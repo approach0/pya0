@@ -6,3 +6,5 @@ runs/
 *.log
 *.scores
 *.model
+.build/
+*.swp
