@@ -1,0 +1,1294 @@
+[
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "f(x) = \\frac{x^2 + x + c}{x^2 + 2x + c}"
+            }
+        ],
+        "qid": "A.1",
+        "tags": "functions"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "f'(x)=f(x+1)"
+            }
+        ],
+        "qid": "A.2",
+        "tags": "ordinary-differential-equations"
+    },
+    {
+        "kw": [
+            {
+                "type": "term",
+                "str": "bisection algorithm"
+            }
+        ],
+        "qid": "A.3",
+        "tags": "numerical-methods,algorithms,bisection"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum_{k=0}^{n} \\binom{n}{k} k"
+            }
+        ],
+        "qid": "A.4",
+        "tags": "combinatorics,number-theory,summation,proof-explanation"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "P(A|B)=(P(A) \\cap P(B))/P(B)"
+            },
+            {
+                "type": "term",
+                "str": "conditional probability formula"
+            }
+        ],
+        "qid": "A.5",
+        "tags": "probability,proof-verification,conditional-probability"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "5^{133} \\mod 8 = 5"
+            },
+            {
+                "type": "term",
+                "str": "number mod with big exponent"
+            }
+        ],
+        "qid": "A.6",
+        "tags": "algebra-precalculus,arithmetic"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "11^{10}-1 =\\equiv x \\pmod{100}"
+            },
+            {
+                "type": "term",
+                "str": "remainder using modulus"
+            }
+        ],
+        "qid": "A.7",
+        "tags": "elementary-number-theory,modular-arithmetic,divisibility,alternative-proof"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\lim_{n\\rightarrow \\infty}\\sqrt[n]{\\frac{(27)^n(n!)^3}{(3n)!}}"
+            },
+            {
+                "type": "term",
+                "str": "finding value of limit"
+            }
+        ],
+        "qid": "A.8",
+        "tags": "limits"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum_{n=0}^N nx^n"
+            },
+            {
+                "type": "term",
+                "str": "derivative geometric series"
+            }
+        ],
+        "qid": "A.9",
+        "tags": "sequences-and-series"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\int_{0}^{\\infty}\\frac{\\sin x}{x^{a}}"
+            },
+            {
+                "type": "term",
+                "str": "improper integral sine function"
+            }
+        ],
+        "qid": "A.10",
+        "tags": "improper-integrals"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "u \\times v"
+            },
+            {
+                "type": "tex",
+                "str": "\\mathbb{R}^2"
+            },
+            {
+                "type": "term",
+                "str": "cross product"
+            }
+        ],
+        "qid": "A.11",
+        "tags": "multivariable-calculus,vectors"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "(1+i\\sqrt{3})^{1/2}"
+            },
+            {
+                "type": "term",
+                "str": "roots of a complex number"
+            }
+        ],
+        "qid": "A.12",
+        "tags": "linear-algebra,complex-numbers,polar-coordinates"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "bf(b)-af(a)"
+            },
+            {
+                "type": "term",
+                "str": "sum of integrals of f and inverse"
+            }
+        ],
+        "qid": "A.13",
+        "tags": "calculus"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "y=xy'+ \\frac{1}{2}(y')^{2}"
+            }
+        ],
+        "qid": "A.14",
+        "tags": "ordinary-differential-equations"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum_{i=1}^n ix^{i-1}"
+            },
+            {
+                "type": "term",
+                "str": "derivative geometric series"
+            }
+        ],
+        "qid": "A.15",
+        "tags": "sequences-and-series,convergence,summation,power-series"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\int_0^1\\frac{\\ln(1+x)\\ln(1-x)}{1+x}dx"
+            }
+        ],
+        "qid": "A.16",
+        "tags": "integration,sequences-and-series,definite-integrals,closed-form"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\int _{x=0}^{\\infty} \\frac{\\sin(x)}{x}"
+            },
+            {
+                "type": "tex",
+                "str": "sinx /x"
+            },
+            {
+                "type": "term",
+                "str": "contour integral"
+            }
+        ],
+        "qid": "A.17",
+        "tags": "complex-analysis,improper-integrals"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\lim_{n \\rightarrow \\infty } \\frac {[(n+1)(n+2)\\cdots(n+n)]^{1/n}}{n}"
+            },
+            {
+                "type": "term",
+                "str": "Ces\u00e1ro-Stolz theorem"
+            }
+        ],
+        "qid": "A.18",
+        "tags": "sequences-and-series"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "p^4-1"
+            },
+            {
+                "type": "term",
+                "str": "greatest integer dividing"
+            }
+        ],
+        "qid": "A.19",
+        "tags": "divisibility,greatest-common-divisor"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\phi(n)=40"
+            },
+            {
+                "type": "term",
+                "str": "euler-Totient Function"
+            }
+        ],
+        "qid": "A.20",
+        "tags": "totient-function"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "9^{9^{9^{\u2026{^9}}}}"
+            },
+            {
+                "type": "term",
+                "str": "towers of 9 "
+            }
+        ],
+        "qid": "A.21",
+        "tags": "number-theory,modular-arithmetic"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "d, d+1, d+2... = N"
+            }
+        ],
+        "qid": "A.22",
+        "tags": "sequences-and-series,number-theory"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "2^7 \\cdot 3^8 \\cdot 5^2 \\cdot 7^{11}"
+            },
+            {
+                "type": "term",
+                "str": "product integers find lcm"
+            }
+        ],
+        "qid": "A.23",
+        "tags": "prime-numbers,greatest-common-divisor,least-common-multiple"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sqrt{2i-1}"
+            }
+        ],
+        "qid": "A.24",
+        "tags": "algebra-precalculus"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "P(x^2+1)=(P(x))^2+1"
+            },
+            {
+                "type": "term",
+                "str": "polynomial functional equation"
+            }
+        ],
+        "qid": "A.25",
+        "tags": "polynomials"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\int_0^\\infty\\frac{\\sin x}{x}dx"
+            },
+            {
+                "type": "tex",
+                "str": "sin x/x"
+            },
+            {
+                "type": "term",
+                "str": "improper integral sin"
+            }
+        ],
+        "qid": "A.26",
+        "tags": "real-analysis,calculus,integration,taylor-expansion,riemann-integration"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "e^{3i \\pi /2}"
+            }
+        ],
+        "qid": "A.27",
+        "tags": "complex-numbers,exponentiation"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sin(18^{\\circ})"
+            }
+        ],
+        "qid": "A.28",
+        "tags": "algebra-precalculus,trigonometry,euclidean-geometry,contest-math"
+    },
+    {
+        "kw": [
+            {
+                "type": "term",
+                "str": "dividing Complex Numbers by Infinity"
+            }
+        ],
+        "qid": "A.29",
+        "tags": "algebra-precalculus,limits,complex-numbers,infinity"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "a^3+b^3+c^3-3abc"
+            }
+        ],
+        "qid": "A.30",
+        "tags": "binomial-theorem"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "Empty(x) \\iff \not \\exists y (y \\in x)"
+            },
+            {
+                "type": "term",
+                "str": "definitions axioms"
+            }
+        ],
+        "qid": "A.32",
+        "tags": "terminology,definition,first-order-logic,axioms"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\frac{\\partial^3 f}{\\partial t^3}"
+            },
+            {
+                "type": "term",
+                "str": "physical meaning of third derivative"
+            }
+        ],
+        "qid": "A.33",
+        "tags": "physics"
+    },
+    {
+        "kw": [
+            {
+                "type": "term",
+                "str": "Knuth up-arrow notation"
+            }
+        ],
+        "qid": "A.34",
+        "tags": "hyperoperation,ackermann-function"
+    },
+    {
+        "kw": [
+            {
+                "type": "term",
+                "str": "function not have an antiderivative"
+            }
+        ],
+        "qid": "A.35",
+        "tags": "integration"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\lnot P  \\to A_1 \\to\\ ... \\ \\to A_n \\to P"
+            },
+            {
+                "type": "term",
+                "str": "proof by contradiction"
+            }
+        ],
+        "qid": "A.36",
+        "tags": "logic,proof-writing"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "f\\circ g = g \\circ f"
+            },
+            {
+                "type": "term",
+                "str": "non trivial examples commutativity composition"
+            }
+        ],
+        "qid": "A.37",
+        "tags": "real-analysis,functional-analysis,functions"
+    },
+    {
+        "kw": [
+            {
+                "type": "term",
+                "str": "applications ZFC axiom"
+            }
+        ],
+        "qid": "A.38",
+        "tags": "set-theory"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\log 2019\\gt \\log 2018"
+            }
+        ],
+        "qid": "A.39",
+        "tags": "algebra-precalculus,logarithms"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "a_1x_1+a_2x_2+a_3x_3+...+a_nx_n="
+            },
+            {
+                "type": "term",
+                "str": "meaning of linearity"
+            }
+        ],
+        "qid": "A.40",
+        "tags": "linear-algebra"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum_{r=1}^n (-1)^{(n-r)} {n \\choose r}(r)^m"
+            },
+            {
+                "type": "term",
+                "str": "find number of onto functions"
+            }
+        ],
+        "qid": "A.41",
+        "tags": "combinatorics,functions,combinations"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "x^2 + 1 = 0"
+            },
+            {
+                "type": "term",
+                "str": "emergence of complex numbers"
+            }
+        ],
+        "qid": "A.42",
+        "tags": "complex-numbers,physics,applications"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum_{n\\geq1}\\frac1{n^2+1}=\\frac{\\pi\\coth\\pi-1}2"
+            },
+            {
+                "type": "term",
+                "str": "prove with Fourier series"
+            }
+        ],
+        "qid": "A.43",
+        "tags": "real-analysis,sequences-and-series"
+    },
+    {
+        "kw": [
+            {
+                "type": "term",
+                "str": "infinite order"
+            }
+        ],
+        "qid": "A.44",
+        "tags": "matrices,group-theory,cyclic-groups"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sin(x) , \\sin(2x) , \\sin(3x) ,...,\\sin(nx)"
+            },
+            {
+                "type": "term",
+                "str": "prove independent in R"
+            }
+        ],
+        "qid": "A.45",
+        "tags": "ordinary-differential-equations"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\int x^k f(x) dx=0"
+            },
+            {
+                "type": "term",
+                "str": "lebesgue integrable function"
+            }
+        ],
+        "qid": "A.46",
+        "tags": "real-analysis"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "rq \\equiv 1 \\bmod p"
+            },
+            {
+                "type": "term",
+                "str": "Wilson's Theorem"
+            }
+        ],
+        "qid": "A.47",
+        "tags": "elementary-number-theory,proof-verification"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "(x+y)^k \\geq x^k + y^k"
+            }
+        ],
+        "qid": "A.48",
+        "tags": "real-analysis,functions,inequality"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "{2n\\choose n}=\\sum_{k=0}^n{n\\choose k}^2"
+            },
+            {
+                "type": "term",
+                "str": "combinatoric interpretation identity"
+            }
+        ],
+        "qid": "A.49",
+        "tags": "combinatorics,binomial-coefficients"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum{\\frac{1}{n^{2+\\cos{n}}}}"
+            },
+            {
+                "type": "term",
+                "str": "divergent series"
+            }
+        ],
+        "qid": "A.50",
+        "tags": "real-analysis,integration,sequences-and-series,analysis"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\displaystyle \\sum_{r=0}^n {n+r\\choose r} \\frac{1}{2^{r}}= 2^{n}"
+            },
+            {
+                "type": "term",
+                "str": "Sum of series binomial coefficients"
+            }
+        ],
+        "qid": "A.51",
+        "tags": "binomial-coefficients"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "n_i \\nmid n=n_1n_2...n_k+1"
+            },
+            {
+                "type": "term",
+                "str": "contradiction proof prime number"
+            }
+        ],
+        "qid": "A.52",
+        "tags": "proof-writing,prime-numbers"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "AB = 1 \\Rightarrow BA = 1"
+            },
+            {
+                "type": "term",
+                "str": "inverse of a square matrix"
+            }
+        ],
+        "qid": "A.53",
+        "tags": "linear-algebra,group-theory"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "P(N) = (S|S \u2286 N)"
+            },
+            {
+                "type": "term",
+                "str": "diagonal argument for uncountable powerset"
+            }
+        ],
+        "qid": "A.54",
+        "tags": "discrete-mathematics,elementary-set-theory"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\frac{1}{\\sqrt{-1}}=\\sqrt{-1}"
+            },
+            {
+                "type": "term",
+                "str": "mistake in calculation"
+            }
+        ],
+        "qid": "A.55",
+        "tags": "complex-numbers,definition"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\exists p\\ \\bigl(\\text{$p$ is prime } \\rightarrow \\forall x  \\text{ ($x$ is prime)}\\bigr)"
+            },
+            {
+                "type": "term",
+                "str": "logical formula involving prime numbers"
+            }
+        ],
+        "qid": "A.56",
+        "tags": "logic,first-order-logic"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "f^{-1} : f(X) \\mapsto X"
+            },
+            {
+                "type": "term",
+                "str": "continuous one-to-one function"
+            }
+        ],
+        "qid": "A.57",
+        "tags": "real-analysis,general-topology,analysis,continuity,metric-spaces"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "3\\arcsin \\frac{1}{4} + \\arccos \\frac {11}{16} = \\frac {\\pi}{2}"
+            },
+            {
+                "type": "term",
+                "str": "trigonometric functions proof"
+            }
+        ],
+        "qid": "A.58",
+        "tags": "trigonometry"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum_{d|n}{\\phi(d)}=n"
+            },
+            {
+                "type": "term",
+                "str": "Euler\u00e2\u0080\u0099s totient proof"
+            }
+        ],
+        "qid": "A.59",
+        "tags": "group-theory,number-theory,alternative-proof,big-list"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "a_{n} \\;=\\; \\left ( 1-\\frac{1}{\\sqrt{2}} \\right ) ... \\left ( 1- \\frac{1}{\\sqrt{n+1}} \\right )"
+            },
+            {
+                "type": "term",
+                "str": "limiting value of a sequence"
+            }
+        ],
+        "qid": "A.60",
+        "tags": "calculus,sequences-and-series,limits,products"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "n=3i+5j"
+            }
+        ],
+        "qid": "A.61",
+        "tags": "elementary-number-theory,discrete-mathematics,induction,diophantine-equations"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "|\\mathbb{Q}| = |\\mathbb{Z}|"
+            },
+            {
+                "type": "term",
+                "str": "rational integer numbers set cardinality"
+            }
+        ],
+        "qid": "A.62",
+        "tags": "discrete-mathematics"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\text{lcm}(n_1,n_2)=\\frac{n_1 n_2}{\\gcd(n_1,n_2)}"
+            },
+            {
+                "type": "term",
+                "str": "gcd and lcm relationship"
+            }
+        ],
+        "qid": "A.63",
+        "tags": "proof-explanation,greatest-common-divisor,least-common-multiple"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "f([a, b]) \\subset [a, b]"
+            },
+            {
+                "type": "term",
+                "str": "mean value property"
+            }
+        ],
+        "qid": "A.64",
+        "tags": "real-analysis,continuity,proof-explanation"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "e^{x-1} \\geq x"
+            },
+            {
+                "type": "term",
+                "str": "exponential growth decay"
+            }
+        ],
+        "qid": "A.65",
+        "tags": "calculus,inequality,exponential-function"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "(x^TAh)^T = h^TA^Tx"
+            },
+            {
+                "type": "term",
+                "str": "transpose of product"
+            }
+        ],
+        "qid": "A.66",
+        "tags": "linear-algebra,transpose"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\det{\\begin{bmatrix}A&B\\\\O&C\\end{bmatrix}}=\\det(A)\\det(C)"
+            },
+            {
+                "type": "term",
+                "str": "combination of matrixes"
+            }
+        ],
+        "qid": "A.67",
+        "tags": "calculus,determinant"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "a^n+1"
+            },
+            {
+                "type": "term",
+                "str": "prove divisible"
+            }
+        ],
+        "qid": "A.68",
+        "tags": "polynomials,induction,divisibility"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\ {s \\choose s} + {s+1 \\choose s} +...+ {n \\choose s} = {n+1 \\choose s+1}"
+            },
+            {
+                "type": "term",
+                "str": "induction with two variable parameters"
+            }
+        ],
+        "qid": "A.69",
+        "tags": "combinatorics"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum_{j=0}^{N-1}\\cos\\frac{\\left(2j+1\\right)\\pi}{2N}=0"
+            },
+            {
+                "type": "term",
+                "str": "Euler formula and geometric serie"
+            }
+        ],
+        "qid": "A.70",
+        "tags": "trigonometry,summation"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "1^2 + 2^2 + .... + n^2 = \\frac{n(n+1)(2n+1)}{6}"
+            },
+            {
+                "type": "term",
+                "str": "sum of squares"
+            }
+        ],
+        "qid": "A.71",
+        "tags": "induction"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\mathcal{X} = \\mathcal{Y}"
+            },
+            {
+                "type": "term",
+                "str": "axiom of regularity"
+            }
+        ],
+        "qid": "A.72",
+        "tags": "set-theory,axioms"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\binom{n}{0}^2 + \\binom{n}{1}^2 + ... + \\binom{n}{n}^2 = \\binom{2n}{n}"
+            },
+            {
+                "type": "term",
+                "str": "binomial theorem proof"
+            }
+        ],
+        "qid": "A.73",
+        "tags": "discrete-mathematics,binomial-coefficients,binomial-theorem"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "f(x)=x+\\dfrac{1}{x}"
+            },
+            {
+                "type": "term",
+                "str": "image of function interval"
+            }
+        ],
+        "qid": "A.74",
+        "tags": "functions,elementary-set-theory"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\lim_{u\\to \\infty} \\frac{u^m}{e^u} = 0"
+            },
+            {
+                "type": "term",
+                "str": "polynomial over exponential"
+            }
+        ],
+        "qid": "A.75",
+        "tags": "real-analysis,calculus,limits"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\bigcup_{i \\in \\mathbb{N}}(a_i+b_i\\mathbb{Z})=\\mathbb{Z}"
+            },
+            {
+                "type": "term",
+                "str": "covering Z by arithmetic progressions"
+            }
+        ],
+        "qid": "A.76",
+        "tags": "general-topology,elementary-number-theory"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "(- 1) (- 1) = 1"
+            },
+            {
+                "type": "term",
+                "str": "distributive law"
+            }
+        ],
+        "qid": "A.77",
+        "tags": "elementary-number-theory"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\displaystyle \\left \\vert{ \\frac {e^{-ixu}-1}{u}}\\right\\vert \\le \\vert x \\vert"
+            },
+            {
+                "type": "term",
+                "str": "inequality with complex exponential"
+            }
+        ],
+        "qid": "A.79",
+        "tags": "inequality,exponential-function,fourier-transform"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\emptyset, \\{1\\}, \\{2\\}, \\{1, 2\\}, \\{3\\}, \\{1, 3\\}, \\{2, 3\\}, \\{1, 2, 3\\}, \\{4\\}, \\ldots"
+            },
+            {
+                "type": "term",
+                "str": "finite subsets of N"
+            }
+        ],
+        "qid": "A.80",
+        "tags": "analysis,elementary-set-theory,proof-explanation"
+    },
+    {
+        "kw": [
+            {
+                "type": "term",
+                "str": "countable subset infinite set"
+            }
+        ],
+        "qid": "A.81",
+        "tags": "elementary-set-theory,axiom-of-choice"
+    },
+    {
+        "kw": [
+            {
+                "type": "term",
+                "str": "definite integral periodic functions"
+            }
+        ],
+        "qid": "A.82",
+        "tags": "calculus,integration,trigonometry,definite-integrals,inverse-function"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "1, 1+\\frac{1}{2}, 1+\\frac{1}{2}+\\frac{1}{3}, 1+\\frac{1}{2}+\\frac{1}{3}+\\frac{1}{4}, . . ."
+            },
+            {
+                "type": "term",
+                "str": "sequence sums inverse natural numbers"
+            }
+        ],
+        "qid": "A.83",
+        "tags": "calculus,sequences-and-series,harmonic-numbers"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "Z[x]"
+            },
+            {
+                "type": "term",
+                "str": "principal ideals"
+            }
+        ],
+        "qid": "A.84",
+        "tags": "abstract-algebra,ring-theory,ideals,principal-ideal-domains"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "p_n = \\frac{1}{2}p_{n-1}"
+            },
+            {
+                "type": "term",
+                "str": "bug steps to reach N"
+            }
+        ],
+        "qid": "A.85",
+        "tags": "markov-chains,random-walk"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum_{k=0}^{n}k\\cdot \\left(\\begin{array}{l}{n}\\\\{k}\\end{array}\\right)=O\\left(2 ^ {n\\log _{3}n}\\right)"
+            },
+            {
+                "type": "term",
+                "str": "combinatorial sum order estimate"
+            }
+        ],
+        "qid": "A.86",
+        "tags": "combinatorics,elementary-number-theory,discrete-mathematics"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\forall n \\in \\Bbb{N} : (\\sum_{i=1}^{n} a_{i} ) (\\sum_{i=1}^{n} \\frac{1}{a_{i}} ) \\ge n^2"
+            },
+            {
+                "type": "term",
+                "str": "AM-GM / Cauchy Schwarz inequality"
+            }
+        ],
+        "qid": "A.87",
+        "tags": "algebra-precalculus,inequality"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "x^4+10x^2+1"
+            },
+            {
+                "type": "term",
+                "str": "reducible polynomial"
+            }
+        ],
+        "qid": "A.88",
+        "tags": "abstract-algebra,ring-theory,field-theory,irreducible-polynomials"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "A^{2} + B^{2} = C^{2} + D^{2}"
+            },
+            {
+                "type": "term",
+                "str": "parametrization of pythagorean-like equation"
+            }
+        ],
+        "qid": "A.89",
+        "tags": "number-theory,diophantine-equations"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "A^{-1}A=\\mathbb I_n \\ \\ \\land \\ \\ AA^{-1}=\\mathbb I_n \\ \\ \\ \\ (1)"
+            },
+            {
+                "type": "term",
+                "str": "definition of an Inverse matrix"
+            }
+        ],
+        "qid": "A.90",
+        "tags": "linear-algebra,matrices"
+    },
+    {
+        "kw": [
+            {
+                "type": "term",
+                "str": "continuous each value twice"
+            }
+        ],
+        "qid": "A.91",
+        "tags": "real-analysis,calculus"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\mathbb F_q[X,Y]"
+            },
+            {
+                "type": "term",
+                "str": "principal maximal ideal"
+            }
+        ],
+        "qid": "A.92",
+        "tags": "polynomials,commutative-algebra,field-theory,finite-fields"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "det(xI - AB) = det(xI - BA)"
+            },
+            {
+                "type": "term",
+                "str": "characteristic polynomial"
+            }
+        ],
+        "qid": "A.93",
+        "tags": "linear-algebra,polynomials"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "2^{\\aleph_{0} }"
+            },
+            {
+                "type": "term",
+                "str": "natural numbers sets finite intersection"
+            }
+        ],
+        "qid": "A.94",
+        "tags": "cardinals,rational-numbers,natural-numbers"
+    },
+    {
+        "kw": [
+            {
+                "type": "term",
+                "str": "convex path sine limit"
+            }
+        ],
+        "qid": "A.95",
+        "tags": "real-analysis,derivatives,trigonometry,reference-request,arc-length"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\sum_i \\frac{a_i}{a_i+a_{i+1}+a_{i+2}+\\cdots}"
+            },
+            {
+                "type": "term",
+                "str": "convergent sum"
+            }
+        ],
+        "qid": "A.96",
+        "tags": "sequences-and-series,analysis"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "\\mathbb{R}"
+            },
+            {
+                "type": "term",
+                "str": "R dimension in vector space"
+            }
+        ],
+        "qid": "A.97",
+        "tags": "linear-algebra,vector-spaces"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "R^{n}(e^{2\\pi i x})=e^{2\\pi i(x+n\\alpha)}"
+            },
+            {
+                "type": "term",
+                "str": "irrational rotation and dense set"
+            }
+        ],
+        "qid": "A.98",
+        "tags": "general-topology,circles,rotations,irrational-numbers"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "f:\\mathbb{R}\\to\\mathbb{R}"
+            },
+            {
+                "type": "term",
+                "str": "set of continuities of function "
+            }
+        ],
+        "qid": "A.99",
+        "tags": "real-analysis,calculus,continuity"
+    },
+    {
+        "kw": [
+            {
+                "type": "tex",
+                "str": "E=(0,1]"
+            },
+            {
+                "type": "term",
+                "str": "closed set"
+            }
+        ],
+        "qid": "A.100",
+        "tags": "real-analysis"
+    }
+]

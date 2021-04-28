@@ -1,0 +1,8 @@
+pya0/
+visualization/
+runs/
+*.run
+*.runtimes
+*.log
+*.scores
+*.model
