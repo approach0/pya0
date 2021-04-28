@@ -272,6 +272,11 @@ if __name__ == '__main__':
         for hit in hits:
             print(hit)
 
+        import collection_driver
+        from .eval import TREC_output
+        collection_driver.TREC_preprocess('test', index, hits)
+        TREC_output(hits, 'TEST.0', append=False, output_file=trec_output)
+
     elif args.docid:
         abort_on_network_index(index)
         doc = pya0.index_lookup_doc(index, args.docid)
