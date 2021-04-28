@@ -115,7 +115,10 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
             fh.write(f'</ol>\n')
             output_html_pagination(fh, qid, page, tot_pages)
             # mathJax
-            fh.write('<script> window.MathJax ={ tex: { inlineMath: [["[imath]", "[/imath]"]] } }; </script>')
+            fh.write('<script> window.MathJax ={' +
+                "loader: { source: {'[tex]/AMScd': '[tex]/amscd'} }," +
+                'tex: { inlineMath: [["[imath]", "[/imath]"]] }' +
+            '}; </script>')
             fh.write(f'<script type="text/javascript" src="{mathjax_cdn}"></script>')
             # end document
             fh.write('</body></html>\n')
