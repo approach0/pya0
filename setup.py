@@ -13,9 +13,9 @@ def copy_files():
 
 setup(
     name = 'pya0',
-    version = '0.2.8',
+    version = '0.2.9',
     author = 'Wei Zhong',
-    author_email = "clock126@126.com",
+    author_email = "w32zhong@uwaterloo.ca",
     description = 'Approach Zero Python Interface',
     long_description = long_description,
     long_description_content_type = "text/markdown",
