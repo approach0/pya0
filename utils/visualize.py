@@ -86,6 +86,7 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
             # query
             fh.write(f'<h3>Query Keywords (Topic ID: {qid})</h3>\n')
             fh.write('<ul id="topbar">\n')
+            if query is None: query = []
             for q in query:
                 kw_str = q['str'] if q['type'] == 'term' else f'[imath]{q["str"]}[/imath]'
                 fh.write(f'<li>{kw_str}</li>\n')
@@ -120,7 +121,21 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
             fh.write('</body></html>\n')
 
 
-def visualize_run(index, collection, tsv_file_path):
+def visualize_hits(index, run_name, qid, query, hits, qrels=None, scores=None):
+    # lookup document content
+    for hit in hits:
+        trec_docid = hit['docid']
+        doc = pya0.index_lookup_doc(index, trec_docid)
+        doc = pya0.index_lookup_doc(index, int(doc['extern_id']))
+        hit['content'] = doc['content']
+    # output HTML preview
+    if True:
+        output_html_topic_run(run_name, qid, query, hits, qrels=qrels, judged_only=False, scores=scores)
+    if qrels:
+        output_html_topic_run(run_name, qid, query, hits, qrels=qrels, judged_only=True, scores=scores)
+
+
+def visualize_collection_runs(index, collection, tsv_file_path):
     run_per_topic, _ = parse_trec_file(tsv_file_path)
     scores_file_path = '.'.join(tsv_file_path.split('.')[0:-1]) + '.scores'
     scores = parse_scores_file(scores_file_path)
@@ -129,14 +144,18 @@ def visualize_run(index, collection, tsv_file_path):
     for i, (qid, query, _) in enumerate(gen_topics_queries(collection)):
         print(qid, query)
         topic_hits = run_per_topic[qid] if qid in run_per_topic else []
-        # lookup document content
-        for hit in topic_hits:
-            trec_docid = hit['docid']
-            doc = pya0.index_lookup_doc(index, trec_docid)
-            doc = pya0.index_lookup_doc(index, int(doc['extern_id']))
-            hit['content'] = doc['content']
-        output_html_topic_run(run_name, qid, query, topic_hits, qrels=qrels, judged_only=False, scores=scores)
-        output_html_topic_run(run_name, qid, query, topic_hits, qrels=qrels, judged_only=True, scores=scores)
+        visualize_hits(index, run_name, qid, query, topic_hits, qrels=qrels, scores=scores)
+
+
+def visualize(index, tsv_file_path, collection=None, adhoc_query=None):
+    print(f'\n\t Visualize runfile: {tsv_file_path} ...\n')
+    if collection:
+        visualize_collection_runs(index, collection, tsv_file_path)
+    elif adhoc_query:
+        run_name = os.path.basename(tsv_file_path)
+        run_per_topic, _ = parse_trec_file(tsv_file_path)
+        for qid, hits in run_per_topic.items():
+            visualize_hits(index, run_name, qid, adhoc_query, hits)
 
 
 def bar_plot(ax, data, colors=None, total_width=0.8, single_width=1, legend=True):

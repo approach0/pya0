@@ -119,6 +119,7 @@ if __name__ == '__main__':
     if args.list_prebuilt_indexes:
         list_indexes()
         exit(0)
+
     # print auto-eval summary?
     elif args.auto_eval_summary:
         abort_on_invalid_collection(args.collection)
@@ -143,27 +144,32 @@ if __name__ == '__main__':
             for row in rows:
                 print('\t'.join(row), file=fh)
         exit(0)
+
     # visualize score comparison?
     elif args.visualize_compare_scores:
         from .visualize import visualize_compare_scores
         files = args.visualize_compare_scores.split(',')
         visualize_compare_scores(files[0], files[1])
         exit(0)
+
     # concatenate run files?
     elif args.concate_runs:
         A, B, n = args.concate_runs.split(',')
         concatenate_run_files(A, B, int(n), topk, verbose=verbose)
         exit(0)
+
     # merge run files?
     elif args.merge_runs:
         A, B, alpha = args.merge_runs.split(',')
         merge_run_files(A, B, float(alpha), topk, verbose=verbose)
         exit(0)
+
     # learning to rank?
     elif args.learning2rank_linear_regression:
         path = args.learning2rank_linear_regression
         L2R_train(path, args=None, method='linear')
         exit(0)
+
     elif args.learning2rank_lambda_mart:
         splits = args.learning2rank_lambda_mart.split(',')
         path, args = splits[0], splits[1:]
@@ -173,7 +179,7 @@ if __name__ == '__main__':
     # open index from specified index path or prebuilt index
     if args.index is None:
         print('No index specified, abort.')
-        exit(0)
+        exit(1)
 
     elif isinstance(args.index, str) and args.index.startswith('http'):
         index = args.index
@@ -192,12 +198,11 @@ if __name__ == '__main__':
         print(f'index open failed: {index_path}')
         exit(1)
 
-    # visualize run files?
-    if args.visualize_run:
-        from .visualize import visualize_run
+    # output HTML file
+    if args.visualize_run and args.collection:
+        from .visualize import visualize
         abort_on_network_index(index)
-        abort_on_invalid_collection(args.collection)
-        visualize_run(index, args.collection, args.visualize_run)
+        visualize(index, args.visualize_run, collection=args.collection)
         exit(0)
 
     # generate l2r training data
@@ -250,7 +255,7 @@ if __name__ == '__main__':
 
     # actually run query
     if args.query:
-        # parser query by different types
+        # parser query
         query = []
         for kw in args.query:
             kw_type = 'term'
@@ -269,13 +274,22 @@ if __name__ == '__main__':
         topic_query = ('TEST.0', query, '') # no tags
         hits = cascade_run(index, cascades, topic_query, verbose=verbose,
                            topk=topk, collection=args.collection)
+        # print hits
         for hit in hits:
             print(hit)
 
-        import collection_driver
-        from .eval import TREC_output
-        collection_driver.TREC_preprocess('test', index, hits)
-        TREC_output(hits, 'TEST.0', append=False, output_file=trec_output)
+        # output run file
+        if args.trec_output is not None:
+            import collection_driver
+            from .eval import TREC_output
+            collection_driver.TREC_preprocess('test', index, hits)
+            TREC_output(hits, 'TEST.0', append=False, output_file=trec_output)
+
+        # output HTML file
+        if args.visualize_run:
+            from .visualize import visualize
+            abort_on_network_index(index)
+            visualize(index, args.visualize_run, adhoc_query=query)
 
     elif args.docid:
         abort_on_network_index(index)
@@ -298,7 +312,6 @@ if __name__ == '__main__':
             math_expansion=args.math_expansion,
             kfold=args.kfold
         )
-
     else:
-        print('no docid, query or evaluating collection specifed, abort.')
-        exit(0)
+        print('No --docid, --query --collection specifed, abort.')
+        exit(1)
