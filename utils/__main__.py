@@ -1,15 +1,16 @@
 import os
 import json
 import argparse
+import auto_eval
+import time
+import pickle
 import pya0
 from .mindex_info import list_indexes
 from .eval import run_topics, evaluate_run, evaluate_log
 from .msearch import cascade_run, msearch
 from .mergerun import concatenate_run_files, merge_run_files
 from .l2r import L2R_gen_train_data, L2R_train
-import auto_eval
-import time
-import pickle
+from .preprocess import preprocess_query
 
 
 def abort_on_network_index(index):
@@ -281,8 +282,15 @@ if __name__ == '__main__':
                 'type': kw_type,
                 'field': 'content',
             })
+
         if verbose:
-            print('[query] ', query)
+            print('[origin query] ', query)
+
+        # process initial query
+        query = preprocess_query(query, expansion=args.math_expansion)
+
+        if verbose:
+            print('[processed query] ', query)
 
         # actually run query
         topic_query = ('TEST.0', query, '') # no tags

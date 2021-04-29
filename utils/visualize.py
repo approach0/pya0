@@ -1,8 +1,10 @@
 import pya0
+import copy
 import os
 from .eval import gen_topics_queries
 from .eval import get_qrels_filepath, parse_qrel_file
 from .mergerun import parse_trec_file
+from .preprocess import preprocess_query
 
 
 def parse_scores_file(file_path):
@@ -87,8 +89,12 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
             fh.write(f'<h3>Query Keywords (Topic ID: {qid})</h3>\n')
             fh.write('<ul id="topbar">\n')
             if query is None: query = []
-            for q in query:
-                kw_str = q['str'] if q['type'] == 'term' else f'[imath]{q["str"]}[/imath]'
+            actual_query = preprocess_query(copy.deepcopy(query), expansion=False)
+            for q, aq in zip(query, actual_query):
+                if q['type'] == 'term':
+                    kw_str = f'{q["str"]} &nbsp;&nbsp; (stemmed: {aq["str"]})'
+                else:
+                    kw_str = f'[imath]{q["str"]}[/imath]'
                 fh.write(f'<li>{kw_str}</li>\n')
             fh.write('</ul>\n')
             # hits
