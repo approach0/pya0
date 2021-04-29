@@ -1,3 +1,8 @@
+> This branch contains a source code snapshot for our paper
+> *PyA0: A Python Toolkit for Accessible Math-Aware Search (by Wei Zhong and Jimmy Lin)*.
+> A Google Colab has been made to illustrate the usage of PyA0,
+> check it out [here](https://colab.research.google.com/drive/1lhG5KlXogG-ulIPF9wEwHeHFLJvx__H-).
+
 ## About
 **pya0** is a Python wrapper for Approach Zero search engine.
 It provides Python interface to make the search engine core easy to play with.
