@@ -123,7 +123,7 @@ def parse_qrel_file(file_path):
 
 
 def run_fold_topics(index, collection, fold, cascades, output, topk,
-                    math_expansion=False, verbose=False, log=None):
+                    math_expansion=False, verbose=False, log=None, fork_search=False):
     #tracemalloc.start()
     for i, topic_query in enumerate(fold):
         qid, query, args = topic_query
@@ -139,8 +139,8 @@ def run_fold_topics(index, collection, fold, cascades, output, topk,
 
         # actually run query
         print('[cascade_run]', qid, f' ==> {output}')
-        hits = cascade_run(index, cascades, topic_query, verbose=verbose,
-                           topk=topk, collection=collection, log=log)
+        hits = cascade_run(index, cascades, topic_query, verbose=verbose, topk=topk,
+            collection=collection, log=log, fork_search=fork_search)
         print()
 
         # output TREC-format run file
@@ -156,7 +156,7 @@ def run_fold_topics(index, collection, fold, cascades, output, topk,
 
 def run_topics(index, collection, output, topk=1000, verbose=False, log=None,
     trec_eval_args=[], cascades=[('baseline', None)], training_output=None,
-    kfold=None, math_expansion=None):
+    kfold=None, math_expansion=None, fork_search=False):
     # prepare K-fold evaluation
     topic_queries = list(gen_topics_queries(collection))
     N = len(topic_queries)
@@ -180,11 +180,11 @@ def run_topics(index, collection, output, topk=1000, verbose=False, log=None,
 
         # for training
         run_fold_topics(index, collection, cur_fold, cascades, outfor('train'), topk,
-            math_expansion=math_expansion, verbose=verbose, log=None)
+            math_expansion=math_expansion, verbose=verbose, log=None, fork_search=fork_search)
 
         # for testing
         run_fold_topics(index, collection, hold_out, cascades, outfor('test'), topk,
-            math_expansion=math_expansion, verbose=verbose, log=log)
+            math_expansion=math_expansion, verbose=verbose, log=log, fork_search=fork_search)
 
         # for testing: invoke trec_eval ...
         qrels = get_qrels_filepath(collection)

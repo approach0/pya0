@@ -1,7 +1,10 @@
+import os
 import sys
 import pya0
 import json
+import pickle
 import requests
+import subprocess
 from .rm3 import rm3_expand_query
 from .l2r import L2R_rerank
 from .mergerun import parse_trec_file
@@ -21,8 +24,23 @@ def send_json(url, obj, verbose=False):
         exit(1)
 
 
-def msearch(index, query, verbose=False, topk=1000, log=None):
-    if isinstance(index, str):
+def msearch(index, query, verbose=False, topk=1000, log=None, fork_search=False):
+    if fork_search:
+        pkl_file = '/tmp/7tncksy_tmp-fork-search.pkl'
+        results = {'ret_code': 0, 'ret_str': 'successful', 'hits': []}
+        with open(pkl_file, 'wb') as fh:
+            pickle.dump((query, topk, log), fh)
+            fh.flush()
+            process = subprocess.run(
+                ['python3', '-m', 'pya0', '--index', fork_search, '--direct-search', pkl_file],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+            output = process.stdout
+            #print(output.decode("utf-8")) #debug
+            #print(process.stderr.decode("utf-8")) # debug
+            results = json.loads(output)
+
+    elif isinstance(index, str):
         results = send_json(index, {
             "page": -1, # return results without paging
             "kw": query
@@ -36,6 +54,7 @@ def msearch(index, query, verbose=False, topk=1000, log=None):
             if verbose: print(f'cluster returns {len(hits)} results in total')
         else:
             if verbose: print(f'cluster returns error: #{ret_code} ({ret_msg})')
+
     else:
         result_JSON = pya0.search(index, query,
             verbose=verbose, topk=topk, log=log)
@@ -48,14 +67,14 @@ def print_query_oneline(query):
 
 
 def cascade_run(index, cascades, topic_query, verbose=False,
-                topk=1000, collection=None, log=None):
+                topk=1000, collection=None, log=None, fork_search=False):
     qid, query, qtags = topic_query
     hits = []
     for cascade, args in cascades:
         if cascade == 'baseline':
             print_query_oneline(query)
-            results = msearch(index, query,
-                verbose=verbose, log=log, topk=topk
+            results = msearch(index, query, verbose=verbose,
+                log=log, topk=topk, fork_search=fork_search
             )
 
         elif cascade == 'reader':
@@ -79,8 +98,8 @@ def cascade_run(index, cascades, topic_query, verbose=False,
             query = rm3_expand_query(index, query, hits,
                                      feedbackTerms=fbTerms, feedbackDocs=fbDocs)
             print_query_oneline(query)
-            results = msearch(index, query,
-                verbose=verbose, log=log, topk=topk
+            results = msearch(index, query, verbose=verbose,
+                log=log, topk=topk, fork_search=fork_search
             )
 
         elif cascade == 'l2r':

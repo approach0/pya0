@@ -1,14 +1,15 @@
-import json
 import os
+import json
 import argparse
 import pya0
 from .mindex_info import list_indexes
 from .eval import run_topics, evaluate_run, evaluate_log
-from .msearch import cascade_run
+from .msearch import cascade_run, msearch
 from .mergerun import concatenate_run_files, merge_run_files
 from .l2r import L2R_gen_train_data, L2R_train
 import auto_eval
 import time
+import pickle
 
 
 def abort_on_network_index(index):
@@ -28,6 +29,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--query', type=str, required=False, nargs='+',
         help="Mixed type of keywords, math keywords are written in TeX and wrapped up in dollars")
+    parser.add_argument('--direct-search', type=str, required=False,
+        help="Issue direct search query in pickle, and output JSON results")
     parser.add_argument('--docid', type=int, required=False,
         help="Lookup a raw document from index")
     parser.add_argument('--index', type=str, required=False,
@@ -86,6 +89,18 @@ if __name__ == '__main__':
     verbose = args.verbose if args.verbose else False
     topk = args.topk if args.topk else 1000
     trec_output = args.trec_output if args.trec_output else '/dev/null'
+
+    # direct search
+    if args.direct_search:
+        if not os.path.exists(args.index) and not os.path.exists(args.direct_search):
+            exit(1)
+        index = pya0.index_open(args.index, option="r")
+        with open(args.direct_search, 'rb') as fh:
+            query, topk, log = pickle.load(fh)
+            res = msearch(index, query, topk=topk, log=log)
+            print(json.dumps(res, indent=4))
+        pya0.index_close(index)
+        exit(0)
 
     # enable fallback parser?
     if args.use_fallback_parser:
@@ -247,6 +262,7 @@ if __name__ == '__main__':
                 verbose=False,
                 cascades=cascades,
                 math_expansion=args.math_expansion,
+                fork_search=args.index
             )
             with open(f'tmp/{run_name}.done', 'w') as fh:
                 pass
