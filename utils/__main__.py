@@ -1,5 +1,6 @@
 import os
 import json
+import copy
 import argparse
 import auto_eval
 import time
@@ -283,13 +284,12 @@ if __name__ == '__main__':
                 'field': 'content',
             })
 
-        if verbose:
-            print('[origin query] ', query)
-
         # process initial query
+        origin_query = copy.deepcopy(query)
         query = preprocess_query(query, expansion=args.math_expansion)
 
         if verbose:
+            print('[origin query] ', origin_query)
             print('[processed query] ', query)
 
         # actually run query
@@ -311,7 +311,7 @@ if __name__ == '__main__':
         if args.visualize_run:
             from .visualize import visualize
             abort_on_network_index(index)
-            visualize(index, args.visualize_run, adhoc_query=query)
+            visualize(index, args.visualize_run, adhoc_query=origin_query)
 
     elif args.docid:
         abort_on_network_index(index)
