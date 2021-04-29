@@ -140,7 +140,6 @@ if __name__ == '__main__':
         abort_on_invalid_collection(args.collection)
         name = args.auto_eval_summary
         header, rows = auto_eval.tsv_eval_read('product.tsv')
-        templates = auto_eval.read_templates('./template/')
         def wrap_summary(idx, run_name, _):
             global header
             run_path=f'tmp/{run_name}.run'
@@ -238,20 +237,19 @@ if __name__ == '__main__':
     elif args.auto_eval:
         abort_on_invalid_collection(args.collection)
         name = args.auto_eval
-        print('reading auto_eval.tsv')
+        print('reading auto_eval.tsv ...')
         out_tsv_content = auto_eval.tsv_product('auto_eval.tsv')
         out_tsv = 'product.tsv'
-        print(f'generating {out_tsv}')
+        print(f'generating {out_tsv} ...')
         with open(out_tsv, 'w') as fh:
             fh.write(out_tsv_content + '\n')
-        print('reading templates from ./template/')
+        print('starting evaluation ...')
         header, rows = auto_eval.tsv_eval_read(out_tsv)
-        templates = auto_eval.read_templates('./template/')
         def wrap_eval(idx, run_name, replaces):
             if os.path.exists(f'tmp/{run_name}.done'):
                 print('skip this row')
                 return
-            auto_eval.replace_source_code(templates, replaces)
+            auto_eval.replace_source_code('./template', replaces)
             print('Rebuild project in 3 seconds...')
             time.sleep(3)
             auto_eval.remake('..')

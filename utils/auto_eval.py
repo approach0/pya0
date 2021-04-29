@@ -17,7 +17,7 @@ def remake(root_dir):
         quit(1)
 
 
-def read_templates(directory):
+def _read_templates(directory):
     templates = []
     for _, _, file_names in os.walk(directory):
         for file_name in file_names:
@@ -32,10 +32,12 @@ def read_templates(directory):
     return templates
 
 
-def replace_source_code(templates, replaces):
+def replace_source_code(templates_dir, replaces):
+    templates = _read_templates(templates_dir)
     for k, v in replaces.items():
         for t in templates:
             t['txt'] = t['txt'].replace('{{' + k + '}}', v)
+            print(f'{t["output"]}: replace "{k}" --> "{v}"')
     for t in templates:
         with open(t['output'], 'w') as f:
             f.write(t['txt'])
@@ -102,8 +104,7 @@ if __name__ == '__main__':
     with open('product.tsv', 'w') as fh:
         fh.write(output + '\n')
     header, rows = tsv_eval_read('product.tsv')
-    templates = read_templates('./template/')
     def replace_and_remake(idx, run_name, replaces):
-        replace_source_code(templates, replaces)
+        replace_source_code('./template', replaces)
         remake('../')
     tsv_eval_do(header, rows, replace_and_remake)

@@ -36,8 +36,7 @@ def msearch(index, query, verbose=False, topk=1000, log=None, fork_search=False)
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE
             )
             output = process.stdout
-            #print(output.decode("utf-8")) #debug
-            #print(process.stderr.decode("utf-8")) # debug
+            print(process.stderr.decode("utf-8"), file=sys.stderr) # debug
             results = json.loads(output)
 
     elif isinstance(index, str):
