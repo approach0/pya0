@@ -9,6 +9,8 @@ It provides Python interface to make the search engine core easy to play with.
 
 Source code of this Python binding can be found in this [repository](https://github.com/approach0/pya0).
 
+However, in order to build this Python module, you will need to have this repository fetched as a git submodule from its parent [repository](https://github.com/approach0/search-engine/tree/pya0).
+
 ### Install Necessary Dependencies (Ubuntu)
 ```sh
 $ sudo apt install build-essential python-dev python3-pip
@@ -22,7 +24,7 @@ Install `pya0` using pip
 $ sudo pip3 install --upgrade pya0
 ```
 
-If you encounter pip not being able to find package, update to the latest pip and try again:
+If you find pip is unable to find package, update to the latest pip and try again:
 ```sh
 $ sudo apt-get install curl python3-distutils
 $ curl https://bootstrap.pypa.io/get-pip.py | python3
@@ -89,7 +91,7 @@ $ sudo apt install python3-venv
 $ sudo python3 -m build
 ```
 
-### Upload to Pip
+### Upload to `pypi.org`
 Install `twine`
 ```sh
 $ sudo apt install rustc libssl-dev libffi-dev
