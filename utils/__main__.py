@@ -31,6 +31,8 @@ if __name__ == '__main__':
         help="Mixed type of keywords, math keywords are written in TeX and wrapped up in dollars")
     parser.add_argument('--direct-search', type=str, required=False,
         help="Issue direct search query in pickle, and output JSON results")
+    parser.add_argument('--select-topic', type=str, required=False,
+        help="Select specific topic to run for evaluation")
     parser.add_argument('--docid', type=int, required=False,
         help="Lookup a raw document from index")
     parser.add_argument('--index', type=str, required=False,
@@ -324,7 +326,8 @@ if __name__ == '__main__':
             trec_eval_args=args.eval_args,
             cascades=cascades,
             math_expansion=args.math_expansion,
-            kfold=args.kfold
+            kfold=args.kfold,
+            select_topic=args.select_topic
         )
     else:
         print('No --docid, --query --collection specifed, abort.')

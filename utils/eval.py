@@ -156,9 +156,11 @@ def run_fold_topics(index, collection, fold, cascades, output, topk,
 
 def run_topics(index, collection, output, topk=1000, verbose=False, log=None,
     trec_eval_args=[], cascades=[('baseline', None)], training_output=None,
-    kfold=None, math_expansion=None, fork_search=False):
+    kfold=None, math_expansion=None, fork_search=False, select_topic=None):
     # prepare K-fold evaluation
     topic_queries = list(gen_topics_queries(collection))
+    if select_topic:
+        topic_queries = list(filter(lambda x: x[0] == select_topic, topic_queries))
     N = len(topic_queries)
     if kfold is None: kfold = 1
     R = N % kfold
