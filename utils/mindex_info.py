@@ -100,24 +100,24 @@ MINDEX_INFO = {
         "image_content_size": "3.0G",
         "image_filesystem": "reiserfs",
     },
-    "ecir2020-a0-arqmath2020-task1": {
-        "description": "To reproduce our submission at ARQMath 2020 for task 1 (with single-token math treated as text)",
+    "index-task1-2021": {
+        "description": "To reproduce our submission at ARQMath 2021 for task 1",
         "urls": [
-            "",
+            "https://drive.google.com/u/0/uc?export=download&confirm=6rLQ&id=1DQ-5-d72TocRd0kYvwOS1pFJixV1zsCi",
         ],
-        "md5": "980337363e92bd02eacdb96db1869a27",
-        "size compressed (bytes)": 11193804419,
-        "image_content_size": "13G",
+        "md5": "891e0feaec448e8b188428578a7d4bf8",
+        "size compressed (bytes)": 5606600,
+        "image_content_size": "11G",
         "image_filesystem": "reiserfs",
 	},
-    "ecir2020-a0-mse": {
-        "description": "To reproduce our ECIR2020 efficiency results on ad-hoc MSE corpus",
+    "index-task2-2021": {
+        "description": "To reproduce our submission at ARQMath 2021 for task 2",
         "urls": [
-            "",
+            "https://drive.google.com/u/0/uc?export=download&confirm=bXNE&id=1nYFSKRBBdI-MLfeSIas2_U6RskJVyj3d",
         ],
-        "md5": "f4193a4b35bb302f2a2382bbf18450d0",
-        "size compressed (bytes)": 9183807154,
-        "image_content_size": "16G",
+        "md5": "82f902d1209fcb68730941fc0ab429fc",
+        "size compressed (bytes)": 4662947,
+        "image_content_size": "14G",
         "image_filesystem": "reiserfs",
 	},
 }

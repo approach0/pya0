@@ -5,8 +5,7 @@ import shutil
 import tarfile
 import subprocess
 from tqdm import tqdm
-from urllib.request import urlretrieve
-from urllib.error import HTTPError
+import requests
 from .mindex_info import MINDEX_INFO
 
 
@@ -43,42 +42,69 @@ def get_cache_home():
     return os.path.expanduser(os.path.join(f'~{os.path.sep}.cache', "pya0"))
 
 
-def download_url(url, save_dir, md5=None, force=False, verbose=True):
-    filename = url.split('/')[-1]
-    filename = filename.split('?')[0] # Remove URI parameters
-    destination_path = os.path.join(save_dir, filename)
+def urlretrieve(url, save_as, hook=None, cookies={}):
+    with requests.get(url, allow_redirects=True,
+        cookies=cookies, stream=True) as r:
+        # raise for status
+        r.raise_for_status()
+        # get name
+        if save_as is None:
+            import cgi
+            cd = r.headers.get('Content-Disposition', '')
+            content_type, params = cgi.parse_header(cd)
+            #print('[rfc6266]', params)
+            save_as = params['filename']
+        # set cookies
+        cookie_jar = r.cookies
+        cookie_dict = cookie_jar.get_dict()
+        for k in cookie_dict:
+            cookies[k] = cookie_dict[k]
+        # download file
+        with open(save_as, 'wb') as w:
+            for chunk in r.iter_content(chunk_size=1024):
+                if chunk: # filter out keep-alive new chunks
+                    w.write(chunk)
 
-    #if verbose:
-    print(f'Downloading {url} to {destination_path}...')
+
+def download_url(url, dest, md5=None, force=False, verbose=True):
+    if verbose:
+        print(f'Downloading {url} to {dest}...')
 
     # Check to see if file already exists, if so, simply return (quietly) unless force=True, in which case we remove
     # destination file and download fresh copy.
-    if os.path.exists(destination_path):
+    if os.path.exists(dest):
         if verbose:
-            print(f'{destination_path} already exists!')
+            print(f'{dest} already exists!')
         if not force:
             if verbose:
                 print(f'Skipping download.')
-            return destination_path
+            return dest
         if verbose:
-            print(f'force=True, removing {destination_path}; fetching fresh copy...')
-        os.remove(destination_path)
+            print(f'force=True, removing {dest}; fetching fresh copy...')
+        os.remove(dest)
 
-    with TqdmUpTo(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc=filename) as t:
-        urlretrieve(url, filename=destination_path, reporthook=t.update_to)
+    cookies = {}
+    if url.find('drive.google.com') >= 0:
+        tmp_file = os.path.join(get_cache_home(), 'gd.html')
+        urlretrieve(url, save_as=tmp_file, cookies=cookies)
+        with open(tmp_file, 'r') as fh:
+            content = fh.read()
+            m = re.search(r'confirm=([^&"]+)', content)
+            confirm = m.group(1)
+            url = re.sub(r'(?<=confirm=)[^&"]+', confirm, url)
+            print('[confirm URL]', url)
+
+    with TqdmUpTo(unit='B', unit_scale=True, unit_divisor=1024, miniters=1) as t:
+        urlretrieve(url, dest, hook=t.update_to, cookies=cookies)
 
     if md5:
-        md5_computed = compute_md5(destination_path)
-        assert md5_computed == md5, f'{destination_path} does not match checksum! Expecting {md5} got {md5_computed}.'
+        md5_computed = compute_md5(dest)
+        assert md5_computed == md5, f'{dest} does not match checksum! Expecting {md5} got {md5_computed}.'
 
-    return destination_path
+    return dest
 
 
-def download_and_unpack_index(url, index_directory='indexes', force=False, verbose=True, prebuilt=False, md5=None):
-    index_name = url.split('/')[-1]
-    index_name = index_name.split('?')[0]
-    index_name = re.sub('''.tar.gz.*$''', '', index_name)
-
+def download_and_unpack_index(url, index_name, index_directory='indexes', force=False, verbose=True, prebuilt=False, md5=None):
     if prebuilt:
         index_directory = os.path.join(get_cache_home(), index_directory)
         index_path = os.path.join(index_directory, f'{index_name}.{md5}')
@@ -106,8 +132,8 @@ def download_and_unpack_index(url, index_directory='indexes', force=False, verbo
             print(f'{index_path} already exists, but force=True, removing {index_path} and fetching fresh copy...')
         shutil.rmtree(index_path)
 
-    print(f'Downloading index at {url}...')
-    download_url(url, index_directory, verbose=False, md5=md5)
+    dest = os.path.join(index_directory, f'{index_name}.tar.gz')
+    download_url(url, dest, verbose=True, md5=md5)
 
     if verbose:
         print(f'Extracting {local_tarball} into {index_path}...')
@@ -131,8 +157,9 @@ def download_prebuilt_index(index_name, force=False, verbose=True, mirror=None):
     index_md5 = target_index['md5']
     for url in target_index['urls']:
         try:
-            return download_and_unpack_index(url, prebuilt=True, md5=index_md5)
-        except HTTPError:
+            return download_and_unpack_index(url, index_name, prebuilt=True, md5=index_md5)
+        except Exception as e:
+            print(e)
             print(f'Unable to download pre-built index at {url}, trying next URL...')
     raise ValueError(f'Unable to download pre-built index at any known URLs.')
 
