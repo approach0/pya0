@@ -5,8 +5,9 @@ import shutil
 import tarfile
 import subprocess
 from tqdm import tqdm
-import requests
+from urllib.request import urlretrieve
 from .mindex_info import MINDEX_INFO
+import gdown
 
 
 # https://gist.github.com/leimao/37ff6e990b3226c2c9670a2cd1e4a6f5
@@ -42,30 +43,6 @@ def get_cache_home():
     return os.path.expanduser(os.path.join(f'~{os.path.sep}.cache', "pya0"))
 
 
-def urlretrieve(url, save_as, hook=None, cookies={}):
-    with requests.get(url, allow_redirects=True,
-        cookies=cookies, stream=True) as r:
-        # raise for status
-        r.raise_for_status()
-        # get name
-        if save_as is None:
-            import cgi
-            cd = r.headers.get('Content-Disposition', '')
-            content_type, params = cgi.parse_header(cd)
-            #print('[rfc6266]', params)
-            save_as = params['filename']
-        # set cookies
-        cookie_jar = r.cookies
-        cookie_dict = cookie_jar.get_dict()
-        for k in cookie_dict:
-            cookies[k] = cookie_dict[k]
-        # download file
-        with open(save_as, 'wb') as w:
-            for chunk in r.iter_content(chunk_size=1024):
-                if chunk: # filter out keep-alive new chunks
-                    w.write(chunk)
-
-
 def download_url(url, dest, md5=None, force=False, verbose=True):
     if verbose:
         print(f'Downloading {url} to {dest}...')
@@ -85,17 +62,10 @@ def download_url(url, dest, md5=None, force=False, verbose=True):
 
     cookies = {}
     if url.find('drive.google.com') >= 0:
-        tmp_file = os.path.join(get_cache_home(), 'gd.html')
-        urlretrieve(url, save_as=tmp_file, cookies=cookies)
-        with open(tmp_file, 'r') as fh:
-            content = fh.read()
-            m = re.search(r'confirm=([^&"]+)', content)
-            confirm = m.group(1)
-            url = re.sub(r'(?<=confirm=)[^&"]+', confirm, url)
-            print('[confirm URL]', url)
-
-    with TqdmUpTo(unit='B', unit_scale=True, unit_divisor=1024, miniters=1) as t:
-        urlretrieve(url, dest, hook=t.update_to, cookies=cookies)
+        gdown.download(url, dest, quiet=False)
+    else:
+        with TqdmUpTo(unit='B', unit_scale=True, unit_divisor=1024, miniters=1) as t:
+            urlretrieve(url, dest, reporthook=t.update_to)
 
     if md5:
         md5_computed = compute_md5(dest)

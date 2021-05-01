@@ -103,7 +103,7 @@ MINDEX_INFO = {
     "index-task1-2021": {
         "description": "To reproduce our submission at ARQMath 2021 for task 1",
         "urls": [
-            "https://drive.google.com/u/0/uc?export=download&confirm=6rLQ&id=1DQ-5-d72TocRd0kYvwOS1pFJixV1zsCi",
+            "https://drive.google.com/uc?id=1DQ-5-d72TocRd0kYvwOS1pFJixV1zsCi",
         ],
         "md5": "891e0feaec448e8b188428578a7d4bf8",
         "size compressed (bytes)": 5606600,
@@ -113,7 +113,7 @@ MINDEX_INFO = {
     "index-task2-2021": {
         "description": "To reproduce our submission at ARQMath 2021 for task 2",
         "urls": [
-            "https://drive.google.com/u/0/uc?export=download&confirm=bXNE&id=1nYFSKRBBdI-MLfeSIas2_U6RskJVyj3d",
+            "https://drive.google.com/uc?id=1nYFSKRBBdI-MLfeSIas2_U6RskJVyj3d",
         ],
         "md5": "82f902d1209fcb68730941fc0ab429fc",
         "size compressed (bytes)": 4662947,
