@@ -132,7 +132,7 @@ def run_fold_topics(index, collection, fold, cascades, output, topk,
         if qid is None or query is None:
             continue
 
-        # initial query
+        # process initial query
         query = preprocess_query(query, expansion=math_expansion)
 
         #snapshot1 = tracemalloc.take_snapshot()

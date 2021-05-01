@@ -1,15 +1,17 @@
 import os
 import json
+import copy
 import argparse
+import auto_eval
+import time
+import pickle
 import pya0
 from .mindex_info import list_indexes
 from .eval import run_topics, evaluate_run, evaluate_log
 from .msearch import cascade_run, msearch
 from .mergerun import concatenate_run_files, merge_run_files
 from .l2r import L2R_gen_train_data, L2R_train
-import auto_eval
-import time
-import pickle
+from .preprocess import preprocess_query
 
 
 def abort_on_network_index(index):
@@ -283,8 +285,14 @@ if __name__ == '__main__':
                 'type': kw_type,
                 'field': 'content',
             })
+
+        # process initial query
+        origin_query = copy.deepcopy(query)
+        query = preprocess_query(query, expansion=args.math_expansion)
+
         if verbose:
-            print('[query] ', query)
+            print('[origin query] ', origin_query)
+            print('[processed query] ', query)
 
         # actually run query
         topic_query = ('TEST.0', query, '') # no tags
@@ -305,7 +313,7 @@ if __name__ == '__main__':
         if args.visualize_run:
             from .visualize import visualize
             abort_on_network_index(index)
-            visualize(index, args.visualize_run, adhoc_query=query)
+            visualize(index, args.visualize_run, adhoc_query=origin_query)
 
     elif args.docid:
         abort_on_network_index(index)
