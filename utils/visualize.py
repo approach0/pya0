@@ -165,6 +165,9 @@ def visualize(index, tsv_file_path, collection=None, adhoc_query=None):
         run_per_topic, _ = parse_trec_file(tsv_file_path)
         for qid, hits in run_per_topic.items():
             visualize_hits(index, run_name, qid, adhoc_query, hits)
+    else:
+        print('Error: Please specify --query for adhoc query visualization.')
+        quit(1)
 
 
 def bar_plot(ax, data, colors=None, total_width=0.8, single_width=1, legend=True):

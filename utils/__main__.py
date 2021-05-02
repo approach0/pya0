@@ -217,7 +217,7 @@ if __name__ == '__main__':
         exit(1)
 
     # output HTML file
-    if args.visualize_run and args.collection:
+    if args.visualize_run and not args.query:
         from .visualize import visualize
         abort_on_network_index(index)
         visualize(index, args.visualize_run, collection=args.collection)
