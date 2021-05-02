@@ -3,13 +3,13 @@ from preprocess import tokenize_text
 
 
 def TREC_preprocess(collection, index, hits):
-    if collection == 'arqmath-2020-task1' or collection == 'test':
+    if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1']:
         for hit in hits:
             doc = pya0.index_lookup_doc(index, hit['docid'])
             hit['_'] = hit['docid']
             hit['docid'] = int(doc['url'])
 
-    elif collection == 'arqmath-2020-task2':
+    elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2']:
         for hit in hits:
             doc = pya0.index_lookup_doc(index, hit['docid'])
             formulaID, postID, threadID, type_, visualID = doc['url'].split(',')
@@ -18,7 +18,7 @@ def TREC_preprocess(collection, index, hits):
 
 
 def TREC_reverse(collection, index, hits):
-    if collection == 'arqmath-2020-task1' or collection == 'test':
+    if collection in ['test'] or collection.startswith('arqmath-'):
         for hit in hits:
             trec_docid = hit['docid']
             doc = pya0.index_lookup_doc(index, trec_docid)
@@ -28,15 +28,15 @@ def TREC_reverse(collection, index, hits):
 def eval_cmd(collection, run_path):
     if collection == 'test':
         return ['sh', 'eval-test.sh', run_path]
-    elif collection == 'arqmath-2020-task1':
+    elif collection in ['arqmath-2020-task1', 'arqmath-2021-task1']:
         return ['sh', 'eval-arqmath-task1.sh', run_path]
-    elif collection == 'arqmath-2020-task2':
+    elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2']:
         return ['sh', 'eval-arqmath-task2.sh', run_path]
     else:
         return None
 
 
-def _topic_process__test(line):
+def _topic_process__test(idx, line):
     fields = line.split(',')
     qid = fields[0]
     tags = fields[1]
@@ -53,34 +53,34 @@ def _topic_process__test(line):
     return qid, query, tags
 
 
-def _topic_process__ntcir12_math_browsing(line):
+def _topic_process__ntcir12_math_browsing(idx, line):
     fields = line.split()
     query = [{'type': 'tex', 'str': ' '.join(fields[1:])}]
     qid = fields[0]
     return qid, query, None
 
 
-def _topic_process__ntcir12_math_browsing_concrete(line):
+def _topic_process__ntcir12_math_browsing_concrete(idx, line):
     fields = line.split()
     query = [{'type': 'tex', 'str': ' '.join(fields[1:])}]
     qid = fields[0]
     return qid, query, None
 
 
-def _topic_process__ntcir12_math_browsing_wildcards(line):
+def _topic_process__ntcir12_math_browsing_wildcards(idx, line):
     fields = line.split()
     query = [{'type': 'tex', 'str': ' '.join(fields[1:])}]
     qid = fields[0]
     return qid, query, None
 
 
-def _topic_process__arqmath_2020_task1(json_item):
+def _topic_process__arqmath_2020_task1(idx, json_item):
     query = json_item['kw']
     qid = json_item['qid']
     return qid, query, json_item['tags']
 
 
-def _topic_process__arqmath_2020_task2(line):
+def _topic_process__arqmath_2020_task2(idx, line):
     if line.startswith('#'):
         return None, None, None
     fields = line.split('\t')
@@ -88,6 +88,25 @@ def _topic_process__arqmath_2020_task2(line):
     latex = fields[1].strip()
     treat_type = 'term' if latex.isdigit() or len(latex) == 1 else 'tex'
     query = [{'type': treat_type, 'str': latex}]
+    return qid, query, None
+
+
+def _topic_process__arqmath_2021_task1(idx, line):
+    if idx == 0:
+        return None, None, None
+    fields = line.split('\t')
+    qid = fields[0]
+    terms = fields[1].strip()
+    formulas = fields[2:] if len(fields) > 2 else []
+    query_terms = [{'type': 'term', 'str': terms}] if len(terms) > 0 else []
+    query_formulas = [{'type': 'tex', 'str': s.strip()} for s in formulas]
+    return qid, query_terms + query_formulas, None
+
+
+def _topic_process__arqmath_2021_task2(idx, line):
+    fields = line.split('\t')
+    qid = fields[0]
+    query = [{'type': 'tex', 'str': fields[1].strip()}]
     return qid, query, None
 
 

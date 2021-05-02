@@ -26,14 +26,14 @@ def gen_topics_queries(collection, fold=None):
         ext = src.split('.')[-1]
         if ext == 'txt':
             with open(src, 'r') as fh:
-                for line in fh:
+                for i, line in enumerate(fh):
                     line = line.rstrip()
-                    yield handler(line)
+                    yield handler(i, line)
         elif ext == 'json':
             with open(src, 'r') as fh:
                 qlist = json.load(fh)
-                for json_item in qlist:
-                    yield handler(json_item)
+                for i, json_item in enumerate(qlist):
+                    yield handler(i, json_item)
     if not found:
         raise ValueError(f'Unrecognized index name {collection}')
 

@@ -7,7 +7,6 @@ import subprocess
 from tqdm import tqdm
 from urllib.request import urlretrieve
 from .mindex_info import MINDEX_INFO
-import gdown
 
 
 # https://gist.github.com/leimao/37ff6e990b3226c2c9670a2cd1e4a6f5
@@ -62,6 +61,7 @@ def download_url(url, dest, md5=None, force=False, verbose=True):
 
     cookies = {}
     if url.find('drive.google.com') >= 0:
+        import gdown
         gdown.download(url, dest, quiet=False)
     else:
         with TqdmUpTo(unit='B', unit_scale=True, unit_divisor=1024, miniters=1) as t:

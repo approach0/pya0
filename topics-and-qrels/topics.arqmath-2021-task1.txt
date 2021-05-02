@@ -95,7 +95,7 @@ B.293	re-indexing, reindexing	\sum_{j=2}^{n-1}j^2
 B.294	hypercohomology hyper, sheaf, isomorphic, cohomology, resolution, existence, derived category			
 B.295	use power series	\sum_{n=1}^{\infty} n(n+1)x^n	\sum_{n=1}^{\infty} \frac{n(n+1)}{3^n}	
 B.296	Taylor series, well defined, point	e^x=\frac {x^0}{0!}+\frac {x^1}{1!}+ ...	0^0	
-B.297	Find all integers, solutions, satisfies, such that, Euler’s Phi function value, 320	\phi(n)=320		
+B.297	Find all integers, solutions, satisfies, such that, Euler Phi function value, 320	\phi(n)=320		
 B.298	Dirac delta function, Hubble, comoving, redshift, understand, interpret, transformation	\delta(a\chi(z)-b) \rightarrow \delta(z-c)		
 B.299	proof prove show, without calculating	\cos \frac{\pi}5-\cos \frac{2 \pi}5= 0.5		
 B.300	uniformly continuous, on	\frac{1}{1+\log^2 (x)}		
