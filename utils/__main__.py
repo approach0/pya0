@@ -306,7 +306,8 @@ if __name__ == '__main__':
         if args.trec_output is not None:
             import collection_driver
             from .eval import TREC_output
-            collection_driver.TREC_preprocess('test', index, hits)
+            collection = args.collection if args.collection else 'test'
+            collection_driver.TREC_preprocess(collection, index, hits)
             TREC_output(hits, 'TEST.0', append=False, output_file=trec_output)
 
         # output HTML file
