@@ -1,8 +1,12 @@
 EVAL="trec_eval ./topics-and-qrels/qrels.arqmath-2020-task2.txt"
-RUN="${1-tmp.run} -q"
+RUN="${1-tmp.run}"
+
+TMPRUN=/tmp/shifted.run
+echo "creating $TMPRUN"
+cat $RUN | awk '{print $1 "\t" "_" "\t" $2 "\t" $4 "\t" $5 "\t" $6}' > $TMPRUN
 
 set -e
-$EVAL $RUN -J -m ndcg
-$EVAL $RUN -J -l2 -m map
-$EVAL $RUN -l2 -m P.10
-$EVAL $RUN -l2 -m bpref
+$EVAL -q $TMPRUN -J -m ndcg
+$EVAL -q $TMPRUN -J -l2 -m map
+$EVAL -q $TMPRUN -l2 -m P.10
+$EVAL -q $TMPRUN -l2 -m bpref
