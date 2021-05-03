@@ -31,10 +31,9 @@ def msearch(index, query, verbose=False, topk=1000, log=None, fork_search=False)
         with open(pkl_file, 'wb') as fh:
             pickle.dump((query, topk, log), fh)
             fh.flush()
-            process = subprocess.run(
-                ['python3', '-m', 'pya0', '--index', fork_search, '--direct-search', pkl_file],
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            )
+            cmd = ['python3', '-m', 'pya0', '--index', fork_search, '--direct-search', pkl_file]
+            print(cmd, file=sys.stderr)
+            process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             output = process.stdout
             print(process.stderr.decode("utf-8"), file=sys.stderr) # debug
             results = json.loads(output)

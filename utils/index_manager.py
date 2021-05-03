@@ -1,6 +1,7 @@
 import hashlib
 import re
 import os
+import sys
 import shutil
 import tarfile
 import subprocess
@@ -103,7 +104,7 @@ def download_and_unpack_index(url, index_name, index_directory='indexes', force=
         shutil.rmtree(index_path)
 
     dest = os.path.join(index_directory, f'{index_name}.tar.gz')
-    download_url(url, dest, verbose=True, md5=md5)
+    download_url(url, dest, verbose=verbose, md5=md5)
 
     if verbose:
         print(f'Extracting {local_tarball} into {index_path}...')
@@ -127,10 +128,10 @@ def download_prebuilt_index(index_name, force=False, verbose=True, mirror=None):
     index_md5 = target_index['md5']
     for url in target_index['urls']:
         try:
-            return download_and_unpack_index(url, index_name, prebuilt=True, md5=index_md5)
+            return download_and_unpack_index(url, index_name, prebuilt=True, md5=index_md5, verbose=verbose)
         except Exception as e:
-            print(e)
-            print(f'Unable to download pre-built index at {url}, trying next URL...')
+            print(str(e), file=sys.stderr)
+            print(f'Unable to download pre-built index at {url}, trying next URL...', file=sys.stderr)
     raise ValueError(f'Unable to download pre-built index at any known URLs.')
 
 

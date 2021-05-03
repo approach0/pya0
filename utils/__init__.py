@@ -10,10 +10,9 @@ from .index_manager import download_prebuilt_index, mount_image_index
 from .preprocess import preprocess, preprocess_query
 
 
-def from_prebuilt_index(prebuilt_index_name):
-    print(f'Attempting to initialize pre-built index {prebuilt_index_name}.')
+def from_prebuilt_index(prebuilt_index_name, verbose=True):
     try:
-        index_dir = download_prebuilt_index(prebuilt_index_name)
+        index_dir = download_prebuilt_index(prebuilt_index_name, verbose=verbose)
 
         # mount index if it is a loop-device image
         target_index = MINDEX_INFO[prebuilt_index_name]
@@ -22,8 +21,7 @@ def from_prebuilt_index(prebuilt_index_name):
             index_dir = mount_image_index(index_dir, filesystem)
 
     except ValueError as e:
-        print(str(e))
+        print(str(e), file=sys.stderr)
         return None
 
-    print(f'Index directory: {index_dir}')
     return index_dir
