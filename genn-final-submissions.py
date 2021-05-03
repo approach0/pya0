@@ -9,7 +9,6 @@ def shell(cmd):
         quit(1)
 
 shell('mkdir -p tmp')
-shell('rm -f tmp/*')
 shell('mkdir -p runs/2020')
 shell('mkdir -p runs/2021')
 
@@ -31,6 +30,7 @@ with open('final-run-generator.tsv', 'r') as fh:
         for k in ['a0_math_exp', 'a0_rm3']:
             if r[k] != '':
                 run_args += r[k].split()
+        shell('rm -f tmp/*') # clean up a0 runfile output directory
         print(run_args)
         subprocess.run(run_args)
         # output path/name
