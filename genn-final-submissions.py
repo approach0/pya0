@@ -23,6 +23,8 @@ with open('final-run-generator.tsv', 'r') as fh:
         elif line.startswith('#'):
             continue # skip commented row
         r = dict(list(zip(keys, fields)))
+        # use which a0 parameters?
+        shell(f'cp auto_eval-{r["a0_param"]}.tsv auto_eval.tsv')
         # run math search
         cmd = f'python3 -m pya0 --index index-{r["task"]}-{r["year"]} --collection arqmath-{r["year"]}-{r["task"]} --auto-eval tmp' # + ' --select-topic B.202'
         run_args = cmd.split()
