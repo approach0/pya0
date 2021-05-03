@@ -261,7 +261,8 @@ if __name__ == '__main__':
                 verbose=False,
                 cascades=cascades,
                 math_expansion=args.math_expansion,
-                fork_search=args.index
+                fork_search=args.index,
+                select_topic=args.select_topic
             )
             with open(f'tmp/{run_name}.done', 'w') as fh:
                 pass
