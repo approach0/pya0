@@ -94,18 +94,6 @@ if __name__ == '__main__':
     topk = args.topk if args.topk else 1000
     trec_output = args.trec_output if args.trec_output else '/dev/null'
 
-    # direct search
-    if args.direct_search:
-        if not os.path.exists(args.index) and not os.path.exists(args.direct_search):
-            exit(1)
-        index = pya0.index_open(args.index, option="r")
-        with open(args.direct_search, 'rb') as fh:
-            query, topk, log = pickle.load(fh)
-            res = msearch(index, query, topk=topk, log=log)
-            print(json.dumps(res, indent=4))
-        pya0.index_close(index)
-        exit(0)
-
     # enable fallback parser?
     if args.use_fallback_parser:
         print('use fallback parser.')
@@ -204,7 +192,7 @@ if __name__ == '__main__':
         pass
 
     elif not os.path.exists(args.index):
-        index_path = pya0.from_prebuilt_index(args.index)
+        index_path = pya0.from_prebuilt_index(args.index, verbose=verbose)
         if index_path is None: # if index name is not registered
             exit(1)
         index = pya0.index_open(index_path, option="r")
@@ -216,8 +204,17 @@ if __name__ == '__main__':
         print(f'index open failed: {index_path}')
         exit(1)
 
+    # direct search
+    if args.direct_search:
+        with open(args.direct_search, 'rb') as fh:
+            query, topk, log = pickle.load(fh)
+            res = msearch(index, query, topk=topk, log=log)
+            print(json.dumps(res, indent=4))
+        pya0.index_close(index)
+        exit(0)
+
     # output HTML file
-    if args.visualize_run and not args.query:
+    elif args.visualize_run and not args.query:
         from .visualize import visualize
         abort_on_network_index(index)
         visualize(index, args.visualize_run, collection=args.collection)
