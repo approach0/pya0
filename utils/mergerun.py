@@ -7,7 +7,7 @@ def parse_trec_file(file_path):
     with open(file_path, 'r') as fh:
         for line in fh.readlines():
             line = line.rstrip()
-            sp = '\t' if line.find('\t') != -1 else ' '
+            sp = '\t' if line.find('\t') != -1 else None
             fields = line.split(sp)
             qryID = fields[0]
             _     = fields[1]
@@ -18,7 +18,7 @@ def parse_trec_file(file_path):
             if run_name is None:
                 run_name = run
             elif run_name != run:
-                print('ERR: Run name not the same in TREC file.')
+                print(f'ERR: Run name not the same in TREC file: {run_name} and {run}.')
                 exit(1)
             if qryID not in run_per_topic:
                 run_per_topic[qryID] = []
