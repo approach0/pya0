@@ -41,6 +41,9 @@ with open('final-run-generator.tsv', 'r') as fh:
         _2nd_stage = r["2nd_stage"]
         if _2nd_stage != '':
             shell(f'cp {r["anserini_run"]} anserini.run')
+            shell(f'sed -i -e "s/-/ /g" anserini.run')
+            shell(f'sed -i -e "s/Q0//g" anserini.run')
+            shell(f'sed -i -e "s/^/B./g" anserini.run')
             shell(f'rm -f ./merged-* ./concate-*')
             cmd = f'python3 -m pya0 {_2nd_stage}'
             run_args = cmd.split()
