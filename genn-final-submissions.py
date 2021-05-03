@@ -35,11 +35,11 @@ with open('final-run-generator.tsv', 'r') as fh:
         name = '+'.join([f.replace(' ', '_').replace('/', '_') for f in fields])
         output=f'./runs/{r["year"]}/{name}.run'
         # run 2nd-stage
-        shell(f'mv tmp/*.run a0.run')
-        shell(f'cp {r["anserini_run"]} anserini.run')
-        shell(f'rm -f ./merged-* ./concate-*')
+        shell(f'mv tmp/*.run a0.run') # take output from last stage as input of this stage
         _2nd_stage = r["2nd_stage"]
         if _2nd_stage != '':
+            shell(f'cp {r["anserini_run"]} anserini.run')
+            shell(f'rm -f ./merged-* ./concate-*')
             cmd = f'python3 -m pya0 {_2nd_stage}'
             run_args = cmd.split()
             print(run_args)
