@@ -25,7 +25,7 @@ with open('final-run-generator.tsv', 'r') as fh:
         # use which a0 parameters?
         shell(f'cp auto_eval-{r["a0_param"]}.tsv auto_eval.tsv')
         # run math search
-        cmd = f'python3 -m pya0 --index index-{r["task"]}-{r["year"]} --collection arqmath-{r["year"]}-{r["task"]} --auto-eval tmp' # + ' --select-topic B.202'
+        cmd = f'python3 -m pya0 --index index-{r["task"]}-2021 --collection arqmath-{r["year"]}-{r["task"]} --auto-eval tmp' # + ' --select-topic B.202'
         run_args = cmd.split()
         for k in ['a0_math_exp', 'a0_rm3']:
             if r[k] != '':
