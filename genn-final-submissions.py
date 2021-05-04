@@ -55,5 +55,5 @@ with open('final-run-generator.tsv', 'r') as fh:
             else:
                 shell(f'mv merged-*.run {output}')
         else:
-            shell(f'mv a0.run {output}')
+            shell(f'cp a0.run {output}')
         shell(f'sed -i -e "s/ /\\t/g" {output}')
