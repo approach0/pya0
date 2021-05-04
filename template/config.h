@@ -77,3 +77,5 @@
 
 //#define DO_MERGE do_wand_merge
 #define DO_MERGE do_maxscore_merge
+
+#define UNLIMIT_FILENO
