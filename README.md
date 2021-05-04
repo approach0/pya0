@@ -6,6 +6,8 @@ Source code of this Python binding can be found in this [repository](https://git
 
 However, in order to build this Python module, you will need to have this repository fetched as a git submodule from its parent [repository](https://github.com/approach0/search-engine/tree/pya0).
 
+There is a [specific branch](https://github.com/approach0/pya0/tree/sigir2021) for a saved snapshot of our SIGIR 2021 paper, please find a Colab link there to illustrate the usage of PyA0 from that version.
+
 ### Install Necessary Dependencies (Ubuntu)
 ```sh
 $ sudo apt install build-essential python-dev python3-pip
