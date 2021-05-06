@@ -41,7 +41,7 @@ def concatenate_run_files(A, B, n, topK, verbose=False):
         m = re.search(r'\d+', x)
         return int(m.group()) if m else x
     topicIDs = sorted(list(topicIDs), key=useNumberInKey)
-    output_file = f"concate-{runA_name}-{runB_name}-n{n}-k{topK}.run"
+    output_file = f"mergerun-concate-{runA_name}-{runB_name}-n{n}-k{topK}.run"
     for i, qid in enumerate(topicIDs):
         hitsA = runA[qid] if qid in runA else []
         hitsB = runB[qid] if qid in runB else []
@@ -50,7 +50,7 @@ def concatenate_run_files(A, B, n, topK, verbose=False):
         hitsB_pruned = [h for h in hitsB if h['docid'] not in docsetA]
         hitsC = (hitsA_pruned + hitsB_pruned)[:topK]
         hitsC = [{
-            '_': 0,
+            '_': h['_'],
             'docid': h['docid'],
             'score': 500 - i,
         } for i, h in enumerate(hitsC)]
@@ -73,34 +73,25 @@ def normalized_scores(docs):
     max_score = max(doc_scores)
     score_range = max_score - min_score
     if score_range == 0:
-        docs = {doc['docid']: 0 for doc in docs}
+        docs = {doc['docid']: (0, doc['_']) for doc in docs}
     else:
-        docs = {doc['docid']: (doc['score'] - min_score) / score_range for doc in docs}
+        docs = {doc['docid']: ((doc['score'] - min_score) / score_range, doc['_']) for doc in docs}
     return docs
 
 
 def interpolate_generator(runs1, w1, runs2, w2, whichtokeep="both", verbose=False):
     for qid in runs1.keys():
-        docs1 = normalized_scores(runs1[qid]) if qid in runs1 else {}
-        docs2 = normalized_scores(runs2[qid]) if qid in runs2 else {}
-        overlap = set(docs1.keys()) & set(docs2.keys())
-        min_doc = min(len(docs1), len(docs2))
-        if verbose and len(overlap) != min_doc:
-            print(
-                "warning: the smaller set have ",
-                min_doc,
-                "docs, while there are only",
-                len(overlap),
-                "overlap",
-            )
+        docs1 = normalized_scores(runs1[qid]) if qid in runs1 else {} # docID -> (score, _)
+        docs2 = normalized_scores(runs2[qid]) if qid in runs2 else {} # docID -> (score, _)
+        overlap = set(docs1.keys()) & set(docs2.keys()) # unique docID
 
-        combined = [(d, w1 * docs1[d] + w2 * docs2[d]) for d in overlap]
+        combined = [(d, w1 * docs1[d][0] + w2 * docs2[d][0], docs1[d][1], docs2[d][1]) for d in overlap]
         # for those docs cannot be found on the otherside, treat the score from the otherside as 0
         docs_only_in_docs1 = [
-            (d, w1 * score) for d, score in docs1.items() if d not in overlap
+            (d, w1 * docs[0], docs[1], None) for d, docs in docs1.items() if d not in overlap
         ]
         docs_only_in_docs2 = [
-            (d, w2 * score) for d, score in docs2.items() if d not in overlap
+            (d, w2 * docs[0], None, docs[1]) for d, docs in docs2.items() if d not in overlap
         ]
 
         if whichtokeep == "both":
@@ -118,16 +109,26 @@ def interpolate_generator(runs1, w1, runs2, w2, whichtokeep="both", verbose=Fals
         yield qid, combined
 
 
-def merge_run_files(f1, f2, alpha, topk, verbose=False, option="both"):
+def merge_run_files(f1, f2, alpha, topk, verbose=False, option="both", merge_null_field=True):
     available_options = ["overlap", "run1", "run2", "both"]
     assert option in available_options
     runs1, run_name1 = parse_trec_file(f1)
     runs2, run_name2 = parse_trec_file(f2)
-    f_out = f"merged-{run_name1}-{run_name2}-alpha{alpha}-top{topk}-{option}.run"
+    f_out = f"mergerun-merged-{run_name1}-{run_name2}-alpha{alpha}-top{topk}-{option}.run"
     with open(f_out, "w") as f:
         for qid, combined in interpolate_generator(
             runs1, alpha, runs2, 1 - alpha, whichtokeep=option
         ):
-            for rank, (doc, score) in enumerate(combined):
-                f.write(f"{qid} Q0 {doc} {rank+1} {score} {run_name1}-{run_name2}\n")
+            for rank, (doc, score, _1, _2) in enumerate(combined):
+                if merge_null_field:
+                    if _1 is None:
+                        f.write(f"{qid} {_2} {doc} {rank+1} {score} {run_name1}-{run_name2}\n")
+                        continue
+                    elif _2 is None:
+                        f.write(f"{qid} {_1} {doc} {rank+1} {score} {run_name1}-{run_name2}\n")
+                        continue
+                    elif _1 == _2:
+                        f.write(f"{qid} {_1} {doc} {rank+1} {score} {run_name1}-{run_name2}\n")
+                        continue
+                f.write(f"{qid} {_1}-{_2} {doc} {rank+1} {score} {run_name1}-{run_name2}\n")
     print(f"Output: {f_out}")
