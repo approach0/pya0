@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import subprocess
 import os
+from pya0.eval import evaluate_run
 
 
 def shell(cmd):
@@ -33,7 +34,8 @@ def genn_final_runs():
             # use which a0 parameters?
             shell(f'cp auto_eval-{r["a0_param"]}.tsv auto_eval.tsv')
             # run math search
-            cmd = f'python3 -m pya0 --index index-{r["task"]}-2021 --collection arqmath-{r["year"]}-{r["task"]} --auto-eval tmp' # + ' --select-topic B.202'
+            collection = f'arqmath-{r["year"]}-{r["task"]}'
+            cmd = f'python3 -m pya0 --index index-{r["task"]}-2021 --collection {collection} --auto-eval tmp' # + ' --select-topic B.202'
             run_args = cmd.split()
             for k in ['a0_math_exp', 'a0_rm3']:
                 if r[k] != '':
@@ -83,6 +85,34 @@ def evaluate_from_2020():
                     shell(f'./eval-arqmath-{task}.sh {path} | grep all')
 
 
+def gen_tsv_from_2020():
+    rows = []
+    with open('final-run-generator.tsv', 'r') as fh:
+        for ln, line in enumerate(fh):
+            fields = line.split('\t')
+            fields = [f.strip() for f in fields]
+            if ln == 0:
+                keys = fields
+                continue # skip header
+            elif line.startswith('#'):
+                continue # skip commented row
+            r = dict(list(zip(keys, fields)))
+            if r['year'] == '2020':
+                name = '+'.join([f.replace(' ', '_').replace('/', '_') for f in fields])
+                path = f'./runs/{r["year"]}/{name}.run'
+                collection = f'arqmath-{r["year"]}-{r["task"]}'
+                header, row = evaluate_run(collection, path)
+                rows.append(fields + row)
+            else:
+                rows.append(fields)
+            print(rows[-1])
+    with open('final-run-results.tsv', 'w') as fh:
+        print('\t'.join(keys + header), file=fh)
+        for row in rows:
+            print('\t'.join(row), file=fh)
+
+
 if __name__ == '__main__':
-    genn_final_runs()
-    evaluate_from_2020()
+    #genn_final_runs()
+    #evaluate_from_2020()
+    gen_tsv_from_2020()
