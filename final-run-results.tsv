@@ -1,0 +1,99 @@
+year	task	a0_param	a0_math_exp	a0_rm3	anserini_run	2nd_stage	comment	ndcg	map	P_10	bpref
+2021	task1	best1	--math-expansion		anserini/arqmath2021/title+description.arqmath2021.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	P+math+text-0.6
+2021	task1	best1	--math-expansion		anserini/arqmath2021/title+description.arqmath2021.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	P+math+text-0.6
+2021	task1	best1	--math-expansion		anserini/arqmath2021/title+description.arqmath2021.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	P+math+text-0.5
+2021	task1	best1	--math-expansion		anserini/arqmath2021/title+description.arqmath2021.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	P+math+text-0.5
+2021	task1	best1	--math-expansion				P
+2021	task1	best2	--math-expansion		anserini/arqmath2021/title+description.arqmath2021.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	A+math+text-0.6
+2021	task1	best2	--math-expansion		anserini/arqmath2021/title+description.arqmath2021.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	A+math+text-0.6
+2021	task1	best2	--math-expansion		anserini/arqmath2021/title+description.arqmath2021.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	A+math+text-0.5
+2021	task1	best2	--math-expansion		anserini/arqmath2021/title+description.arqmath2021.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	A+math+text-0.5
+2021	task1	best2	--math-expansion				A
+2021	task1	best3	--math-expansion		anserini/arqmath2021/title+description.arqmath2021.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	B+math+text-0.6
+2021	task1	best3	--math-expansion		anserini/arqmath2021/title+description.arqmath2021.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	B+math+text-0.6
+2021	task1	best3	--math-expansion		anserini/arqmath2021/title+description.arqmath2021.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	B+math+text-0.5
+2021	task1	best3	--math-expansion		anserini/arqmath2021/title+description.arqmath2021.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	B+math+text-0.5
+2021	task1	best3	--math-expansion				B
+2021	task2	best1			anserini/arqmath2021/title.arqmath2021.task2.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	P2+math-0.6
+2021	task2	best1			anserini/arqmath2021/title.arqmath2021.task2.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	P2+math-0.6
+2021	task2	best1					P2
+2021	task2	best2			anserini/arqmath2021/title.arqmath2021.task2.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	A2+math-0.6
+2021	task2	best2			anserini/arqmath2021/title.arqmath2021.task2.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	A2+math-0.6
+2021	task2	best2					A2
+2021	task2	best3			anserini/arqmath2021/title.arqmath2021.task2.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	B2+math-0.6
+2021	task2	best3			anserini/arqmath2021/title.arqmath2021.task2.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	B2+math-0.6
+2021	task2	best3					B2
+2020	task1	best1	--math-expansion		anserini/arqmath2020/title.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	P+math-0.6	0.3578	0.1695	0.1026	0.1767
+2020	task1	best1	--math-expansion		anserini/arqmath2020/title.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	P+math-0.6	0.3587	0.1686	0.1052	0.1736
+2020	task1	best1	--math-expansion		anserini/arqmath2021/description.arqmath2021.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	P+text-0.6	0.3301	0.1580	0.0883	0.1675
+2020	task1	best1	--math-expansion		anserini/arqmath2020/description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	P+text-0.6	0.3464	0.1661	0.0961	0.1676
+2020	task1	best1	--math-expansion		anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	P+math+text-0.6	0.3525	0.1669	0.0961	0.1714
+2020	task1	best1	--math-expansion		anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	P+math+text-0.6	0.3530	0.1674	0.0987	0.1708
+2020	task1	best1	--math-expansion		anserini/arqmath2020/title.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	P+math-0.5	0.3583	0.1718	0.0896	0.1776
+2020	task1	best1	--math-expansion		anserini/arqmath2020/title.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	P+math-0.5	0.3610	0.1710	0.1013	0.1736
+2020	task1	best1	--math-expansion		anserini/arqmath2020/description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	P+text-0.5	0.3434	0.1607	0.0818	0.1656
+2020	task1	best1	--math-expansion		anserini/arqmath2020/description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	P+text-0.5	0.3434	0.1608	0.0909	0.1632
+2020	task1	best1	--math-expansion		anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	P+math+text-0.5	0.3476	0.1599	0.0883	0.1657
+2020	task1	best1	--math-expansion		anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	P+math+text-0.5	0.3503	0.1623	0.0961	0.1672
+2020	task1	best2	--math-expansion		anserini/arqmath2020/title.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	A+math-0.6	0.3611	0.1700	0.1026	0.1800
+2020	task1	best2	--math-expansion		anserini/arqmath2020/title.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	A+math-0.6	0.3636	0.1717	0.1052	0.1800
+2020	task1	best2	--math-expansion		anserini/arqmath2020/description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	A+text-0.6	0.3425	0.1632	0.0961	0.1715
+2020	task1	best2	--math-expansion		anserini/arqmath2020/description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	A+text-0.6	0.3423	0.1631	0.1013	0.1678
+2020	task1	best2	--math-expansion		anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	A+math+text-0.6	0.3437	0.1635	0.0948	0.1736
+2020	task1	best2	--math-expansion		anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	A+math+text-0.6	0.3474	0.1652	0.1013	0.1726
+2020	task1	best2	--math-expansion		anserini/arqmath2020/title.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	A+math-0.5	0.3620	0.1715	0.0974	0.1808
+2020	task1	best2	--math-expansion		anserini/arqmath2020/title.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	A+math-0.5	0.3628	0.1712	0.1052	0.1789
+2020	task1	best2	--math-expansion		anserini/arqmath2020/description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	A+text-0.5	0.3383	0.1574	0.0870	0.1655
+2020	task1	best2	--math-expansion		anserini/arqmath2020/description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	A+text-0.5	0.3391	0.1570	0.0922	0.1612
+2020	task1	best2	--math-expansion		anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	A+math+text-0.5	0.3397	0.1572	0.0883	0.1669
+2020	task1	best2	--math-expansion		anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	A+math+text-0.5	0.3448	0.1597	0.0961	0.1677
+2020	task1	best3	--math-expansion		anserini/arqmath2020/title.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	B+math-0.6	0.3634	0.1731	0.1065	0.1798
+2020	task1	best3	--math-expansion		anserini/arqmath2020/title.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	B+math-0.6	0.3637	0.1733	0.1065	0.1800
+2020	task1	best3	--math-expansion		anserini/arqmath2020/description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	B+text-0.6	0.3361	0.1659	0.0948	0.1711
+2020	task1	best3	--math-expansion		anserini/arqmath2020/description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	B+text-0.6	0.3339	0.1627	0.1052	0.1655
+2020	task1	best3	--math-expansion		anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	B+math+text-0.6	0.3388	0.1651	0.0948	0.1743
+2020	task1	best3	--math-expansion		anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	B+math+text-0.6	0.3419	0.1665	0.1026	0.1721
+2020	task1	best3	--math-expansion		anserini/arqmath2020/title.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	B+math-0.5	0.3572	0.1694	0.0987	0.1788
+2020	task1	best3	--math-expansion		anserini/arqmath2020/title.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	B+math-0.5	0.3627	0.1706	0.1026	0.1797
+2020	task1	best3	--math-expansion		anserini/arqmath2020/description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	B+text-0.5	0.3305	0.1582	0.0909	0.1650
+2020	task1	best3	--math-expansion		anserini/arqmath2020/description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	B+text-0.5	0.3261	0.1542	0.0948	0.1580
+2020	task1	best3	--math-expansion		anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	B+math+text-0.5	0.3327	0.1571	0.0909	0.1668
+2020	task1	best3	--math-expansion		anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.5	B+math+text-0.5	0.3363	0.1586	0.0974	0.1649
+2020	task1	best1			anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	P+math+text-0.6-nomathexp	0.3487	0.1639	0.0896	0.1689
+2020	task1	best1			anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	P+math+text-0.6-nomathexp	0.3495	0.1635	0.1026	0.1670
+2020	task1	best2			anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	A+math+text-0.6-nomathexp	0.3404	0.1662	0.0857	0.1748
+2020	task1	best2			anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	A+math+text-0.6-nomathexp	0.3445	0.1675	0.0974	0.1739
+2020	task1	best3			anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	B+math+text-0.6-nomathexp	0.3349	0.1663	0.0909	0.1751
+2020	task1	best3			anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	B+math+text-0.6-nomathexp	0.3364	0.1658	0.1013	0.1719
+2020	task1	best1	--math-expansion	--rm3 20,10	anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	P+math+text-0.6-a0rm3,20,10	0.3494	0.1636	0.0961	0.1669
+2020	task1	best1	--math-expansion	--rm3 20,10	anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	P+math+text-0.6-a0rm3,20,10	0.3512	0.1651	0.0987	0.1696
+2020	task1	best2	--math-expansion	--rm3 20,10	anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	A+math+text-0.6-a0rm3,20,10	0.3426	0.1602	0.1078	0.1697
+2020	task1	best2	--math-expansion	--rm3 20,10	anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	A+math+text-0.6-a0rm3,20,10	0.3452	0.1596	0.0961	0.1704
+2020	task1	best3	--math-expansion	--rm3 20,10	anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	B+math+text-0.6-a0rm3,20,10	0.3425	0.1619	0.0961	0.1710
+2020	task1	best3	--math-expansion	--rm3 20,10	anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	B+math+text-0.6-a0rm3,20,10	0.3475	0.1642	0.1026	0.1706
+2020	task1	best1	--math-expansion	--rm3 20,15	anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	P+math+text-0.6-a0rm3,20,15	0.3472	0.1577	0.0922	0.1616
+2020	task1	best2	--math-expansion	--rm3 20,15	anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	A+math+text-0.6-a0rm3,20,15	0.3463	0.1612	0.0987	0.1679
+2020	task1	best3	--math-expansion	--rm3 20,15	anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	B+math+text-0.6-a0rm3,20,15	0.3421	0.1604	0.0948	0.1691
+2020	task1	best1	--math-expansion				P	0.3301	0.1580	0.0883	0.1675
+2020	task1	best2	--math-expansion				A	0.3263	0.1563	0.0896	0.1680
+2020	task1	best3	--math-expansion				B	0.3194	0.1576	0.0961	0.1666
+2020	task1	best1	--math-expansion		anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--concate-runs a0.run,anserini.run,100	P-math+text-100	0.3073	0.1470	0.0883	0.1623
+2020	task1	best1	--math-expansion		anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--concate-runs a0.run,anserini.run,250	P-math+text-250	0.3247	0.1545	0.0883	0.1667
+2020	task1	best1	--math-expansion		anserini/arqmath2020/title+description.arqmath2020.task1.keepsw.k1=0.9.b=0.4.bm25-rm3	--concate-runs a0.run,anserini.run,500	P-math+text-500	0.3386	0.1593	0.0883	0.1674
+2020	task2	best1			anserini/arqmath2020/title.arqmath2020.task2.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	P2+math-0.6	0.5249	0.3874	0.2614	0.3834
+2020	task2	best1			anserini/arqmath2020/title.arqmath2020.task2.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	P2+math-0.6	0.5219	0.3850	0.2568	0.3814
+2020	task2	best1					P2	0.5015	0.3771	0.2386	0.3764
+2020	task2	best2			anserini/arqmath2020/title.arqmath2020.task2.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	A2+math-0.6	0.5252	0.3880	0.2614	0.3840
+2020	task2	best2			anserini/arqmath2020/title.arqmath2020.task2.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	A2+math-0.6	0.5222	0.3856	0.2568	0.3819
+2020	task2	best2					A2	0.5018	0.3777	0.2386	0.3769
+2020	task2	best3			anserini/arqmath2020/title.arqmath2020.task2.keepsw.k1=1.5.b=0.75.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	B2+math-0.6	0.5252	0.3880	0.2614	0.3840
+2020	task2	best3			anserini/arqmath2020/title.arqmath2020.task2.keepsw.k1=0.9.b=0.4.bm25-rm3	--merge-runs a0.run,anserini.run,0.6	B2+math-0.6	0.5222	0.3856	0.2568	0.3819
+2020	task2	best3					B2	0.5018	0.3777	0.2386	0.3769
+2020	task2	best1			anserini/arqmath2020/title.arqmath2020.task2.keepsw.k1=0.9.b=0.4.bm25-rm3	--concate-runs a0.run,anserini.run,100	P2-math-100	0.4958	0.3546	0.2500	0.3615
+2020	task2	best1			anserini/arqmath2020/title.arqmath2020.task2.keepsw.k1=0.9.b=0.4.bm25-rm3	--concate-runs a0.run,anserini.run,200	P2-math-200	0.5109	0.3677	0.2500	0.3716
+2020	task2	best1			anserini/arqmath2020/title.arqmath2020.task2.keepsw.k1=0.9.b=0.4.bm25-rm3	--concate-runs a0.run,anserini.run,300	P2-math-300	0.5211	0.3774	0.2500	0.3789
+2020	task2	best1			anserini/arqmath2020/title.arqmath2020.task2.keepsw.k1=0.9.b=0.4.bm25-rm3	--concate-runs a0.run,anserini.run,400	P2-math-400	0.5123	0.3704	0.2500	0.3720
+2020	task2	best1			anserini/arqmath2020/title.arqmath2020.task2.keepsw.k1=0.9.b=0.4.bm25-rm3	--concate-runs a0.run,anserini.run,500	P2-math-500	0.5122	0.3704	0.2500	0.3719
+2020	task2	best1			anserini/arqmath2020/title.arqmath2020.task2.keepsw.k1=0.9.b=0.4.bm25-rm3	--concate-runs a0.run,anserini.run,600	P2-math-600	0.5111	0.3721	0.2500	0.3736
+2020	task2	best1			anserini/arqmath2020/title.arqmath2020.task2.keepsw.k1=0.9.b=0.4.bm25-rm3	--concate-runs a0.run,anserini.run,700	P2-math-700	0.5104	0.3717	0.2500	0.3741
+2020	task2	best1			anserini/arqmath2020/title.arqmath2020.task2.keepsw.k1=0.9.b=0.4.bm25-rm3	--concate-runs a0.run,anserini.run,800	P2-math-800	0.5131	0.3761	0.2500	0.3787
