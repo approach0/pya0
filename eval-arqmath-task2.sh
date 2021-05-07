@@ -2,7 +2,7 @@ EVAL="trec_eval ./topics-and-qrels/qrels.arqmath-2020-task2.txt"
 RUN="${1-tmp.run}"
 
 TMPRUN=$(mktemp)
-echo "creating $TMPRUN"
+echo "creating $TMPRUN" > /dev/stderr
 cat $RUN | awk '{print $1 "\t" "_" "\t" $2 "\t" $4 "\t" $5 "\t" $6}' > $TMPRUN
 
 set -e
