@@ -113,6 +113,6 @@ def gen_tsv_from_2020():
 
 
 if __name__ == '__main__':
-    #genn_final_runs()
+    genn_final_runs()
     #evaluate_from_2020()
     gen_tsv_from_2020()
