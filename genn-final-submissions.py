@@ -16,7 +16,7 @@ def swap_2_3(fname):
     shell(f'mv {fname}.swap {fname}')
 
 
-def genn_final_runs():
+def gen_final_runs():
     shell('mkdir -p tmp')
     shell('mkdir -p runs/2020')
     shell('mkdir -p runs/2021')
@@ -112,7 +112,29 @@ def gen_tsv_from_2020():
             print('\t'.join(row), file=fh)
 
 
+def gen_submissions():
+    shell('mkdir -p runs/2020/submission')
+    shell('mkdir -p runs/2021/submission')
+    with open('final-run-generator.tsv', 'r') as fh:
+        for ln, line in enumerate(fh):
+            fields = line.split('\t')
+            fields = [f.strip() for f in fields]
+            if ln == 0:
+                continue # skip header
+            elif line.startswith('#'):
+                continue # skip commented row
+            name = '+'.join([f.replace(' ', '_').replace('/', '_') for f in fields])
+            if name.find('approach0') >= 0:
+                year = name.split('+')[0]
+                final_name = name.split('+')[-1]
+                src_path = f'./runs/{year}/{name}.run'
+                dst_path = f'./runs/{year}/submission/{final_name}.tsv'
+                shell(f'cp {src_path} \t {dst_path}')
+    shell('ls runs/*/submission')
+
+
 if __name__ == '__main__':
-    genn_final_runs()
+    gen_final_runs()
     #evaluate_from_2020()
-    gen_tsv_from_2020()
+    #gen_tsv_from_2020()
+    gen_submissions()
