@@ -5,6 +5,7 @@ from .eval import gen_topics_queries
 from .eval import get_qrels_filepath, parse_qrel_file
 from .mergerun import parse_trec_file
 from .preprocess import preprocess_query
+import collection_driver
 
 
 def parse_scores_file(file_path):
@@ -133,9 +134,8 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
 def visualize_hits(index, run_name, qid, query, hits, qrels=None, scores=None):
     # lookup document content
     for hit in hits:
-        trec_docid = hit['docid']
-        doc = pya0.index_lookup_doc(index, trec_docid)
-        doc = pya0.index_lookup_doc(index, int(doc['extern_id']))
+        docid = hit['docid']
+        doc = pya0.index_lookup_doc(index, docid)
         hit['content'] = doc['content']
     # output HTML preview
     if True:
@@ -153,20 +153,22 @@ def visualize_collection_runs(index, collection, tsv_file_path):
     for i, (qid, query, _) in enumerate(gen_topics_queries(collection)):
         print(qid, query)
         topic_hits = run_per_topic[qid] if qid in run_per_topic else []
+        collection_driver.TREC_reverse(collection, index, topic_hits)
         visualize_hits(index, run_name, qid, query, topic_hits, qrels=qrels, scores=scores)
 
 
 def visualize(index, tsv_file_path, collection=None, adhoc_query=None):
     print(f'\n\t Visualize runfile: {tsv_file_path} ...\n')
-    if collection:
+    if collection and not adhoc_query:
         visualize_collection_runs(index, collection, tsv_file_path)
-    elif adhoc_query:
+    elif collection and adhoc_query:
         run_name = os.path.basename(tsv_file_path)
         run_per_topic, _ = parse_trec_file(tsv_file_path)
         for qid, hits in run_per_topic.items():
+            collection_driver.TREC_reverse(collection, index, hits)
             visualize_hits(index, run_name, qid, adhoc_query, hits)
     else:
-        print('Error: Please specify --query for adhoc query visualization.')
+        print('Error: Please specify --query and --collection for visualization.')
         quit(1)
 
 
