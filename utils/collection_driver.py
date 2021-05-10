@@ -15,14 +15,24 @@ def TREC_preprocess(collection, index, hits):
             formulaID, postID, threadID, type_, visualID = doc['url'].split(',')
             hit['_'] = formulaID
             hit['docid'] = int(postID)
+    else:
+        raise NotImplementedError
 
 
 def TREC_reverse(collection, index, hits):
-    if collection in ['test'] or collection.startswith('arqmath-'):
+    if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1']:
         for hit in hits:
             trec_docid = hit['docid']
             doc = pya0.index_lookup_doc(index, trec_docid)
-            hit['docid'] = int(doc['extern_id'])
+            hit['docid'] = int(doc['extern_id']) # get internal doc ID
+    elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2']:
+        for hit in hits:
+            trec_docid = int(hit['_'])
+            hit['_'] = str(hit['docid']) # docid is actually post ID here
+            doc = pya0.index_lookup_doc(index, trec_docid)
+            hit['docid'] = int(doc['extern_id']) # get internal doc ID
+    else:
+        raise NotImplementedError
 
 
 def eval_cmd(collection, run_path):
@@ -33,7 +43,7 @@ def eval_cmd(collection, run_path):
     elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2']:
         return ['sh', 'eval-arqmath-task2.sh', run_path]
     else:
-        return None
+        raise NotImplementedError
 
 
 def _topic_process__test(idx, line):
