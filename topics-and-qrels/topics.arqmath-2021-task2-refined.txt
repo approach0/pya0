@@ -1,0 +1,100 @@
+B.201	n\times n
+B.202	[E:F] < \infty
+B.203	-(-x)= x
+B.204	\delta :  Y\rightarrow Y\times_Z Y
+B.205	x^n=n^x
+B.206	\left(1+\frac{1}{n}\right)^n
+B.207	f(N) \sim \sum_{k \geq 0}\frac{k!}{N^k}
+B.208	H_n^{(k)}=\sum_{i=1}^n \frac{1}{i^k}
+B.209	\int_0^\infty e^{-hx^2}\;\mathrm{d}x
+B.210	x(1-x) \leq \frac14
+B.211	\int\sqrt{x^2\sqrt{x^3\sqrt{x^4\sqrt{x^5\sqrt{x^6\sqrt{x^7\sqrt{x^8\ldots}}}}}}}\,dx
+B.212	f(x)=\sum_{n=0}^{\infty}(2n+1)(2x)^{2n}
+B.213	\sum_{x=1}^{\infty} \frac{x-1}{2^{x}}	\sum_{x=1}^{\infty} \frac{(x-1)}{2^{x}}
+B.214	\int\limits_{-\infty}^\infty e^{-\pi x^2}dx = 1
+B.215	A=\bigcup_{n=1}^{\infty}A_n
+B.216	\lim\limits_{t \to + \infty} \int_0^{+ \infty} \frac{ \mathrm d x}{e^x+ \sin tx}
+B.217	x^2/a^2 + y^2/b^2 = 1
+B.218	R(m, n) \leq R(m-1, n)+R(m, n-1)
+B.219	\dbinom{n+r+1}{r}=\sum_{k=0}^{r}\dbinom{n+k}{k}
+B.220	\sum_{k=0}^{n} \binom{x+k}{k}=\binom{x+n+1}{n}
+B.221	g(n) \le \sum_{k=1}^{\ell(n)} \left( g(k) + 1 \right)
+B.222	(x+x^2/2!+x^3/3!+...)^4
+B.223	\sum_{i=0}^n {n+i \choose i}\frac{1}{2^i} = 2^n
+B.224	|f(x) - f(x_0)|<\varepsilon	\left| f(x) - f(x_0) \right|<\varepsilon
+B.225	\alpha_1+\alpha_2+\alpha_3=3
+B.226	x^{x^y}=y
+B.227	1+2+3...=-\dfrac{1}{12}	1+2+3+...=-\dfrac{1}{12}
+B.228	\int_{-\infty}^{+\infty} f(t+x) f(t+y) d t
+B.229	\int_{0}^{1} x^{-2} dx	\int_{0}^{1} x^{-p} dx
+B.230	R(n_1, ..., n_c)
+B.231	\aleph_0
+B.232	| A | =\max_{|w| = 1} |Aw| 	\left| A \right| =\max_{\left|w\right| = 1} \left|Aw\right|
+B.233	f\in C^\infty(M)
+B.234	Z = \{a \in X : f'(a) = 0\}
+B.235	ax^2 + bx + c = y^2
+B.236	 \frac{1}{\mathrm{B}(\boldsymbol\alpha)} \prod_{i=1}^K x_i^{\alpha_i - 1}
+B.237	p \land \lnot q \land r
+B.238	a \sim a
+B.239	(x, y) \in R
+B.240	\Delta  = b^2 – 4ac
+B.241	n^3 +6n^2-7n
+B.242	(p+1)(p-1) = p^2-1
+B.243	2^{2k}-x^2 \mid 2^{2k}-1
+B.244	|\mathbb{R}/R|
+B.245	f(f(z)) = \sin z
+B.246	\csc \theta = \csc 2\theta +\csc 3\theta	\csc(\theta)=\csc(2\theta)+\csc(3\theta)
+B.247	x = 5 \cos(\theta)	x = 5 \cos\theta
+B.248	M:=\{g\in G:g^2=e\}
+B.249	(G, * , e)
+B.250	\sqrt[n]{a_1 \cdots a_n} \leq \frac{1}{n} \sum_{i=1}^{n}a_i
+B.251	(k+1)^{\frac{1}{k+1}} < k^{\frac{1}{k}}
+B.252	\zeta(2)=\frac1{1^2}+\frac1{2^2}+\frac1{3^2}+\cdots = \frac{\pi^2}{6}
+B.253	\int_{-\infty}^{\infty} \frac{\cos (bx) - \cos (ax)}{x^2} dx = \pi (a-b)
+B.254	\int_0^\pi \frac{x }{1- \sin x \cos x}\ dx
+B.255	f_{X,Y}(x,y) \propto \exp\left(13xy - 94x^2 - \frac{1}{2}y^2\right)
+B.256	\lim_{x\to1}\frac{x^2-1}{x-1}
+B.257	\lim_{x \rightarrow k}\ c(f(x)+g(x)) = c \lim_{x \rightarrow k} f(x) + c\ \lim_{x \rightarrow k} g(x)
+B.258	\lim_{x \to \infty} \frac{x^k}{e^x}=0
+B.259	\lim_{n \rightarrow \infty} \frac{2^n}{n^c} = 0
+B.260	\lim_{(x,y)\rightarrow (0,0)}\frac{xy^{2}}{x^{4}+y^{2}}
+B.261	\det(T_n)=\sum_{k=0}^{n}\alpha^{n-k}\beta^k
+B.262	a = a^+ - a^-
+B.263	(a\land (a\to b))\to b
+B.264	a^b \pmod x = a^{b\pmod x} \pmod x
+B.265	(a/b)^2
+B.266	\frac{14}{3} \rightarrow 4 \frac{2}{3} \rightarrow \frac{8}{3} \rightarrow 2 \frac{2}{3} \rightarrow \frac{4}{3} \rightarrow 1\frac{1}{3}\rightarrow \frac{1}{3}.
+B.267	L(x,\lambda) = f_0(x) + \sum_{i=1}^m \lambda_i f_i(x)
+B.268	\frac{1}{1+Z}.
+B.269	P(E|F)=\frac{P(E\cap F)}{P(F)}=\frac{1/3}{2/3}=\frac{1}{2}
+B.270	E(n)=\frac{1}{2}(E(n)+1)+\frac{1}{2}(E(n-1))
+B.271	\limsup_{n\to \infty} \big\{ X_n X_{n+1}> 0 \big\}
+B.272	1 = \sqrt{(-1)(-1)} = \sqrt{-1}\sqrt{-1} = (i)(i) = i^2 = -1
+B.273	\sqrt[\cfrac{1}{k}]{x}=x^{k}
+B.274	H^{s}\left(\mathbf{R}^{n}\right)=\left\{f \in \mathcal{S}^{\prime}\left(\mathbf{R}^{n}\right) : \left(1+|\xi|^{2}\right)^{s / 2} \mathcal{F} f \in L^{2}\left(\mathbf{R}^{n}\right)\right\}
+B.275	x^{-1}\;=\;\int_0^\infty e^{-xt}dt
+B.276	\lim_{n\to\infty} \frac{n^k}{a^n}=0
+B.277	\frac{S}{n} \ge \sqrt[n]{P}
+B.278	f(\mathbb Q) \subseteq \mathbb Q
+B.279	\lim_{x\to 0}\left(f(x)+\frac{1}{f(x)}\right)=2.
+B.280	4\Delta-\frac{2n\Delta}{k^2}=0
+B.281	n^{\frac{1}{n}} \rightarrow 1
+B.282	\sum_{n=1}^{\infty} \frac{1}{n^2}	\sum_{n=1}^{\infty} n^{-2}
+B.283	x_{n+1} := x_n + \frac{1}{x_n}
+B.284	\frac{m}{n} = \frac{1}{n} + \frac{1}{n} + ... + \frac{1}{n}
+B.285	U_n= n^2+n
+B.286	\lim _{n \rightarrow+\infty} n a_{n}=0
+B.287	\sum_{i=1}^n\frac{2i}{2^i}
+B.288	\sum\frac{\sign(\sin(n))}{n}
+B.289	x^n+y^n+z^n
+B.290	7\times11^{2n+1}-3^{4n-1}
+B.291	\sum_{n=1}^\infty \frac{\prod_{k=1}^n(2k)^2}{(2n+2)!}
+B.292	(n+1)^k \geq 1 + nk
+B.293	\sum_{j=2}^{n-1}j^2
+B.294	H^i(X, \mathscr F) \cong \mathbb H^i(X,\mathscr G).
+B.295	\sum_{n=1}^{\infty} n(n+1)x^n
+B.296	e^x=\sum_{n=0}^{\infty}\frac{x^n}{n!},x\in \mathbb R
+B.297	\phi(n)=320
+B.298	\delta(a\chi(z)-b) \rightarrow \delta(z-c)
+B.299	\cos \frac{\pi}5-\cos \frac{2 \pi}5=\frac12	\cos \frac{\pi}5-\cos \frac{2 \pi}5=\frac12
+B.300	f(x)=\frac{1}{1+\log^2 (x)}
