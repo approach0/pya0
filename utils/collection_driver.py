@@ -9,7 +9,7 @@ def TREC_preprocess(collection, index, hits):
             hit['_'] = hit['docid']
             hit['docid'] = int(doc['url'])
 
-    elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2']:
+    elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined']:
         for hit in hits:
             doc = pya0.index_lookup_doc(index, hit['docid'])
             formulaID, postID, threadID, type_, visualID = doc['url'].split(',')
@@ -25,7 +25,7 @@ def TREC_reverse(collection, index, hits):
             trec_docid = hit['docid']
             doc = pya0.index_lookup_doc(index, trec_docid)
             hit['docid'] = int(doc['extern_id']) # get internal doc ID
-    elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2']:
+    elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined']:
         for hit in hits:
             trec_docid = int(hit['_'])
             hit['_'] = str(hit['docid']) # docid is actually post ID here
@@ -40,7 +40,7 @@ def eval_cmd(collection, run_path):
         return ['sh', 'eval-test.sh', run_path]
     elif collection in ['arqmath-2020-task1', 'arqmath-2021-task1']:
         return ['sh', 'eval-arqmath-task1.sh', run_path]
-    elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2']:
+    elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined']:
         return ['sh', 'eval-arqmath-task2.sh', run_path]
     else:
         raise NotImplementedError
@@ -101,6 +101,10 @@ def _topic_process__arqmath_2020_task2(idx, line):
     return qid, query, None
 
 
+def _topic_process__arqmath_2020_task2_refined(idx, line):
+    return _topic_process__arqmath_2020_task2(idx, line)
+
+
 def _topic_process__arqmath_2021_task1(idx, line):
     if idx == 0:
         return None, None, None
@@ -116,8 +120,13 @@ def _topic_process__arqmath_2021_task1(idx, line):
 def _topic_process__arqmath_2021_task2(idx, line):
     fields = line.split('\t')
     qid = fields[0]
-    query = [{'type': 'tex', 'str': fields[1].strip()}]
+    formulas = fields[1:]
+    query = [{'type': 'tex', 'str': s.strip()} for s in formulas]
     return qid, query, None
+
+
+def _topic_process__arqmath_2021_task2_refined(idx, line):
+    return _topic_process__arqmath_2021_task2(idx, line)
 
 
 def _featslookup__test(topic_query, doc):
