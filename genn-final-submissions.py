@@ -120,9 +120,9 @@ def gen_tsv_from_2020():
                 print('\t'.join(row), file=fh)
 
 
-def gen_submissions():
-    shell('mkdir -p runs/2020/submission')
-    shell('mkdir -p runs/2021/submission')
+def gen_submissions(root):
+    import uuid
+    folder = uuid.uuid4()
     with open('final-run-generator.tsv', 'r') as fh:
         for ln, line in enumerate(fh):
             fields = line.split('\t')
@@ -135,14 +135,16 @@ def gen_submissions():
             if name.find('approach0') >= 0:
                 year = name.split('+')[0]
                 final_name = name.split('+')[-1]
+                task = 'Task1-QA' if 'task1' in final_name else 'Task2-Formulas'
                 src_path = f'./runs/{year}/{name}.run'
-                dst_path = f'./runs/{year}/submission/{final_name}.tsv'
-                shell(f'cp {src_path} \t {dst_path}')
-    shell('ls runs/*/submission')
+                dst_dir = f'{root}/{folder}/{task}/{year}'
+                shell(f'mkdir -p {dst_dir}')
+                shell(f'cp {src_path} \t {dst_dir}/{final_name}.tsv')
+    shell(f'cd {root}/{folder}')
 
 
 if __name__ == '__main__':
     gen_final_runs()
     #evaluate_from_2020()
     gen_tsv_from_2020()
-    gen_submissions()
+    gen_submissions('/tuna1/scratch/w32zhong/arqmath/2021-submission')
