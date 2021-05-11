@@ -3,7 +3,7 @@ from preprocess import tokenize_text
 
 
 def TREC_preprocess(collection, index, hits):
-    if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1']:
+    if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1', 'arqmath-2021-task1-refined']:
         for hit in hits:
             doc = pya0.index_lookup_doc(index, hit['docid'])
             hit['_'] = hit['docid']
@@ -20,7 +20,7 @@ def TREC_preprocess(collection, index, hits):
 
 
 def TREC_reverse(collection, index, hits):
-    if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1']:
+    if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1', 'arqmath-2021-task1-refined']:
         for hit in hits:
             trec_docid = hit['docid']
             doc = pya0.index_lookup_doc(index, trec_docid)
@@ -38,7 +38,7 @@ def TREC_reverse(collection, index, hits):
 def eval_cmd(collection, run_path):
     if collection == 'test':
         return ['sh', 'eval-test.sh', run_path]
-    elif collection in ['arqmath-2020-task1', 'arqmath-2021-task1']:
+    elif collection in ['arqmath-2020-task1', 'arqmath-2021-task1', 'arqmath-2021-task1-refined']:
         return ['sh', 'eval-arqmath-task1.sh', run_path]
     elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined']:
         return ['sh', 'eval-arqmath-task2.sh', run_path]
@@ -101,10 +101,6 @@ def _topic_process__arqmath_2020_task2(idx, line):
     return qid, query, None
 
 
-def _topic_process__arqmath_2020_task2_refined(idx, line):
-    return _topic_process__arqmath_2020_task2(idx, line)
-
-
 def _topic_process__arqmath_2021_task1(idx, line):
     if idx == 0:
         return None, None, None
@@ -115,6 +111,10 @@ def _topic_process__arqmath_2021_task1(idx, line):
     query_terms = [{'type': 'term', 'str': terms}] if len(terms) > 0 else []
     query_formulas = [{'type': 'tex', 'str': s.strip()} for s in formulas]
     return qid, query_terms + query_formulas, None
+
+
+def _topic_process__arqmath_2021_task1_refined(idx, line):
+    return _topic_process__arqmath_2021_task1(idx, line)
 
 
 def _topic_process__arqmath_2021_task2(idx, line):
