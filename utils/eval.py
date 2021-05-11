@@ -109,6 +109,8 @@ def get_qrels_filepath(collection: str):
 
 def parse_qrel_file(file_path):
     qrels = dict()
+    if file_path is None or not os.path.exists(file_path):
+        return None
     with open(file_path, 'r') as fh:
         for line in fh.readlines():
             line = line.rstrip()
