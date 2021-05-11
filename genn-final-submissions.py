@@ -34,7 +34,10 @@ def gen_final_runs():
             # use which a0 parameters?
             shell(f'cp auto_eval-{r["a0_param"]}.tsv auto_eval.tsv')
             # run math search
-            collection = f'arqmath-{r["year"]}-{r["task"]}'
+            if r["anserini_run"].split('.')[-1] == 'refined':
+                collection = f'arqmath-{r["year"]}-{r["task"]}-refined'
+            else:
+                collection = f'arqmath-{r["year"]}-{r["task"]}'
             cmd = f'python3 -m pya0 --index index-{r["task"]}-2021 --collection {collection} --auto-eval tmp' # + ' --select-topic B.202'
             run_args = cmd.split()
             for k in ['a0_math_exp', 'a0_rm3']:
@@ -100,7 +103,10 @@ def gen_tsv_from_2020():
             if r['year'] == '2020':
                 name = '+'.join([f.replace(' ', '_').replace('/', '_') for f in fields])
                 path = f'./runs/{r["year"]}/{name}.run'
-                collection = f'arqmath-{r["year"]}-{r["task"]}'
+                if r["anserini_run"].split('.')[-1] == 'refined':
+                    collection = f'arqmath-{r["year"]}-{r["task"]}-refined'
+                else:
+                    collection = f'arqmath-{r["year"]}-{r["task"]}'
                 header, row = evaluate_run(collection, path)
                 rows.append(fields + row)
             else:
@@ -136,5 +142,5 @@ def gen_submissions():
 if __name__ == '__main__':
     gen_final_runs()
     #evaluate_from_2020()
-    #gen_tsv_from_2020()
+    gen_tsv_from_2020()
     gen_submissions()
