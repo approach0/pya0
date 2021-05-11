@@ -89,6 +89,7 @@ def evaluate_from_2020():
 
 
 def gen_tsv_from_2020():
+    header = None
     rows = []
     with open('final-run-generator.tsv', 'r') as fh:
         for ln, line in enumerate(fh):
@@ -112,10 +113,11 @@ def gen_tsv_from_2020():
             else:
                 rows.append(fields)
             print(rows[-1])
-    with open('final-run-results.tsv', 'w') as fh:
-        print('\t'.join(keys + header), file=fh)
-        for row in rows:
-            print('\t'.join(row), file=fh)
+    if header:
+        with open('final-run-results.tsv', 'w') as fh:
+            print('\t'.join(keys + header), file=fh)
+            for row in rows:
+                print('\t'.join(row), file=fh)
 
 
 def gen_submissions():
