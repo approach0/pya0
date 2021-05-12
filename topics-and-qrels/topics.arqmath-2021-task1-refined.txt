@@ -22,7 +22,7 @@ A.220		\sum_{k=0}^{n} \binom{x+k}{k}=\binom{x+n+1}{n}
 A.221	using only 2, 4, allowed operations, expression, function			
 A.222		(x+x^2/2!+x^3/3!+...)^4	(e^x-1)^4	
 A.223	combinatorial proof	\sum_{i=0}^n {n+i\choose i}\frac{1}{2^i} = 2^n		
-A.224		|f(x) - f(x_0)|&lt;\varepsilon	\epsilon - \delta	
+A.224	definition of continuity, for every, we can find a positive number, understanding	\epsilon - \delta		
 A.225	root, cubic, equations, find, unique, Vieta's formulas, sum			
 A.226		x^{x^y}=y		
 A.227	zeta, series	1+2+3...=-\dfrac{1}{12}	\frac{x(x+1)}{2}	
