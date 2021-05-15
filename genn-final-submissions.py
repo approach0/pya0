@@ -11,6 +11,11 @@ def shell(cmd):
         quit(1)
 
 
+def dele_2(fname):
+    shell('cat %s | awk \'{print $1 "\t" $3 "\t" $4 "\t" $5 "\t" $6}\' > %s.swap' % (fname, fname))
+    shell(f'mv {fname}.swap {fname}')
+
+
 def swap_2_3(fname):
     shell('cat %s | awk \'{print $1 "\t" $3 "\t" $2 "\t" $4 "\t" $5 "\t" $6}\' > %s.swap' % (fname, fname))
     shell(f'mv {fname}.swap {fname}')
@@ -71,7 +76,9 @@ def gen_final_runs():
                 subprocess.run(run_args)
                 shell(f'mv mergerun-*.run {output}')
                 # post-processing
-                if r["task"] == 'task2':
+                if r["task"] == 'task1':
+                    dele_2(output)
+                elif r["task"] == 'task2':
                     swap_2_3(output)
             else:
                 shell(f'cp a0.run {output}')
@@ -145,6 +152,6 @@ def gen_submissions(root):
 
 if __name__ == '__main__':
     gen_final_runs()
-    #evaluate_from_2020()
-    gen_tsv_from_2020()
+    evaluate_from_2020()
+    #gen_tsv_from_2020()
     gen_submissions('/tuna1/scratch/w32zhong/arqmath/2021-submission')
