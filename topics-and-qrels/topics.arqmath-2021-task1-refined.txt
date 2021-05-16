@@ -1,0 +1,101 @@
+qid	term	tex	More tex formulas follow ...	
+A.201	invertable, matrix, division ring, inverse, elementary			
+A.202	rings theory, fields	F \subset D \subset E		
+A.203	why subtraction work explain	-(-x) = x		
+A.204	morphisms, agree, residue fields, schemes, locally closed subscheme	Y \rightarrow Y \times_Z Y		
+A.205	solution	x^n = n^x		
+A.206	proof, prove, limitation	\lim_{n \rightarrow \infty} \left(1+\frac{1}{n}\right)^n=e		
+A.207	find function asymptotically equivalent	f(N) \sim \sum_{k \geq 0}\frac{k!}{N^k}		
+A.208	approximation, asymptotics, harmonic number, derived, proof, prove	\sum_{i=1}^n \frac{1}{i^k}	H_n^{(k)}=n^{-k}    \left(-\frac{n}{k-1}+\frac{1}{2}-\frac{k}{12    n}+O\left(\frac{1}{n^3}\right)\right)    +\zeta (k)	
+A.209	Evaluate, calculate, solve, integral	\int_0^\infty e^{-hx^2}\;\mathrm{d}x	\frac{\sqrt{\pi}}{2\sqrt{h}}	
+A.210	extremas, max, show, prove	x(1-x) \leq \frac14	f(x) = x(1-x)	
+A.211	MIT integration bee	\int\sqrt{x^2\sqrt{x^3\sqrt{x^4\sqrt{x^5\sqrt{x^6\sqrt{x^7\sqrt{x^8\ldots}}}}}}}\,dx		
+A.212		f(x)=\sum_{n=0}^{\infty}(2n+1)(2x)^{2n}		
+A.213		\sum_{x=1}^{\infty} \frac{(x-1)}{2^{x}}	\sum_{x=1}^{\infty} \frac{x-1}{2^{x}}	\sum_{x=1}^{\infty} \frac{(x-1)}{2^{x}}
+A.214		\int\limits_{-\infty}^\infty e^{-\pi x^2}dx = 1		
+A.215	everywhere differentiable, set of derivative discontinuities, first category, 1st, prove, proof, union, nowhere dense, interval			
+A.216		\lim\limits_{t \to + \infty} \int_0^{+ \infty} \frac{ \mathrm d x}{e^x+ \sin tx}		
+A.217	maximum max area, isosceles triangle, inscribed in ellipse			
+A.218	Ramsey, identity	(m, n) \leq \binom{m+n-2}{m-1}	R(m, n) \leq R(m-1, n)+R(m, n-1)	
+A.219		\dbinom{n+r+1}{r}=\sum_{k=0}^{r}\dbinom{n+k}{k}		
+A.220		\sum_{k=0}^{n} \binom{x+k}{k}=\binom{x+n+1}{n}		
+A.221	using only 2, 4, allowed operations, expression, function			
+A.222		(x+x^2/2!+x^3/3!+...)^4	(e^x-1)^4	
+A.223	combinatorial proof	\sum_{i=0}^n {n+i\choose i}\frac{1}{2^i} = 2^n		
+A.224	definition of continuity, for every, we can find a positive number, understanding	\epsilon - \delta		
+A.225	root, cubic, equations, find, unique, Vieta's formulas, sum			
+A.226		x^{x^y}=y		
+A.227	zeta, series	1+2+3...=-\dfrac{1}{12}	\frac{x(x+1)}{2}	
+A.228		\int_{-\infty}^{+\infty} f(t+x) f(t+y) d t		
+A.229	function intergral, fractional part	\int_{0}^{1}\big\lbrace\frac{1}{x}\big\rbrace \big\lbrace\frac{1}{1-x}\big\rbrace \big\lbrace1-\frac{1}{x}\big\rbrace dx		
+A.230	definition, Ramsey number, colour, color, permutation, symmetricity, multi			
+A.231	divided by aleph null; undefined;			
+A.232	Induced Matrix Norm	\left\lVert A \right\rVert =\max_{\Vert \mathbf w\Vert = 1}\Vert A \mathbf w\Vert.		
+A.233	tangent vectors	f\in C^\infty(M)		
+A.234	Sards theorem, polynomial, measure, zero	Z = \{a \in X : f'(a) = 0\}		
+A.235	solve, Diophantine equation	ax^2 + bx + c = y^2		
+A.236	normalizing constant, Dirichlet distribution	D(x_1, \ldots, x_K) = \frac{1}{\mathrm{B}(\boldsymbol\alpha)} \prod_{i=1}^K x_i^{\alpha_i - 1}		
+A.237	rewritepropositions without implication	p \land \lnot q \land r		
+A.238	Definition of Equivalence Relation, set, reflexive, symmetric, transitive			
+A.239	prove reflexive, symmetric transitive			
+A.240	Bhaskara, constant	\Delta  = b^2 – 4ac		
+A.241	divisible	n^3 +6n^2-7n		
+A.242	prime numbers greater than 3 24 deivides	p^2-1		
+A.243	Pell equations, divisors, divisible	2^{2k}-x^2 \mid 2^{2k}-1		
+A.244	Cardinality, quotient set, Equivalence relation			
+A.245	find	f(f(x))=\sin x		
+A.246	n-side polygon find number	\frac1{A_1A_2}=\frac1{A_1A_3}+\frac1{A_1A_4}		
+A.247	endpoints, maximal arc, circle, eye, circular arc, screen. co-ordinate, coordinates, visible			
+A.248	abelian group, even order	M=\{g\in G:g^2=e\}		
+A.249	abelian, commutative	(G, * , e)		
+A.250		(a_1a_2\ldots a_n)^{\frac{1}{n}}\leq \frac{\sum_{i=1}^{n}a_i}{n}		
+A.251	induction	(k+1)^{\frac{1}{k+1}} < k^{\frac{1}{k}}		
+A.252	redundant, unexpected, include, appearance	\zeta(2)=\frac1{1^2}+\frac1{2^2}+\frac1{3^2}+\cdots = \frac{\pi^2}{6}	\frac 16\pi^2	\frac 16 \pi^2
+A.253	contour integration	\int_{-\infty}^{\infty} \frac{\cos (bx) - \cos (ax)}{x^2} dx = \pi (a-b)		
+A.254	solve	\int_0^\pi \frac{x }{1- \sin x \cos x}\ dx		
+A.255	Integral	\int_{-\infty}^\infty e^{13xy - 94x^2 - \frac{1}{2}y^2}{\rm d}y		
+A.256	factorize the function before taking limit			
+A.257	taking a limit a function, ternary operation, group, homomorphism	\lim_{x \rightarrow k} (fg)(x) = \lim_{x \rightarrow k} f(x)g(x)	\lim_{x \rightarrow k}\ c(f(x)+g(x)) = c \lim_{x \rightarrow k} f(x) + c\ \lim_{x \rightarrow k} g(x),	
+A.258	proof, prove, show, other approach	\lim_{x \to \infty} \frac{x^k}{e^x}=0		
+A.259	faster, grows, limit	\lim_{n \rightarrow \infty} \frac{2^n}{n^c} = 0		
+A.260	polar coordinates, converge	\lim_{(x,y)\rightarrow (0,0)}\frac{xy^{2}}{x^{4}+y^{2}}		
+A.261	matrix, diagonal, field	\det(T_n)=\sum_{k=0}^{n}\alpha^{n-k}\beta^k		
+A.262	positive, negative, non-negative	a = a^+ - a^-		
+A.263	formal definition, rule inference,  logicalform, concepts, notations, same, different			
+A.264	Modulo Power Arithmetic	a^b \pmod x = a^{b\pmod x} \pmod x		
+A.265	cannot be integer, prime, 2	(a/b)^2		
+A.266	mixed number notation, improper fractions, process, terminate, iterate, what happens	4 \frac{2}{3}		
+A.267	dual of Lagrange dual, primal, duality, convex optimization	L(x,\lambda) = f_0(x) + \sum_{i=1}^m \lambda_i f_i(x)		
+A.268	Poisson, expected value	E\left[\frac{1}{1+Z}\right]=\sum_{k=0}^\infty\frac{1}{1+k}\frac{e^{-\lambda}\lambda^k}{k!}		
+A.269	conditional probability, both, know one, children, boy, family, girl			
+A.270	fair coin, repeatedly until before, turns up five times, expected number of heads			
+A.271	Gaussian, mean, zero 0, probability, limit, sup, lim, Borel Cantelli			
+A.272	show, not true, when both negative	\sqrt{ab} \neq \sqrt{a}\sqrt{b}		
+A.273	decimal, fractional exponents, radicals, inverse, roots exist	\sqrt[\cfrac{b}{a}]{x}=x^{\cfrac{a}{b}}		
+A.274	why prove proof show, Heaviside distribution, belong to any Sobolev space	H^{s}(\mathbb{R})		
+A.275	why prove proof show	\lim_{A \rightarrow \infty} \int_0^A \frac{\sin(x)}{x} dx = \frac{\pi}{2}		
+A.276	proof, prove, show, other approach	\lim_{x \to \infty} \frac{x^k}{e^x}=0		
+A.277	AM-GM inequality, sufficient necessary condition, exist sequence positive real numbers			
+A.278	find differentiable function, such that	f(\mathbb Q) \subseteq \mathbb Q	f'(\mathbb Q) \not \subseteq \mathbb Q	
+A.279	proof prove show, if, then	\lim_{x\to 0}\left(f(x)+\frac{1}{f(x)}\right)=2.	\lim_{x\to 0}f(x)=1	
+A.280	derivatives in discontinuous functions			
+A.281	proof prove show	n^{\frac{1}{n}} \rightarrow 1	\lim_{n\rightarrow \infty} n^{\frac{1}{n}} = 1	
+A.282	proof prove show, Functional Analysis	\sum_{n=1}^{\infty} \frac{1}{n^2} = \frac{ \pi^2 }{ 6 }		
+A.283	sequence converges or diverges, bounded	x_{n+1} = x_n + \frac{1}{x_n}		
+A.284	proof rational number, decimal digits don't repeat, periodically			
+A.285	determine the sum of a series that is quadratic or cubic, not geometric nor arithmetic	\sum_n a n^2 + bn + c		
+A.286	series converges	\lim n a_{n}=0	\sum a_{k}	
+A.287	Evaluate	\sum_{i=1}^n\frac{2i}{2^i}		
+A.288	alternating sign changing Harmonic Series	\sum\frac{\sin(n)}{n}		
+A.289	general	n=x^n+y^n+z^n		
+A.290	divisible, induction, 10	7 \times 11^{2n+1}-3^{4n-1}		
+A.291	even, odd, diverging, converging	\sum_{n=0}^\infty \frac{\prod_{k=0}^n(2k+1)^2}{(2n+3)!}=\frac{1^2}{3!}+\frac{1^23^2}{5!}+...		
+A.292	series, for all	\lim_{n \to \infty} \frac{n^k}{x^n}		
+A.293	re-indexing, reindexing	\sum_{j=2}^{n-1}j^2		
+A.294	hypercohomology hyper, sheaf, isomorphic, cohomology, resolution, existence, derived category			
+A.295	use power series	\sum_{n=1}^{\infty} n(n+1)x^n	\sum_{n=1}^{\infty} \frac{n(n+1)}{3^n}	
+A.296	Taylor series, well defined, point	e^x=\frac {x^0}{0!}+\frac {x^1}{1!}+ ...	0^0	
+A.297	Find all integers, solutions, satisfies, such that, Euler Phi function value, 320	\phi(n)=320		
+A.298	Dirac delta function, Hubble, comoving, redshift, understand, interpret, transformation	\delta(a\chi(z)-b) \rightarrow \delta(z-c)		
+A.299	proof prove show, without calculating	\cos \frac{\pi}5-\cos \frac{2 \pi}5= 0.5		
+A.300	uniformly continuous, on	\frac{1}{1+\log^2 (x)}		
