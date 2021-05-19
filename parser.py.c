@@ -40,6 +40,7 @@ static LIST_IT_CALLBK(append_subtree_pyobject)
 static PyObject *get_opt_pyobject(struct optr_node *opt, int insert_rank_node)
 {
 	if (opt == NULL) {
+		Py_INCREF(Py_None);
 		return Py_None;
 	}
 
