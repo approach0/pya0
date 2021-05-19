@@ -21,7 +21,7 @@ def swap_2_3(fname):
     shell(f'mv {fname}.swap {fname}')
 
 
-def gen_final_runs():
+def gen_final_runs(only_anserini=False):
     shell('mkdir -p tmp')
     shell('mkdir -p runs/2020')
     shell('mkdir -p runs/2021')
@@ -36,36 +36,45 @@ def gen_final_runs():
             elif line.startswith('#'):
                 continue # skip commented row
             r = dict(list(zip(keys, fields)))
-            # use which a0 parameters?
-            shell(f'cp auto_eval-{r["a0_param"]}.tsv auto_eval.tsv')
-            # run math search
-            if r["anserini_run"].split('.')[-1] == 'refined':
-                collection = f'arqmath-{r["year"]}-{r["task"]}-refined'
-            else:
-                collection = f'arqmath-{r["year"]}-{r["task"]}'
-            cmd = f'python3 -m pya0 --index index-{r["task"]}-2021 --collection {collection} --auto-eval tmp' # + ' --select-topic B.202'
-            run_args = cmd.split()
-            for k in ['a0_math_exp', 'a0_rm3']:
-                if r[k] != '':
-                    run_args += r[k].split()
-            shell('rm -f tmp/*') # clean up a0 runfile output directory
-            print(run_args)
-            subprocess.run(run_args)
             # output path/name
             name = '+'.join([f.replace(' ', '_').replace('/', '_') for f in fields])
             output=f'./runs/{r["year"]}/{name}.run'
+            a0save=f'./runs/{r["year"]}/a0-{name}.run'
+            if only_anserini:
+                shell(f'cp {a0save} a0.run')
+            else:
+                # use which a0 parameters?
+                shell(f'cp auto_eval-{r["a0_param"]}.tsv auto_eval.tsv')
+                # run math search
+                if r["year"] == "2021":
+                    collection = f'arqmath-{r["year"]}-{r["task"]}-refined'
+                else:
+                    collection = f'arqmath-{r["year"]}-{r["task"]}'
+                cmd = f'python3 -m pya0 --index index-{r["task"]}-2021 --collection {collection} --auto-eval tmp' # + ' --select-topic B.202'
+                run_args = cmd.split()
+                for k in ['a0_math_exp', 'a0_rm3']:
+                    if r[k] != '':
+                        run_args += r[k].split()
+                shell('rm -f tmp/*') # clean up a0 runfile output directory
+                print(run_args)
+                subprocess.run(run_args)
+                shell(f'mv tmp/*.run a0.run') # take output from last stage as input of this stage
+                shell(f'cp a0.run {a0save}') # save a0 run
             # run 2nd-stage
-            shell(f'mv tmp/*.run a0.run') # take output from last stage as input of this stage
             _2nd_stage = r["2nd_stage"]
+            ans_save=f'./runs/{r["year"]}/anserini-{name}.run'
             if _2nd_stage != '':
                 # preprocessing
                 shell(f'cp {r["anserini_run"]} anserini.run')
                 if r["task"] == 'task1':
                     shell(f'sed -i -e "s/^/A./g" anserini.run')
+                    shell(f'cp anserini.run {ans_save}')
+                    dele_2(ans_save)
                 elif r["task"] == 'task2':
                     shell(f'sed -i -e "s/^/B./g" anserini.run')
                     shell(f'sed -i -e "s/-/ /g" anserini.run')
                     shell(f'sed -i -e "s/Q0//g" anserini.run')
+                    shell(f'cp anserini.run {ans_save}')
                     swap_2_3('a0.run')
                     swap_2_3('anserini.run')
                 # invoke 2nd-stage
@@ -80,19 +89,10 @@ def gen_final_runs():
                     dele_2(output)
                 elif r["task"] == 'task2':
                     swap_2_3(output)
+                shell(f'rm -f a0.run anserini.run')
             else:
                 shell(f'cp a0.run {output}')
             shell(f'sed -i -e "s/ /\\t/g" {output}')
-
-
-def evaluate_from_2020():
-    # Get a sense of how good each search model is from 2020 runs
-    for folder, _, files in os.walk('runs/2020'):
-        for filename in files:
-            path = os.path.join(folder, filename)
-            for task in ['task1', 'task2']:
-                if filename.find(task) >= 0:
-                    shell(f'./eval-arqmath-{task}.sh {path} | grep all')
 
 
 def gen_tsv_from_2020():
@@ -111,7 +111,7 @@ def gen_tsv_from_2020():
             if r['year'] == '2020':
                 name = '+'.join([f.replace(' ', '_').replace('/', '_') for f in fields])
                 path = f'./runs/{r["year"]}/{name}.run'
-                if r["anserini_run"].split('.')[-1] == 'refined':
+                if r["year"] == "2021":
                     collection = f'arqmath-{r["year"]}-{r["task"]}-refined'
                 else:
                     collection = f'arqmath-{r["year"]}-{r["task"]}'
@@ -151,7 +151,7 @@ def gen_submissions(root):
 
 
 if __name__ == '__main__':
-    gen_final_runs()
-    evaluate_from_2020()
-    #gen_tsv_from_2020()
-    gen_submissions('/tuna1/scratch/w32zhong/arqmath/2021-submission')
+    gen_final_runs(only_anserini=False)
+    #gen_final_runs(only_anserini=True)
+    gen_tsv_from_2020()
+    #gen_submissions('/tuna1/scratch/w32zhong/arqmath/2021-submission')
