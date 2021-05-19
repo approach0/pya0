@@ -40,8 +40,7 @@ static LIST_IT_CALLBK(append_subtree_pyobject)
 static PyObject *get_opt_pyobject(struct optr_node *opt, int insert_rank_node)
 {
 	if (opt == NULL) {
-		Py_INCREF(Py_None);
-		return Py_None;
+		Py_RETURN_NONE;
 	}
 
 	PyObject *py_list = PyList_New(0);
@@ -88,6 +87,7 @@ PyObject *do_parsing(PyObject *self, PyObject *args, PyObject* kwargs)
 			PyTuple_SetItem(result, 1, py_opt);
 			optr_release(opt);
 		} else {
+			Py_INCREF(Py_None);
 			PyTuple_SetItem(result, 1, Py_None);
 		}
 
@@ -96,6 +96,7 @@ PyObject *do_parsing(PyObject *self, PyObject *args, PyObject* kwargs)
 
 	} else {
 		PyTuple_SetItem(result, 0, PyUnicode_FromString(ret.msg));
+		Py_INCREF(Py_None);
 		PyTuple_SetItem(result, 1, Py_None);
 	}
 
