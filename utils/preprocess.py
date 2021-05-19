@@ -18,7 +18,9 @@ my_stopwords = (
 )
 
 
-def process_text(txt):
+def preprocess_text(txt):
+    if len(txt) == 0:
+        return txt
     lpad = ' ' if txt[0] == ' ' else ''
     rpad = ' ' if txt[-1] == ' ' else ''
     stem_toks = tokenize_text(txt)
@@ -114,7 +116,7 @@ def preprocess(content, expansion=False):
     for type_, piece, last, next_ in iter_imath_splits(content):
         # print(type_, piece, last, next_)
         if type_ == 'text':
-            output += process_text(piece)
+            output += preprocess_text(piece)
         else:
             if expansion: expand_math(piece, expand_set)
             output += last + piece + next_
@@ -122,7 +124,7 @@ def preprocess(content, expansion=False):
         expands = ' '.join(list(expand_set))
         output += ' __EXPAND__ '
         for type_, piece, last, next_ in iter_imath_splits(expands):
-            if type_ == 'text': output += process_text(piece)
+            if type_ == 'text': output += preprocess_text(piece)
     return output.strip()
 
 
@@ -139,7 +141,7 @@ def preprocess_query(query, expansion=False):
             })
     for kw in query:
         if kw['type'] == 'term':
-            kw['str'] = process_text(kw['str'])
+            kw['str'] = preprocess_text(kw['str'])
         kw['field'] = 'content'
     return query
 
