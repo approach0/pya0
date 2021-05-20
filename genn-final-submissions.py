@@ -21,6 +21,12 @@ def swap_2_3(fname):
     shell(f'mv {fname}.swap {fname}')
 
 
+def preprocess_anserini_task2(tmprun):
+    shell(f'sed -i -e "s/^/B./g" {tmprun}')
+    shell(f'sed -i -e "s/-/ /g" {tmprun}')
+    shell(f'sed -i -e "s/Q0//g" {tmprun}')
+
+
 def gen_final_runs(only_anserini=False):
     shell('mkdir -p tmp')
     shell('mkdir -p runs/2020')
@@ -71,9 +77,7 @@ def gen_final_runs(only_anserini=False):
                     shell(f'cp anserini.run {ans_save}')
                     dele_2(ans_save)
                 elif r["task"] == 'task2':
-                    shell(f'sed -i -e "s/^/B./g" anserini.run')
-                    shell(f'sed -i -e "s/-/ /g" anserini.run')
-                    shell(f'sed -i -e "s/Q0//g" anserini.run')
+                    preprocess_anserini_task2('anserini.run')
                     shell(f'cp anserini.run {ans_save}')
                     swap_2_3('a0.run')
                     swap_2_3('anserini.run')
@@ -151,7 +155,8 @@ def gen_submissions(root):
 
 
 if __name__ == '__main__':
-    gen_final_runs(only_anserini=False)
-    #gen_final_runs(only_anserini=True)
-    gen_tsv_from_2020()
+    #gen_final_runs(only_anserini=False)
+    #gen_tsv_from_2020()
     #gen_submissions('/tuna1/scratch/w32zhong/arqmath/2021-submission')
+    preprocess_anserini_task2('new.run')
+    preprocess_anserini_task2('old.run')
