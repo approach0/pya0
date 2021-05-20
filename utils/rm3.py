@@ -42,7 +42,7 @@ def rm3_expand_query(index, query, hits, feedbackTerms=20, feedbackDocs=10):
         vocab.update(d_vec.keys())
 
     # generate relevance_model (RM)
-    relevance_model = dict([(w, 0) for w in vocab]) # P(w|R) \prox P(w|q1...qn)
+    relevance_model = dict([(w, 0) for w in vocab]) # P(w|R) \prox P(w|q1...qn) / Z
     for word in vocab:
         word_weight = 0 # P(w,q1...qn) = sum_D P(D) * P(w|D) * QueryLikelihood
         for i, d_vec in enumerate(d_vectors):
