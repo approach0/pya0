@@ -67,7 +67,7 @@ def L2R_train(train_data_path, method='lambdaMART', args=[]):
         # init model
         from sklearn.linear_model import LinearRegression
         print(f'LinearRegression()')
-        model = LinearRegression()
+        model = LinearRegression(normalize=True)
         # fit model
         model.fit(train_features, train_rel)
         print(model.coef_, '+', model.intercept_)
