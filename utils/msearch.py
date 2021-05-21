@@ -7,7 +7,7 @@ import requests
 import subprocess
 from .rm3 import rm3_expand_query
 from .l2r import L2R_rerank
-from .mergerun import parse_trec_file
+from .mergerun import parse_trec_file, parse_qrel_file_to_trec
 import collection_driver
 
 def send_json(url, obj, verbose=False):
@@ -77,11 +77,14 @@ def cascade_run(index, cascades, topic_query, verbose=False,
 
         elif cascade == 'reader':
             file_format, file_path = args
-            if file_format.lower() != 'trec':
+            if file_format.lower() == 'trec':
+                run_per_topic, _ = parse_trec_file(file_path)
+            elif file_format.lower() == 'qrel':
+                run_per_topic, _ = parse_qrel_file_to_trec(file_path)
+            else:
                 print(f'Error: Unrecognized file format: {file_format}')
                 quite(1)
 
-            run_per_topic, _ = parse_trec_file(file_path)
             results = {
                 "ret_code": 0,
                 "ret_str": 'from reader'
