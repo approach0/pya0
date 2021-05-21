@@ -1,4 +1,6 @@
 import re
+import os
+from collections import defaultdict
 
 
 def parse_trec_file(file_path):
@@ -28,6 +30,28 @@ def parse_trec_file(file_path):
                 'rank': int(rank),
                 'score': float(score)
             })
+    return run_per_topic, run_name
+
+
+def parse_qrel_file_to_trec(file_path):
+    run_per_topic = defaultdict(list)
+    with open(file_path, 'r') as fh:
+        for line in fh.readlines():
+            line = line.rstrip()
+            fields = line.split('\t')
+            qryID = fields[0]
+            _     = fields[1]
+            docID = fields[2]
+            relev = fields[3]
+            run_per_topic[qryID].append({
+                'docid': int(docID),
+                '_': _,
+                'rank': int(-1),
+                'score': float(relev)
+            })
+    for qryID in run_per_topic:
+        run_per_topic[qryID] = sorted(run_per_topic[qryID], key=lambda x: x['score'], reverse=True)
+    run_name = os.path.basename(file_path)
     return run_per_topic, run_name
 
 
