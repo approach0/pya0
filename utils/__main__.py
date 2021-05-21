@@ -296,7 +296,7 @@ if __name__ == '__main__':
         # actually run query
         topic_query = ('TEST.0', query, '') # no tags
         hits = cascade_run(index, cascades, topic_query, verbose=verbose,
-                           topk=topk, collection=collection)
+                           topk=topk, collection=collection, docid=args.docid)
         # print hits
         for hit in hits:
             print(hit)

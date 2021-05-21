@@ -24,7 +24,7 @@ def send_json(url, obj, verbose=False):
         exit(1)
 
 
-def msearch(index, query, verbose=False, topk=1000, log=None, fork_search=False):
+def msearch(index, query, verbose=False, topk=1000, log=None, fork_search=False, docid=None):
     if fork_search:
         pkl_file = '/tmp/7tncksy_tmp-fork-search.pkl'
         results = {'ret_code': 0, 'ret_str': 'successful', 'hits': []}
@@ -53,10 +53,19 @@ def msearch(index, query, verbose=False, topk=1000, log=None, fork_search=False)
         else:
             if verbose: print(f'cluster returns error: #{ret_code} ({ret_msg})')
 
-    else:
-        result_JSON = pya0.search(index, query,
-            verbose=verbose, topk=topk, log=log)
+    elif docid:
+        print(docid)
+        result_JSON = pya0.search(
+            index, query, verbose=verbose, topk=topk, log=log, docid=docid
+        )
         results = json.loads(result_JSON)
+
+    else:
+        result_JSON = pya0.search(
+            index, query, verbose=verbose, topk=topk, log=log
+        )
+        results = json.loads(result_JSON)
+
     return results
 
 
@@ -64,15 +73,16 @@ def print_query_oneline(query):
     print(['$'+q['str']+'$' if q['type'] == 'tex' else q['str'] for q in query])
 
 
-def cascade_run(index, cascades, topic_query, verbose=False,
+def cascade_run(index, cascades, topic_query, verbose=False, docid=None,
                 topk=1000, collection=None, log=None, fork_search=False):
     qid, query, qtags = topic_query
     hits = []
     for cascade, args in cascades:
         if cascade == 'baseline':
             print_query_oneline(query)
-            results = msearch(index, query, verbose=verbose,
-                log=log, topk=topk, fork_search=fork_search
+            results = msearch(
+                index, query, verbose=verbose, log=log,
+                topk=topk, fork_search=fork_search, docid=docid
             )
 
         elif cascade == 'reader':

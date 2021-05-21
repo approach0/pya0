@@ -12,12 +12,13 @@ PyObject *do_search(PyObject *self, PyObject *args, PyObject* kwargs)
 	/* parse arguments */
 	PyObject *pyindices, *pylist;
 	int verbose = 0, topk = 20;
+	unsigned int docid = 0;
 	const char *log = NULL;
 	static char *kwlist[] = {
-		"index", "keywords", "verbose", "topk", "log", NULL
+		"index", "keywords", "verbose", "topk", "log", "docid", NULL
 	};
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|piz", kwlist,
-		&pyindices, &pylist, &verbose, &topk, &log)) {
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|pizI", kwlist,
+		&pyindices, &pylist, &verbose, &topk, &log, &docid)) {
 		PyErr_Format(PyExc_RuntimeError,
 			"PyArg_ParseTupleAndKeywords error");
 		return NULL;
@@ -33,6 +34,7 @@ PyObject *do_search(PyObject *self, PyObject *args, PyObject* kwargs)
 
 	/* construct query */
 	struct query qry = QUERY_NEW;
+	qry.docID = docid;
 	for (int i = 0; i < list_len; i++) {
 		PyObject *item = PyList_GetItem(pylist, i);
 		if (!PyDict_Check(item)) {
@@ -79,10 +81,10 @@ PyObject *do_search(PyObject *self, PyObject *args, PyObject* kwargs)
 	struct indices *indices = PyLong_AsVoidPtr(pyindices);
 	ranked_results_t srch_res; /* search results */
 	if (verbose) {
-		srch_res = indices_run_query(indices, &qry, topk, NULL, 0, stdout);
+		srch_res = indices_run_query(indices, &qry, topk, NULL, stdout);
 	} else {
 		FILE *log_fh = (log == NULL) ? fopen("/dev/null", "a") : fopen(log, "a");
-		srch_res = indices_run_query(indices, &qry, topk, NULL, 0, log_fh);
+		srch_res = indices_run_query(indices, &qry, topk, NULL, log_fh);
 		fclose(log_fh);
 	}
 
