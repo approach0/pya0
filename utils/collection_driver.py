@@ -1,4 +1,5 @@
 import pya0
+import json
 from preprocess import tokenize_text
 
 
@@ -129,10 +130,17 @@ def _topic_process__arqmath_2021_task2_refined(idx, line):
     return _topic_process__arqmath_2021_task2(idx, line)
 
 
-def _featslookup__test(topic_query, doc):
+def _featslookup__arqmath_2020_task1(topic_query, index, docid):
     qid, query, qtags = topic_query
     # qnum
     qnum = int(qid.split('.')[1])
+    # doc
+    doc = pya0.index_lookup_doc(index, docid)
+    # doc score
+    result_JSON = pya0.search(index, query, verbose=False, topk=1, log=None, docid=docid)
+    results = json.loads(result_JSON)
+    doc_s = results['hits'][0] if results['ret_code'] == 0 and len(results['hits']) > 0 else {'score': 0}
+    score = doc_s['score'] if doc_s['docid'] == docid else 0
     # tags
     dtags = doc['tags']
     qtags = tokenize_text(qtags, no_punctuation=True, rm_stopwords=False)
@@ -140,18 +148,8 @@ def _featslookup__test(topic_query, doc):
     n_tag_match = len(set(dtags) & set(qtags))
     # upvotes
     upvotes = int(doc['title'].split(':')[1])
-    return [qnum, upvotes, n_tag_match]
+    return [qnum, upvotes, n_tag_match, score]
 
 
-def _featslookup__arqmath_2020_task1(topic_query, doc):
-    qid, query, qtags = topic_query
-    # qnum
-    qnum = int(qid.split('.')[1])
-    # tags
-    dtags = doc['tags']
-    qtags = tokenize_text(qtags, no_punctuation=True, rm_stopwords=False)
-    dtags = tokenize_text(dtags, no_punctuation=True, rm_stopwords=False)
-    n_tag_match = len(set(dtags) & set(qtags))
-    # upvotes
-    upvotes = int(doc['title'].split(':')[1])
-    return [qnum, upvotes, n_tag_match]
+def _feats_qid_process__arqmath_2020_task1(qfield):
+    return 'A.' + qfield.split(':')[1]

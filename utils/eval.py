@@ -86,6 +86,7 @@ def evaluate_log(collection, path):
 
 
 def TREC_output(hits, queryID, append=False, output_file="tmp.run"):
+    if len(hits) == 0: return
     with open(output_file, 'a' if append else 'w') as fh:
         for i, hit in enumerate(hits):
             print("%s %s %u %u %f %s" % (
@@ -124,7 +125,7 @@ def parse_qrel_file(file_path):
     return qrels
 
 
-def run_fold_topics(index, collection, fold, cascades, output, topk,
+def run_fold_topics(index, collection, fold, cascades, output, topk, purpose,
                     math_expansion=False, verbose=False, log=None, fork_search=False):
     #tracemalloc.start()
     for i, topic_query in enumerate(fold):
@@ -141,8 +142,9 @@ def run_fold_topics(index, collection, fold, cascades, output, topk,
 
         # actually run query
         print('[cascade_run]', qid, f' ==> {output}')
-        hits = cascade_run(index, cascades, topic_query, verbose=verbose, topk=topk,
-            collection=collection, log=log, fork_search=fork_search)
+        hits = cascade_run(index, cascades, topic_query, collection=collection,
+            purpose=purpose, run_num=i, verbose=verbose, topk=topk,
+            log=log, fork_search=fork_search, output=output)
         print()
 
         # output TREC-format run file
@@ -176,21 +178,17 @@ def run_topics(index, collection, output, topk=1000, verbose=False, log=None,
         tmp_dict = dict([(h[0], 0) for h in hold_out])
         cur_fold = [f for f in topic_queries if f[0] not in tmp_dict]
 
-        def outfor(goal):
+        def outfor(purpose):
+            filename = os.path.basename(output)
             filename_fields = output.split('.')
             filename = '.'.join(filename_fields[:-1])
             ext = filename_fields[-1]
-            return f'{output}' if kfold == 1 else f'{filename}.fold{k}.{goal}.{ext}'
+            return f'{output}' if kfold == 1 else f'{filename}.fold{k}.{purpose}.{ext}'
 
         # for training
-        run_fold_topics(index, collection, cur_fold, cascades, outfor('train'), topk,
+        run_fold_topics(index, collection, cur_fold, cascades, outfor('train'), topk, 'train',
             math_expansion=math_expansion, verbose=verbose, log=None, fork_search=fork_search)
 
         # for testing
-        run_fold_topics(index, collection, hold_out, cascades, outfor('test'), topk,
+        run_fold_topics(index, collection, hold_out, cascades, outfor('test'), topk, 'test',
             math_expansion=math_expansion, verbose=verbose, log=log, fork_search=fork_search)
-
-        # for testing: invoke trec_eval ...
-        qrels = get_qrels_filepath(collection)
-        print('\n --- trec_eval ---\n', end='')
-        trec_eval(qrels, outfor('test'), trec_eval_args)

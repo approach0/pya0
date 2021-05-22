@@ -33,7 +33,7 @@ def parse_trec_file(file_path):
     return run_per_topic, run_name
 
 
-def parse_qrel_file_to_trec(file_path):
+def parse_qrel_file_to_run(file_path):
     run_per_topic = defaultdict(list)
     with open(file_path, 'r') as fh:
         for line in fh.readlines():
