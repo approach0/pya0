@@ -77,7 +77,7 @@ def L2R_train(method, args):
 
     if train_data_path is None or not os.path.exists(train_data_path):
         return None
-    if method == 'linear':
+    if method == 'linearRegression':
         # init model
         from sklearn.linear_model import LinearRegression
         print(f'LinearRegression()')
@@ -119,7 +119,7 @@ def L2R_rerank(method, params, collection, topic_query, hits, index):
     X = np.array(X)
 
     # load and apply model
-    if method == 'linear_regression':
+    if method == 'linearRegression':
         model_path = params[0]
         with open(model_path, 'rb') as fh:
             model = pickle.load(fh)
@@ -135,7 +135,7 @@ def L2R_rerank(method, params, collection, topic_query, hits, index):
             hit['y_score'] = float(Y[i])
 
     else:
-        print('Unrecognized L2R training method:', method)
+        print('Unrecognized L2R re-ranking method:', method)
         quit(1)
 
     # rerank
