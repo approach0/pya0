@@ -125,7 +125,7 @@ def parse_qrel_file(file_path):
     return qrels
 
 
-def run_fold_topics(index, collection, fold, cascades, output, topk, purpose,
+def run_fold_topics(index, collection, k, fold, cascades, output, topk, purpose,
                     math_expansion=False, verbose=False, log=None, fork_search=False):
     #tracemalloc.start()
     for i, topic_query in enumerate(fold):
@@ -143,7 +143,7 @@ def run_fold_topics(index, collection, fold, cascades, output, topk, purpose,
         # actually run query
         print('[cascade_run]', qid, f' ==> {output}')
         hits = cascade_run(index, cascades, topic_query, collection=collection,
-            purpose=purpose, run_num=i, verbose=verbose, topk=topk,
+            purpose=purpose, run_num=i, verbose=verbose, topk=topk, fold=k,
             log=log, fork_search=fork_search, output=output)
         print()
 
@@ -186,9 +186,9 @@ def run_topics(index, collection, output, topk=1000, verbose=False, log=None,
             return f'{output}' if kfold == 1 else f'{filename}.fold{k}.{purpose}.{ext}'
 
         # for training
-        run_fold_topics(index, collection, cur_fold, cascades, outfor('train'), topk, 'train',
+        run_fold_topics(index, collection, k, cur_fold, cascades, outfor('train'), topk, 'train',
             math_expansion=math_expansion, verbose=verbose, log=None, fork_search=fork_search)
 
         # for testing
-        run_fold_topics(index, collection, hold_out, cascades, outfor('test'), topk, 'test',
+        run_fold_topics(index, collection, k, hold_out, cascades, outfor('test'), topk, 'test',
             math_expansion=math_expansion, verbose=verbose, log=log, fork_search=fork_search)
