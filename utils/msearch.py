@@ -74,11 +74,18 @@ def print_query_oneline(query):
 
 def cascade_run(index, cascades, topic_query,
     purpose='test', run_num=0, verbose=False, docid=None, output=None,
-    topk=1000, collection=None, log=None, fork_search=False):
+    topk=1000, collection=None, log=None, fork_search=False, fold=0):
 
     qid, query, qtags = topic_query
     hits = []
     for cascade, args in cascades:
+        if cascade == 'filter':
+            filter_name = args[0]
+            if filter_name == purpose:
+                continue
+            else:
+                break
+
         if cascade == 'baseline':
             print_query_oneline(query)
             results = msearch(
@@ -107,11 +114,10 @@ def cascade_run(index, cascades, topic_query,
                 results['hits'] = hits
 
             elif file_format.lower() == 'svmlight_to_fold':
-                if purpose == 'train':
-                    dat_per_topic = parse_svmlight_by_topic(collection, file_path)
-                    train_data = dat_per_topic[qid] if qid in dat_per_topic else ''
-                    with open(output, 'w' if run_num == 0 else 'a') as fh:
-                        fh.write(train_data)
+                dat_per_topic = parse_svmlight_by_topic(collection, file_path)
+                train_data = dat_per_topic[qid] if qid in dat_per_topic else ''
+                with open(output, 'w' if run_num == 0 else 'a') as fh:
+                    fh.write(train_data)
             else:
                 print(f'Error: Unrecognized file format: {file_format}')
                 quit(1)
@@ -126,6 +132,7 @@ def cascade_run(index, cascades, topic_query,
             )
 
         elif cascade == 'l2r':
+            args[1] = [p.replace('__fold__', f'fold{fold}') for p in args[1]]
             method, params = args
             topic_query = (qid, query, qtags)
             results['hits'] = L2R_rerank(

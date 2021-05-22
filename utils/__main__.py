@@ -35,6 +35,8 @@ if __name__ == '__main__':
         help="Issue direct search query in pickle, and output JSON results")
     parser.add_argument('--select-topic', type=str, required=False,
         help="Select specific topic to run for evaluation")
+    parser.add_argument('--filter', type=str, required=False,
+        help="Add topic filter layer for training/testing")
     parser.add_argument('--docid', type=int, required=False,
         help="Lookup a raw document from index")
     parser.add_argument('--index', type=str, required=False,
@@ -95,18 +97,25 @@ if __name__ == '__main__':
         print('use fallback parser.')
         pya0.use_fallback_parser(True)
 
-    # parse RM3 arguments
+    # initial filter layer
+    if args.filter:
+        cascades = [('filter', [args.filter])]
+    else:
+        cascades = []
+
+    # initial retrieve layer
     if args.read_file:
         file_format, file_path = args.read_file.split(':')
-        cascades = [('reader', [file_format, file_path])]
+        cascades.append(('reader', [file_format, file_path]))
     else:
-        cascades = [('baseline', None)]
+        cascades.append(('baseline', None))
 
     # add cascade layers
     if args.rm3:
         fbTerms, fbDocs = args.rm3.split(',')
         fbTerms, fbDocs = int(fbTerms), int(fbDocs)
         cascades.append(('rm3', [fbTerms, fbDocs]))
+
     elif args.learning2rank_rerank:
         fields = args.learning2rank_rerank.split(',')
         method, params = fields[0], fields[1:] if len(fields) > 1 else []

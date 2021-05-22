@@ -1,6 +1,7 @@
 pya0/
 visualization/
 runs/
+tmp/
 *.run
 *.runtimes
 *.log
@@ -8,3 +9,4 @@ runs/
 *.model
 .build/
 *.swp
+product.tsv
