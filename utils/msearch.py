@@ -6,8 +6,8 @@ import pickle
 import requests
 import subprocess
 from .rm3 import rm3_expand_query
-from .l2r import L2R_rerank
-from .mergerun import parse_trec_file, parse_qrel_file_to_trec
+from .l2r import L2R_rerank, parse_svmlight_by_topic
+from .mergerun import parse_trec_file, parse_qrel_file_to_run
 import collection_driver
 
 def send_json(url, obj, verbose=False):
@@ -54,7 +54,6 @@ def msearch(index, query, verbose=False, topk=1000, log=None, fork_search=False,
             if verbose: print(f'cluster returns error: #{ret_code} ({ret_msg})')
 
     elif docid:
-        print(docid)
         result_JSON = pya0.search(
             index, query, verbose=verbose, topk=topk, log=log, docid=docid
         )
@@ -73,8 +72,10 @@ def print_query_oneline(query):
     print(['$'+q['str']+'$' if q['type'] == 'tex' else q['str'] for q in query])
 
 
-def cascade_run(index, cascades, topic_query, verbose=False, docid=None,
-                topk=1000, collection=None, log=None, fork_search=False):
+def cascade_run(index, cascades, topic_query,
+    purpose='test', run_num=0, verbose=False, docid=None, output=None,
+    topk=1000, collection=None, log=None, fork_search=False):
+
     qid, query, qtags = topic_query
     hits = []
     for cascade, args in cascades:
@@ -86,23 +87,34 @@ def cascade_run(index, cascades, topic_query, verbose=False, docid=None,
             )
 
         elif cascade == 'reader':
-            file_format, file_path = args
-            if file_format.lower() == 'trec':
-                run_per_topic, _ = parse_trec_file(file_path)
-            elif file_format.lower() == 'qrel':
-                run_per_topic, _ = parse_qrel_file_to_trec(file_path)
-            else:
-                print(f'Error: Unrecognized file format: {file_format}')
-                quite(1)
-
             results = {
                 "ret_code": 0,
                 "ret_str": 'from reader'
             }
+            file_format, file_path = args
+            if file_format.lower() == 'trec':
+                run_per_topic, _ = parse_trec_file(file_path)
 
-            hits = run_per_topic[qid] if qid in run_per_topic else []
-            collection_driver.TREC_reverse(collection, index, hits)
-            results['hits'] = hits
+                hits = run_per_topic[qid] if qid in run_per_topic else []
+                collection_driver.TREC_reverse(collection, index, hits)
+                results['hits'] = hits
+
+            elif file_format.lower() == 'qrel':
+                run_per_topic, _ = parse_qrel_file_to_run(file_path)
+
+                hits = run_per_topic[qid] if qid in run_per_topic else []
+                collection_driver.TREC_reverse(collection, index, hits)
+                results['hits'] = hits
+
+            elif file_format.lower() == 'svmlight_to_fold':
+                if purpose == 'train':
+                    dat_per_topic = parse_svmlight_by_topic(collection, file_path)
+                    train_data = dat_per_topic[qid] if qid in dat_per_topic else ''
+                    with open(output, 'w' if run_num == 0 else 'a') as fh:
+                        fh.write(train_data)
+            else:
+                print(f'Error: Unrecognized file format: {file_format}')
+                quit(1)
 
         elif cascade == 'rm3':
             fbTerms, fbDocs = args
@@ -114,10 +126,11 @@ def cascade_run(index, cascades, topic_query, verbose=False, docid=None,
             )
 
         elif cascade == 'l2r':
-            method, model_path = args
+            method, params = args
             topic_query = (qid, query, qtags)
-            results['hits'] = L2R_rerank(model_path, collection, topic_query,
-                                         hits, index, method=method)
+            results['hits'] = L2R_rerank(
+                method, params, collection, topic_query, hits, index
+            )
 
         else:
             print(f'Unrecognized cascade layer: {cascade}', file=sys.stderr)
@@ -126,7 +139,7 @@ def cascade_run(index, cascades, topic_query, verbose=False, docid=None,
 
         ret_code = results['ret_code']
         ret_msg = results['ret_str']
-        hits = results['hits'] if ret_code == 0 else []
+        hits = results['hits'] if ret_code == 0 and 'hits' in results else []
         n_hits = len(hits)
 
         RED = '\033[31m'

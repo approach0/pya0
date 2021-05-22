@@ -70,14 +70,10 @@ if __name__ == '__main__':
         help="Apply RM3 (query expansion using Relevance Model): fbTerms,fbDocs. E.g., '--rm3 20,10'")
     parser.add_argument('--training-data-from-run', type=str, required=False,
         help="Output learning2rank training data")
-    parser.add_argument('--learning2rank-linear-regression', type=str, required=False,
-        help="Train and save Linear Regression model. Argument format: data_path")
-    parser.add_argument('--learning2rank-lambda-mart', type=str, required=False,
-        help="Train and save LambdaMART model. Argument format: data_path,n_tree=150,depth=5")
-    parser.add_argument('--linear-regression', type=str, required=False,
-        help="Apply Linear Regression to rank results. E.g., '--linear-regression <model>'")
-    parser.add_argument('--lambda-mart', type=str, required=False,
-        help="Apply LambdaMART (a pairwise/listwise learning-to-rank method). E.g., '--lambda-mart <model>'")
+    parser.add_argument('--learning2rank-train', type=str, required=False,
+        help="train learning-to-rank model. E.g., '--learnig2rank-train lambdaMART,90,5,<path>'")
+    parser.add_argument('--learning2rank-rerank', type=str, required=False,
+        help="apply learning-to-rank model. E.g., '--learnig2rank-rerank lambdaMART,<path>'")
     parser.add_argument('--math-expansion', required=False, action='store_true',
         help="do text expansion for math query keyword(s)")
     parser.add_argument('--kfold', type=int, required=False,
@@ -111,16 +107,10 @@ if __name__ == '__main__':
         fbTerms, fbDocs = args.rm3.split(',')
         fbTerms, fbDocs = int(fbTerms), int(fbDocs)
         cascades.append(('rm3', [fbTerms, fbDocs]))
-
-    elif args.linear_regression:
-        model_path = args.linear_regression
-        method = 'linear_regression'
-        cascades.append(('l2r', [method, model_path]))
-
-    elif args.lambda_mart:
-        model_path = args.lambda_mart
-        method = 'lambdaMART'
-        cascades.append(('l2r', [method, model_path]))
+    elif args.learning2rank_rerank:
+        fields = args.learning2rank_rerank.split(',')
+        method, params = fields[0], fields[1:] if len(fields) > 1 else []
+        cascades.append(('l2r', [method, params]))
 
     # list prebuilt indexes?
     if args.list_prebuilt_indexes:
@@ -171,15 +161,10 @@ if __name__ == '__main__':
         exit(0)
 
     # learning to rank?
-    elif args.learning2rank_linear_regression:
-        path = args.learning2rank_linear_regression
-        L2R_train(path, args=None, method='linear')
-        exit(0)
-
-    elif args.learning2rank_lambda_mart:
-        splits = args.learning2rank_lambda_mart.split(',')
-        path, args = splits[0], splits[1:]
-        L2R_train(path, args=args, method='lambdaMART')
+    elif args.learning2rank_train:
+        fields = args.learning2rank_train.split(',')
+        method, params = fields[0], fields[1:] if len(fields) > 1 else []
+        L2R_train(method, params)
         exit(0)
 
     # open index from specified index path or prebuilt index
