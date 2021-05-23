@@ -50,51 +50,47 @@ kfold_test()
 kfold_metric_result()
 {
 	measure=$1
-	suffix=$2
+	name=$2
+	trec=./eval-arqmath-task1.trec.sh
 	sum=0
 	for i in $(seq 0 $(($KFOLD - 1))); do
-		score=$(cat ./tmp/$RUN_NAME.fold${i}.$suffix | grep all | grep $measure | awk '{print $3}')
+		score=$($trec ./$OUTDIR/${name}.fold${i}.test.run | grep all | grep $measure | awk '{print $3}')
 		sum=$(python -c "print($sum + $score)")
 	done
 	avg=$(python -c "print($sum / $KFOLD)")
-	echo "avg($measure) of $suffix = $avg"
+	echo "avg($measure) of $name = $avg"
 }
 
 kfold_summary_result()
 {
-	res_name=${L2R_METHOD}$args
-	> ./tmp/$RUN_NAME.$res_name.scores
-	kfold_metric_result ndcg test.scores >> ./tmp/$RUN_NAME.$res_name.scores
-	kfold_metric_result ndcg l2r.scores  >> ./tmp/$RUN_NAME.$res_name.scores
-	kfold_metric_result map test.scores  >> ./tmp/$RUN_NAME.$res_name.scores
-	kfold_metric_result map l2r.scores   >> ./tmp/$RUN_NAME.$res_name.scores
-	kfold_metric_result bpref test.scores  >> ./tmp/$RUN_NAME.$res_name.scores
-	kfold_metric_result bpref l2r.scores   >> ./tmp/$RUN_NAME.$res_name.scores
-	cat ./tmp/$RUN_NAME.$res_name.scores
-#./eval-arqmath.sh ./tmp/$RUN_NAME.fold${i}.test.run | tee ./tmp/$RUN_NAME.fold${i}.test.scores
-#./eval-arqmath.sh ./tmp/$RUN_NAME.fold${i}.l2r.run | tee ./tmp/$RUN_NAME.fold${i}.l2r.scores
+	name=${1-linearRegression}
+	for metric in ndcg map P_10 bpref; do
+		kfold_metric_result $metric $name
+	done
 }
 
-set -xe
+set -e
 
 #genn_baseline
 #genn_data
 #rm -f $OUTDIR/*.train.model
 #rm -f $OUTDIR/*.test.run
 
-kfold_train linearRegression
-kfold_test  linearRegression
+#kfold_train linearRegression
+#kfold_test  linearRegression
 #kfold_train lambdaMART,10,5
 #kfold_test  lambdaMART,10,5
-kfold_train lambdaMART,10,10
-kfold_test  lambdaMART,10,10
-kfold_train lambdaMART,50,5
-kfold_test  lambdaMART,50,5
-kfold_train lambdaMART,50,10
-kfold_test  lambdaMART,50,10
-kfold_train lambdaMART,90,5
-kfold_test  lambdaMART,90,5
-kfold_train lambdaMART,150,3
-kfold_test  lambdaMART,150,3
-kfold_train lambdaMART,150,5
-kfold_test  lambdaMART,150,5
+#kfold_train lambdaMART,50,5
+#kfold_test  lambdaMART,50,5
+#kfold_train lambdaMART,90,3
+#kfold_test  lambdaMART,90,3
+#kfold_train lambdaMART,90,5
+#kfold_test  lambdaMART,90,5
+
+kfold_summary_result base
+#kfold_summary_result rerank-linearRegression
+#kfold_summary_result rerank-lambdaMART-10-5
+#kfold_summary_result rerank-lambdaMART-10-10
+#kfold_summary_result rerank-lambdaMART-50-5
+#kfold_test  lambdaMART,90,5
+kfold_summary_result rerank-lambdaMART-90-5
