@@ -87,10 +87,22 @@ set -e
 #kfold_train lambdaMART,90,5
 #kfold_test  lambdaMART,90,5
 
-kfold_summary_result base
+#kfold_summary_result base
 #kfold_summary_result rerank-linearRegression
 #kfold_summary_result rerank-lambdaMART-10-5
 #kfold_summary_result rerank-lambdaMART-10-10
 #kfold_summary_result rerank-lambdaMART-50-5
 #kfold_test  lambdaMART,90,5
-kfold_summary_result rerank-lambdaMART-90-5
+#kfold_summary_result rerank-lambdaMART-90-5
+
+python << HEREDOC
+import pickle
+import numpy as np
+sum = np.array([0, 0, 0], dtype=float)
+for k in range($KFOLD):
+	with open(f'tmp/linearRegression.fold{k}.train.model', 'rb') as fh:
+		model = pickle.load(fh)
+		print('+', model.coef_)
+		sum += model.coef_
+print(sum / $KFOLD)
+HEREDOC
