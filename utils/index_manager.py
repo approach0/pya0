@@ -138,6 +138,7 @@ def download_prebuilt_index(index_name, force=False, verbose=True, mirror=None):
 def mount_image_index(image_path, image_fs):
     mount_dir = os.path.dirname(image_path) + '/mnt-' + os.path.basename(image_path)
     os.makedirs(mount_dir, exist_ok=True)
-    subprocess.run(["sudo", "umount", mount_dir])
-    subprocess.run(["sudo", "mount", "-t", image_fs, image_path, mount_dir])
+    if not os.path.ismount(mount_dir):
+        subprocess.run(["sudo", "umount", mount_dir])
+        subprocess.run(["sudo", "mount", "-t", image_fs, image_path, mount_dir])
     return mount_dir
