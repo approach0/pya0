@@ -65,7 +65,7 @@ def parse_svmlight_by_topic(collection, file_path):
     return dat_per_topic
 
 
-def L2R_train(method, args):
+def L2R_train(method, args, output_file=None):
     train_data_path = args[-1]
     print(f'[learing to rank] Loading data from {train_data_path}')
     # load data
@@ -73,7 +73,8 @@ def L2R_train(method, args):
     train_data = load_svmlight_file(train_data_path, query_id=True)
     train_features, train_rel, train_qid = train_data
     # output file
-    output_file = strip_ext(train_data_path) + '.model'
+    if output_file is None:
+        output_file = strip_ext(train_data_path) + '.model'
 
     if train_data_path is None or not os.path.exists(train_data_path):
         return None

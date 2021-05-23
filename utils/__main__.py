@@ -173,7 +173,7 @@ if __name__ == '__main__':
     elif args.learning2rank_train:
         fields = args.learning2rank_train.split(',')
         method, params = fields[0], fields[1:] if len(fields) > 1 else []
-        L2R_train(method, params)
+        L2R_train(method, params, output_file=args.trec_output)
         exit(0)
 
     # open index from specified index path or prebuilt index
