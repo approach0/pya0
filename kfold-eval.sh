@@ -4,10 +4,9 @@ INDEX=index-task1-2021
 #COLLECTION="arqmath-2020-task1"
 COLLECTION="arqmath-2020-task1 --math-expansion"
 QREL=./topics-and-qrels/qrels.arqmath-2020-task1.txt
-#MODEL=lambdaMART,90,5
-MODEL=linearRegression
 OUTDIR=tmp
 KFOLD=8
+MODEL_NAME=$(echo $MODEL | sed -e 's/,/-/g')
 
 genn_baseline()
 {
@@ -30,18 +29,22 @@ genn_data()
 
 kfold_train()
 {
+	MODEL=${1-linearRegression}
+	MODEL_NAME=$(echo $MODEL | sed -e 's/,/-/g')
 	for i in $(seq 0 $(($KFOLD - 1))); do
 		python -m pya0 --index $INDEX --collection $COLLECTION \
-			--learning2rank-train ${MODEL},./$OUTDIR/feats.fold${i}.train.dat
-		mv ./$OUTDIR/feats.fold${i}.train.model ./$OUTDIR/$MODEL.fold${i}.train.model
+			--learning2rank-train ${MODEL},./$OUTDIR/feats.fold${i}.train.dat \
+			--trec-output ./$OUTDIR/$MODEL_NAME.fold${i}.train.model
 	done
 }
 
 kfold_test()
 {
+	MODEL=${1-linearRegression}
+	MODEL_NAME=$(echo $MODEL | sed -e 's/,/-/g')
 	python -m pya0 --index $INDEX --collection $COLLECTION \
-		--learning2rank-rerank lambdaMART,./$OUTDIR/$MODEL.__fold__.train.model \
-		--kfold $KFOLD --filter test --trec-output ./$OUTDIR/rerank-$MODEL.run
+		--learning2rank-rerank $(echo $MODEL | cut -d, -f 1),./$OUTDIR/$MODEL_NAME.__fold__.train.model \
+		--kfold $KFOLD --filter test --trec-output ./$OUTDIR/rerank-$MODEL_NAME.run
 }
 
 kfold_metric_result()
@@ -76,5 +79,22 @@ set -xe
 
 #genn_baseline
 #genn_data
-kfold_train
-kfold_test
+#rm -f $OUTDIR/*.train.model
+#rm -f $OUTDIR/*.test.run
+
+kfold_train linearRegression
+kfold_test  linearRegression
+#kfold_train lambdaMART,10,5
+#kfold_test  lambdaMART,10,5
+kfold_train lambdaMART,10,10
+kfold_test  lambdaMART,10,10
+kfold_train lambdaMART,50,5
+kfold_test  lambdaMART,50,5
+kfold_train lambdaMART,50,10
+kfold_test  lambdaMART,50,10
+kfold_train lambdaMART,90,5
+kfold_test  lambdaMART,90,5
+kfold_train lambdaMART,150,3
+kfold_test  lambdaMART,150,3
+kfold_train lambdaMART,150,5
+kfold_test  lambdaMART,150,5
