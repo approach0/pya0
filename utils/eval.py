@@ -10,7 +10,7 @@ import collection_driver
 import tracemalloc
 
 
-def gen_topics_queries(collection, fold=None):
+def gen_topics_queries(collection, fold=None, qfilter=None):
     func_name = '_topic_process__' + collection.replace('-', '_')
     handler = getattr(collection_driver, func_name)
     cache = get_cache_home()
@@ -28,12 +28,18 @@ def gen_topics_queries(collection, fold=None):
             with open(src, 'r') as fh:
                 for i, line in enumerate(fh):
                     line = line.rstrip()
-                    yield handler(i, line)
+                    qid, query, args = handler(i, line)
+                    if qfilter:
+                        query = list(filter(qfilter, query))
+                    yield qid, query, args
         elif ext == 'json':
             with open(src, 'r') as fh:
                 qlist = json.load(fh)
                 for i, json_item in enumerate(qlist):
-                    yield handler(i, json_item)
+                    qid, query, args = handler(i, json_item)
+                    if qfilter:
+                        query = list(filter(qfilter, query))
+                    yield qid, query, args
     if not found:
         raise ValueError(f'Unrecognized index name {collection}')
 
@@ -132,7 +138,7 @@ def run_fold_topics(index, collection, k, fold, cascades, output, topk, purpose,
         qid, query, args = topic_query
 
         # skip topic file header / comments
-        if qid is None or query is None:
+        if qid is None or query is None or len(query) == 0:
             continue
 
         # process initial query
@@ -163,6 +169,7 @@ def run_topics(index, collection, output, topk=1000, verbose=False, log=None,
     kfold=None, math_expansion=None, fork_search=False, select_topic=None):
     # prepare K-fold evaluation
     topic_queries = list(gen_topics_queries(collection))
+    #topic_queries = list(gen_topics_queries(collection, qfilter=lambda x: x['type'] == 'tex'))
     if select_topic:
         topic_queries = list(filter(lambda x: x[0] == select_topic, topic_queries))
     N = len(topic_queries)
