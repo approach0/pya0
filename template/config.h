@@ -75,7 +75,6 @@
 
 #define PRINT_MERGE_TIME
 
-//#define DO_MERGE do_wand_merge
-#define DO_MERGE do_maxscore_merge
+#define SEARCH_MERGER maxscore
 
 #define UNLIMIT_FILENO
