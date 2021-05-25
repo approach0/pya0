@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import copy
 import tempfile
 import subprocess
 from .index_manager import get_cache_home
@@ -134,7 +135,8 @@ def parse_qrel_file(file_path):
 def run_fold_topics(index, collection, k, fold, cascades, output, topk, purpose,
                     math_expansion=False, verbose=False, log=None, fork_search=False):
     #tracemalloc.start()
-    for i, topic_query in enumerate(fold):
+    for i, topic_query_ in enumerate(fold):
+        topic_query = copy.deepcopy(topic_query_)
         qid, query, args = topic_query
 
         # skip topic file header / comments
