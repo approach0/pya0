@@ -16,8 +16,6 @@ genn_baseline()
 
 genn_data()
 {
-	mkdir -p ./$OUTDIR
-	rm -f ./$OUTDIR/*
 	python -m pya0 --index $INDEX --collection $COLLECTION \
 		--read-file QREL:$QREL --trec-output ./$OUTDIR/perfect.run
 	python -m pya0 --index $INDEX --collection $COLLECTION \
@@ -70,22 +68,23 @@ kfold_summary_result()
 }
 
 set -e
+mkdir -p ./$OUTDIR
+rm -f ./$OUTDIR/*
+rm -f $OUTDIR/*.train.model
+rm -f $OUTDIR/*.test.run
 
-#rm -f $OUTDIR/*.train.model
-#rm -f $OUTDIR/*.test.run
-
-#genn_baseline
-#genn_data
-#kfold_train linearRegression
-#kfold_test  linearRegression
-#kfold_train lambdaMART,10,5
-#kfold_test  lambdaMART,10,5
-#kfold_train lambdaMART,10,10
-#kfold_test  lambdaMART,10,10
-#kfold_train lambdaMART,50,5
-#kfold_test  lambdaMART,50,5
-#kfold_train lambdaMART,90,5
-#kfold_test  lambdaMART,90,5
+genn_baseline
+genn_data
+kfold_train linearRegression
+kfold_test  linearRegression
+kfold_train lambdaMART,10,5
+kfold_test  lambdaMART,10,5
+kfold_train lambdaMART,10,10
+kfold_test  lambdaMART,10,10
+kfold_train lambdaMART,50,5
+kfold_test  lambdaMART,50,5
+kfold_train lambdaMART,90,5
+kfold_test  lambdaMART,90,5
 
 kfold_summary_result base
 kfold_summary_result rerank-linearRegression
