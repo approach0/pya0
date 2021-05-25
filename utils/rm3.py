@@ -1,7 +1,17 @@
 from collections import Counter
+from nltk.corpus import stopwords
 from .preprocess import tokenize_query, tokenize_content
 import pya0
 import re
+
+
+from nltk.stem import LancasterStemmer
+stemmer = LancasterStemmer()
+my_stopwords = (
+    stopwords.words('english') +
+    ['__EXPAND__', '__answer__']
+)
+my_stopwords = [stemmer.stem(w) for w in my_stopwords]
 
 
 def list2vec(lst):
@@ -39,7 +49,10 @@ def rm3_expand_query(index, query, hits, feedbackTerms=20, feedbackDocs=10):
         d_vec = list2vec(d_lst)
         d_vectors.append(d_vec)
         d_scores.append(hit['score'])
-        vocab.update(d_vec.keys())
+        # consider stop words in the document?
+        #pruned_voc = list(filter(lambda x: x not in my_stopwords, d_vec.keys()))
+        pruned_voc = d_vec.keys()
+        vocab.update(pruned_voc)
 
     # generate relevance_model (RM)
     relevance_model = dict([(w, 0) for w in vocab]) # P(w|R) \prox P(w|q1...qn)
