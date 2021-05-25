@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import copy
 import argparse
@@ -202,6 +203,8 @@ if __name__ == '__main__':
     if args.direct_search:
         with open(args.direct_search, 'rb') as fh:
             query, topk, log = pickle.load(fh)
+            print(query, topk, log, file=sys.stderr)
+            sys.stderr.flush()
             res = msearch(index, query, topk=topk, log=log)
             print(json.dumps(res, indent=4))
         pya0.index_close(index)
@@ -328,6 +331,7 @@ if __name__ == '__main__':
             trec_eval_args=args.eval_args,
             cascades=cascades,
             math_expansion=args.math_expansion,
+            #fork_search=args.index,
             kfold=args.kfold,
             select_topic=args.select_topic
         )

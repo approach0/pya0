@@ -4,6 +4,7 @@ import pya0
 import json
 import pickle
 import requests
+import tempfile
 import subprocess
 from .rm3 import rm3_expand_query
 from .l2r import L2R_rerank, parse_svmlight_by_topic
@@ -26,7 +27,7 @@ def send_json(url, obj, verbose=False):
 
 def msearch(index, query, verbose=False, topk=1000, log=None, fork_search=False, docid=None):
     if fork_search:
-        pkl_file = '/tmp/7tncksy_tmp-fork-search.pkl'
+        pkl_file = tempfile.mktemp() + '-fork-search.pkl'
         results = {'ret_code': 0, 'ret_str': 'successful', 'hits': []}
         with open(pkl_file, 'wb') as fh:
             pickle.dump((query, topk, log), fh)
