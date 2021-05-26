@@ -24,11 +24,13 @@ def TREC_reverse(collection, index, hits):
     if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1', 'arqmath-2021-task1-refined']:
         for hit in hits:
             trec_docid = hit['docid']
+            hit['trec_docid'] = trec_docid
             doc = pya0.index_lookup_doc(index, trec_docid)
             hit['docid'] = int(doc['extern_id']) # get internal doc ID
     elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined']:
         for hit in hits:
             trec_docid = int(hit['_'])
+            hit['trec_docid'] = trec_docid
             hit['_'] = str(hit['docid']) # docid is actually post ID here
             doc = pya0.index_lookup_doc(index, trec_docid)
             hit['docid'] = int(doc['extern_id']) # get internal doc ID

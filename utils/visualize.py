@@ -55,7 +55,7 @@ def degree_color(relev):
 def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=False, scores=None):
     # lookup relevance scores
     for hit in hits:
-        docID = hit["docid"]
+        docID = hit["trec_docid"]
         qrel_id = f'{qid}/{docID}'
         relev = -1
         if qrels and qrel_id in qrels:
@@ -108,7 +108,7 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
             output_html_pagination(fh, qid, page, tot_pages)
             fh.write('<ol>\n')
             for hit in page_hits:
-                docID = hit["docid"]
+                docID = hit["trec_docid"]
                 rank = hit['rank']
                 score = hit['score']
                 relev = hit['relev']
@@ -139,10 +139,10 @@ def visualize_hits(index, run_name, qid, query, hits, qrels=None, scores=None):
         doc = pya0.index_lookup_doc(index, docid)
         hit['content'] = doc['content']
     # output HTML preview
-    if True:
-        output_html_topic_run(run_name, qid, query, hits, qrels=qrels, judged_only=False, scores=scores)
     if qrels:
         output_html_topic_run(run_name, qid, query, hits, qrels=qrels, judged_only=True, scores=scores)
+    if True:
+        output_html_topic_run(run_name, qid, query, hits, qrels=qrels, judged_only=False, scores=scores)
 
 
 def visualize_collection_runs(index, collection, tsv_file_path):
