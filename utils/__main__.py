@@ -154,8 +154,8 @@ if __name__ == '__main__':
     # visualize score comparison?
     elif args.visualize_compare_scores:
         from .visualize import visualize_compare_scores
-        files = args.visualize_compare_scores.split(',')
-        visualize_compare_scores(files[0], files[1])
+        files = args.visualize_compare_scores.split(':')
+        visualize_compare_scores(files)
         exit(0)
 
     # concatenate run files?
