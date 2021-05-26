@@ -1,6 +1,7 @@
 import pya0
 import copy
 import os
+import re
 from .eval import gen_topics_queries
 from .eval import get_qrels_filepath, parse_qrel_file
 from .mergerun import parse_trec_file
@@ -172,7 +173,7 @@ def visualize(index, tsv_file_path, collection=None, adhoc_query=None):
         quit(1)
 
 
-def bar_plot(ax, data, colors=None, total_width=0.8, single_width=1, legend=True):
+def bar_plot(ax, data, colors=None, total_width=0.8, single_width=1.3, legend=True):
     """Draws a bar plot with multiple bars per data point.
 
     Parameters
@@ -240,26 +241,35 @@ def bar_plot(ax, data, colors=None, total_width=0.8, single_width=1, legend=True
         ax.legend(bars, data.keys())
 
 
-def visualize_compare_scores(scores_file_path1, scores_file_path2):
-    scores1 = parse_scores_file(scores_file_path1)
-    scores2 = parse_scores_file(scores_file_path2)
-    all_topics = list(set(list(scores1.keys()) + list(scores2.keys())))
-    all_topics = sorted(all_topics, key=lambda x: x.__str__())
+def visualize_compare_scores(score_files):
+    all_topics = set()
+    for scores_file_path in score_files:
+        scores = parse_scores_file(scores_file_path)
+        all_topics.update(scores.keys())
+    def numerically(x):
+        m = re.search(r'\d+', x.__str__())
+        return 0 if m is None else int(m.group())
+    all_topics = sorted(all_topics, key=numerically)
     import matplotlib.pyplot as plt
 
-    y = [(float(scores1[t]['ndcg']) if t in scores1 else -1) for t in all_topics]
-    z = [(float(scores2[t]['ndcg']) if t in scores2 else -1) for t in all_topics]
-
-    data = {
-        scores_file_path1: y,
-        scores_file_path2: z,
-    }
+    data = dict()
+    for scores_file_path in score_files:
+        name = os.path.basename(scores_file_path)
+        if name == '': continue
+        scores = parse_scores_file(scores_file_path)
+        x = [(float(scores[t]['ndcg']) if t in scores else 0) for t in all_topics]
+        print(name, x)
+        data[name] = x
 
     fig, ax = plt.subplots(1, 1, figsize=(25,15))
     ax.tick_params(axis='x', rotation=45)
+    print(data)
     bar_plot(ax, data)
     plt.xticks(range(len(all_topics)), all_topics)
     save_path = './visualization/compare.png'
-    print(f'Saving PNG to {save_path} ...')
-    plt.savefig(save_path)
-    plt.show()
+    print(f'Saving figure to {save_path} ...')
+    plt.savefig(save_path, bbox_inches='tight')
+    save_path = './visualization/compare.eps'
+    print(f'Saving figure to {save_path} ...')
+    plt.savefig(save_path, bbox_inches='tight')
+    #plt.show()
