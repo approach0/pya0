@@ -66,11 +66,14 @@ def gen_final_runs(only_anserini=False):
                 subprocess.run(run_args)
                 shell(f'mv tmp/*.run a0.run') # take output from last stage as input of this stage
                 shell(f'cp a0.run {a0save}') # save a0 run
+            # preprocessing for approach0
+            if r["task"] == 'task2':
+                swap_2_3('a0.run')
             # run 2nd-stage
             _2nd_stage = r["2nd_stage"]
             ans_save=f'./runs/{r["year"]}/anserini-{name}.run'
             if _2nd_stage != '':
-                # preprocessing
+                # preprocessing for anserini
                 shell(f'cp {r["anserini_run"]} anserini.run')
                 if r["task"] == 'task1':
                     shell(f'sed -i -e "s/^/A./g" anserini.run')
@@ -79,7 +82,6 @@ def gen_final_runs(only_anserini=False):
                 elif r["task"] == 'task2':
                     preprocess_anserini_task2('anserini.run')
                     shell(f'cp anserini.run {ans_save}')
-                    swap_2_3('a0.run')
                     swap_2_3('anserini.run')
                 # invoke 2nd-stage
                 shell('rm -f ./mergerun-*')
@@ -156,8 +158,7 @@ def gen_submissions(root):
 
 
 if __name__ == '__main__':
-    #gen_final_runs(only_anserini=False)
-    gen_final_runs(only_anserini=True)
+    gen_final_runs(only_anserini=False)
     #gen_tsv_from_2020()
     gen_submissions('/tuna1/scratch/w32zhong/arqmath/2021-submission')
     #preprocess_anserini_task2('new.run')
