@@ -88,14 +88,14 @@ def gen_final_runs(only_anserini=False):
                 print(run_args)
                 subprocess.run(run_args)
                 shell(f'mv mergerun-*.run {output}')
-                # post-processing
-                if r["task"] == 'task1':
-                    dele_2(output)
-                elif r["task"] == 'task2':
-                    swap_2_3(output)
-                shell(f'rm -f a0.run anserini.run')
             else:
                 shell(f'cp a0.run {output}')
+            # post-processing
+            if r["task"] == 'task1':
+                dele_2(output)
+            elif r["task"] == 'task2':
+                swap_2_3(output)
+            shell(f'rm -f a0.run anserini.run')
             shell(f'sed -i -e "s/ /\\t/g" {output}')
 
 
@@ -145,8 +145,9 @@ def gen_submissions(root):
             name = '+'.join([f.replace(' ', '_').replace('/', '_') for f in fields])
             if name.find('approach0') >= 0:
                 year = name.split('+')[0]
+                task = name.split('+')[1]
                 final_name = name.split('+')[-1]
-                task = 'Task1-QA' if 'task1' in final_name else 'Task2-Formulas'
+                task = 'Task1-QA' if task == 'task1' else 'Task2-Formulas'
                 src_path = f'./runs/{year}/{name}.run'
                 dst_dir = f'{root}/{folder}/{task}/{year}'
                 shell(f'mkdir -p {dst_dir}')
@@ -156,7 +157,8 @@ def gen_submissions(root):
 
 if __name__ == '__main__':
     #gen_final_runs(only_anserini=False)
+    gen_final_runs(only_anserini=True)
     #gen_tsv_from_2020()
-    #gen_submissions('/tuna1/scratch/w32zhong/arqmath/2021-submission')
-    preprocess_anserini_task2('new.run')
-    preprocess_anserini_task2('old.run')
+    gen_submissions('/tuna1/scratch/w32zhong/arqmath/2021-submission')
+    #preprocess_anserini_task2('new.run')
+    #dele_2("./a0-textonly.run")
