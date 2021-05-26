@@ -64,6 +64,8 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
     # generate judged-only results, if specified
     if judged_only:
         hits = [h for h in hits if h['relev'] > -1]
+    # fix ranks based on score (just like trec_eval does)
+    hits = sorted(hits, key=lambda x: x['score'], reverse=True)
     # prepare output
     RESULTS_PER_PAGE = 100
     tot_pages = len(hits) // RESULTS_PER_PAGE + (len(hits) % RESULTS_PER_PAGE > 0)
