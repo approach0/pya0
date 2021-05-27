@@ -56,7 +56,11 @@ def gen_final_runs(only_anserini=False):
                     collection = f'arqmath-{r["year"]}-{r["task"]}-refined'
                 else:
                     collection = f'arqmath-{r["year"]}-{r["task"]}'
-                cmd = f'python3 -m pya0 --index index-{r["task"]}-2021 --collection {collection} --auto-eval tmp' # + ' --select-topic B.202'
+                if r["task"] == 'task1':
+                    cmd = f'python3 -m pya0 --index index-{r["task"]}-2021 --collection {collection} --auto-eval tmp' # + ' --select-topic B.202'
+                else:
+                    assert r["task"] == 'task2'
+                    cmd = f'python3 -m pya0 --index ../../mnt-index-task2-2021-visual-uniq.img --collection {collection} --auto-eval tmp'
                 run_args = cmd.split()
                 for k in ['a0_math_exp', 'a0_rm3']:
                     if r[k] != '':

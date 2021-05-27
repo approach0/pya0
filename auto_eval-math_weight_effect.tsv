@@ -1,0 +1,5 @@
+math_base_w	0.05	0.1	0.15	0.2	0.25	0.3
+init_threshold	0.2
+math_eta	0.3
+bm25_b	0.75
+bm25_k1	1.2	1.5	2.0
