@@ -1,8 +1,8 @@
 #!/bin/bash
 
 INDEX=index-task1-2021
-#COLLECTION="arqmath-2020-task1"
-COLLECTION="arqmath-2020-task1 --math-expansion"
+COLLECTION="arqmath-2020-task1"
+#COLLECTION="arqmath-2020-task1 --math-expansion"
 QREL=./topics-and-qrels/qrels.arqmath-2020-task1.txt
 OUTDIR=tmp
 KFOLD=8
@@ -77,22 +77,33 @@ genn_baseline
 genn_data
 kfold_train linearRegression
 kfold_test  linearRegression
+kfold_train lambdaMART,5,3
+kfold_test  lambdaMART,5,3
+kfold_train lambdaMART,5,5
+kfold_test  lambdaMART,5,5
+kfold_train lambdaMART,7,3
+kfold_test  lambdaMART,7,3
+kfold_train lambdaMART,7,5
+kfold_test  lambdaMART,7,5
+
 kfold_train lambdaMART,10,5
 kfold_test  lambdaMART,10,5
 kfold_train lambdaMART,10,10
 kfold_test  lambdaMART,10,10
 kfold_train lambdaMART,50,5
 kfold_test  lambdaMART,50,5
-kfold_train lambdaMART,90,5
-kfold_test  lambdaMART,90,5
 
 kfold_summary_result base
 kfold_summary_result rerank-linearRegression
+kfold_summary_result rerank-lambdaMART-5-3
+kfold_summary_result rerank-lambdaMART-5-5
+kfold_summary_result rerank-lambdaMART-7-3
+kfold_summary_result rerank-lambdaMART-7-5
 kfold_summary_result rerank-lambdaMART-10-5
 kfold_summary_result rerank-lambdaMART-10-10
 kfold_summary_result rerank-lambdaMART-50-5
-kfold_summary_result rerank-lambdaMART-90-5
 
+exit
 python << HEREDOC
 import pickle
 import numpy as np

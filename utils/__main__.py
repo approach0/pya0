@@ -131,12 +131,18 @@ if __name__ == '__main__':
     elif args.auto_eval_summary:
         abort_on_invalid_collection(args.collection)
         name = args.auto_eval_summary
+        out_tsv = 'product.tsv'
+        print(f'generating {out_tsv} ...')
+        out_tsv_content = auto_eval.tsv_product('auto_eval.tsv')
+        with open(out_tsv, 'w') as fh:
+            fh.write(out_tsv_content + '\n')
         header, rows = auto_eval.tsv_eval_read('product.tsv')
         def wrap_summary(idx, run_name, _):
             global header
-            run_path=f'tmp/{run_name}.run'
-            log_path=f'tmp/{run_name}.log'
-            if os.path.exists(f'tmp/{run_name}.done'):
+            root='./tmp'
+            run_path=f'{root}/{run_name}.run'
+            log_path=f'{root}/{run_name}.log'
+            if os.path.exists(f'{root}/{run_name}.done'):
                 run_header, run_row = evaluate_run(args.collection, run_path)
                 log_header, log_row = evaluate_log(args.collection, log_path)
                 if idx == 0:

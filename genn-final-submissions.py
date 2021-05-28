@@ -149,10 +149,10 @@ def gen_submissions(root):
             elif line.startswith('#'):
                 continue # skip commented row
             name = '+'.join([f.replace(' ', '_').replace('/', '_') for f in fields])
-            if name.find('approach0') >= 0:
+            if name.find('approach0-') >= 0:
                 year = name.split('+')[0]
                 task = name.split('+')[1]
-                final_name = name.split('+')[-1]
+                final_name = name.split('approach0-')[-1]
                 task = 'Task1-QA' if task == 'task1' else 'Task2-Formulas'
                 src_path = f'./runs/{year}/{name}.run'
                 dst_dir = f'{root}/{folder}/{task}/{year}'
