@@ -29,7 +29,7 @@ def gen_topics_queries(collection, fold=None, qfilter=None):
             with open(src, 'r') as fh:
                 for i, line in enumerate(fh):
                     line = line.rstrip()
-                    qid, query, args = handler(i, line)
+                    qid, query, args = handler(i, line, src)
                     if qfilter:
                         query = list(filter(qfilter, query))
                     yield qid, query, args
@@ -37,7 +37,7 @@ def gen_topics_queries(collection, fold=None, qfilter=None):
             with open(src, 'r') as fh:
                 qlist = json.load(fh)
                 for i, json_item in enumerate(qlist):
-                    qid, query, args = handler(i, json_item)
+                    qid, query, args = handler(i, json_item, src)
                     if qfilter:
                         query = list(filter(qfilter, query))
                     yield qid, query, args

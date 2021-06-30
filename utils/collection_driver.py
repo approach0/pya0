@@ -1,5 +1,6 @@
 import pya0
 import json
+import os
 from preprocess import tokenize_text
 
 
@@ -49,7 +50,7 @@ def eval_cmd(collection, run_path):
         raise NotImplementedError
 
 
-def _topic_process__test(idx, line):
+def _topic_process__test(idx, line, src):
     fields = line.split(',')
     qid = fields[0]
     tags = fields[1]
@@ -66,34 +67,34 @@ def _topic_process__test(idx, line):
     return qid, query, tags
 
 
-def _topic_process__ntcir12_math_browsing(idx, line):
+def _topic_process__ntcir12_math_browsing(idx, line, src):
     fields = line.split()
     query = [{'type': 'tex', 'str': ' '.join(fields[1:])}]
     qid = fields[0]
     return qid, query, None
 
 
-def _topic_process__ntcir12_math_browsing_concrete(idx, line):
+def _topic_process__ntcir12_math_browsing_concrete(idx, line, src):
     fields = line.split()
     query = [{'type': 'tex', 'str': ' '.join(fields[1:])}]
     qid = fields[0]
     return qid, query, None
 
 
-def _topic_process__ntcir12_math_browsing_wildcards(idx, line):
+def _topic_process__ntcir12_math_browsing_wildcards(idx, line, src):
     fields = line.split()
     query = [{'type': 'tex', 'str': ' '.join(fields[1:])}]
     qid = fields[0]
     return qid, query, None
 
 
-def _topic_process__arqmath_2020_task1(idx, json_item):
+def _topic_process__arqmath_2020_task1(idx, json_item, src):
     query = json_item['kw']
     qid = json_item['qid']
     return qid, query, json_item['tags']
 
 
-def _topic_process__arqmath_2020_task2(idx, line):
+def _topic_process__arqmath_2020_task2(idx, line, src):
     if line.startswith('#'):
         return None, None, None
     fields = line.split('\t')
@@ -104,23 +105,30 @@ def _topic_process__arqmath_2020_task2(idx, line):
     return qid, query, None
 
 
-def _topic_process__arqmath_2021_task1(idx, line):
+def _topic_process__arqmath_2021_task1(idx, line, src):
     if idx == 0:
         return None, None, None
+    from bs4 import BeautifulSoup
+    origin_xml = os.path.dirname(src) + '/topics.arqmath-2021-task1.origin.xml'
     fields = line.split('\t')
     qid = fields[0]
+    with open(origin_xml) as fh:
+        XML = fh.read()
+        soup = BeautifulSoup(XML)
+        origin_topic = soup.find('topic', {"number" : qid})
+        tags = origin_topic.find('tags').text
     terms = fields[1].strip()
     formulas = fields[2:] if len(fields) > 2 else []
     query_terms = [{'type': 'term', 'str': terms}] if len(terms) > 0 else []
     query_formulas = [{'type': 'tex', 'str': s.strip()} for s in formulas]
-    return qid, query_terms + query_formulas, None
+    return qid, query_terms + query_formulas, tags
 
 
-def _topic_process__arqmath_2021_task1_refined(idx, line):
-    return _topic_process__arqmath_2021_task1(idx, line)
+def _topic_process__arqmath_2021_task1_refined(idx, line, src):
+    return _topic_process__arqmath_2021_task1(idx, line, src)
 
 
-def _topic_process__arqmath_2021_task2(idx, line):
+def _topic_process__arqmath_2021_task2(idx, line, src):
     fields = line.split('\t')
     qid = fields[0]
     formulas = fields[1:]
@@ -128,7 +136,7 @@ def _topic_process__arqmath_2021_task2(idx, line):
     return qid, query, None
 
 
-def _topic_process__arqmath_2021_task2_refined(idx, line):
+def _topic_process__arqmath_2021_task2_refined(idx, line, src):
     return _topic_process__arqmath_2021_task2(idx, line)
 
 
@@ -153,5 +161,13 @@ def _featslookup__arqmath_2020_task1(topic_query, index, docid):
     return [qnum, upvotes, n_tag_match, score]
 
 
+def _featslookup__arqmath_2021_task1_refined(topic_query, index, docid):
+    return _featslookup__arqmath_2020_task1(topic_query, index, docid)
+
+
 def _feats_qid_process__arqmath_2020_task1(qfield):
     return 'A.' + qfield.split(':')[1]
+
+
+def _feats_qid_process__arqmath_2021_task1_refined(qfield):
+    return _featslookup__arqmath_2020_task1(qfield)
