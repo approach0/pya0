@@ -137,7 +137,7 @@ def _topic_process__arqmath_2021_task2(idx, line, src):
 
 
 def _topic_process__arqmath_2021_task2_refined(idx, line, src):
-    return _topic_process__arqmath_2021_task2(idx, line)
+    return _topic_process__arqmath_2021_task2(idx, line, src)
 
 
 def _featslookup__arqmath_2020_task1(topic_query, index, docid):
