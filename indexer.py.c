@@ -32,7 +32,7 @@ PyObject *index_open(PyObject *self, PyObject *args, PyObject* kwargs)
 
 	struct indices_field fields[] = {
 		{"url", FIELD__STORE_PLAIN, FIELD__INDEX_NO},
-		{"content", FIELD__STORE_COMPRESSED, FIELD__INDEX_YES},
+		{"content", FIELD__STORE_COMPRESSED, FIELD__INDEX_ENG},
 		{"extern_id", FIELD__STORE_PLAIN, FIELD__INDEX_NO}
 	};
 	(void)indices_schema_add_field(indices, fields,
@@ -159,7 +159,7 @@ PyObject *indexer_new(PyObject *self, PyObject *args)
 
 	struct indices *indices = PyLong_AsVoidPtr(pyindices);
 	struct indexer *indexer;
-	indexer = indexer_alloc(indices, INDICES_TXT_LEXER, parser_exception);
+	indexer = indexer_alloc(indices, parser_exception);
 
 	return PyLong_FromVoidPtr(indexer);
 }

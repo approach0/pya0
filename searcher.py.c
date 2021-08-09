@@ -60,7 +60,7 @@ PyObject *do_search(PyObject *self, PyObject *args, PyObject* kwargs)
 		float boost = (py_boost == NULL) ? 1.f : PyFloat_AS_DOUBLE(py_boost);
 
 		if (0 == strcmp(type_str, "term")) {
-			query_digest_txt(&qry, field_str, kw_str, QUERY_OP_OR, boost);
+			query_digest_txt(&qry, field_str, kw_str, QUERY_OP_OR, boost, lex_eng_file);
 
 		} else if (0 == strcmp(type_str, "tex")) {
 			query_push_kw(&qry, field_str, kw_str,
