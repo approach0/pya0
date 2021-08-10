@@ -25,6 +25,7 @@ dist: .build/$(MODULE_NAME).so
 	@ mkdir -p $(MODULE_NAME)/topics-and-qrels
 	rm -f $(MODULE_NAME)/*.py
 	cp ./utils/*.py $(MODULE_NAME)
+	cp ./utils/dataset-adapter/*.py $(MODULE_NAME)
 	rm -f $(MODULE_NAME)/topics-and-qrels/*
 	cp ./topics-and-qrels/* $(MODULE_NAME)/topics-and-qrels/
 	rm -f $(MODULE_NAME)/*.so

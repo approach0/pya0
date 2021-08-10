@@ -10,3 +10,4 @@ tmp/
 .build/
 *.swp
 product.tsv
+__pycache__/
