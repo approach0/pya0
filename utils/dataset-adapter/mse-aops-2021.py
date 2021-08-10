@@ -70,20 +70,20 @@ def mse_aops_dataloader(corpus, endat=0):
                     vocab[dollar_prefix_sym] += 1
                 document += ' '.join(tex_syms)
             else:
-                for word in word_tokenizer.tokenize(piece):
-                    vocab[word] += 1
+                #for word in word_tokenizer.tokenize(piece):
+                #    vocab[word] += 1
                 document += piece
         sentences = sent_tokenize(document)
         dataset.append((sentences, tags, url))
     return vocab, dataset
 
 
-def main(corpus):
-    vocab, dataset = mse_aops_dataloader(corpus, endat=-1)
-    print(len(vocab))
-    with open('mse-aops-2021-dataset.pkl', 'wb') as fh:
+def main(corpus, endat=-1):
+    vocab, dataset = mse_aops_dataloader(corpus, endat=endat)
+    print('New vocabulary size:', len(vocab))
+    with open('mse-aops-2021-data.pkl', 'wb') as fh:
         pickle.dump(dataset, fh)
-    with open('mse-aops-2021-vocabulary.pkl', 'wb') as fh:
+    with open('mse-aops-2021-vocab.pkl', 'wb') as fh:
         pickle.dump(vocab, fh)
 
 
