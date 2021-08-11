@@ -117,6 +117,7 @@ def pretrain(batch_size, debug=False, epochs=3):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     transformer.to(device)
     print('Start training on device', transformer.device)
+    transformer.train()
 
     tok_func = tokenizer.tokenize
     for epoch in range(epochs):
@@ -137,6 +138,7 @@ def pretrain(batch_size, debug=False, epochs=3):
                     print('Attention Mask:', batch.attention_mask)
                     break
 
+                optimizer.zero_grad()
                 loss = transformer(**batch).loss
                 loss.backward()
                 optimizer.step()
