@@ -20,7 +20,10 @@ class SentencePairLoader():
         self.window = window
         self.now = 0
 
-    def read_sentences(self, read_length, randomly=False):
+    def __len__(self):
+        return self.N
+
+    def read(self, read_length, randomly=False):
         # get the current sentence
         idx = self.now
         while randomly and idx == self.now:
@@ -28,7 +31,9 @@ class SentencePairLoader():
         row, col = self.ridx[idx]
         # increment pointer
         if not randomly:
-            self.now = 0 if self.now >= self.N else self.now + self.window
+            self.now = self.now + self.window
+            if self.now >= self.N:
+                raise StopIteration
         # concatenate sentences into one no longer than `read_length`
         tokens = []
         sentences = ''
@@ -62,13 +67,16 @@ class SentencePairLoader():
                 # get a pair of random sample or context sample
                 ctx = (rand() < 0.5) # do we sample in a context window?
                 while True:
-                    pair_1, _, url_1 = self.read_sentences(len_1)
-                    pair_2, _, url_2 = self.read_sentences(len_2, randomly=not ctx)
-                    if not ctx or url_1 == url_2:
-                        # when we sample randomly, or we want to sample the
-                        # next sentence, and have ensured we did not span
-                        # over a document.
-                        break
+                    try:
+                        pair_1, _, url_1 = self.read(len_1)
+                        pair_2, _, url_2 = self.read(len_2, randomly=not ctx)
+                        if not ctx or url_1 == url_2:
+                            # when we sample randomly, or we want to sample
+                            # the next sentence, and have ensured we did not
+                            # span over a document.
+                            break
+                    except StopIteration:
+                        return
                 # append to batch
                 sent_pairs.append([pair_1, pair_2])
                 labels.append(1 if ctx else 0)
@@ -111,9 +119,9 @@ def pretrain(batch_size, debug=False, epochs=3):
     print('Start training on device', transformer.device)
 
     tok_func = tokenizer.tokenize
-    data_iter = SentencePairLoader(ridx, data, maxlen, tok_func, batch_size)
     for epoch in range(epochs):
-        with tqdm(data_iter, unit=" batch", total=data_iter.N) as progress:
+        data_iter = SentencePairLoader(ridx, data, maxlen, tok_func, batch_size)
+        with tqdm(data_iter, unit=" batch", ascii=True) as progress:
             for now, pairs, labels, urls in progress:
                 batch = tokenizer(pairs,
                     padding=True, truncation=True, return_tensors="pt")
@@ -134,10 +142,12 @@ def pretrain(batch_size, debug=False, epochs=3):
                 optimizer.step()
                 shape = list(batch.input_ids.shape)
                 loss_ = round(loss.item(), 2)
+                progress.update(now - progress.n)
                 progress.set_description(
-                    f"Ep#{epoch + 1}/{epochs}, Loss={loss_}, batch{shape}"
+                    f"Ep#{epoch+1}/{epochs}, " +
+					#f"sentence={now}/{data_iter.N}, " +
+                    f"Loss={loss_}, batch{shape}"
                 )
-                progress.update(int(now / data_iter.N * 100.0))
 
 
 if __name__ == '__main__':
