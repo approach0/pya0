@@ -1,9 +1,11 @@
 import fire
 import pickle
 import torch
+import json
 from tqdm import tqdm
 from random import randint, random as rand
-from transformers import AdamW, BertTokenizer, BertConfig
+from transformers import AdamW, BertTokenizer
+from transformers import BertForPreTraining
 from transformers import BertForSequenceClassification
 
 
@@ -84,14 +86,47 @@ class SentencePairLoader():
             yield self.now, sent_pairs, labels, urls
 
 
+def mask_batch_tokens(batch_tokens, tot_vocab, decode=None):
+    CE_IGN_IDX = -100 # CrossEntropyLoss ignore index value
+    MASK_PROB = 0.15
+    UNK_CODE = 100
+    CLS_CODE = 101
+    SEP_CODE = 102
+    MSK_CODE = 103
+    PAD_CODE = 0
+    BASE_CODE = 1000
+    unmask_labels = torch.full(batch_tokens.shape, fill_value=CE_IGN_IDX)
+    for b, tokens in enumerate(batch_tokens):
+        # dec_tokens = decode(tokens)
+        mask_indexes = []
+        for i in range(len(tokens)):
+            if tokens[i] == PAD_CODE:
+                break
+            elif tokens[i] in [CLS_CODE, SEP_CODE]:
+                continue
+            elif rand() < MASK_PROB:
+                mask_indexes.append(i)
+        unmask_labels[b][mask_indexes] = tokens[mask_indexes]
+        for i in mask_indexes:
+            r = rand()
+            if r <= 0.8:
+                batch_tokens[b][i] = MSK_CODE
+            elif r <= 0.1:
+                batch_tokens[b][i] = random.randint(BASE_CODE, tot_vocab - 1)
+                #batch_tokens[b][i] = UNK_CODE
+            else:
+                pass # unchanged
+    return batch_tokens, unmask_labels
+
+
 def pretrain(batch_size, debug=False, epochs=3):
-    print('Loading base transformer model ...')
+    print('Loading model ...')
     ckpoint = 'bert-base-uncased'
     tokenizer = BertTokenizer.from_pretrained(ckpoint)
-    transformer = BertForSequenceClassification.from_pretrained(ckpoint)
-    transformer_config = BertConfig.from_pretrained(ckpoint)
-    maxlen = transformer_config.max_position_embeddings
-    print()
+    model = BertForPreTraining.from_pretrained(ckpoint, tie_word_embeddings=True)
+    #print(list(zip(tokenizer.all_special_tokens, tokenizer.all_special_ids)))
+    #print(model.config.to_json_string(use_diff=False))
+    maxlen = model.config.max_position_embeddings
 
     print('Before loading new vocabulary:', len(tokenizer))
     with open('mse-aops-2021-vocab.pkl', 'rb') as fh:
@@ -112,34 +147,55 @@ def pretrain(batch_size, debug=False, epochs=3):
         print('random sentence:', data[r[0]][0][r[1]])
 
     # expand embedding and preparing training
-    transformer.resize_token_embeddings(len(tokenizer))
-    optimizer = AdamW(transformer.parameters())
+    model.resize_token_embeddings(len(tokenizer))
+    optimizer = AdamW(model.parameters())
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    transformer.to(device)
-    print('Start training on device', transformer.device)
-    transformer.train()
+    model.to(device)
+    print('Start training on device', model.device)
+    model.train()
 
-    tok_func = tokenizer.tokenize
+    tokenize = tokenizer.tokenize
+    decode = tokenizer.decode
     for epoch in range(epochs):
-        data_iter = SentencePairLoader(ridx, data, maxlen, tok_func, batch_size)
+        data_iter = SentencePairLoader(ridx, data, maxlen, tokenize, batch_size)
         with tqdm(data_iter, unit=" batch", ascii=True) as progress:
             for now, pairs, labels, urls in progress:
+                # tokenize sentences
                 batch = tokenizer(pairs,
                     padding=True, truncation=True, return_tensors="pt")
-                batch["labels"] = torch.tensor(labels)
+                # mask sentence tokens
+                unmask_tokens = batch['input_ids']
+                unmask_tokens, unmask_labels = mask_batch_tokens(
+                    unmask_tokens, len(tokenizer), decode=decode
+                )
+                batch['input_ids'] = torch.tensor(unmask_tokens)
+                batch["labels"] = torch.tensor(unmask_labels)
+                batch["next_sentence_label"] = torch.tensor(labels)
                 batch.to(device)
 
                 if debug:
-                    for j, vals in enumerate(batch.input_ids):
-                        print('URLs:', urls[j])
-                        print('Label:', batch["labels"][j])
+                    for b, vals in enumerate(batch['input_ids']):
+                        print('URLs:', urls[b])
+                        print('Label:', batch["next_sentence_label"][b])
                         print(tokenizer.decode(vals))
                     print('Type IDs:', batch.token_type_ids)
                     print('Attention Mask:', batch.attention_mask)
+                    inputs = json.dumps({
+                        attr: batch[attr].shape
+                        if attr in batch else None for attr in [
+                        'input_ids',
+                        'attention_mask',
+                        'token_type_ids',
+                        'position_ids',
+                        'labels', # used to test UNMASK CrossEntropyLoss
+                        'next_sentence_label' # used to test NextSentPrediction
+                    ]}, sort_keys=True, indent=4)
+                    print(inputs)
                     break
 
                 optimizer.zero_grad()
-                loss = transformer(**batch).loss
+                outputs = model(**batch)
+                loss = outputs.loss
                 loss.backward()
                 optimizer.step()
                 shape = list(batch.input_ids.shape)
