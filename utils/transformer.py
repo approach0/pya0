@@ -99,7 +99,7 @@ def mask_batch_tokens(batch_tokens, tot_vocab, decode=None):
     MSK_CODE = 103
     PAD_CODE = 0
     BASE_CODE = 1000
-    unmask_labels = numpy.full(batch_tokens.shape, fill_value=CE_IGN_IDX)
+    mask_labels = numpy.full(batch_tokens.shape, fill_value=CE_IGN_IDX)
     for b, tokens in enumerate(batch_tokens):
         # dec_tokens = decode(tokens)
         mask_indexes = []
@@ -110,7 +110,7 @@ def mask_batch_tokens(batch_tokens, tot_vocab, decode=None):
                 continue
             elif rand() < MASK_PROB:
                 mask_indexes.append(i)
-        unmask_labels[b][mask_indexes] = tokens[mask_indexes]
+        mask_labels[b][mask_indexes] = tokens[mask_indexes]
         for i in mask_indexes:
             r = rand()
             if r <= 0.8:
@@ -120,7 +120,7 @@ def mask_batch_tokens(batch_tokens, tot_vocab, decode=None):
                 #batch_tokens[b][i] = UNK_CODE
             else:
                 pass # unchanged
-    return batch_tokens, unmask_labels
+    return batch_tokens, mask_labels
 
 
 def pretrain(batch_size, debug=False, epochs=3, save_fold=10,
@@ -190,11 +190,11 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10,
                         padding=True, truncation=True, return_tensors="pt")
                     # mask sentence tokens
                     unmask_tokens = batch['input_ids'].numpy()
-                    unmask_tokens, unmask_labels = mask_batch_tokens(
+                    mask_tokens, mask_labels = mask_batch_tokens(
                         unmask_tokens, len(tokenizer), decode=tokenizer.decode
                     )
-                    batch['input_ids'] = torch.tensor(unmask_tokens)
-                    batch["labels"] = torch.tensor(unmask_labels)
+                    batch['input_ids'] = torch.tensor(mask_tokens)
+                    batch["labels"] = torch.tensor(mask_labels)
                     batch["next_sentence_label"] = torch.tensor(labels)
                     batch.to(device)
 
