@@ -2,8 +2,9 @@ import fire
 import pickle
 import torch
 import json
+import numpy
 from tqdm import tqdm
-from random import randint, random as rand
+from random import randint, seed, random as rand
 from transformers import AdamW, BertTokenizer
 from transformers import BertForPreTraining
 from transformers import BertForSequenceClassification
@@ -11,7 +12,7 @@ from transformers import BertForSequenceClassification
 
 class SentencePairLoader():
     def __init__(self, ridx, data, maxlen, tokenize, batch_sz,
-        short_prob=0.1, window=3):
+                 short_prob=0.1, window=3):
         self.ridx = ridx
         self.N = len(ridx) # total number of sentences
         self.data = data
@@ -21,6 +22,7 @@ class SentencePairLoader():
         self.short_prob = short_prob
         self.window = window
         self.now = 0
+        self.dryrun = (data is None or tokenize is None)
 
     def __len__(self):
         return self.N
@@ -36,6 +38,8 @@ class SentencePairLoader():
             self.now = self.now + self.window
             if self.now >= self.N:
                 raise StopIteration
+        if self.dryrun:
+            return '', None, ''
         # concatenate sentences into one no longer than `read_length`
         tokens = []
         sentences = ''
@@ -66,10 +70,10 @@ class SentencePairLoader():
                 maxlen = self.maxlen // 4 if rand() < p else self.maxlen
                 len_1 = randint(1, maxlen - 1 - 2) # minus [CLS], [SEP]
                 len_2 = randint(1, maxlen - len_1 - 1) # minus [SEP]
-                # get a pair of random sample or context sample
                 ctx = (rand() < 0.5) # do we sample in a context window?
                 while True:
                     try:
+                        # get a pair of random sample or context sample
                         pair_1, _, url_1 = self.read(len_1)
                         pair_2, _, url_2 = self.read(len_2, randomly=not ctx)
                         if not ctx or url_1 == url_2:
@@ -95,7 +99,7 @@ def mask_batch_tokens(batch_tokens, tot_vocab, decode=None):
     MSK_CODE = 103
     PAD_CODE = 0
     BASE_CODE = 1000
-    unmask_labels = torch.full(batch_tokens.shape, fill_value=CE_IGN_IDX)
+    unmask_labels = numpy.full(batch_tokens.shape, fill_value=CE_IGN_IDX)
     for b, tokens in enumerate(batch_tokens):
         # dec_tokens = decode(tokens)
         mask_indexes = []
@@ -119,10 +123,10 @@ def mask_batch_tokens(batch_tokens, tot_vocab, decode=None):
     return batch_tokens, unmask_labels
 
 
-def pretrain(batch_size, debug=False, epochs=3):
-    print('Loading model ...')
-    ckpoint = 'bert-base-uncased'
-    tokenizer = BertTokenizer.from_pretrained(ckpoint)
+def pretrain(batch_size, debug=False, epochs=3, save_fold=10,
+             ckpoint='bert-base-uncased', random_seed=123):
+    print(f'Loading model {ckpoint}...')
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     model = BertForPreTraining.from_pretrained(ckpoint, tie_word_embeddings=True)
     #print(list(zip(tokenizer.all_special_tokens, tokenizer.all_special_ids)))
     #print(model.config.to_json_string(use_diff=False))
@@ -151,61 +155,88 @@ def pretrain(batch_size, debug=False, epochs=3):
     optimizer = AdamW(model.parameters())
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
-    print('Start training on device', model.device)
     model.train()
 
+    print('Calculating total iterations ...')
     tokenize = tokenizer.tokenize
-    decode = tokenizer.decode
+    seed(random_seed)
+    data_iter = SentencePairLoader(ridx, None, maxlen, tokenize, batch_size)
+    tot_iters = len([_ for _ in data_iter])
+    if '/' not in ckpoint:
+        begin_epoch, begin_iter = -1, -1
+    else:
+        fields = ckpoint.strip('/').split('/')[-1].split('-')
+        begin_epoch, begin_iter = int(fields[0]), int(fields[1])
+        print(f'Checking out from Ep#{begin_epoch}, iteration#{begin_iter}')
+
+    def save_model(epoch, cur_iter, model):
+        save_name = f"{epoch}-{cur_iter}"
+        print(f'Saving model "{save_name}" ...')
+        model.save_pretrained(f"./save/{save_name}")
+
+    print('Start training on device', model.device)
     for epoch in range(epochs):
+        if epoch < begin_epoch: continue
+        seed(random_seed)
         data_iter = SentencePairLoader(ridx, data, maxlen, tokenize, batch_size)
+        save_iter = tot_iters // save_fold
+        last_iter = tot_iters - 1
         with tqdm(data_iter, unit=" batch", ascii=True) as progress:
-            for now, pairs, labels, urls in progress:
-                # tokenize sentences
-                batch = tokenizer(pairs,
-                    padding=True, truncation=True, return_tensors="pt")
-                # mask sentence tokens
-                unmask_tokens = batch['input_ids']
-                unmask_tokens, unmask_labels = mask_batch_tokens(
-                    unmask_tokens, len(tokenizer), decode=decode
-                )
-                batch['input_ids'] = torch.tensor(unmask_tokens)
-                batch["labels"] = torch.tensor(unmask_labels)
-                batch["next_sentence_label"] = torch.tensor(labels)
-                batch.to(device)
+            try:
+                for cur_iter, (now, pairs, labels, urls) in enumerate(progress):
+                    if cur_iter <= begin_iter: continue
+                    # tokenize sentences
+                    batch = tokenizer(pairs,
+                        padding=True, truncation=True, return_tensors="pt")
+                    # mask sentence tokens
+                    unmask_tokens = batch['input_ids'].numpy()
+                    unmask_tokens, unmask_labels = mask_batch_tokens(
+                        unmask_tokens, len(tokenizer), decode=tokenizer.decode
+                    )
+                    batch['input_ids'] = torch.tensor(unmask_tokens)
+                    batch["labels"] = torch.tensor(unmask_labels)
+                    batch["next_sentence_label"] = torch.tensor(labels)
+                    batch.to(device)
 
-                if debug:
-                    for b, vals in enumerate(batch['input_ids']):
-                        print('URLs:', urls[b])
-                        print('Label:', batch["next_sentence_label"][b])
-                        print(tokenizer.decode(vals))
-                    print('Type IDs:', batch.token_type_ids)
-                    print('Attention Mask:', batch.attention_mask)
-                    inputs = json.dumps({
-                        attr: batch[attr].shape
-                        if attr in batch else None for attr in [
-                        'input_ids',
-                        'attention_mask',
-                        'token_type_ids',
-                        'position_ids',
-                        'labels', # used to test UNMASK CrossEntropyLoss
-                        'next_sentence_label' # used to test NextSentPrediction
-                    ]}, sort_keys=True, indent=4)
-                    print(inputs)
-                    break
+                    if debug:
+                        for b, vals in enumerate(batch['input_ids']):
+                            print('URLs:', urls[b])
+                            print('Label:', batch["next_sentence_label"][b])
+                            print(tokenizer.decode(vals))
+                        print('Type IDs:', batch.token_type_ids)
+                        print('Attention Mask:', batch.attention_mask)
+                        inputs = json.dumps({
+                            attr: batch[attr].shape
+                            if attr in batch else None for attr in [
+                            'input_ids',
+                            'attention_mask',
+                            'token_type_ids',
+                            'position_ids',
+                            'labels', # used to test UNMASK CrossEntropyLoss
+                            'next_sentence_label'
+                        ]}, sort_keys=True, indent=4)
+                        print(inputs)
+                        break
 
-                optimizer.zero_grad()
-                outputs = model(**batch)
-                loss = outputs.loss
-                loss.backward()
-                optimizer.step()
-                shape = list(batch.input_ids.shape)
-                loss_ = round(loss.item(), 2)
-                progress.update(now - progress.n)
-                progress.set_description(
-                    f"Ep#{epoch+1}/{epochs}, " +
-					#f"sentence={now}/{data_iter.N}, " +
-                    f"Loss={loss_}, batch{shape}"
-                )
+                    optimizer.zero_grad()
+                    outputs = model(**batch)
+                    loss = outputs.loss
+                    loss.backward()
+                    optimizer.step()
+                    shape = list(batch.input_ids.shape)
+                    loss_ = round(loss.item(), 2)
+                    progress.update(now - progress.n)
+                    progress.set_description(
+                        f"Ep#{epoch+1}/{epochs}, " +
+                        f"{cur_iter}%{save_iter}={cur_iter % save_iter}, " +
+                        f"Loss={loss_}, batch{shape}"
+                    )
+
+                    if cur_iter % save_iter == 0 or cur_iter == last_iter:
+                        save_model(epoch, cur_iter, model)
+            except KeyboardInterrupt:
+                save_model(epoch, cur_iter, model)
+                quit(0)
 
 
 if __name__ == '__main__':
