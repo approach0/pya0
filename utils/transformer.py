@@ -137,7 +137,7 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10,
     n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
     node_id = get_env_var("SLURM_NODEID", 0)
 
-    print(node_id, f'Loading model {ckpoint}...')
+    print(node_id, f'Loading model {ckpoint}...', flush=True)
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     model = BertForPreTraining.from_pretrained(ckpoint, tie_word_embeddings=True)
     #print(list(zip(tokenizer.all_special_tokens, tokenizer.all_special_ids)))
@@ -157,19 +157,19 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10,
         dist.barrier(device_ids=[0]) # wait for other nodes to connect master node
         model = DDP(model)
 
-    print(node_id, 'Before loading new vocabulary:', len(tokenizer))
+    print(node_id, 'Before loading new vocabulary:', len(tokenizer), flush=True)
     with open('mse-aops-2021-vocab.pkl', 'rb') as fh:
         vocab = pickle.load(fh)
         for w in vocab.keys():
             tokenizer.add_tokens(w)
-    print(node_id, 'After loading new vocabulary:', len(tokenizer))
+    print(node_id, 'After loading new vocabulary:', len(tokenizer), flush=True)
 
     print(node_id, 'Loading data ...')
     with open('mse-aops-2021-data.pkl', 'rb') as fh:
         data = pickle.load(fh)
         ridx = [(i, j) for i, d in enumerate(data) for j in range(len(d[0]))]
-        print(node_id, 'Data documents:', len(data))
-        print(node_id, 'Data sentences:', len(ridx))
+        print(node_id, 'Data documents:', len(data), flush=True)
+        print(node_id, 'Data sentences:', len(ridx), flush=True)
         #r = ridx[randint(0, len(ridx) - 1)]
         #print('random URL:', data[r[0]][2])
         #print('random tags:', data[r[0]][1] or 'None')
@@ -182,7 +182,7 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10,
     model.to(device)
     model.train()
 
-    print(node_id, 'Calculating total iterations ...')
+    print(node_id, 'Calculating total iterations ...', flush=True)
     tokenize = tokenizer.tokenize
     seed(random_seed)
     data_iter = SentencePairLoader(ridx, None, maxlen, tokenize, batch_size)
@@ -198,10 +198,10 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10,
         if node_id != 0:
             return # must be master node
         save_name = f"{epoch}-{cur_iter}"
-        print(f'Saving model "{save_name}" ...')
+        print(f'Saving model "{save_name}" ...', flush=True)
         model.save_pretrained(f"./save/{save_name}")
 
-    print(node_id, 'Start training on device', model.device)
+    print(node_id, 'Start training on device', model.device, flush=True)
     for epoch in range(epochs):
         if epoch < begin_epoch: continue
         seed(random_seed)
