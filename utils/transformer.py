@@ -1,3 +1,4 @@
+import os
 import fire
 import pickle
 import torch
@@ -8,6 +9,8 @@ from random import randint, seed, random as rand
 from transformers import AdamW, BertTokenizer
 from transformers import BertForPreTraining
 from transformers import BertForSequenceClassification
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
 
 
 class SentencePairLoader():
@@ -123,32 +126,54 @@ def mask_batch_tokens(batch_tokens, tot_vocab, decode=None):
     return batch_tokens, mask_labels
 
 
+def get_env_var(name, default):
+    val = os.environ.get(name)
+    return default if val is None else int(val)
+
+
 def pretrain(batch_size, debug=False, epochs=3, save_fold=10,
-             ckpoint='bert-base-uncased', random_seed=123):
-    print(f'Loading model {ckpoint}...')
+             ckpoint='bert-base-uncased', random_seed=123, master=None):
+
+    n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
+    node_id = get_env_var("SLURM_NODEID", 0)
+
+    print(node_id, f'Loading model {ckpoint}...')
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     model = BertForPreTraining.from_pretrained(ckpoint, tie_word_embeddings=True)
     #print(list(zip(tokenizer.all_special_tokens, tokenizer.all_special_ids)))
     #print(model.config.to_json_string(use_diff=False))
     maxlen = model.config.max_position_embeddings
 
-    print('Before loading new vocabulary:', len(tokenizer))
+    if master:
+        print(node_id, f'Initialized process group ({n_nodes}) ...', flush=True)
+        dist.init_process_group(
+            backend="nccl", # can be mpi, gloo, or nccl
+            init_method=master,
+            world_size=n_nodes,
+            rank=node_id,
+            timeout=datetime.timedelta(0, 10) # 10s timeout
+        )
+        print(node_id, 'Enter Torch DDP.', flush=True)
+        dist.barrier(device_ids=[0]) # wait for other nodes to connect master node
+        model = DDP(model)
+
+    print(node_id, 'Before loading new vocabulary:', len(tokenizer))
     with open('mse-aops-2021-vocab.pkl', 'rb') as fh:
         vocab = pickle.load(fh)
         for w in vocab.keys():
             tokenizer.add_tokens(w)
-    print('After loading new vocabulary:', len(tokenizer))
+    print(node_id, 'After loading new vocabulary:', len(tokenizer))
 
-    print('Loading data ...')
+    print(node_id, 'Loading data ...')
     with open('mse-aops-2021-data.pkl', 'rb') as fh:
         data = pickle.load(fh)
         ridx = [(i, j) for i, d in enumerate(data) for j in range(len(d[0]))]
-        print('Data documents:', len(data))
-        print('Data sentences:', len(ridx))
-        r = ridx[randint(0, len(ridx) - 1)]
-        print('random URL:', data[r[0]][2])
-        print('random tags:', data[r[0]][1] or 'None')
-        print('random sentence:', data[r[0]][0][r[1]])
+        print(node_id, 'Data documents:', len(data))
+        print(node_id, 'Data sentences:', len(ridx))
+        #r = ridx[randint(0, len(ridx) - 1)]
+        #print('random URL:', data[r[0]][2])
+        #print('random tags:', data[r[0]][1] or 'None')
+        #print('random sentence:', data[r[0]][0][r[1]])
 
     # expand embedding and preparing training
     model.resize_token_embeddings(len(tokenizer))
@@ -157,7 +182,7 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10,
     model.to(device)
     model.train()
 
-    print('Calculating total iterations ...')
+    print(node_id, 'Calculating total iterations ...')
     tokenize = tokenizer.tokenize
     seed(random_seed)
     data_iter = SentencePairLoader(ridx, None, maxlen, tokenize, batch_size)
@@ -170,11 +195,13 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10,
         print(f'Checking out from Ep#{begin_epoch}, iteration#{begin_iter}')
 
     def save_model(epoch, cur_iter, model):
+        if node_id != 0:
+            return # must be master node
         save_name = f"{epoch}-{cur_iter}"
         print(f'Saving model "{save_name}" ...')
         model.save_pretrained(f"./save/{save_name}")
 
-    print('Start training on device', model.device)
+    print(node_id, 'Start training on device', model.device)
     for epoch in range(epochs):
         if epoch < begin_epoch: continue
         seed(random_seed)
@@ -227,7 +254,7 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10,
                     loss_ = round(loss.item(), 2)
                     progress.update(now - progress.n)
                     progress.set_description(
-                        f"Ep#{epoch+1}/{epochs}, " +
+                        f"Node#{node_id}: Ep#{epoch+1}/{epochs}, " +
                         f"{cur_iter}%{save_iter}={cur_iter % save_iter}, " +
                         f"Loss={loss_}, batch{shape}"
                     )
@@ -236,7 +263,11 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10,
                         save_model(epoch, cur_iter, model)
             except KeyboardInterrupt:
                 save_model(epoch, cur_iter, model)
-                quit(0)
+                break
+
+    if master:
+        dist.destroy_process_group()
+        print(node_id, 'Exit Torch DDP.', flush=True)
 
 
 if __name__ == '__main__':
