@@ -133,7 +133,7 @@ def get_env_var(name, default):
     return default if val is None else int(val)
 
 
-def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
+def pretrain(batch_size=2, debug=False, epochs=3, save_fold=10, random_seed=123,
     tok_ckpoint='bert-base-uncased', ckpoint='bert-base-uncased', cluster=None):
 
     n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
@@ -221,6 +221,11 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
             try:
                 for cur_iter, (now, pairs, labels, urls) in enumerate(progress):
                     if cur_iter <= begin_iter: continue
+                    # split batch in distributed training
+                    bb = batch_size // n_nodes
+                    bi = slice(node_id * bb, (node_id + 1) * bb)
+                    pairs = pairs[bi]
+                    labels = labels[bi]
                     # tokenize sentences
                     batch = tokenizer(pairs,
                         padding=True, truncation=True, return_tensors="pt")
@@ -257,8 +262,6 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
                     optimizer.zero_grad()
                     outputs = model(**batch)
                     loss = outputs.loss
-                    loss.backward()
-                    optimizer.step()
 
                     # sample GPU usage
                     gpu = GPUtil.getGPUs()[0]
@@ -266,15 +269,19 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
                     gpu_total = int(gpu.memoryTotal // 1000)
                     gpu_load = int(gpu.load * 100)
                     gpu_temp = int(gpu.temperature)
+
+                    loss.backward()
+                    optimizer.step()
+
                     # other stats to report
                     shape = list(batch.input_ids.shape)
                     loss_ = round(loss.item(), 2)
                     # update progress bar information
                     progress.update(now - progress.n)
                     progress.set_description(
-                        f"Ep#{epoch+1}/{epochs}, " +
+                        f"Ep#{epoch+1}/{epochs}, BatchLoss={loss_}, " +
                         f"{cur_iter}%{save_iter}={cur_iter % save_iter}, " +
-                        f"Loss={loss_}, batch{shape} * {n_nodes}, " +
+                        f"batch{shape} * {n_nodes} node(s), " +
                         f"{gpu_name}: {gpu_load}% @ {gpu_temp}C"
                     )
 
