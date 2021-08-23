@@ -133,7 +133,7 @@ def get_env_var(name, default):
 
 
 def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
-    tok_ckpoint='bert-base-uncased', ckpoint='bert-base-uncased', master=None):
+    tok_ckpoint='bert-base-uncased', ckpoint='bert-base-uncased', cluster=None):
 
     n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
     node_id = get_env_var("SLURM_NODEID", 0)
@@ -158,18 +158,19 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
     model.to(device)
 
     # initialize DDP
-    if master:
+    if cluster:
         print(node_id, f'Initialized process group ({n_nodes}) ...')
         dist.init_process_group(
             backend="nccl", # can be mpi, gloo, or nccl
-            init_method=master,
+            init_method=cluster,
             world_size=n_nodes,
             rank=node_id,
-            timeout=datetime.timedelta(0, 10) # 10s timeout
+            timeout=datetime.timedelta(0, 5 * 60) # 5min timeout
         )
         print(node_id, 'Enter Torch DDP.')
-        dist.barrier(device_ids=[0]) # wait for other nodes to connect master node
+        dist.barrier()
         model = DDP(model)
+        dist.barrier()
 
     print(node_id, 'Loading data ...')
     with open('mse-aops-2021-data.pkl', 'rb') as fh:
@@ -202,11 +203,13 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
     def save_model(epoch, cur_iter, model):
         if node_id != 0:
             return # must be master node
+        if cluster: model = model.module # unwrap DDP layer
         save_name = f"{epoch}-{cur_iter}"
         print(f'Saving model "{save_name}" ...')
         model.save_pretrained(f"./save/{save_name}")
 
-    print(node_id, 'Start training on device', model.device)
+    dist.barrier()
+    print(node_id, 'Start training on device', device)
     for epoch in range(epochs):
         if epoch < begin_epoch: continue
         seed(random_seed)
@@ -270,7 +273,7 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
                 save_model(epoch, cur_iter, model)
                 break
 
-    if master:
+    if cluster:
         dist.destroy_process_group()
         print(node_id, 'Exit Torch DDP.')
 
