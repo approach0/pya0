@@ -195,8 +195,9 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
         begin_epoch, begin_iter = -1, -1
     else:
         fields = ckpoint.strip('/').split('/')[-1].split('-')
-        begin_epoch, begin_iter = int(fields[0]), int(fields[1])
-        print(f'Checking out from Ep#{begin_epoch}, iteration#{begin_iter}')
+        if len(fields) == 2 and all(map(lambda x: x.isdigit(), fields)):
+            begin_epoch, begin_iter = int(fields[0]), int(fields[1])
+            print(f'Check out from Ep#{begin_epoch}, iteration#{begin_iter}')
 
     def save_model(epoch, cur_iter, model):
         if node_id != 0:
