@@ -191,9 +191,9 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
     seed(random_seed)
     data_iter = SentencePairLoader(ridx, None, maxlen, tokenize, batch_size)
     tot_iters = len([_ for _ in data_iter])
-    if '/' not in ckpoint:
-        begin_epoch, begin_iter = -1, -1
-    else:
+
+    begin_epoch, begin_iter = -1, -1
+    if '/' in ckpoint:
         fields = ckpoint.strip('/').split('/')[-1].split('-')
         if len(fields) == 2 and all(map(lambda x: x.isdigit(), fields)):
             begin_epoch, begin_iter = int(fields[0]), int(fields[1])
