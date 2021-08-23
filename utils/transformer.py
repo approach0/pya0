@@ -5,6 +5,7 @@ import torch
 import json
 import numpy
 import datetime
+import GPUtil
 from tqdm import tqdm
 from random import randint, seed, random as rand
 from transformers import AdamW, BertTokenizer
@@ -208,7 +209,7 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
         print(f'Saving model "{save_name}" ...')
         model.save_pretrained(f"./save/{save_name}")
 
-    dist.barrier()
+    if cluster: dist.barrier()
     print(node_id, 'Start training on device', device)
     for epoch in range(epochs):
         if epoch < begin_epoch: continue
@@ -216,7 +217,7 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
         data_iter = SentencePairLoader(ridx, data, maxlen, tokenize, batch_size)
         save_iter = tot_iters // save_fold
         last_iter = tot_iters - 1
-        with tqdm(data_iter, unit=" batch", ascii=True) as progress:
+        with tqdm(data_iter, unit=" batch", disable=(node_id > 0)) as progress:
             try:
                 for cur_iter, (now, pairs, labels, urls) in enumerate(progress):
                     if cur_iter <= begin_iter: continue
@@ -258,13 +259,23 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
                     loss = outputs.loss
                     loss.backward()
                     optimizer.step()
+
+                    # sample GPU usage
+                    gpu = GPUtil.getGPUs()[0]
+                    gpu_name = gpu.name
+                    gpu_total = int(gpu.memoryTotal // 1000)
+                    gpu_load = int(gpu.load * 100)
+                    gpu_temp = int(gpu.temperature)
+                    # other stats to report
                     shape = list(batch.input_ids.shape)
                     loss_ = round(loss.item(), 2)
+                    # update progress bar information
                     progress.update(now - progress.n)
                     progress.set_description(
-                        f"Node#{node_id}: Ep#{epoch+1}/{epochs}, " +
+                        f"Ep#{epoch+1}/{epochs}, " +
                         f"{cur_iter}%{save_iter}={cur_iter % save_iter}, " +
-                        f"Loss={loss_}, batch{shape}"
+                        f"Loss={loss_}, batch{shape} * {n_nodes}, " +
+                        f"{gpu_name}: {gpu_load}% @ {gpu_temp}C"
                     )
 
                     if cur_iter % save_iter == 0 or cur_iter == last_iter:
