@@ -131,14 +131,14 @@ def get_env_var(name, default):
     return default if val is None else int(val)
 
 
-def pretrain(batch_size, debug=False, epochs=3, save_fold=10,
-             ckpoint='bert-base-uncased', random_seed=123, master=None):
+def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
+    tok_ckpoint='bert-base-uncased', ckpoint='bert-base-uncased', master=None):
 
     n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
     node_id = get_env_var("SLURM_NODEID", 0)
 
     print(node_id, f'Loading model {ckpoint}...')
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
     model = BertForPreTraining.from_pretrained(ckpoint, tie_word_embeddings=True)
     #print(list(zip(tokenizer.all_special_tokens, tokenizer.all_special_ids)))
     #print(model.config.to_json_string(use_diff=False))
