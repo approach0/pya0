@@ -145,6 +145,9 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
     #print(model.config.to_json_string(use_diff=False))
     maxlen = model.config.max_position_embeddings
 
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model.to(device)
+
     if master:
         print(node_id, f'Initialized process group ({n_nodes}) ...')
         dist.init_process_group(
@@ -179,8 +182,6 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
     # expand embedding and preparing training
     model.resize_token_embeddings(len(tokenizer))
     optimizer = AdamW(model.parameters())
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model.to(device)
     model.train()
 
     print(node_id, 'Calculating total iterations ...')
