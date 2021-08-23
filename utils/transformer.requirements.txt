@@ -14,6 +14,7 @@ cudatoolkit=11.1.74=h6bb024c_0
 dataclasses=0.8=pyh6d0b6a4_7
 filelock=3.0.12=pyhd3eb1b0_1
 fire=0.4.0=pypi_0
+gputil=1.4.0+computecanada=pypi_0
 huggingface-hub=0.0.12=pypi_0
 huggingface_hub=0.0.15=py_0
 idna=2.10=pyhd3eb1b0_0
