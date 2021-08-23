@@ -145,9 +145,19 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
     #print(model.config.to_json_string(use_diff=False))
     maxlen = model.config.max_position_embeddings
 
+    print(node_id, 'Before loading new vocabulary:', len(tokenizer))
+    with open('mse-aops-2021-vocab.pkl', 'rb') as fh:
+        vocab = pickle.load(fh)
+        for w in vocab.keys():
+            tokenizer.add_tokens(w)
+    print(node_id, 'After loading new vocabulary:', len(tokenizer))
+
+    # reshape embedding and load into CUDA
+    model.resize_token_embeddings(len(tokenizer))
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
 
+    # initialize DDP
     if master:
         print(node_id, f'Initialized process group ({n_nodes}) ...')
         dist.init_process_group(
@@ -161,13 +171,6 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
         dist.barrier(device_ids=[0]) # wait for other nodes to connect master node
         model = DDP(model)
 
-    print(node_id, 'Before loading new vocabulary:', len(tokenizer))
-    with open('mse-aops-2021-vocab.pkl', 'rb') as fh:
-        vocab = pickle.load(fh)
-        for w in vocab.keys():
-            tokenizer.add_tokens(w)
-    print(node_id, 'After loading new vocabulary:', len(tokenizer))
-
     print(node_id, 'Loading data ...')
     with open('mse-aops-2021-data.pkl', 'rb') as fh:
         data = pickle.load(fh)
@@ -179,8 +182,7 @@ def pretrain(batch_size, debug=False, epochs=3, save_fold=10, random_seed=123,
         #print('random tags:', data[r[0]][1] or 'None')
         #print('random sentence:', data[r[0]][0][r[1]])
 
-    # expand embedding and preparing training
-    model.resize_token_embeddings(len(tokenizer))
+    # prepare training ...
     optimizer = AdamW(model.parameters())
     model.train()
 
