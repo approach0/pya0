@@ -324,8 +324,11 @@ def pretrain(batch_size=2, debug=False, epochs=3, save_fold=10, random_seed=123,
     mp.spawn(_pretrain_single_process, nprocs=ngpus, join=True, args=arg_vals)
 
 
-def test_max_gpu_batch(ckpoint='bert-base-uncased'):
-    tokenizer = BertTokenizer.from_pretrained(ckpoint)
+def test_max_gpu_batch(
+    ckpoint='bert-base-uncased',
+    tok_ckpoint='bert-base-uncased'):
+
+    tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
     model = BertForPreTraining.from_pretrained(ckpoint)
     model.to(0)
     maxlen = model.config.max_position_embeddings
