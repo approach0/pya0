@@ -137,7 +137,7 @@ def get_env_var(name, default):
     return default if val is None else int(val)
 
 
-def _pretrain_single_process(_,
+def _pretrain_single_process(local_rank,
     batch_size, epochs, save_fold, random_seed,
     tok_ckpoint, ckpoint, cluster, debug):
 
@@ -145,8 +145,7 @@ def _pretrain_single_process(_,
     n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
     node_id = get_env_var("SLURM_NODEID", 0)
     glob_ngpus = n_nodes * ngpus
-    glob_rank  = node_id * ngpus
-    local_rank = glob_rank % ngpus
+    glob_rank  = node_id * ngpus + local_rank
 
     # hook print function to show node/rank
     import builtins as __builtin__
