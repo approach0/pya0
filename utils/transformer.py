@@ -8,6 +8,7 @@ import datetime
 import GPUtil
 from tqdm import tqdm
 from random import randint, seed, random as rand
+import transformers
 from transformers import AdamW, BertTokenizer
 from transformers import BertForPreTraining
 from transformers import BertForSequenceClassification
@@ -247,7 +248,7 @@ def pretrain(batch_size=2, debug=False, epochs=3, save_fold=10, random_seed=123,
                         print('Type IDs:', batch.token_type_ids)
                         print('Attention Mask:', batch.attention_mask)
                         inputs = json.dumps({
-                            attr: batch[attr].shape
+                            attr: str(batch[attr].dtype) + str(batch[attr].shape)
                             if attr in batch else None for attr in [
                             'input_ids',
                             'attention_mask',
@@ -296,5 +297,26 @@ def pretrain(batch_size=2, debug=False, epochs=3, save_fold=10, random_seed=123,
         print(node_id, 'Exit Torch DDP.')
 
 
+def test_max_gpu_batch(ckpoint='bert-base-uncased'):
+    model = BertForPreTraining.from_pretrained(ckpoint)
+    model.to(0)
+    maxlen = model.config.max_position_embeddings
+    for batch_sz in range(2, 200):
+        print(f'try batch size: {batch_sz}')
+        batch = transformers.BatchEncoding()
+        batch['attention_mask'] = torch.randint(1, (batch_sz, maxlen))
+        batch['input_ids'] = torch.randint(1, (batch_sz, maxlen))
+        batch['labels'] = torch.randint(1, (batch_sz, maxlen))
+        batch['next_sentence_label'] = torch.randint(1, (batch_sz,))
+        batch['token_type_ids'] = torch.randint(1, (batch_sz, maxlen))
+        batch.to(0)
+        try:
+            _ = model(**batch)
+        except Exception as e:
+            quit()
+
 if __name__ == '__main__':
-    fire.Fire(pretrain)
+    fire.Fire({
+        'test_max_gpu_batch': test_max_gpu_batch,
+        'pretrain': pretrain
+    })
