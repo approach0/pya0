@@ -1,19 +1,22 @@
 import os
 import fire
 import pickle
-import torch
 import json
 import numpy
 import datetime
 import GPUtil
 from tqdm import tqdm
 from random import randint, seed, random as rand
+
+import torch
+import torch.multiprocessing as mp
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
+
 import transformers
 from transformers import AdamW, BertTokenizer
 from transformers import BertForPreTraining
 from transformers import BertForSequenceClassification
-import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel as DDP
 
 
 class SentencePairLoader():
@@ -134,52 +137,63 @@ def get_env_var(name, default):
     return default if val is None else int(val)
 
 
-def pretrain(batch_size=2, debug=False, epochs=3, save_fold=10, random_seed=123,
-    tok_ckpoint='bert-base-uncased', ckpoint='bert-base-uncased', cluster=None):
+def _pretrain_single_process(_,
+    batch_size, epochs, save_fold, random_seed,
+    tok_ckpoint, ckpoint, cluster, debug):
 
+    ngpus = torch.cuda.device_count()
     n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
     node_id = get_env_var("SLURM_NODEID", 0)
+    glob_ngpus = n_nodes * ngpus
+    glob_rank  = node_id * ngpus
+    local_rank = glob_rank % ngpus
 
-    print(node_id, f'Loading model {ckpoint}...')
+    # hook print function to show node/rank
+    import builtins as __builtin__
+    def print(*args):
+        __builtin__.print(f'[node#{node_id} rank#{glob_rank}]', *args)
+
+    print(f'Loading model {ckpoint}...')
     tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
     model = BertForPreTraining.from_pretrained(ckpoint, tie_word_embeddings=True)
     #print(list(zip(tokenizer.all_special_tokens, tokenizer.all_special_ids)))
     #print(model.config.to_json_string(use_diff=False))
     maxlen = model.config.max_position_embeddings
 
-    print(node_id, 'Before loading new vocabulary:', len(tokenizer))
+    print('Before loading new vocabulary:', len(tokenizer))
     with open('mse-aops-2021-vocab.pkl', 'rb') as fh:
         vocab = pickle.load(fh)
         for w in vocab.keys():
             tokenizer.add_tokens(w)
-    print(node_id, 'After loading new vocabulary:', len(tokenizer))
+    print('After loading new vocabulary:', len(tokenizer))
 
     # reshape embedding and load into CUDA
     model.resize_token_embeddings(len(tokenizer))
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device(f'cuda:{local_rank}'
+        if torch.cuda.is_available() else 'cpu')
     model.to(device)
 
     # initialize DDP
     if cluster:
-        print(node_id, f'Initialized process group ({n_nodes}) ...')
+        print(f'Initialized process group ...')
         dist.init_process_group(
             backend="nccl", # can be mpi, gloo, or nccl
             init_method=cluster,
-            world_size=n_nodes,
-            rank=node_id,
+            world_size=glob_ngpus,
+            rank=glob_rank,
             timeout=datetime.timedelta(0, 5 * 60) # 5min timeout
         )
-        print(node_id, 'Enter Torch DDP.')
+        print('Enter Torch DDP.')
         dist.barrier()
         model = DDP(model)
         dist.barrier()
 
-    print(node_id, 'Loading data ...')
+    print('Loading data ...')
     with open('mse-aops-2021-data.pkl', 'rb') as fh:
         data = pickle.load(fh)
         ridx = [(i, j) for i, d in enumerate(data) for j in range(len(d[0]))]
-        print(node_id, 'Data documents:', len(data))
-        print(node_id, 'Data sentences:', len(ridx))
+        print('Data documents:', len(data))
+        print('Data sentences:', len(ridx))
         #r = ridx[randint(0, len(ridx) - 1)]
         #print('random URL:', data[r[0]][2])
         #print('random tags:', data[r[0]][1] or 'None')
@@ -189,7 +203,7 @@ def pretrain(batch_size=2, debug=False, epochs=3, save_fold=10, random_seed=123,
     optimizer = AdamW(model.parameters())
     model.train()
 
-    print(node_id, 'Calculating total iterations ...')
+    print('Calculating total iterations ...')
     tokenize = tokenizer.tokenize
     seed(random_seed)
     data_iter = SentencePairLoader(ridx, None, maxlen, tokenize, batch_size)
@@ -203,7 +217,7 @@ def pretrain(batch_size=2, debug=False, epochs=3, save_fold=10, random_seed=123,
             print(f'Check out from Ep#{begin_epoch}, iteration#{begin_iter}')
 
     def save_model(epoch, cur_iter, model):
-        if node_id != 0:
+        if glob_rank != 0:
             return # must be master node
         if cluster: model = model.module # unwrap DDP layer
         save_name = f"{epoch}-{cur_iter}"
@@ -211,20 +225,20 @@ def pretrain(batch_size=2, debug=False, epochs=3, save_fold=10, random_seed=123,
         model.save_pretrained(f"./save/{save_name}")
 
     if cluster: dist.barrier()
-    print(node_id, 'Start training on device', device)
+    print('Start training on device', device)
     for epoch in range(epochs):
         if epoch < begin_epoch: continue
         seed(random_seed)
         data_iter = SentencePairLoader(ridx, data, maxlen, tokenize, batch_size)
         save_iter = tot_iters // save_fold
         last_iter = tot_iters - 1
-        with tqdm(data_iter, unit=" batch", disable=(node_id > 0)) as progress:
+        with tqdm(data_iter, unit="batch", disable=(glob_rank > 0)) as progress:
             try:
                 for cur_iter, (now, pairs, labels, urls) in enumerate(progress):
                     if cur_iter <= begin_iter: continue
                     # split batch in distributed training
-                    bb = batch_size // n_nodes
-                    bi = slice(node_id * bb, (node_id + 1) * bb)
+                    bb = batch_size // glob_ngpus
+                    bi = slice(glob_rank * bb, (glob_rank + 1) * bb)
                     pairs = pairs[bi]
                     labels = labels[bi]
                     # tokenize sentences
@@ -281,8 +295,9 @@ def pretrain(batch_size=2, debug=False, epochs=3, save_fold=10, random_seed=123,
                     progress.update(now - progress.n)
                     progress.set_description(
                         f"Ep#{epoch+1}/{epochs}, BatchLoss={loss_}, " +
-                        f"{cur_iter}%{save_iter}={cur_iter % save_iter}, " +
-                        f"batch{shape} * {n_nodes} node(s), " +
+                        f"{cur_iter}%{save_iter}={cur_iter % save_iter}. " +
+                        f"Total {n_nodes} x {ngpus} GPUs. " +
+                        f"Batch {shape} x {glob_ngpus}. " +
                         f"{gpu_name}: {gpu_load}% @ {gpu_temp}C"
                     )
 
@@ -294,25 +309,45 @@ def pretrain(batch_size=2, debug=False, epochs=3, save_fold=10, random_seed=123,
 
     if cluster:
         dist.destroy_process_group()
-        print(node_id, 'Exit Torch DDP.')
+        print('Exit Torch DDP.')
+
+
+def pretrain(batch_size=2, debug=False, epochs=3, save_fold=10, random_seed=123,
+    tok_ckpoint='bert-base-uncased', ckpoint='bert-base-uncased', cluster=None):
+    args = locals()
+
+    ngpus = torch.cuda.device_count()
+
+    import inspect
+    arg_names = inspect.getargspec(_pretrain_single_process)[0][1:]
+    arg_vals = tuple(args[nm] for nm in arg_names)
+    mp.spawn(_pretrain_single_process, nprocs=ngpus, join=True, args=arg_vals)
 
 
 def test_max_gpu_batch(ckpoint='bert-base-uncased'):
+    tokenizer = BertTokenizer.from_pretrained(ckpoint)
     model = BertForPreTraining.from_pretrained(ckpoint)
     model.to(0)
     maxlen = model.config.max_position_embeddings
+    maxvoc = len(tokenizer)
+    torch.cuda.reset_peak_memory_stats()
     for batch_sz in range(2, 200):
         print(f'try batch size: {batch_sz}')
         batch = transformers.BatchEncoding()
         batch['attention_mask'] = torch.randint(1, (batch_sz, maxlen))
-        batch['input_ids'] = torch.randint(1, (batch_sz, maxlen))
+        batch['input_ids'] = torch.randint(maxvoc, (batch_sz, maxlen))
         batch['labels'] = torch.randint(1, (batch_sz, maxlen))
         batch['next_sentence_label'] = torch.randint(1, (batch_sz,))
         batch['token_type_ids'] = torch.randint(1, (batch_sz, maxlen))
         batch.to(0)
         try:
-            _ = model(**batch)
+            outputs = model(**batch)
+            loss = outputs.loss
+            loss.backward()
         except Exception as e:
+            max_memo = torch.cuda.max_memory_allocated()
+            max_memo_GB = max_memo // (1024 ** 3)
+            print(f'Peak memory usage: {max_memo_GB} GB.')
             quit()
 
 if __name__ == '__main__':
