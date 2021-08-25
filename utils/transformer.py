@@ -154,7 +154,7 @@ def _pretrain_thread(local_rank,
     ngpus = torch.cuda.device_count()
     n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
     node_id = get_env_var("SLURM_NODEID", 0)
-    glob_ngpus = n_nodes * ngpus
+    glob_ngpus = n_nodes * ngpus if ngpus > 0 else 1
     glob_rank  = node_id * ngpus + local_rank
 
     # hook print function to show node/rank
