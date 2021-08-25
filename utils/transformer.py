@@ -149,7 +149,7 @@ def use_xla_device():
 
 def _pretrain_thread(local_rank,
     batch_size, epochs, save_fold, random_seed,
-    tok_ckpoint, ckpoint, cluster, xla, debug):
+    tok_ckpoint, ckpoint, cluster, xla_cores, debug):
 
     ngpus = torch.cuda.device_count()
     n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
@@ -178,7 +178,7 @@ def _pretrain_thread(local_rank,
 
     # reshape embedding and set target device
     model.resize_token_embeddings(len(tokenizer))
-    if xla:
+    if xla_cores:
         device, xm = use_xla_device()
     else:
         device = torch.device(f'cuda:{local_rank}'
@@ -298,15 +298,15 @@ def _pretrain_thread(local_rank,
                         gpu_load = int(gpu.load * 100)
                         gpu_temp = int(gpu.temperature)
                         gpu_desc = f"{gpu_name}: {gpu_load}% @ {gpu_temp}C"
-                    elif xla:
+                    elif xla_cores:
                         gpu_desc = 'TPU'
                     else:
                         gpu_desc = ''
 
                     loss.backward()
                     optimizer.step()
-                    if xla:
-                        xm.mark_step()
+                    if xla_cores:
+                        xm.optimizer_step(optimizer)
 
                     # other stats to report
                     shape = list(batch.input_ids.shape)
@@ -333,20 +333,20 @@ def _pretrain_thread(local_rank,
 
 
 def pretrain(batch_size=2, debug=False, epochs=3,
-    random_seed=123, cluster=None, xla=False, save_fold=10,
+    random_seed=123, cluster=None, xla_cores=0, save_fold=10,
     tok_ckpoint='bert-base-uncased', ckpoint='bert-base-uncased'):
     args = locals()
     import inspect
     arg_names = inspect.getargspec(_pretrain_thread)[0][1:]
     arg_vals = tuple(args[nm] for nm in arg_names)
 
-    if xla:
+    if xla_cores:
+        import torch_xla.distributed.xla_multiprocessing as xmp
         # TPU environment does not support native mp.spawn()
-        arg_vals = (0, *arg_vals)
-        _pretrain_thread(*arg_vals)
+        xmp.spawn(_pretrain_thread, nprocs=xla_cores, args=arg_vals)
     else:
         ngpus = torch.cuda.device_count()
-        mp.spawn(_pretrain_thread, nprocs=ngpus, join=True, args=arg_vals)
+        mp.spawn(_pretrain_thread, nprocs=ngpus, args=arg_vals)
 
 
 def estimate_max_device_batch(xla=False,
