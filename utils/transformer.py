@@ -137,9 +137,19 @@ def get_env_var(name, default):
     return default if val is None else int(val)
 
 
+def use_xla_device():
+    import torch_xla
+    import torch_xla.core.xla_model as xm
+    dev = xm.xla_device()
+    dev_info = torch_xla.core.xla_model.get_memory_info(dev)
+    total_mem = dev_info['kb_total'] / 1000
+    print('TPU memory: ', total_mem)
+    return dev, xm
+
+
 def _pretrain_single_process(local_rank,
     batch_size, epochs, save_fold, random_seed,
-    tok_ckpoint, ckpoint, cluster, debug):
+    tok_ckpoint, ckpoint, cluster, xla, debug):
 
     ngpus = torch.cuda.device_count()
     n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
@@ -166,10 +176,13 @@ def _pretrain_single_process(local_rank,
             tokenizer.add_tokens(w)
     print('After loading new vocabulary:', len(tokenizer))
 
-    # reshape embedding and load into CUDA
+    # reshape embedding and set target device
     model.resize_token_embeddings(len(tokenizer))
-    device = torch.device(f'cuda:{local_rank}'
-        if torch.cuda.is_available() else 'cpu')
+    if xla:
+        device, xm = use_xla_device()
+    else:
+        device = torch.device(f'cuda:{local_rank}'
+            if torch.cuda.is_available() else 'cpu')
     model.to(device)
 
     # initialize DDP
@@ -277,15 +290,23 @@ def _pretrain_single_process(local_rank,
                     outputs = model(**batch)
                     loss = outputs.loss
 
-                    # sample GPU usage
-                    gpu = GPUtil.getGPUs()[0]
-                    gpu_name = gpu.name
-                    gpu_total = int(gpu.memoryTotal // 1000)
-                    gpu_load = int(gpu.load * 100)
-                    gpu_temp = int(gpu.temperature)
+                    # device information
+                    if ngpus > 0:
+                        gpu = GPUtil.getGPUs()[0]
+                        gpu_name = gpu.name
+                        gpu_total = int(gpu.memoryTotal // 1000)
+                        gpu_load = int(gpu.load * 100)
+                        gpu_temp = int(gpu.temperature)
+                        gpu_desc = f"{gpu_name}: {gpu_load}% @ {gpu_temp}C"
+                    elif xla:
+                        gpu_desc = 'TPU'
+                    else:
+                        gpu_desc = ''
 
                     loss.backward()
                     optimizer.step()
+                    if xla:
+                        xm.mark_step()
 
                     # other stats to report
                     shape = list(batch.input_ids.shape)
@@ -297,7 +318,7 @@ def _pretrain_single_process(local_rank,
                         f"{cur_iter}%{save_iter}={cur_iter % save_iter}. " +
                         f"Total {n_nodes} x {ngpus} GPUs. " +
                         f"Batch {shape} x {glob_ngpus}. " +
-                        f"{gpu_name}: {gpu_load}% @ {gpu_temp}C"
+                        gpu_desc
                     )
 
                     if cur_iter % save_iter == 0 or cur_iter == last_iter:
@@ -311,8 +332,9 @@ def _pretrain_single_process(local_rank,
         print('Exit Torch DDP.')
 
 
-def pretrain(batch_size=2, debug=False, epochs=3, save_fold=10, random_seed=123,
-    tok_ckpoint='bert-base-uncased', ckpoint='bert-base-uncased', cluster=None):
+def pretrain(batch_size=2, debug=False, epochs=3,
+    random_seed=123, cluster=None, xla=False, save_fold=10,
+    tok_ckpoint='bert-base-uncased', ckpoint='bert-base-uncased'):
     args = locals()
 
     ngpus = torch.cuda.device_count()
