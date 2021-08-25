@@ -349,16 +349,25 @@ def pretrain(batch_size=2, debug=False, epochs=3,
         mp.spawn(_pretrain_thread, nprocs=ngpus, join=True, args=arg_vals)
 
 
-def test_max_gpu_batch(
-    ckpoint='bert-base-uncased',
-    tok_ckpoint='bert-base-uncased'):
+def estimate_max_device_batch(xla=False,
+    ckpoint='bert-base-uncased', tok_ckpoint='bert-base-uncased'):
 
     tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
     model = BertForPreTraining.from_pretrained(ckpoint)
-    model.to(0)
+
+    if xla:
+        device, _ = use_xla_device()
+    else:
+        device = torch.device(f'cuda:0'
+            if torch.cuda.is_available() else 'cpu')
+    model.to(device)
+
     maxlen = model.config.max_position_embeddings
     maxvoc = len(tokenizer)
-    torch.cuda.reset_peak_memory_stats()
+
+    if torch.cuda.is_available():
+        torch.cuda.reset_peak_memory_stats()
+
     for batch_sz in range(2, 200):
         print(f'try batch size: {batch_sz}')
         batch = transformers.BatchEncoding()
@@ -367,19 +376,20 @@ def test_max_gpu_batch(
         batch['labels'] = torch.randint(1, (batch_sz, maxlen))
         batch['next_sentence_label'] = torch.randint(1, (batch_sz,))
         batch['token_type_ids'] = torch.randint(1, (batch_sz, maxlen))
-        batch.to(0)
+        batch.to(device)
         try:
             outputs = model(**batch)
             loss = outputs.loss
             loss.backward()
         except Exception as e:
-            max_memo = torch.cuda.max_memory_allocated()
-            max_memo_GB = max_memo // (1024 ** 3)
-            print(f'Peak memory usage: {max_memo_GB} GB.')
+            if torch.cuda.is_available():
+                max_memo = torch.cuda.max_memory_allocated()
+                max_memo_GB = max_memo // (1024 ** 3)
+                print(f'Peak memory usage: {max_memo_GB} GB.')
             quit()
 
 if __name__ == '__main__':
     fire.Fire({
-        'test_max_gpu_batch': test_max_gpu_batch,
+        'estimate_max_device_batch': estimate_max_device_batch,
         'pretrain': pretrain
     })
