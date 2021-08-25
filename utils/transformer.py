@@ -147,7 +147,7 @@ def use_xla_device():
     return dev, xm
 
 
-def _pretrain_single_process(local_rank,
+def _pretrain_thread(local_rank,
     batch_size, epochs, save_fold, random_seed,
     tok_ckpoint, ckpoint, cluster, xla, debug):
 
@@ -336,13 +336,17 @@ def pretrain(batch_size=2, debug=False, epochs=3,
     random_seed=123, cluster=None, xla=False, save_fold=10,
     tok_ckpoint='bert-base-uncased', ckpoint='bert-base-uncased'):
     args = locals()
-
-    ngpus = torch.cuda.device_count()
-
     import inspect
-    arg_names = inspect.getargspec(_pretrain_single_process)[0][1:]
+    arg_names = inspect.getargspec(_pretrain_thread)[0][1:]
     arg_vals = tuple(args[nm] for nm in arg_names)
-    mp.spawn(_pretrain_single_process, nprocs=ngpus, join=True, args=arg_vals)
+
+    if xla:
+        # TPU environment does not support native mp.spawn()
+        arg_vals = (0, *arg_vals)
+        _pretrain_thread(*arg_vals)
+    else:
+        ngpus = torch.cuda.device_count()
+        mp.spawn(_pretrain_thread, nprocs=ngpus, join=True, args=arg_vals)
 
 
 def test_max_gpu_batch(
