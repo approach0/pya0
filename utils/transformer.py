@@ -276,7 +276,7 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster,
         # update progress bar information
         progress.update(now - progress.n)
         progress.set_description(
-            f"Ep#{epoch+1}/{epochs}, shard#{shard}/{n_shards}, " +
+            f"Ep#{epoch+1}/{epochs}, shard#{shard+1}/{n_shards}, " +
             f"iter={cur_iter}%{save_iter}, " +
             f"{n_nodes} nodes, " +
             f"{device_desc}, " +
@@ -321,6 +321,7 @@ def _pretrain_thread(local_rank, n_shards,
     if xla_cores:
         device, xm = use_xla_device(local_rank)
     else:
+        xm = None
         device = torch.device(f'cuda:{local_rank}'
             if torch.cuda.is_available() else 'cpu')
     model.to(device)
@@ -356,9 +357,9 @@ def _pretrain_thread(local_rank, n_shards,
     print('Start training ...')
     for epoch in range(epochs):
         if epoch < begin_epoch: continue
-        for shard in range(n_shards):
+        for shard in range(n_shards if n_shards > 0 else 1):
             if (epoch, shard) < (begin_epoch, begin_shard): continue
-            print(f'Loading pretrain data ({shard}/{n_shards}) ...')
+            print(f'Loading pretrain data ...')
             data = load_pretrain_data(shard, n_shards)
             # get total iterations in this shard
             seed(random_seed)
