@@ -144,7 +144,8 @@ def get_env_var(name, default):
 def use_xla_device(ordinal=0):
     import torch_xla
     import torch_xla.core.xla_model as xm
-    dev = xm.xla_device(ordinal)
+    dev = xm.xla_device()
+    #dev = xm.xla_device(ordinal) # this doesn't work
     dev_info = torch_xla.core.xla_model.get_memory_info(dev)
     total_mem = dev_info['kb_total'] / 1000
     print(f'TPU core#{ordinal} memory: {total_mem} MiB.')
