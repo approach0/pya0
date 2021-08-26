@@ -204,7 +204,7 @@ def load_local_model(ckpoint):
 
 def train_loop(model, optimizer, tokenizer, debug, progress, cluster,
     device, xla_cores, n_nodes, batch_size, glob_batches, glob_rank,
-    epoch, epochs, shard, n_shards, begin_iter, save_iter):
+    epoch, epochs, shard, n_shards, begin_iter, save_iter, xm):
 
     for cur_iter, (now, pairs, labels, urls) in enumerate(progress):
         if cur_iter <= begin_iter: continue
