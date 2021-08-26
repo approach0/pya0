@@ -267,7 +267,8 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster,
         loss.backward()
         optimizer.step()
         if xla_cores:
-            xm.optimizer_step(optimizer)
+            xm.rendezvous('_step')
+            xm.optimizer_step(optimizer, barrier=True)
 
         # other stats to report
         shape = list(batch.input_ids.shape)
@@ -339,6 +340,9 @@ def _pretrain_thread(local_rank, n_shards,
         dist.barrier()
         model = DDP(model)
         dist.barrier()
+    elif xla_cores:
+        # XLA barrier
+        xm.rendezvous('init')
 
     # prepare training ...
     optimizer = AdamW(model.parameters())
