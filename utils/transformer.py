@@ -175,7 +175,7 @@ def load_pretrain_data(shard, n_shards):
 
 
 def shard_pretrain_data(n_shards):
-    docs, _ = load_pretrain_data(0, 1)
+    docs, _ = load_pretrain_data(0, 0)
     L = len(docs)
     D = -(-L // n_shards) # ceil division
     for shard, i in enumerate(range(0, L, D)):
