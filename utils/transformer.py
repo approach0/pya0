@@ -151,7 +151,7 @@ def use_xla_device():
     return dev, xm
 
 
-def num_devices():
+def num_devices(xla_cores):
     if torch.cuda.is_available():
         return torch.cuda.device_count() # GPU
     elif xla_cores > 0:
@@ -250,7 +250,7 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster,
         outputs = model(**batch)
         loss = outputs.loss
 
-        n_devices = num_devices()
+        n_devices = num_devices(xla_cores)
         if device.type == 'cuda':
             gpu = GPUtil.getGPUs()[0]
             gpu_name = gpu.name
@@ -291,7 +291,7 @@ def _pretrain_thread(local_rank, n_shards,
 
     n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
     node_id = get_env_var("SLURM_NODEID", 0)
-    n_devices = num_devices()
+    n_devices = num_devices(xla_cores)
     glob_batches = n_nodes * n_devices
     glob_rank = node_id * n_devices + local_rank
 
@@ -392,7 +392,8 @@ def pretrain(batch_size=2, debug=False, epochs=3, n_shards=1,
         xmp.spawn(_pretrain_thread, nprocs=xla_cores, args=arg_vals)
     else:
         import torch.multiprocessing as mp
-        mp.spawn(_pretrain_thread, nprocs=num_devices(), args=arg_vals)
+        n_cores = num_devices(0)
+        mp.spawn(_pretrain_thread, nprocs=n_cores, args=arg_vals)
 
 
 def estimate_max_device_batch(xla=False,
