@@ -161,7 +161,7 @@ def num_devices(xla_cores):
 
 
 def load_pretrain_data(shard, n_shards):
-    suffix = '' if n_shards <= 1 else f'.{shard}'
+    suffix = '' if n_shards == 0 else f'.{shard}'
     with open(DOCS_FILE + suffix, 'rb') as fh:
         docs = pickle.load(fh)
         ridx = [(i, j) for i, d in enumerate(docs) for j in range(len(d[0]))]
@@ -379,7 +379,7 @@ def _pretrain_thread(local_rank, n_shards,
         print('Exit Torch DDP.')
 
 
-def pretrain(batch_size=2, debug=False, epochs=3, n_shards=1,
+def pretrain(batch_size=2, debug=False, epochs=3, n_shards=0,
     random_seed=123, cluster=None, xla_cores=0, save_fold=10,
     tok_ckpoint='bert-base-uncased', ckpoint='bert-base-uncased'):
     args = locals()
