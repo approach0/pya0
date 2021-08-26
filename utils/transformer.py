@@ -141,13 +141,13 @@ def get_env_var(name, default):
     return default if val is None else int(val)
 
 
-def use_xla_device():
+def use_xla_device(ordinal=0):
     import torch_xla
     import torch_xla.core.xla_model as xm
-    dev = xm.xla_device()
+    dev = xm.xla_device(ordinal)
     dev_info = torch_xla.core.xla_model.get_memory_info(dev)
     total_mem = dev_info['kb_total'] / 1000
-    print('TPU memory: ', total_mem)
+    print(f'TPU core#{ordinal} memory: {total_mem} MiB.')
     return dev, xm
 
 
@@ -317,7 +317,7 @@ def _pretrain_thread(local_rank, n_shards,
     # reshape embedding and set target device
     model.resize_token_embeddings(len(tokenizer))
     if xla_cores:
-        device, xm = use_xla_device()
+        device, xm = use_xla_device(local_rank)
     else:
         device = torch.device(f'cuda:{local_rank}'
             if torch.cuda.is_available() else 'cpu')
