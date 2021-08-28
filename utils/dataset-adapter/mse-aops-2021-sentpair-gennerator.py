@@ -1,10 +1,9 @@
+import os
 import fire
 import pickle
 from tqdm import tqdm
 from random import randint, seed, random as rand
 from transformers import BertTokenizer
-
-DOCS_FILE = 'mse-aops-2021-data.pkl'
 
 
 class SentencePairGennerator():
@@ -78,12 +77,15 @@ class SentencePairGennerator():
             yield [pair_1, pair_2], 1 if ctx else 0, (url_1, url_2)
 
 
-def generate_sentpairs(debug=False, maxlen=512,
+def generate_sentpairs(
+    docs_file = 'mse-aops-2021-data.pkl',
+    debug=False, maxlen=512, n_splits=20,
     tok_ckpoint='bert-base-uncased', random_seed=123):
+
     tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
     tokenize = tokenizer.tokenize
-    with open(DOCS_FILE, 'rb') as fh:
-        print(f'Loading {DOCS_FILE} ...')
+    with open(docs_file, 'rb') as fh:
+        print(f'Loading {docs_file} ...')
         docs = pickle.load(fh)
         ridx = [(i, j) for i, d in enumerate(docs) for j in range(len(d[0]))]
 
@@ -91,13 +93,22 @@ def generate_sentpairs(debug=False, maxlen=512,
         seed(random_seed)
         data_iter = SentencePairGennerator((docs, ridx), maxlen, None)
         n_sentpairs = len(list(data_iter))
+        n_per_split = n_sentpairs // n_splits
 
         print(f'Generating ...')
         seed(random_seed)
         data_iter = SentencePairGennerator((docs, ridx), maxlen, tokenize)
+        aggregate = []
+        aggregate_cnt = 0
         with tqdm(data_iter, total=n_sentpairs) as progress:
             for pair, relevance, urls in progress:
-                progress.set_description('Progress:')
+                aggregate.append((relevance, *pair))
+                aggregate_cnt += 1
+                reminder = aggregate_cnt % n_per_split
+                progress.set_description(f'{reminder} % {n_per_split}')
+                if reminder == 0:
+                    with open(docs_file + f'.pairs.{aggregate_cnt}', 'wb') as fh:
+                        docs = pickle.dump(aggregate, fh)
                 if debug:
                     print(relevance)
                     print('##', urls[0])
@@ -106,7 +117,10 @@ def generate_sentpairs(debug=False, maxlen=512,
                     print(pair[1])
                     print()
                     break
+            with open(docs_file + f'.pairs.{aggregate_cnt}', 'wb') as fh:
+                docs = pickle.dump(aggregate, fh)
 
 
 if __name__ == '__main__':
+    os.environ["PAGER"] = 'cat'
     fire.Fire(generate_sentpairs)
