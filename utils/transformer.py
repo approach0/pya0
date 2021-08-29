@@ -18,89 +18,7 @@ from transformers import AdamW, BertTokenizer
 from transformers import BertForPreTraining
 from transformers import BertForSequenceClassification
 
-DOCS_FILE = 'mse-aops-2021-data.pkl'
 VOCB_FILE = 'mse-aops-2021-vocab.pkl'
-
-
-class SentencePairLoader():
-    def __init__(self, D, maxlen, tokenize, batch_sz,
-                 short_prob=0.1, window=3):
-        data, ridx = D
-        self.ridx = ridx
-        self.N = len(ridx) # total number of sentences
-        self.data = data
-        self.maxlen = maxlen # maximum number of tokens
-        self.tokenize = tokenize
-        self.batch_sz = batch_sz
-        self.short_prob = short_prob
-        self.window = window
-        self.now = 0
-        self.dryrun = (data is None or tokenize is None)
-
-    def __len__(self):
-        return self.N
-
-    def read(self, read_length, randomly=False):
-        # get the current sentence
-        idx = self.now
-        while randomly and idx == self.now:
-            idx = randint(0, self.N - 1)
-        row, col = self.ridx[idx]
-        # increment pointer
-        if not randomly:
-            self.now = self.now + self.window
-            if self.now >= self.N:
-                raise StopIteration
-        if self.dryrun:
-            return '', None, ''
-        # concatenate sentences into one no longer than `read_length`
-        tokens = []
-        sentences = ''
-        for sentence in self.data[row][0][col:]:
-            sentence_toks = self.tokenize(sentence)
-            if len(tokens) + len(sentence_toks) >= read_length and len(tokens) > 0:
-                # try to make our sentence no longer than read_length,
-                # but at the same time we have to include at least one
-                # sentence, if that sentence is longer than read_length,
-                # we nevertheless include that one, and leave truncation
-                # for tokenizer.
-                break
-            tokens += sentence_toks
-            sentences += sentence
-        # return sentences
-        tags = self.data[row][1]
-        url = self.data[row][2]
-        return sentences, tags, url
-
-    def __iter__(self):
-        while True:
-            sent_pairs = []
-            labels = []
-            urls = []
-            for _ in range(self.batch_sz):
-                # determine sentence pair lengths
-                p = self.short_prob
-                maxlen = self.maxlen // 4 if rand() < p else self.maxlen
-                len_1 = randint(1, maxlen - 1 - 2) # minus [CLS], [SEP]
-                len_2 = randint(1, maxlen - len_1 - 1) # minus [SEP]
-                ctx = (rand() < 0.5) # do we sample in a context window?
-                while True:
-                    try:
-                        # get a pair of random sample or context sample
-                        pair_1, _, url_1 = self.read(len_1)
-                        pair_2, _, url_2 = self.read(len_2, randomly=not ctx)
-                        if not ctx or url_1 == url_2:
-                            # when we sample randomly, or we want to sample
-                            # the next sentence, and have ensured we did not
-                            # span over a document.
-                            break
-                    except StopIteration:
-                        return
-                # append to batch
-                sent_pairs.append([pair_1, pair_2])
-                labels.append(1 if ctx else 0)
-                urls.append((url_1, url_2))
-            yield self.now, sent_pairs, labels, urls
 
 
 def mask_batch_tokens(batch_tokens, tot_vocab, decode=None):
@@ -161,36 +79,11 @@ def num_devices(xla_cores):
         return 1 # CPU
 
 
-def load_pretrain_data(shard, n_shards):
-    suffix = '' if n_shards == 0 else f'.{shard}'
-    with open(DOCS_FILE + suffix, 'rb') as fh:
-        docs = pickle.load(fh)
-        ridx = [(i, j) for i, d in enumerate(docs) for j in range(len(d[0]))]
-        #print('Data documents:', len(docs))
-        #print('Data sentences:', len(ridx))
-        #r = ridx[randint(0, len(ridx) - 1)]
-        #print('random URL:', data[r[0]][2])
-        #print('random tags:', data[r[0]][1] or 'None')
-        #print('random sentence:', data[r[0]][0][r[1]])
-    return docs, ridx
-
-
-def shard_pretrain_data(n_shards):
-    docs, _ = load_pretrain_data(0, 0)
-    L = len(docs)
-    D = -(-L // n_shards) # ceil division
-    for shard, i in enumerate(range(0, L, D)):
-        print(f'Generating shard#{shard} [{i}, {i+D}] ...')
-        shard_docs = docs[i: i+D]
-        with open(DOCS_FILE + f'.{shard}', 'wb') as fh:
-            pickle.dump(shard_docs, fh)
-
-
-def save_model(model, epoch, shard, cur_iter, cluster, glob_rank):
+def save_model(model, epoch, shard, batch, cluster, glob_rank):
     if glob_rank != 0:
         return # must be master node
     if cluster: model = model.module # unwrap DDP layer
-    save_name = f"{epoch}-{shard}-{cur_iter}"
+    save_name = f"{epoch}-{shard}-{batch}"
     print(f'Saving model "{save_name}" ...')
     model.save_pretrained(f"./save/{save_name}")
 
@@ -203,40 +96,40 @@ def load_local_model(ckpoint):
     return 0, 0, -1
 
 
-def train_loop(model, optimizer, tokenizer, debug, progress, cluster,
+def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
     device, xla_cores, n_nodes, batch_size, glob_batches, glob_rank,
-    epoch, epochs, shard, n_shards, begin_iter, save_iter, xm):
+    epoch, epochs, begin_shard, shard, n_shards, begin_batch, save_cycle):
 
-    for cur_iter, (now, pairs, labels, urls) in enumerate(progress):
-        if cur_iter <= begin_iter: continue
-        # split batch in distributed training
+    for batch, pairs, labels in progress:
+        # further split batch in distributed training
         bb = batch_size // glob_batches
         bi = slice(glob_rank * bb, (glob_rank + 1) * bb)
         pairs = pairs[bi]
         labels = labels[bi]
         # tokenize sentences
-        batch = tokenizer(pairs,
+        batch_input = tokenizer(pairs,
             padding=True, truncation=True, return_tensors="pt")
         # mask sentence tokens
-        unmask_tokens = batch['input_ids'].numpy()
+        unmask_tokens = batch_input['input_ids'].numpy()
         mask_tokens, mask_labels = mask_batch_tokens(
             unmask_tokens, len(tokenizer), decode=tokenizer.decode
         )
-        batch['input_ids'] = torch.tensor(mask_tokens)
-        batch["labels"] = torch.tensor(mask_labels)
-        batch["next_sentence_label"] = torch.tensor(labels)
-        batch.to(device)
+        batch_input['input_ids'] = torch.tensor(mask_tokens)
+        batch_input["labels"] = torch.tensor(mask_labels)
+        batch_input["next_sentence_label"] = torch.tensor(labels)
+        batch_input.to(device)
 
         if debug:
-            for b, vals in enumerate(batch['input_ids']):
+            for b, vals in enumerate(batch_input['input_ids']):
                 print('URLs:', urls[b])
-                print('Label:', batch["next_sentence_label"][b])
+                print('Label:', batch_input["next_sentence_label"][b])
                 print(tokenizer.decode(vals))
-            print('Type IDs:', batch.token_type_ids)
-            print('Attention Mask:', batch.attention_mask)
+            print('Type IDs:', batch_input.token_type_ids)
+            print('Attention Mask:', batch_input.attention_mask)
             inputs = json.dumps({
-                attr: str(batch[attr].dtype) + ', ' + str(batch[attr].shape)
-                if attr in batch else None for attr in [
+                attr: str(batch_input[attr].dtype) + ', '
+                + str(batch_input[attr].shape)
+                if attr in batch_input else None for attr in [
                 'input_ids',
                 'attention_mask',
                 'token_type_ids',
@@ -248,7 +141,7 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster,
             quit(0)
 
         optimizer.zero_grad()
-        outputs = model(**batch)
+        outputs = model(**batch_input)
         loss = outputs.loss
 
         n_devices = num_devices(xla_cores)
@@ -271,25 +164,51 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster,
             xm.optimizer_step(optimizer, barrier=True)
 
         # other stats to report
-        shape = list(batch.input_ids.shape)
+        input_shape = list(batch_input.input_ids.shape)
         loss_ = round(loss.item(), 2)
         # update progress bar information
-        progress.update(now - progress.n)
+        progress.update(batch - progress.n)
         progress.set_description(
             f"Ep#{epoch+1}/{epochs}, shard#{shard+1}/{n_shards}, " +
-            f"iter={cur_iter}%{save_iter}, " +
+            f"save@{batch % save_cycle}%{save_cycle}, " +
             f"{n_nodes} nodes, " +
             f"{device_desc}, " +
-            f'Device batch {shape} loss = {loss_}'
+            f"In{input_shape}, " +
+            f'loss={loss_}'
         )
 
-        if cur_iter % save_iter == 0:
-            save_model(model, epoch, shard, cur_iter, cluster, glob_rank)
+        if batch % save_cycle == 0:
+            save_model(model, epoch, shard, batch, cluster, glob_rank)
 
 
-def _pretrain_thread(local_rank, n_shards,
+def sharding_loader(shard_files):
+    for shard, shard_file in enumerate(shard_files):
+        print(f'Loading pretrain shard#{shard} "{shard_file}" ...')
+        with open(shard_file, 'rb') as fh:
+            data = pickle.load(fh)
+            yield shard, data
+
+
+def batch_loader(data, batch_size):
+    L = len(data)
+    for i in range(0, L, batch_size):
+        batch = data[i:i+batch_size]
+        labels = [b[0] for b in batch]
+        pairs = [b[1:] for b in batch]
+        yield i, pairs, labels
+
+
+def _pretrain_thread(local_rank, shards_list,
     batch_size, epochs, save_fold, random_seed,
     tok_ckpoint, ckpoint, cluster, xla_cores, debug):
+
+    # shards lists file path sanity check
+    assert os.path.isfile(shards_list)
+    dirname = os.path.dirname(shards_list)
+    with open(shards_list, 'r') as fh:
+        shard_files = [dirname + '/' + line.rstrip() for line in fh]
+        exists = [os.path.isfile(f) for f in shard_files]
+        assert(all(exists))
 
     n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
     node_id = get_env_var("SLURM_NODEID", 0)
@@ -349,34 +268,26 @@ def _pretrain_thread(local_rank, n_shards,
     optimizer = AdamW(model.parameters())
     model.train()
 
-    # check out at a specific epoch?
-    begin_epoch, begin_shard, begin_iter = load_local_model(ckpoint)
-    print(f'Checkout Ep#{begin_epoch}, shard#{begin_shard}, iter#{begin_iter}')
+    begin_epoch, begin_shard, begin_batch = load_local_model(ckpoint)
+    print(f'Checkout Ep#{begin_epoch}, shard#{begin_shard}, batch#{begin_batch}')
 
     if cluster: dist.barrier()
     print('Start training ...')
     for epoch in range(epochs):
         if epoch < begin_epoch: continue
-        for shard in range(n_shards if n_shards > 0 else 1):
-            if (epoch, shard) < (begin_epoch, begin_shard): continue
-            print(f'Loading pretrain data ...')
-            data = load_pretrain_data(shard, n_shards)
-            # get total iterations in this shard
-            seed(random_seed)
-            data_iter = SentencePairLoader(data, maxlen, None, batch_size)
-            tot_iters = len(list(data_iter))
-            save_iter = tot_iters // save_fold
-            # create the actual iterator for this shard
-            seed(random_seed)
-            tokenize = tokenizer.tokenize
-            data_iter = SentencePairLoader(data, maxlen, tokenize, batch_size)
+        for shard, shard_data in sharding_loader(shard_files):
+            if shard < begin_shard: continue
+            n_batches = len(shard_data) // batch_size + 1
             is_slave = (glob_rank > 0)
-            with tqdm(data_iter, unit="batch", disable=is_slave) as progress:
+            save_cycle = n_batches // save_fold
+            n_shards = len(shard_files)
+            with tqdm(batch_loader(shard_data, batch_size), unit="batch",
+                disable=is_slave, total=n_batches) as progress:
                 args = locals()
                 arg_names = inspect.getargspec(train_loop)[0]
                 arg_vals = tuple(args[nm] for nm in arg_names)
                 train_loop(*arg_vals)
-                begin_iter = -1 # reset local checkout position
+                begin_batch = -1
     # final save ...
     save_model(model, epoch + 1, 0, 0, cluster, glob_rank)
 
@@ -385,7 +296,7 @@ def _pretrain_thread(local_rank, n_shards,
         print('Exit Torch DDP.')
 
 
-def pretrain(batch_size=2, debug=False, epochs=3, n_shards=0,
+def pretrain(batch_size=2, debug=False, epochs=3, shards_list='shards.txt',
     random_seed=123, cluster=None, xla_cores=0, save_fold=10,
     tok_ckpoint='bert-base-uncased', ckpoint='bert-base-uncased'):
     args = locals()
@@ -443,8 +354,8 @@ def estimate_max_device_batch(xla=False,
 
 
 if __name__ == '__main__':
+    os.environ["PAGER"] = 'cat'
     fire.Fire({
         'estimate_max_device_batch': estimate_max_device_batch,
-        'sharding': shard_pretrain_data,
         'pretrain': pretrain
     })
