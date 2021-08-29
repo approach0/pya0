@@ -196,8 +196,7 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
             save_model(model, epoch, shard, batch, cluster, glob_rank)
 
 
-def _pretrain_thread(local_rank, shards_list,
-    batch_size, epochs, save_fold, random_seed,
+def _pretrain_thread(local_rank, shards_list, batch_size, epochs, save_fold,
     tok_ckpoint, ckpoint, cluster, xla_cores, debug):
 
     # shards lists file path sanity check
@@ -294,8 +293,8 @@ def _pretrain_thread(local_rank, shards_list,
         print('Exit Torch DDP.')
 
 
-def pretrain(batch_size=2, debug=False, epochs=3, shards_list='shards.txt',
-    random_seed=123, cluster=None, xla_cores=0, save_fold=10,
+def pretrain(batch_size=2, debug=False, epochs=3, save_fold=10,
+    shards_list='shards.txt', cluster=None, xla_cores=0,
     tok_ckpoint='bert-base-uncased', ckpoint='bert-base-uncased'):
     args = locals()
     arg_names = inspect.getargspec(_pretrain_thread)[0][1:]
