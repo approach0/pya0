@@ -96,6 +96,23 @@ def load_local_model(ckpoint):
     return 0, 0, -1
 
 
+def sharding_loader(shard_files):
+    for shard, shard_file in enumerate(shard_files):
+        print(f'Loading pretrain shard#{shard} "{shard_file}" ...')
+        with open(shard_file, 'rb') as fh:
+            data = pickle.load(fh)
+            yield shard, data
+
+
+def batch_loader(data, batch_size):
+    L = len(data)
+    for cnt, i in enumerate(range(0, L, batch_size)):
+        batch = data[i:i+batch_size]
+        labels = [b[0] for b in batch]
+        pairs = [b[1:] for b in batch]
+        yield cnt, pairs, labels
+
+
 def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
     device, xla_cores, n_nodes, batch_size, glob_batches, glob_rank,
     epoch, epochs, begin_shard, shard, n_shards, begin_batch, save_cycle):
@@ -166,7 +183,6 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
         input_shape = list(batch_input.input_ids.shape)
         loss_ = round(loss.item(), 2)
         # update progress bar information
-        progress.update(batch - progress.n)
         progress.set_description(
             f"Ep#{epoch+1}/{epochs}, shard#{shard+1}/{n_shards}, " +
             f"save@{batch % save_cycle}%{save_cycle}, " +
@@ -178,23 +194,6 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
 
         if batch % save_cycle == 0:
             save_model(model, epoch, shard, batch, cluster, glob_rank)
-
-
-def sharding_loader(shard_files):
-    for shard, shard_file in enumerate(shard_files):
-        print(f'Loading pretrain shard#{shard} "{shard_file}" ...')
-        with open(shard_file, 'rb') as fh:
-            data = pickle.load(fh)
-            yield shard, data
-
-
-def batch_loader(data, batch_size):
-    L = len(data)
-    for i in range(0, L, batch_size):
-        batch = data[i:i+batch_size]
-        labels = [b[0] for b in batch]
-        pairs = [b[1:] for b in batch]
-        yield i, pairs, labels
 
 
 def _pretrain_thread(local_rank, shards_list,
