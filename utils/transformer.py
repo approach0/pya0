@@ -121,7 +121,6 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
 
         if debug:
             for b, vals in enumerate(batch_input['input_ids']):
-                print('URLs:', urls[b])
                 print('Label:', batch_input["next_sentence_label"][b])
                 print(tokenizer.decode(vals))
             print('Type IDs:', batch_input.token_type_ids)
@@ -138,7 +137,7 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
                 'next_sentence_label'
             ]}, sort_keys=True, indent=4)
             print(inputs)
-            quit(0)
+            break
 
         optimizer.zero_grad()
         outputs = model(**batch_input)
