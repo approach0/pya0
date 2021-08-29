@@ -109,6 +109,7 @@ def generate_sentpairs(
                 if reminder == 0:
                     with open(docs_file + f'.pairs.{aggregate_cnt}', 'wb') as fh:
                         docs = pickle.dump(aggregate, fh)
+                    aggregate = []
                 if debug:
                     print(relevance)
                     print('##', urls[0])
