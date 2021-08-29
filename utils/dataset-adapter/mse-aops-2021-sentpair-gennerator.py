@@ -79,7 +79,7 @@ class SentencePairGennerator():
 
 def generate_sentpairs(
     docs_file = 'mse-aops-2021-data.pkl',
-    debug=False, maxlen=512, n_splits=20,
+    debug=False, maxlen=512, n_splits=20, limit=-1,
     tok_ckpoint='bert-base-uncased', random_seed=123):
 
     tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
@@ -100,8 +100,10 @@ def generate_sentpairs(
         data_iter = SentencePairGennerator((docs, ridx), maxlen, tokenize)
         aggregate = []
         aggregate_cnt = 0
-        with tqdm(data_iter, total=n_sentpairs) as progress:
-            for pair, relevance, urls in progress:
+        with tqdm(data_iter, total=max(n_sentpairs, limit)) as progress:
+            for cnt, (pair, relevance, urls) in enumerate(progress):
+                if cnt >= limit and limit >= 0:
+                    break
                 aggregate.append((relevance, *pair))
                 aggregate_cnt += 1
                 reminder = aggregate_cnt % n_per_split
