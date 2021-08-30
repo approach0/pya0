@@ -125,7 +125,14 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
     epoch, epochs, begin_shard, shard, n_shards, begin_batch, save_cycle):
 
     for batch, (pairs, labels) in enumerate(progress):
-        pairs = list(zip(pairs[0], pairs[1]))
+        # split batch for each distributed instance
+        bb = batch_size // glob_batches
+        bi = slice(glob_rank * bb, (glob_rank + 1) * bb)
+        pairs = list(zip(pairs[0][bi], pairs[1][bi]))
+        labels = labels[bi]
+        if len(pairs) == 0 or len(labels) == 0:
+            continue
+
         # tokenize sentences
         batch_input = tokenizer(pairs,
             padding=True, truncation=True, return_tensors="pt")
@@ -157,7 +164,7 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
                 'next_sentence_label'
             ]}, sort_keys=True, indent=4)
             print(inputs)
-            break
+            quit()
 
         optimizer.zero_grad()
         outputs = model(**batch_input)
@@ -285,7 +292,7 @@ def _pretrain_thread(local_rank, shards_list, batch_size, epochs, save_fold,
             n_shards = len(shard_files)
             pairs = SetencePairs(shard_data)
             loader = DataLoader(pairs,
-                batch_size=(batch_size // glob_batches),
+                batch_size=batch_size,
                 shuffle=False
             )
             if xla_cores:
