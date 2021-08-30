@@ -104,25 +104,27 @@ def sharding_loader(shard_files):
             yield shard, data
 
 
-def batch_loader(data, batch_size):
-    L = len(data)
-    for cnt, i in enumerate(range(0, L, batch_size)):
-        batch = data[i:i+batch_size]
-        labels = [b[0] for b in batch]
-        pairs = [b[1:] for b in batch]
-        yield cnt, pairs, labels
+from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
+class SetencePairs(Dataset):
+    def __init__(self, data):
+        self.data = data
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        data = self.data[idx]
+        label = data[0]
+        pair = data[1:]
+        return pair, label
 
 
 def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
     device, xla_cores, n_nodes, batch_size, glob_batches, glob_rank,
     epoch, epochs, begin_shard, shard, n_shards, begin_batch, save_cycle):
 
-    for batch, pairs, labels in progress:
-        # further split batch in distributed training
-        bb = batch_size // glob_batches
-        bi = slice(glob_rank * bb, (glob_rank + 1) * bb)
-        pairs = pairs[bi]
-        labels = labels[bi]
+    for batch, (pairs, labels) in enumerate(progress):
         # tokenize sentences
         batch_input = tokenizer(pairs,
             padding=True, truncation=True, return_tensors="pt")
@@ -133,7 +135,7 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
         )
         batch_input['input_ids'] = torch.tensor(mask_tokens)
         batch_input["labels"] = torch.tensor(mask_labels)
-        batch_input["next_sentence_label"] = torch.tensor(labels)
+        batch_input["next_sentence_label"] = labels
         batch_input.to(device)
 
         if debug:
@@ -278,8 +280,13 @@ def _pretrain_thread(local_rank, shards_list, batch_size, epochs, save_fold,
             is_slave = (glob_rank > 0)
             save_cycle = n_batches // save_fold
             n_shards = len(shard_files)
-            with tqdm(batch_loader(shard_data, batch_size), unit="batch",
-                disable=is_slave, total=n_batches) as progress:
+            pairs = SetencePairs(shard_data)
+            loader = DataLoader(pairs,
+                batch_size=(batch_size // glob_batches),
+                num_workers=n_devices,
+                shuffle=False
+            )
+            with tqdm(loader, unit="batch", disable=is_slave) as progress:
                 args = locals()
                 arg_names = inspect.getargspec(train_loop)[0]
                 arg_vals = tuple(args[nm] for nm in arg_names)
