@@ -125,6 +125,7 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
     epoch, epochs, begin_shard, shard, n_shards, begin_batch, save_cycle):
 
     for batch, (pairs, labels) in enumerate(progress):
+        pairs = list(zip(pairs[0], pairs[1]))
         # tokenize sentences
         batch_input = tokenizer(pairs,
             padding=True, truncation=True, return_tensors="pt")
