@@ -283,7 +283,6 @@ def _pretrain_thread(local_rank, shards_list, batch_size, epochs, save_fold,
             pairs = SetencePairs(shard_data)
             loader = DataLoader(pairs,
                 batch_size=(batch_size // glob_batches),
-                num_workers=1,
                 shuffle=False
             )
             if xla_cores:
