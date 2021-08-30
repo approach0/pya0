@@ -178,7 +178,9 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
 
         loss.backward()
         if xla_cores:
-            xm.optimizer_step(optimizer)
+            # although barrier option is optional in pl.MpDeviceLoader,
+            # error occurs when we save model if there is no barrier here.
+            xm.optimizer_step(optimizer, barrier=True)
         else:
             optimizer.step()
 
