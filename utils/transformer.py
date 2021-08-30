@@ -177,9 +177,10 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
             device_desc = 'CPU'
 
         loss.backward()
-        optimizer.step()
         if xla_cores:
             xm.optimizer_step(optimizer)
+        else:
+            optimizer.step()
 
         # other stats to report
         input_shape = list(batch_input.input_ids.shape)
