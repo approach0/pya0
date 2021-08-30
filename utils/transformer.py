@@ -178,8 +178,7 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
         loss.backward()
         optimizer.step()
         if xla_cores:
-            xm.rendezvous('_step')
-            xm.optimizer_step(optimizer, barrier=True)
+            xm.optimizer_step(optimizer)
 
         # other stats to report
         input_shape = list(batch_input.input_ids.shape)
@@ -286,6 +285,9 @@ def _pretrain_thread(local_rank, shards_list, batch_size, epochs, save_fold,
                 num_workers=n_devices,
                 shuffle=False
             )
+            if xla_cores:
+                import torch_xla.distributed.parallel_loader as pl
+                loader = pl.MpDeviceLoader(loader, device)
             with tqdm(loader, unit="batch", disable=is_slave) as progress:
                 args = locals()
                 arg_names = inspect.getargspec(train_loop)[0]
