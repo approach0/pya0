@@ -79,13 +79,20 @@ def num_devices(xla_cores):
         return 1 # CPU
 
 
-def save_model(model, epoch, shard, batch, cluster, glob_rank):
+def save_model(model, epoch, shard, batch, cluster, glob_rank, xla_cores):
     if glob_rank != 0:
         return # must be master node
     if cluster: model = model.module # unwrap DDP layer
     save_name = f"{epoch}-{shard}-{batch}"
     print(f'Saving model "{save_name}" ...')
-    model.save_pretrained(f"./save/{save_name}")
+
+    if xla_cores:
+        import torch_xla.core.xla_model as xm
+        save_function = xm.save
+        print('(save as XLA model)')
+    else:
+        save_function = torch.save
+    model.save_pretrained(f"./save/{save_name}", save_function=save_function)
 
 
 def load_local_model(ckpoint):
@@ -205,7 +212,10 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
         )
 
         if batch % save_cycle == 0:
-            save_model(model, epoch, shard, batch, cluster, glob_rank)
+            save_model(model,
+                epoch, shard, batch,
+                cluster, glob_rank, xla_cores
+            )
 
 
 def _pretrain_thread(local_rank, shards_list, batch_size, epochs, save_fold,
@@ -305,7 +315,7 @@ def _pretrain_thread(local_rank, shards_list, batch_size, epochs, save_fold,
                 train_loop(*arg_vals)
                 begin_batch = -1
     # final save ...
-    save_model(model, epoch + 1, 0, 0, cluster, glob_rank)
+    save_model(model, epoch + 1, 0, 0, cluster, glob_rank, xla_cores)
 
     if cluster:
         dist.destroy_process_group()
