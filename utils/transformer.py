@@ -80,12 +80,11 @@ def num_devices(xla_cores):
 
 
 def save_model(model, epoch, shard, batch, cluster, glob_rank, xla_cores):
-    if glob_rank != 0:
-        return # must be master node
+    if glob_rank != 0 and xla_cores == 0:
+        return # must be master node (unless if it is TPU)
     if cluster: model = model.module # unwrap DDP layer
     save_name = f"{epoch}-{shard}-{batch}"
     print(f'Saving model "{save_name}" ...')
-
     if xla_cores:
         import torch_xla.core.xla_model as xm
         save_function = xm.save
@@ -132,6 +131,8 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
     epoch, epochs, begin_shard, shard, n_shards, begin_batch, save_cycle):
 
     for batch, (pairs, labels) in enumerate(progress):
+        if batch <= begin_batch: continue
+
         # split batch for each distributed instance
         bb = batch_size // glob_batches
         bi = slice(glob_rank * bb, (glob_rank + 1) * bb)
@@ -192,9 +193,7 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
 
         loss.backward()
         if xla_cores:
-            # although barrier option is optional in pl.MpDeviceLoader,
-            # error occurs when we save model if there is no barrier here.
-            xm.optimizer_step(optimizer, barrier=True)
+            xm.optimizer_step(optimizer)
         else:
             optimizer.step()
 
@@ -216,6 +215,7 @@ def train_loop(model, optimizer, tokenizer, debug, progress, cluster, xm,
                 epoch, shard, batch,
                 cluster, glob_rank, xla_cores
             )
+            if xla_cores: xm.rendezvous('save')
 
 
 def _pretrain_thread(local_rank, shards_list, batch_size, epochs, save_fold,
