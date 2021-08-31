@@ -299,6 +299,7 @@ def _pretrain_thread(local_rank, shards_list, batch_size, epochs, save_fold,
             n_batches = len(shard_data) // batch_size + 1
             is_slave = (glob_rank > 0)
             save_cycle = n_batches // save_fold
+            if save_cycle == 0: save_cycle = n_batches # avoid divide-by-zero
             n_shards = len(shard_files)
             pairs = SetencePairs(shard_data)
             loader = DataLoader(pairs,
