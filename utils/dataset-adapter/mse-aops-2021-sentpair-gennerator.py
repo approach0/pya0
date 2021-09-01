@@ -2,7 +2,8 @@ import os
 import fire
 import pickle
 from tqdm import tqdm
-from random import randint, seed, random as rand
+from collections import defaultdict
+from random import randint, seed, random as rand, shuffle
 from transformers import BertTokenizer
 
 
@@ -78,7 +79,7 @@ class SentencePairGennerator():
 
 
 def generate_sentpairs(
-    docs_file = 'mse-aops-2021-data.pkl',
+    docs_file='mse-aops-2021-data.pkl',
     debug=False, maxlen=512, n_splits=20, limit=-1,
     tok_ckpoint='bert-base-uncased', random_seed=123):
 
@@ -110,7 +111,7 @@ def generate_sentpairs(
                 progress.set_description(f'{reminder} % {n_per_split}')
                 if reminder == 0:
                     with open(docs_file + f'.pairs.{aggregate_cnt}', 'wb') as fh:
-                        docs = pickle.dump(aggregate, fh)
+                        pickle.dump(aggregate, fh)
                     aggregate = []
                 if debug:
                     print(relevance)
@@ -121,9 +122,81 @@ def generate_sentpairs(
                     print()
                     break
             with open(docs_file + f'.pairs.{aggregate_cnt}', 'wb') as fh:
-                docs = pickle.dump(aggregate, fh)
+                pickle.dump(aggregate, fh)
+
+
+def generate_tag_pairs(
+    docs_file='mse-aops-2021-data.pkl', debug=False,
+    maxlen=512, n_splits=20, limit=-1, min_tagfreq=200,
+    tok_ckpoint='bert-base-uncased', random_seed=123):
+
+    seed(random_seed)
+    tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
+    tokenize = tokenizer.tokenize
+    tag_dict = defaultdict(int)
+    with open(docs_file, 'rb') as fh:
+        print(f'Loading {docs_file} ...')
+        docs = pickle.load(fh)
+        print('Loaded.')
+
+        print(f'Counting unique tags ...')
+        for sentences, tags, url in tqdm(docs):
+            for tag in tags:
+                tag_dict[tag] += 1
+        freq_tags = set(filter(lambda x: tag_dict[x] > min_tagfreq, tag_dict))
+        n_tags = len(freq_tags)
+        tag_ids = dict(zip(
+            list(freq_tags), range(n_tags)
+        ))
+        print(tag_ids)
+
+        print(f'Generating passage and tags ...')
+        aggregate = []
+        aggregate_cnt = 0
+        n_per_split = len(docs) // n_splits
+        if limit >= 0: docs = docs[:limit]
+        for sentences, tags, url in tqdm(docs):
+            intersect_tags = set(tags).intersection(freq_tags)
+            if len(intersect_tags) == 0:
+                continue
+            # get sentence that fits into maxlen
+            token_cnt = 0
+            passage = ''
+            for sentence in sentences:
+                sent_tokens = tokenize(sentence)
+                # if tokens number plus [CLS] is too long?
+                if token_cnt + len(sent_tokens) + 1 >= maxlen:
+                    token_cnt = 0
+                    if token_cnt > 0: aggregate.append((tags, passage))
+                    passage = ''
+                else:
+                    passage += sentence + ' '
+                    token_cnt += len(sent_tokens)
+            if token_cnt > 0:
+                aggregate.append((tags, passage))
+            if debug:
+                print(aggregate)
+                quit(0)
+            aggregate_cnt += 1
+            if aggregate_cnt % n_per_split == 0:
+                with open(docs_file + f'.tags.{aggregate_cnt}', 'wb') as fh:
+                    print('writing split ...')
+                    shuffle(aggregate)
+                    pickle.dump(aggregate, fh)
+                    aggregate = []
+
+        print('writing final split ...')
+        with open(docs_file + f'.tags.{aggregate_cnt}', 'wb') as fh:
+            shuffle(aggregate)
+            pickle.dump(aggregate, fh)
+        print('writing tag IDs ...')
+        with open(docs_file + f'.tags.ids', 'wb') as fh:
+            pickle.dump(tag_ids, fh)
 
 
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
-    fire.Fire(generate_sentpairs)
+    fire.Fire({
+        'generate_sentpairs': generate_sentpairs,
+        'generate_tag_pairs': generate_tag_pairs
+    })
