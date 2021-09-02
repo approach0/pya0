@@ -64,12 +64,16 @@ class BaseTrainer:
         raise NotImplementedError
 
     def _get_shard_files(self):
-        assert os.path.isfile(self.shards_list)
-        dirname = os.path.dirname(self.shards_list)
-        with open(self.shards_list, 'r') as fh:
-            shard_files = [dirname + '/' + line.rstrip() for line in fh]
-            exists = [os.path.isfile(f) for f in shard_files]
-            assert(all(exists))
+        try:
+            assert os.path.isfile(self.shards_list)
+            dirname = os.path.dirname(self.shards_list)
+            with open(self.shards_list, 'r') as fh:
+                shard_files = [dirname + '/' + line.rstrip() for line in fh]
+                exists = [os.path.isfile(f) for f in shard_files]
+                assert(all(exists))
+        except Exception as e:
+            print(f'Error: {self.shards_list} exists?')
+            quit(1)
         return shard_files
 
     def save_model(self, model, save_funct, save_name):
@@ -175,8 +179,10 @@ def _train_thread(local_rank, trainer):
             dataset = trainer.dataset_cls(shard_file)
             # calculating save fold ...
             n_batches = len(dataset) // trainer.batch_size + 1
-            save_cycle = n_batches // trainer.save_fold
-            if save_cycle == 0: save_cycle = n_batches # avoid divide-by-zero
+            if trainer.save_fold == 0:
+                save_cycle = 0
+            else:
+                save_cycle = n_batches // trainer.save_fold
             # prepare dataset loader
             loader = DataLoader(dataset,
                 batch_size=trainer.batch_size,
@@ -201,13 +207,14 @@ def _train_thread(local_rank, trainer):
                     arg_vals = tuple(args[k] for k in arg_names if k != 'self')
                     trainer.train_loop(*arg_vals)
                     # save on cycle
-                    if batch % save_cycle == 0:
+                    if save_cycle > 0 and batch % save_cycle == 0:
                         trainer._save_model((epoch, shard, batch), glob_rank)
                         if trainer.xla_cores:
                             import torch_xla.core.xla_model as xm
                             xm.rendezvous('save')
     # final save ...
-    trainer._save_model((epoch + 1, 0, 0), glob_rank)
+    if save_cycle > 0:
+        trainer._save_model((epoch + 1, 0, 0), glob_rank)
 
     # Leaving barrier
     if trainer.cluster:
