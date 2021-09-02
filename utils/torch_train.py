@@ -1,0 +1,214 @@
+import os
+import GPUtil
+import inspect
+import datetime
+from tqdm import tqdm
+from dataclasses import dataclass
+
+import torch
+import torch.distributed as dist
+from torch.utils.data import DataLoader
+from torch.nn.parallel import DistributedDataParallel as DDP
+
+
+@dataclass
+class BaseTrainer:
+    """
+    Trainer for typical distributed training process.
+    """
+    model: 'typing.Any' = None
+    dataset_cls: 'typing.Any' = None
+    epochs: int = 20
+    save_fold: int = 5
+    batch_size: int = 2
+    cluster: 'typing.Any' = None
+    xla_cores: int = 0
+    start_point: tuple = (0,0,-1)
+    shards_list: str = './shards.txt'
+
+    def infer_start_point(self, save_name):
+        if '/' in save_name:
+            fields = save_name.strip('/').split('/')[-1].split('-')
+            if len(fields) == 3 and all(map(lambda x: x.isdigit(), fields)):
+                return tuple(int(v) for v in fields)
+        return 0, 0, -1
+
+    def num_local_dev(self):
+        if torch.cuda.is_available():
+            return torch.cuda.device_count() # GPU
+        elif self.xla_cores > 0:
+            return self.xla_cores # TPU
+        else:
+            return 1 # CPU
+
+    def local_device_info(self):
+        n_devices = self.num_local_dev()
+        if torch.cuda.is_available():
+            gpu = GPUtil.getGPUs()[0]
+            gpu_name = gpu.name
+            gpu_total = int(gpu.memoryTotal // 1000)
+            gpu_load = int(gpu.load * 100)
+            gpu_temp = int(gpu.temperature)
+            return f"{n_devices} x {gpu_name}: {gpu_load}%"
+        elif xla_cores:
+            import torch_xla
+            import torch_xla.core.xla_model as xm
+            device = xm.xla_device()
+            dev_info = torch_xla.core.xla_model.get_memory_info(dev)
+            total_mem = dev_info['kb_total'] / 1000
+            return f'{n_devices} x TPU core {total_mem}MiB'
+        else:
+            return 'CPU'
+
+    def set_optimizer(self, model):
+        raise NotImplementedError
+
+    def _get_shard_files(self):
+        assert os.path.isfile(self.shards_list)
+        dirname = os.path.dirname(self.shards_list)
+        with open(self.shards_list, 'r') as fh:
+            shard_files = [dirname + '/' + line.rstrip() for line in fh]
+            exists = [os.path.isfile(f) for f in shard_files]
+            assert(all(exists))
+        return shard_files
+
+    def save_model(self, model, save_funct, save_name):
+        model.save_pretrained(
+            f"./save/{save_name}", save_function=save_funct
+        )
+
+    def _save_model(self, point, glob_rank):
+        if glob_rank != 0 and self.xla_cores == 0:
+            return # must be master node (unless if it is TPU)
+        if self.cluster:
+            model = self.model.module # unwrap DDP layer
+        else:
+            model = self.model
+        save_name = ('%d-%d-%d' % point)
+        print(f'Saving model "{save_name}" ...')
+        if self.xla_cores:
+            import torch_xla.core.xla_model as xm
+            save_function = xm.save
+        else:
+            save_function = torch.save
+        self.save_model(model, save_function, save_name)
+
+    def dist_step(self):
+        if self.xla_cores:
+            import torch_xla.core.xla_model as xm
+            xm.optimizer_step(self.optimizer)
+        else:
+            self.optimizer.step()
+
+    def train_loop(self, *args):
+        raise NotImplementedError
+
+    def start_training(self):
+        if self.xla_cores:
+            import torch_xla.distributed.xla_multiprocessing as xmp
+            xmp.spawn(_train_thread, nprocs=xla_cores, args=(self,))
+        else:
+            import torch.multiprocessing as mp
+            n_cores = self.num_local_dev()
+            mp.spawn(_train_thread, nprocs=n_cores, args=(self,))
+
+
+def _train_thread(local_rank, trainer):
+    # hook print function to show node/rank
+    import builtins as __builtin__
+    def print(*args):
+        __builtin__.print(f'[node#{node_id} rank#{glob_rank}]', *args)
+
+    # get cluster information
+    def get_env_var(name, default):
+        val = os.environ.get(name)
+        return default if val is None else int(val)
+    n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
+    node_id = get_env_var("SLURM_NODEID", 0)
+    n_devices = trainer.num_local_dev()
+    glob_batches = n_nodes * n_devices
+    glob_rank = node_id * n_devices + local_rank
+    is_slave = (glob_rank > 0)
+
+    # move model to device
+    if trainer.xla_cores:
+        import torch_xla.core.xla_model as xm
+        device = xm.xla_device()
+    else:
+        device = torch.device(f'cuda:{local_rank}'
+            if torch.cuda.is_available() else 'cpu')
+    print('Training on device', device)
+    trainer.model.to(device)
+
+    # Cluster/XLA barrier
+    if trainer.cluster:
+        print(f'Initialized process group ...')
+        dist.init_process_group(
+            backend="nccl", # can be mpi, gloo, or nccl
+            init_method=trainer.cluster,
+            world_size=glob_batches,
+            rank=glob_rank,
+            timeout=datetime.timedelta(0, 5 * 60) # 5min timeout
+        )
+        print('Enter Torch DDP.')
+        dist.barrier()
+        trainer.model = DDP(trainer.model)
+        dist.barrier()
+    elif trainer.xla_cores:
+        import torch_xla.core.xla_model as xm
+        print('Enter XLA barrier.')
+        xm.rendezvous('init')
+
+    # at this point, optimizer will hook into DDP model
+    trainer.set_optimizer()
+
+    shard_files = trainer._get_shard_files()
+    n_shards = len(shard_files)
+    print('Shards:', shard_files)
+
+    print('Start training at:', trainer.start_point)
+    for epoch in range(trainer.epochs):
+        if (epoch,) < trainer.start_point[:1]: continue
+        for shard, shard_file in enumerate(shard_files):
+            if (epoch, shard) < trainer.start_point[:2]: continue
+            print(f'Loading shard {shard_file} ...')
+            dataset = trainer.dataset_cls(shard_file)
+            # calculating save fold ...
+            n_batches = len(dataset) // trainer.batch_size + 1
+            save_cycle = n_batches // trainer.save_fold
+            if save_cycle == 0: save_cycle = n_batches # avoid divide-by-zero
+            # prepare dataset loader
+            loader = DataLoader(dataset,
+                batch_size=trainer.batch_size,
+                shuffle=False
+            )
+            if trainer.xla_cores:
+                import torch_xla.distributed.parallel_loader as pl
+                loader = pl.MpDeviceLoader(loader, device)
+            # invoke training loop ...
+            with tqdm(loader, unit="batch", disable=is_slave) as progress:
+                for batch, inputs in enumerate(progress):
+                    if (epoch, shard, batch) <= trainer.start_point[:3]:
+                        continue
+                    bb = trainer.batch_size // glob_batches
+                    bi = slice(glob_rank * bb, (glob_rank + 1) * bb)
+                    inputs = [inp[bi] for inp in inputs]
+                    if len(inputs[0]) == 0:
+                        continue # last (incomplete) batch?
+                    # invoke train loop
+                    args = locals()
+                    arg_names = inspect.getargspec(trainer.train_loop)[0]
+                    arg_vals = tuple(args[k] for k in arg_names if k != 'self')
+                    trainer.train_loop(*arg_vals)
+                    # save on cycle
+                    if batch % save_cycle == 0:
+                        trainer._save_model((epoch, shard, batch), glob_rank)
+                        if trainer.xla_cores:
+                            import torch_xla.core.xla_model as xm
+                            xm.rendezvous('save')
+    # final save ...
+    trainer._save_model((epoch + 1, 0, 0), glob_rank)
+
+    # Leaving barrier
+    if trainer.cluster:
+        dist.destroy_process_group()
