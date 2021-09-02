@@ -104,20 +104,17 @@ class BaseTrainer:
         else:
             self.optimizer.step()
 
-    def train_loop(self, *args):
-        raise NotImplementedError
-
-    def start_training(self):
+    def start_training(self, train_loop):
         if self.xla_cores:
             import torch_xla.distributed.xla_multiprocessing as xmp
-            xmp.spawn(_train_thread, nprocs=xla_cores, args=(self,))
+            xmp.spawn(_train_thread, nprocs=xla_cores, args=(self, train_loop))
         else:
             import torch.multiprocessing as mp
             n_cores = self.num_local_dev()
-            mp.spawn(_train_thread, nprocs=n_cores, args=(self,))
+            mp.spawn(_train_thread, nprocs=n_cores, args=(self, train_loop))
 
 
-def _train_thread(local_rank, trainer):
+def _train_thread(local_rank, trainer, train_loop):
     # hook print function to show node/rank
     import builtins as __builtin__
     def print(*args):
@@ -203,9 +200,9 @@ def _train_thread(local_rank, trainer):
                         continue # last (incomplete) batch?
                     # invoke train loop
                     args = locals()
-                    arg_names = inspect.getargspec(trainer.train_loop)[0]
+                    arg_names = inspect.getargspec(train_loop)[0]
                     arg_vals = tuple(args[k] for k in arg_names if k != 'self')
-                    trainer.train_loop(*arg_vals)
+                    train_loop(*arg_vals)
                     # save on cycle
                     if save_cycle > 0 and batch % save_cycle == 0:
                         trainer._save_model((epoch, shard, batch), glob_rank)

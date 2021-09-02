@@ -31,7 +31,27 @@ class SentencePairsShard(Dataset):
         return pair, label
 
 
-class PretrainTrainer(BaseTrainer):
+class TaggedPassagesShard(Dataset):
+    def __init__(self, tag_ids, shard_file):
+        self.tag_ids = tag_ids
+        self.N = len(tag_ids)
+        with open(shard_file, 'rb') as fh:
+            self.shard = pickle.load(fh)
+
+    def __len__(self):
+        return len(self.shard)
+
+    def __getitem__(self, idx):
+        tags, passage = self.shard[idx]
+        onehot_label = numpy.zeros((self.N))
+        for tag in tags:
+            if tag in self.tag_ids:
+                tag_id = self.tag_ids[tag]
+                onehot_label[tag_id] = 1
+        return onehot_label, passage
+
+
+class Trainer(BaseTrainer):
 
     def __init__(self, debug=False, **args):
         super().__init__(**args)
@@ -49,7 +69,40 @@ class PretrainTrainer(BaseTrainer):
     def set_optimizer(self):
         self.optimizer = AdamW(self.model.parameters())
 
-    def start(self, ckpoint, tok_ckpoint, vocab_file):
+    @staticmethod
+    def mask_batch_tokens(batch_tokens, tot_vocab, decode=None):
+        CE_IGN_IDX = -100 # CrossEntropyLoss ignore index value
+        MASK_PROB = 0.15
+        UNK_CODE = 100
+        CLS_CODE = 101
+        SEP_CODE = 102
+        MSK_CODE = 103
+        PAD_CODE = 0
+        BASE_CODE = 1000
+        mask_labels = numpy.full(batch_tokens.shape, fill_value=CE_IGN_IDX)
+        for b, tokens in enumerate(batch_tokens):
+            # dec_tokens = decode(tokens)
+            mask_indexes = []
+            for i in range(len(tokens)):
+                if tokens[i] == PAD_CODE:
+                    break
+                elif tokens[i] in [CLS_CODE, SEP_CODE]:
+                    continue
+                elif random.random() < MASK_PROB:
+                    mask_indexes.append(i)
+            mask_labels[b][mask_indexes] = tokens[mask_indexes]
+            for i in mask_indexes:
+                r = random.random()
+                if r <= 0.8:
+                    batch_tokens[b][i] = MSK_CODE
+                elif r <= 0.1:
+                    batch_tokens[b][i] = random.randint(BASE_CODE, tot_vocab - 1)
+                    #batch_tokens[b][i] = UNK_CODE
+                else:
+                    pass # unchanged
+        return batch_tokens, mask_labels
+
+    def pretrain(self, ckpoint, tok_ckpoint, vocab_file):
         self.start_point = self.infer_start_point(ckpoint)
         self.dataset_cls = SentencePairsShard
 
@@ -72,9 +125,9 @@ class PretrainTrainer(BaseTrainer):
 
         print('Invoke training ...')
         self.model.train()
-        self.start_training()
+        self.start_training(self.pretrain_loop)
 
-    def train_loop(self, inputs, device,
+    def pretrain_loop(self, inputs, device,
         progress, epoch, shard, batch,
         n_shards, save_cycle, n_nodes):
         # fetch input tensors (on CPU)
@@ -85,7 +138,7 @@ class PretrainTrainer(BaseTrainer):
             padding=True, truncation=True, return_tensors="pt")
         # mask sentence tokens
         unmask_tokens = tokenized_inputs['input_ids'].numpy()
-        mask_tokens, mask_labels = PretrainTrainer.mask_batch_tokens(
+        mask_tokens, mask_labels = Trainer.mask_batch_tokens(
             unmask_tokens, len(self.tokenizer), decode=self.tokenizer.decode
         )
         tokenized_inputs['input_ids'] = torch.tensor(mask_tokens)
@@ -130,70 +183,7 @@ class PretrainTrainer(BaseTrainer):
             f'loss={loss_}'
         )
 
-    @staticmethod
-    def mask_batch_tokens(batch_tokens, tot_vocab, decode=None):
-        CE_IGN_IDX = -100 # CrossEntropyLoss ignore index value
-        MASK_PROB = 0.15
-        UNK_CODE = 100
-        CLS_CODE = 101
-        SEP_CODE = 102
-        MSK_CODE = 103
-        PAD_CODE = 0
-        BASE_CODE = 1000
-        mask_labels = numpy.full(batch_tokens.shape, fill_value=CE_IGN_IDX)
-        for b, tokens in enumerate(batch_tokens):
-            # dec_tokens = decode(tokens)
-            mask_indexes = []
-            for i in range(len(tokens)):
-                if tokens[i] == PAD_CODE:
-                    break
-                elif tokens[i] in [CLS_CODE, SEP_CODE]:
-                    continue
-                elif random.random() < MASK_PROB:
-                    mask_indexes.append(i)
-            mask_labels[b][mask_indexes] = tokens[mask_indexes]
-            for i in mask_indexes:
-                r = random.random()
-                if r <= 0.8:
-                    batch_tokens[b][i] = MSK_CODE
-                elif r <= 0.1:
-                    batch_tokens[b][i] = random.randint(BASE_CODE, tot_vocab - 1)
-                    #batch_tokens[b][i] = UNK_CODE
-                else:
-                    pass # unchanged
-        return batch_tokens, mask_labels
-
-
-class TaggedPassagesShard(Dataset):
-    def __init__(self, tag_ids, shard_file):
-        self.tag_ids = tag_ids
-        self.N = len(tag_ids)
-        with open(shard_file, 'rb') as fh:
-            self.shard = pickle.load(fh)
-
-    def __len__(self):
-        return len(self.shard)
-
-    def __getitem__(self, idx):
-        tags, passage = self.shard[idx]
-        onehot_label = numpy.zeros((self.N))
-        for tag in tags:
-            if tag in self.tag_ids:
-                tag_id = self.tag_ids[tag]
-                onehot_label[tag_id] = 1
-        return onehot_label, passage
-
-
-class FinetuneTrainer(BaseTrainer):
-
-    def __init__(self, debug=False, **args):
-        super().__init__(**args)
-        self.debug = debug
-
-    def set_optimizer(self):
-        self.optimizer = AdamW(self.model.parameters())
-
-    def start(self, ckpoint, tok_ckpoint, tag_ids_file):
+    def finetune(self, ckpoint, tok_ckpoint, tag_ids_file):
         print('Loading tag IDs ...')
         with open(tag_ids_file, 'rb') as fh:
             self.tag_ids = pickle.load(fh)
@@ -211,9 +201,9 @@ class FinetuneTrainer(BaseTrainer):
 
         print('Invoke training ...')
         self.model.train()
-        self.start_training()
+        self.start_training(self.finetune_loop)
 
-    def train_loop(self, inputs, device,
+    def finetune_loop(self, inputs, device,
         progress, epoch, shard, batch,
         n_shards, save_cycle, n_nodes):
         # fetch input tensors (on CPU)
@@ -256,7 +246,4 @@ class FinetuneTrainer(BaseTrainer):
 
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
-    fire.Fire({
-        'pretrain': PretrainTrainer,
-        'finetune': FinetuneTrainer
-    })
+    fire.Fire(Trainer)
