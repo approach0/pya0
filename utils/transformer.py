@@ -56,6 +56,7 @@ class Trainer(BaseTrainer):
     def __init__(self, debug=False, **args):
         super().__init__(**args)
         self.debug = debug
+        self.save_dir = 'save'
 
     def print_tokens(self):
         print(
@@ -68,6 +69,11 @@ class Trainer(BaseTrainer):
 
     def set_optimizer(self):
         self.optimizer = AdamW(self.model.parameters())
+
+    def save_model(self, model, save_funct, save_name):
+        model.save_pretrained(
+            f"./{self.save_dir}/{save_name}", save_function=save_funct
+        )
 
     @staticmethod
     def mask_batch_tokens(batch_tokens, tot_vocab, decode=None):
@@ -103,6 +109,7 @@ class Trainer(BaseTrainer):
         return batch_tokens, mask_labels
 
     def pretrain(self, ckpoint, tok_ckpoint, vocab_file):
+        self.save_dir = 'save/pretrain'
         self.start_point = self.infer_start_point(ckpoint)
         self.dataset_cls = SentencePairsShard
 
@@ -189,15 +196,17 @@ class Trainer(BaseTrainer):
             self.tag_ids = pickle.load(fh)
             self.tag_ids_iv = {self.tag_ids[t]: t for t in self.tag_ids}
 
+        self.save_dir = 'save/finetune'
+        self.start_point = self.infer_start_point(ckpoint)
+        self.dataset_cls = partial(TaggedPassagesShard, self.tag_ids)
+
         print('Loading model ...')
         self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
-        self.start_point = self.infer_start_point(ckpoint)
         self.model = BertForSequenceClassification.from_pretrained(ckpoint,
             tie_word_embeddings=True,
             problem_type='multi_label_classification',
             num_labels=len(self.tag_ids)
         )
-        self.dataset_cls = partial(TaggedPassagesShard, self.tag_ids)
 
         print('Invoke training ...')
         self.model.train()

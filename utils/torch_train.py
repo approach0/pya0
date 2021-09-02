@@ -60,9 +60,6 @@ class BaseTrainer:
         else:
             return 'CPU'
 
-    def set_optimizer(self, model):
-        raise NotImplementedError
-
     def _get_shard_files(self):
         try:
             assert os.path.isfile(self.shards_list)
@@ -76,10 +73,11 @@ class BaseTrainer:
             quit(1)
         return shard_files
 
+    def set_optimizer(self, model):
+        raise NotImplementedError
+
     def save_model(self, model, save_funct, save_name):
-        model.save_pretrained(
-            f"./save/{save_name}", save_function=save_funct
-        )
+        raise NotImplementedError
 
     def _save_model(self, point, glob_rank):
         if glob_rank != 0 and self.xla_cores == 0:
