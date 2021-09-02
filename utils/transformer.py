@@ -49,12 +49,7 @@ class PretrainTrainer(BaseTrainer):
     def set_optimizer(self):
         self.optimizer = AdamW(self.model.parameters())
 
-    def start(self,
-        ckpoint='bert-base-uncased',
-        tok_ckpoint='bert-base-uncased',
-        vocab_file='mse-aops-2021-vocab.pkl'
-        ):
-
+    def start(self, ckpoint, tok_ckpoint, vocab_file):
         self.start_point = self.infer_start_point(ckpoint)
         self.dataset_cls = SentencePairsShard
 
@@ -198,12 +193,7 @@ class FinetuneTrainer(BaseTrainer):
     def set_optimizer(self):
         self.optimizer = AdamW(self.model.parameters())
 
-    def start(self,
-        ckpoint,
-        tok_ckpoint='bert-base-uncased',
-        tag_ids_file='mse-aops-2021-data.pkl.tags.ids'
-        ):
-
+    def start(self, ckpoint, tok_ckpoint, tag_ids_file):
         print('Loading tag IDs ...')
         with open(tag_ids_file, 'rb') as fh:
             self.tag_ids = pickle.load(fh)
