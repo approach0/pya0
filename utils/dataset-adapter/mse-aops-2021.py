@@ -88,4 +88,5 @@ def main(corpus, endat=-1):
 
 
 if __name__ == '__main__':
+    os.environ["PAGER"] = 'cat'
     fire.Fire(main)
