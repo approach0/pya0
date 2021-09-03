@@ -141,26 +141,26 @@ class Trainer(BaseTrainer):
         pairs, labels = inputs
         pairs = list(zip(pairs[0], pairs[1]))
 
-        tokenized_inputs = self.tokenizer(pairs,
+        enc_inputs = self.tokenizer(pairs,
             padding=True, truncation=True, return_tensors="pt")
         # mask sentence tokens
-        unmask_tokens = tokenized_inputs['input_ids'].numpy()
+        unmask_tokens = enc_inputs['input_ids'].numpy()
         mask_tokens, mask_labels = Trainer.mask_batch_tokens(
             unmask_tokens, len(self.tokenizer), decode=self.tokenizer.decode
         )
-        tokenized_inputs['input_ids'] = torch.tensor(mask_tokens)
-        tokenized_inputs["labels"] = torch.tensor(mask_labels)
-        tokenized_inputs["next_sentence_label"] = labels
-        tokenized_inputs.to(device)
+        enc_inputs['input_ids'] = torch.tensor(mask_tokens)
+        enc_inputs["labels"] = torch.tensor(mask_labels)
+        enc_inputs["next_sentence_label"] = labels
+        enc_inputs.to(device)
 
         if self.debug:
-            for b, ids in enumerate(tokenized_inputs['input_ids']):
-                print('Label:', tokenized_inputs["next_sentence_label"][b])
+            for b, ids in enumerate(enc_inputs['input_ids']):
+                print('Label:', enc_inputs["next_sentence_label"][b])
                 print(self.tokenizer.decode(ids))
             inputs_overview = json.dumps({
-                attr: str(tokenized_inputs[attr].dtype) + ', '
-                + str(tokenized_inputs[attr].shape)
-                if attr in tokenized_inputs else None for attr in [
+                attr: str(enc_inputs[attr].dtype) + ', '
+                + str(enc_inputs[attr].shape)
+                if attr in enc_inputs else None for attr in [
                 'input_ids',
                 'attention_mask',
                 'token_type_ids',
@@ -172,14 +172,14 @@ class Trainer(BaseTrainer):
             quit(0)
 
         self.optimizer.zero_grad()
-        outputs = self.model(**tokenized_inputs)
+        outputs = self.model(**enc_inputs)
         loss = outputs.loss
         loss.backward()
         self.dist_step()
 
         # update progress bar information
         loss_ = round(loss.item(), 2)
-        input_shape = list(tokenized_inputs.input_ids.shape)
+        input_shape = list(enc_inputs.input_ids.shape)
         device_desc = self.local_device_info()
         progress.set_description(
             f"Ep#{epoch+1}/{self.epochs}, shard#{shard+1}/{n_shards}, " +
@@ -218,30 +218,30 @@ class Trainer(BaseTrainer):
         # fetch input tensors (on CPU)
         labels, passage = inputs
 
-        tokenized_inputs = self.tokenizer(passage,
+        enc_inputs = self.tokenizer(passage,
             padding=True, truncation=True, return_tensors="pt")
-        tokenized_inputs['labels'] = labels
-        tokenized_inputs.to(device)
+        enc_inputs['labels'] = labels
+        enc_inputs.to(device)
 
         if self.debug:
-            for b, ids in enumerate(tokenized_inputs['input_ids']):
+            for b, ids in enumerate(enc_inputs['input_ids']):
                 indices = labels[b].cpu().numpy().nonzero()[0]
                 tags = [self.tag_ids_iv[i] for i in indices]
                 print('tags:', tags)
                 print(self.tokenizer.decode(ids))
-            print(tokenized_inputs['labels'].shape)
-            print(tokenized_inputs['input_ids'].shape)
+            print(enc_inputs['labels'].shape)
+            print(enc_inputs['input_ids'].shape)
             quit(0)
 
         self.optimizer.zero_grad()
-        outputs = self.model(**tokenized_inputs)
+        outputs = self.model(**enc_inputs)
         loss = outputs.loss
         loss.backward()
         self.dist_step()
 
         # update progress bar information
         loss_ = round(loss.item(), 2)
-        input_shape = list(tokenized_inputs.input_ids.shape)
+        input_shape = list(enc_inputs.input_ids.shape)
         device_desc = self.local_device_info()
         progress.set_description(
             f"Ep#{epoch+1}/{self.epochs}, shard#{shard+1}/{n_shards}, " +
