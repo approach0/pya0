@@ -302,7 +302,7 @@ class Trainer(BaseTrainer):
             f'loss={loss_}'
         )
 
-    def train_colbert(self, ckpoint, tok_ckpoint):
+    def colbert(self, ckpoint, tok_ckpoint):
         self.save_dir = 'save/colbert'
         self.start_point = self.infer_start_point(ckpoint)
         self.dataset_cls = ContrastiveQAShard
@@ -312,17 +312,60 @@ class Trainer(BaseTrainer):
             tie_word_embeddings=True
         )
         self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
+        self.criterion = nn.CrossEntropyLoss()
+        self.labels = torch.zeros(self.batch_size, dtype=torch.long)
 
         print('Invoke training ...')
         self.model.train()
         self.start_training(self.train_colbert_loop)
 
-    def train_colbert_loop(self, inputs, device,
+    def colbert_loop(self, inputs, device,
         progress, epoch, shard, batch,
         n_shards, save_cycle, n_nodes):
-        # fetch input tensors (on CPU)
+
+        # each (2*B, L), since queries contains two copies,
+        # passages contains positive and negative samples.
         queries, passages = inputs
-        pass
+
+        enc_queries = self.tokenizer(queries,
+            padding=True, truncation=True, return_tensors="pt")
+        enc_queries.to(device)
+
+        enc_passages = self.tokenizer(passages,
+            padding=True, truncation=True, return_tensors="pt")
+        enc_passages.to(device)
+
+        scores = self.model(queries, passages) # (2*B)
+
+        #          +   +   +   -   -   -
+        # tensor([ 1,  2,  3, -1, -2, -3])
+        #
+        # tensor([[ 1,  2,  3],
+        #         [-1, -2, -3]])
+        #
+        # tensor([[ 1, -1],
+        #         [ 2, -2],
+        #         [ 3, -3]])
+        scores = scores.view(2, -1).permute(1, 0) # (B, 2)
+
+        self.labels.to(device)
+        loss = criterion(scores, labels)
+        self.backward(loss)
+        self.step()
+
+        # update progress bar information
+        loss_ = round(loss.item(), 2)
+        Q_shape = list(enc_queries.input_ids.shape)
+        D_shape = list(enc_passages.input_ids.shape)
+        device_desc = self.local_device_info()
+        progress.set_description(
+            f"Ep#{epoch+1}/{self.epochs}, shard#{shard+1}/{n_shards}, " +
+            f"save@{batch % (save_cycle+1)}%{save_cycle}, " +
+            f"{n_nodes} nodes, " +
+            f"{device_desc}, " +
+            f"Q{Q_shape} D{D_shape}, " +
+            f'loss={loss_}'
+        )
 
 
 if __name__ == '__main__':
