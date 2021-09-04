@@ -181,7 +181,7 @@ def _train_thread(local_rank, trainer, train_loop):
             # prepare dataset loader
             loader = DataLoader(dataset,
                 batch_size=trainer.batch_size,
-                shuffle=False
+                shuffle=True # each shard should shuffle
             )
             if trainer.xla_cores:
                 import torch_xla.distributed.parallel_loader as pl
