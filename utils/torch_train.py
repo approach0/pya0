@@ -2,6 +2,7 @@ import os
 import GPUtil
 import inspect
 import datetime
+import contextlib
 from tqdm import tqdm
 from dataclasses import dataclass
 
@@ -25,6 +26,7 @@ class BaseTrainer:
     xla_cores: int = 0
     start_point: tuple = (0,0,-1)
     shards_list: str = './shards.txt'
+    active_fp16: bool = False
 
     def infer_start_point(self, save_name):
         if '/' in save_name:
@@ -49,7 +51,8 @@ class BaseTrainer:
             gpu_total = int(gpu.memoryTotal // 1000)
             gpu_load = int(gpu.load * 100)
             gpu_temp = int(gpu.temperature)
-            return f"{n_devices} x {gpu_name}: {gpu_load}%"
+            fp16 = ' (FP16)' if self.active_fp16 else ''
+            return f"{n_devices} x {gpu_name}{fp16}: {gpu_load}%"
         elif xla_cores:
             import torch_xla
             import torch_xla.core.xla_model as xm
@@ -95,10 +98,19 @@ class BaseTrainer:
             save_function = torch.save
         self.save_model(model, save_function, save_name)
 
-    def dist_step(self):
+    def backward(self, loss, **args):
+        if self.scaler:
+            self.scaler.scale(loss).backward(**args)
+        else:
+            loss.backward(**args)
+
+    def step(self):
         if self.xla_cores:
             import torch_xla.core.xla_model as xm
             xm.optimizer_step(self.optimizer)
+        elif self.scaler:
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
         else:
             self.optimizer.step()
 
@@ -161,6 +173,14 @@ def _train_thread(local_rank, trainer, train_loop):
     # prehook: setup optimizer etc., after DDP initialization.
     trainer.prehook(device)
 
+    # Turn on FP16?
+    if torch.cuda.is_available() and trainer.active_fp16:
+        trainer.scaler = torch.cuda.amp.GradScaler()
+        scaler_ctx = torch.cuda.amp.autocast()
+    else:
+        trainer.scaler = None
+        scaler_ctx = contextlib.nullcontext()
+
     shard_files = trainer._get_shard_files()
     n_shards = len(shard_files)
     print('Shards:', shard_files)
@@ -200,7 +220,8 @@ def _train_thread(local_rank, trainer, train_loop):
                     args = locals()
                     arg_names = inspect.getargspec(train_loop)[0]
                     arg_vals = tuple(args[k] for k in arg_names if k != 'self')
-                    train_loop(*arg_vals)
+                    with scaler_ctx:
+                        train_loop(*arg_vals)
                     # save on cycle
                     if save_cycle > 0 and batch % save_cycle == 0:
                         trainer._save_model((epoch, shard, batch), glob_rank)

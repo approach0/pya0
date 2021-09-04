@@ -53,6 +53,17 @@ class TaggedPassagesShard(Dataset):
         return onehot_label, passage
 
 
+class ContrastiveQAShard(Dataset):
+    def __init__(self, shard_file):
+        pass
+
+    def __len__(self):
+        return 0
+
+    def __getitem__(self, idx):
+        return None
+
+
 class ColBERT(BertPreTrainedModel):
 
     def __init__(self, config, query_maxlen=512, doc_maxlen=512, dim=128):
@@ -213,8 +224,8 @@ class Trainer(BaseTrainer):
         self.optimizer.zero_grad()
         outputs = self.model(**enc_inputs)
         loss = outputs.loss
-        loss.backward()
-        self.dist_step()
+        self.backward(loss)
+        self.step()
 
         # update progress bar information
         loss_ = round(loss.item(), 2)
@@ -275,8 +286,8 @@ class Trainer(BaseTrainer):
         self.optimizer.zero_grad()
         outputs = self.model(**enc_inputs)
         loss = outputs.loss
-        loss.backward()
-        self.dist_step()
+        self.backward(loss)
+        self.step()
 
         # update progress bar information
         loss_ = round(loss.item(), 2)
@@ -290,6 +301,28 @@ class Trainer(BaseTrainer):
             f"In{input_shape}, " +
             f'loss={loss_}'
         )
+
+    def train_colbert(self, ckpoint, tok_ckpoint):
+        self.save_dir = 'save/colbert'
+        self.start_point = self.infer_start_point(ckpoint)
+        self.dataset_cls = ContrastiveQAShard
+
+        print('Loading as ColBERT model ...')
+        self.model = ColBERT.from_pretrained(ckpoint,
+            tie_word_embeddings=True
+        )
+        self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
+
+        print('Invoke training ...')
+        self.model.train()
+        self.start_training(self.train_colbert_loop)
+
+    def train_colbert_loop(self, inputs, device,
+        progress, epoch, shard, batch,
+        n_shards, save_cycle, n_nodes):
+        # fetch input tensors (on CPU)
+        queries, passages = inputs
+        pass
 
 
 if __name__ == '__main__':
