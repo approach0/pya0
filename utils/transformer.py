@@ -7,6 +7,7 @@ import pickle
 from functools import partial
 
 import torch
+import torch.nn as nn
 from torch.utils.data import Dataset
 from torch_train import BaseTrainer
 
@@ -14,6 +15,7 @@ import transformers
 from transformers import AdamW, BertTokenizer
 from transformers import BertForPreTraining
 from transformers import BertForSequenceClassification
+from transformers import BertModel, BertPreTrainedModel
 
 
 class SentencePairsShard(Dataset):
@@ -49,6 +51,43 @@ class TaggedPassagesShard(Dataset):
                 tag_id = self.tag_ids[tag]
                 onehot_label[tag_id] = 1
         return onehot_label, passage
+
+
+class ColBERT(BertPreTrainedModel):
+
+    def __init__(self, config, query_maxlen=512, doc_maxlen=512, dim=128):
+        super().__init__(config)
+
+        self.query_maxlen = query_maxlen
+        self.doc_maxlen = doc_maxlen
+        self.dim = dim
+
+        self.bert = BertModel(config)
+        self.linear = nn.Linear(config.hidden_size, dim, bias=False)
+        self.init_weights()
+
+    def forward(self, Q, D):
+        return self.score(self.query(*Q), self.doc(*D))
+
+    def query(self, input_ids):
+        input_ids.to(self.bert.device)
+        Q = self.bert(input_ids)[0] # last-layer hidden state
+        # Q: (B, Lq, H) -> (B, Lq, dim)
+        Q = self.linear(Q)
+        # return: (B, Lq, 1) normalized
+        return torch.nn.functional.normalize(Q, p=2, dim=2)
+
+    def doc(self, input_ids):
+        input_ids.to(self.bert.device)
+        D = self.bert(input_ids)[0]
+        D = self.linear(D)
+        return torch.nn.functional.normalize(D, p=2, dim=2)
+
+    def score(self, Q, D):
+        # (B, Lq, 1) x (B, 1, Ld) -> (B, Lq, Ld)
+        cmp_matrix = Q @ D.permute(0, 2, 1)
+        best_match = cmp_matrix.max(2).values # best match per query
+        return best_match.sum(1) # sum score over each query
 
 
 class Trainer(BaseTrainer):
