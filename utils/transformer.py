@@ -177,6 +177,9 @@ class Trainer(BaseTrainer):
             for w in vocab.keys():
                 self.tokenizer.add_tokens(w)
         print('After loading new vocabulary:', len(self.tokenizer))
+
+        print('Resize model embedding and save new tokenizer ...')
+        self.tokenizer.save_pretrained(f"./{self.save_dir}/tokenizer")
         self.model.resize_token_embeddings(len(self.tokenizer))
         #self.print_tokens()
 
