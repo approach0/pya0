@@ -67,7 +67,7 @@ class Trainer(BaseTrainer):
             self.tokenizer.all_special_ids
         )))
 
-    def set_optimizer(self):
+    def prehook(self, device):
         self.optimizer = AdamW(self.model.parameters())
 
     def save_model(self, model, save_funct, save_name):

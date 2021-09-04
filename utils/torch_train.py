@@ -73,8 +73,8 @@ class BaseTrainer:
             quit(1)
         return shard_files
 
-    def set_optimizer(self, model):
-        raise NotImplementedError
+    def prehook(self, device):
+        pass
 
     def save_model(self, model, save_funct, save_name):
         raise NotImplementedError
@@ -158,8 +158,8 @@ def _train_thread(local_rank, trainer, train_loop):
         print('Enter XLA barrier.')
         xm.rendezvous('init')
 
-    # at this point, optimizer will hook into DDP model
-    trainer.set_optimizer()
+    # prehook: setup optimizer etc., after DDP initialization.
+    trainer.prehook(device)
 
     shard_files = trainer._get_shard_files()
     n_shards = len(shard_files)
