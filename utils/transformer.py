@@ -64,8 +64,7 @@ class ContrastiveQAShard(Dataset):
 
     def __getitem__(self, idx):
         Q, tag, pos, neg = self.shard[idx]
-        #return ['Q', 'pos', 'Q', 'neg'] # for debug
-        return [Q, pos, Q, neg]
+        return [Q, pos, neg]
 
 
 class ColBERT(BertPreTrainedModel):
@@ -192,9 +191,9 @@ class Trainer(BaseTrainer):
     def pretrain_loop(self, inputs, device,
         progress, epoch, shard, batch,
         n_shards, save_cycle, n_nodes):
-        # unpack input data
-        pairs, labels = inputs
-        pairs = list(zip(pairs[0], pairs[1]))
+        # collate inputs
+        pairs = [pair for pair, label in inputs]
+        labels = [label for pari, label in inputs]
 
         enc_inputs = self.tokenizer(pairs,
             padding=True, truncation=True, return_tensors="pt")
@@ -206,7 +205,7 @@ class Trainer(BaseTrainer):
         )
         enc_inputs['input_ids'] = torch.tensor(mask_tokens)
         enc_inputs["labels"] = torch.tensor(mask_labels)
-        enc_inputs["next_sentence_label"] = labels
+        enc_inputs["next_sentence_label"] = torch.tensor(labels)
         enc_inputs.to(device)
 
         if self.debug:
@@ -271,17 +270,18 @@ class Trainer(BaseTrainer):
     def finetune_loop(self, inputs, device,
         progress, epoch, shard, batch,
         n_shards, save_cycle, n_nodes):
-        # unpack input data
-        labels, passage = inputs
+        # collate inputs
+        labels = [label for label, passage in inputs]
+        passages = [passage for label, passage in inputs]
 
-        enc_inputs = self.tokenizer(passage,
+        enc_inputs = self.tokenizer(passages,
             padding=True, truncation=True, return_tensors="pt")
-        enc_inputs['labels'] = labels
+        enc_inputs['labels'] = torch.tensor(labels)
         enc_inputs.to(device)
 
         if self.debug:
             for b, ids in enumerate(enc_inputs['input_ids']):
-                indices = labels[b].cpu().numpy().nonzero()[0]
+                indices = labels[b].nonzero()[0]
                 tags = [self.tag_ids_iv[i] for i in indices]
                 print('tags:', tags)
                 print(self.tokenizer.decode(ids))
@@ -334,10 +334,15 @@ class Trainer(BaseTrainer):
     def colbert_loop(self, inputs, device,
         progress, epoch, shard, batch,
         n_shards, save_cycle, n_nodes):
+        # collate inputs
+        queries = [Q for Q, pos, neg in inputs]
+        positives = [pos for Q, pos, neg in inputs]
+        negatives = [neg for Q, pos, neg in inputs]
+
         # each (2*B, L), where each query contains two copies,
         # passages contains positive and negative samples.
-        queries = [*inputs[0], *inputs[2]]
-        passages = [*inputs[1], *inputs[3]]
+        queries = queries + queries
+        passages = positives + negatives
 
         # prepend ColBERT special tokens
         queries = ['[Q] ' + q for q in queries]

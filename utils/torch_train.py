@@ -201,6 +201,7 @@ def _train_thread(local_rank, trainer, train_loop):
             # prepare dataset loader
             loader = DataLoader(dataset,
                 batch_size=trainer.batch_size,
+                collate_fn=lambda batch: batch,
                 shuffle=True # each shard should shuffle
             )
             if trainer.xla_cores:
@@ -213,8 +214,8 @@ def _train_thread(local_rank, trainer, train_loop):
                         continue
                     bb = trainer.batch_size // glob_batches
                     bi = slice(glob_rank * bb, (glob_rank + 1) * bb)
-                    inputs = [inp[bi] for inp in inputs]
-                    if len(inputs[0]) == 0:
+                    inputs = inputs[bi]
+                    if len(inputs) == 0:
                         continue # last (incomplete) batch?
                     # invoke train loop
                     args = locals()
