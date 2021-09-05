@@ -43,36 +43,7 @@ def mse_aops_dataloader(corpus, endat=0):
         text = j['text']
         tags = j['tags'] if 'tags' in j else ''
         url = j['url']
-        document = ''
-        for type_, piece, *_ in preprocess.iter_imath_splits(text):
-            piece = piece.strip('\n')
-            if type_ == 'math':
-                tex_toks = []
-                try:
-                    tex_toks = tex_tokenize(piece, include_syntatic_literal=True)
-                except Exception as err:
-                    print(err)
-                    print('Occurred when parsing:', piece)
-                    continue
-                tex_syms = []
-                for _, tok_type, sym in tex_toks:
-                    if tok_type in ('VAR', 'NUM', 'FLOAT', 'ONE', 'ZERO'):
-                        if '`' in sym:
-                            sym = sym.split('`')[-1].strip('\'')
-                        if tok_type == 'NUM' and len(str(sym)) >= 2:
-                            sym = 'somenum'
-                    elif sym == '\n':
-                        break
-                    else:
-                        assert '`' not in sym
-                    dollar_prefix_sym = '$' + sym + '$'
-                    tex_syms.append(dollar_prefix_sym)
-                    vocab[dollar_prefix_sym] += 1
-                document += ' '.join(tex_syms)
-            else:
-                #for word in word_tokenizer.tokenize(piece):
-                #    vocab[word] += 1
-                document += piece
+        document = preprocess.preprocess_for_transformer(text, vocab)
         sentences = sent_tokenize(document)
         dataset.append((sentences, tags, url))
     return vocab, dataset

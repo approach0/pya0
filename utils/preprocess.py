@@ -170,3 +170,37 @@ def tokenize_query(query):
         else:
             tokens.append(f'[imath]{kw}[/imath]')
     return tokens
+
+
+def preprocess_for_transformer(text, math_vocab=None):
+    output = ''
+    for type_, piece, *_ in iter_imath_splits(text):
+        piece = piece.strip('\n')
+        if type_ == 'math':
+            tex_toks = []
+            try:
+                tex_toks = tex_tokenize(piece,
+                    include_syntatic_literal=True)
+            except Exception as err:
+                print(err)
+                print('Occurred when parsing:', piece)
+                continue
+            tex_syms = []
+            for _, tok_type, sym in tex_toks:
+                if tok_type in ('VAR', 'NUM', 'FLOAT', 'ONE', 'ZERO'):
+                    if '`' in sym:
+                        sym = sym.split('`')[-1].strip('\'')
+                    if tok_type == 'NUM' and len(str(sym)) >= 2:
+                        sym = 'somenum'
+                elif sym == '\n':
+                    break
+                else:
+                    assert '`' not in sym
+                dollar_prefix_sym = '$' + sym + '$'
+                tex_syms.append(dollar_prefix_sym)
+                if math_vocab is not None:
+                    math_vocab[dollar_prefix_sym] += 1
+            output += ' '.join(tex_syms)
+        else:
+            output += piece
+    return output
