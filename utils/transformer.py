@@ -212,6 +212,7 @@ class Trainer(BaseTrainer):
             for b, ids in enumerate(enc_inputs['input_ids']):
                 print('Label:', enc_inputs["next_sentence_label"][b])
                 print(self.tokenizer.decode(ids))
+
             inputs_overview = json.dumps({
                 attr: str(enc_inputs[attr].dtype) + ', '
                 + str(enc_inputs[attr].shape)
@@ -224,6 +225,7 @@ class Trainer(BaseTrainer):
                 'next_sentence_label'
             ]}, sort_keys=True, indent=4)
             print(inputs_overview)
+
             quit(0)
 
         self.optimizer.zero_grad()

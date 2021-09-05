@@ -4,6 +4,9 @@ import pickle
 import random
 from tqdm import tqdm
 
+import _pya0
+from preprocess import preprocess_for_transformer
+
 
 def load_pickle_file(file):
     with open(file, 'rb') as fh:
@@ -60,6 +63,10 @@ def generate_contrastive_pairs(
                 print(f'[{tag}]')
                 print(negative_A, end='\n\n')
                 quit(0)
+
+            Q = preprocess_for_transformer(Q)
+            positive_A = preprocess_for_transformer(positive_A)
+            negative_A = preprocess_for_transformer(negative_A)
 
             aggregate.append((Q, tag, positive_A, negative_A))
             aggregate_cnt += 1
