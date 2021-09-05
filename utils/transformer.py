@@ -325,6 +325,7 @@ class Trainer(BaseTrainer):
         self.tokenizer.add_special_tokens({
             'additional_special_tokens': ['[Q]', '[D]']
         })
+        self.model.resize_token_embeddings(len(self.tokenizer))
 
         print('Invoke training ...')
         self.model.train()
