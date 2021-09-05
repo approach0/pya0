@@ -27,6 +27,7 @@ class BaseTrainer:
     start_point: tuple = (0,0,-1)
     shards_list: str = './shards.txt'
     active_fp16: bool = False
+    caller: str = 'nocaller'
 
     def infer_start_point(self, save_name):
         if '/' in save_name:
@@ -115,6 +116,8 @@ class BaseTrainer:
             self.optimizer.step()
 
     def start_training(self, train_loop):
+        self.caller = inspect.stack()[1].function
+        print('[caller]', self.caller)
         if self.xla_cores:
             import torch_xla.distributed.xla_multiprocessing as xmp
             xmp.spawn(_train_thread, nprocs=xla_cores, args=(self, train_loop))
@@ -136,6 +139,7 @@ def _train_thread(local_rank, trainer, train_loop):
         return default if val is None else int(val)
     n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
     node_id = get_env_var("SLURM_NODEID", 0)
+    self.job_id = get_env_var("SLURM_JOB_ID", 0)
     n_devices = trainer.num_local_dev()
     glob_batches = n_nodes * n_devices
     glob_rank = node_id * n_devices + local_rank

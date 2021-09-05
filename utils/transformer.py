@@ -107,7 +107,6 @@ class Trainer(BaseTrainer):
     def __init__(self, debug=False, **args):
         super().__init__(**args)
         self.debug = debug
-        self.save_dir = 'save'
 
     def print_tokens(self):
         print(
@@ -123,7 +122,8 @@ class Trainer(BaseTrainer):
 
     def save_model(self, model, save_funct, save_name):
         model.save_pretrained(
-            f"./{self.save_dir}/{save_name}", save_function=save_funct
+            f"./job-{self.job_id}-{self.caller}/{save_name}",
+            save_function=save_funct
         )
 
     @staticmethod
@@ -153,14 +153,14 @@ class Trainer(BaseTrainer):
                 if r <= 0.8:
                     batch_tokens[b][i] = MSK_CODE
                 elif r <= 0.1:
-                    batch_tokens[b][i] = random.randint(BASE_CODE, tot_vocab - 1)
+                    random_tok = random.randint(BASE_CODE, tot_vocab - 1)
+                    batch_tokens[b][i] = random_tok
                     #batch_tokens[b][i] = UNK_CODE
                 else:
                     pass # unchanged
         return batch_tokens, mask_labels
 
     def pretrain(self, ckpoint, tok_ckpoint, vocab_file):
-        self.save_dir = 'save/pretrain'
         self.start_point = self.infer_start_point(ckpoint)
         self.dataset_cls = SentencePairsShard
 
@@ -179,8 +179,11 @@ class Trainer(BaseTrainer):
                 self.tokenizer.add_tokens(w)
         print('After loading new vocabulary:', len(self.tokenizer))
 
+        if self.debug:
+            print('Saving tokenizer ...')
+            self.tokenizer.save_pretrained(f"./save/tokenizer")
+
         print('Resize model embedding and save new tokenizer ...')
-        self.tokenizer.save_pretrained(f"./{self.save_dir}/tokenizer")
         self.model.resize_token_embeddings(len(self.tokenizer))
         #self.print_tokens()
 
@@ -253,7 +256,6 @@ class Trainer(BaseTrainer):
             self.tag_ids = pickle.load(fh)
             self.tag_ids_iv = {self.tag_ids[t]: t for t in self.tag_ids}
 
-        self.save_dir = 'save/finetune'
         self.start_point = self.infer_start_point(ckpoint)
         self.dataset_cls = partial(TaggedPassagesShard, self.tag_ids)
 
@@ -311,7 +313,6 @@ class Trainer(BaseTrainer):
         )
 
     def colbert(self, ckpoint, tok_ckpoint):
-        self.save_dir = 'save/colbert'
         self.start_point = self.infer_start_point(ckpoint)
         self.dataset_cls = ContrastiveQAShard
 
