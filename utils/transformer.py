@@ -55,13 +55,17 @@ class TaggedPassagesShard(Dataset):
 
 class ContrastiveQAShard(Dataset):
     def __init__(self, shard_file):
+        with open(shard_file, 'rb') as fh:
+            self.shard = pickle.load(fh)
         pass
 
     def __len__(self):
-        return 0
+        return len(self.shard)
 
     def __getitem__(self, idx):
-        return None
+        Q, tag, pos, neg = self.shard[idx]
+        #return ['Q', 'pos', 'Q', 'neg'] # for debug
+        return [Q, pos, Q, neg]
 
 
 class ColBERT(BertPreTrainedModel):
@@ -78,19 +82,17 @@ class ColBERT(BertPreTrainedModel):
         self.init_weights()
 
     def forward(self, Q, D):
-        return self.score(self.query(*Q), self.doc(*D))
+        return self.score(self.query(Q), self.doc(D))
 
-    def query(self, input_ids):
-        input_ids.to(self.bert.device)
-        Q = self.bert(input_ids)[0] # last-layer hidden state
+    def query(self, inputs):
+        Q = self.bert(**inputs)[0] # last-layer hidden state
         # Q: (B, Lq, H) -> (B, Lq, dim)
         Q = self.linear(Q)
         # return: (B, Lq, 1) normalized
         return torch.nn.functional.normalize(Q, p=2, dim=2)
 
-    def doc(self, input_ids):
-        input_ids.to(self.bert.device)
-        D = self.bert(input_ids)[0]
+    def doc(self, inputs):
+        D = self.bert(**inputs)[0]
         D = self.linear(D)
         return torch.nn.functional.normalize(D, p=2, dim=2)
 
@@ -190,12 +192,13 @@ class Trainer(BaseTrainer):
     def pretrain_loop(self, inputs, device,
         progress, epoch, shard, batch,
         n_shards, save_cycle, n_nodes):
-        # fetch input tensors (on CPU)
+        # unpack input data
         pairs, labels = inputs
         pairs = list(zip(pairs[0], pairs[1]))
 
         enc_inputs = self.tokenizer(pairs,
             padding=True, truncation=True, return_tensors="pt")
+
         # mask sentence tokens
         unmask_tokens = enc_inputs['input_ids'].numpy()
         mask_tokens, mask_labels = Trainer.mask_batch_tokens(
@@ -268,7 +271,7 @@ class Trainer(BaseTrainer):
     def finetune_loop(self, inputs, device,
         progress, epoch, shard, batch,
         n_shards, save_cycle, n_nodes):
-        # fetch input tensors (on CPU)
+        # unpack input data
         labels, passage = inputs
 
         enc_inputs = self.tokenizer(passage,
@@ -318,17 +321,26 @@ class Trainer(BaseTrainer):
         self.criterion = nn.CrossEntropyLoss()
         self.labels = torch.zeros(self.batch_size, dtype=torch.long)
 
+        # adding ColBERT special tokens
+        self.tokenizer.add_special_tokens({
+            'additional_special_tokens': ['[Q]', '[D]']
+        })
+
         print('Invoke training ...')
         self.model.train()
-        self.start_training(self.train_colbert_loop)
+        self.start_training(self.colbert_loop)
 
     def colbert_loop(self, inputs, device,
         progress, epoch, shard, batch,
         n_shards, save_cycle, n_nodes):
-
-        # each (2*B, L), since queries contains two copies,
+        # each (2*B, L), where each query contains two copies,
         # passages contains positive and negative samples.
-        queries, passages = inputs
+        queries = [*inputs[0], *inputs[2]]
+        passages = [*inputs[1], *inputs[3]]
+
+        # prepend ColBERT special tokens
+        queries = ['[Q] ' + q for q in queries]
+        passages = ['[D] ' + p for p in passages]
 
         enc_queries = self.tokenizer(queries,
             padding=True, truncation=True, return_tensors="pt")
@@ -338,7 +350,18 @@ class Trainer(BaseTrainer):
             padding=True, truncation=True, return_tensors="pt")
         enc_passages.to(device)
 
-        scores = self.model(queries, passages) # (2*B)
+        if self.debug:
+            pairs = zip(
+                enc_queries['input_ids'].cpu().tolist(),
+                enc_passages['input_ids'].cpu().tolist(),
+            )
+            for b, (q_ids, p_ids) in enumerate(pairs):
+                print(f'\n--- batch {b} ---\n')
+                print(self.tokenizer.decode(q_ids))
+                print(self.tokenizer.decode(p_ids))
+            quit(0)
+
+        scores = self.model(enc_queries, enc_passages) # (2*B)
 
         #          +   +   +   -   -   -
         # tensor([ 1,  2,  3, -1, -2, -3])
@@ -351,8 +374,8 @@ class Trainer(BaseTrainer):
         #         [ 3, -3]])
         scores = scores.view(2, -1).permute(1, 0) # (B, 2)
 
-        self.labels.to(device)
-        loss = criterion(scores, labels)
+        self.labels = self.labels.to(device) # (B)
+        loss = self.criterion(scores, self.labels)
         self.backward(loss)
         self.step()
 
