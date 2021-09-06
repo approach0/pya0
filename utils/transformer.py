@@ -73,7 +73,7 @@ class ColBERT(BertPreTrainedModel):
         super().__init__(config)
 
         self.dim = dim
-        self.bert = BertModel(config)
+        self.bert = BertModel(config, add_pooling_layer=False)
         self.linear = nn.Linear(config.hidden_size, dim, bias=False)
         self.init_weights()
 
