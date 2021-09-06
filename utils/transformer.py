@@ -322,7 +322,6 @@ class Trainer(BaseTrainer):
         )
         self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
         self.criterion = nn.CrossEntropyLoss()
-        self.labels = torch.zeros(self.batch_size, dtype=torch.long)
 
         # adding ColBERT special tokens
         self.tokenizer.add_special_tokens({
@@ -383,8 +382,10 @@ class Trainer(BaseTrainer):
         #         [ 3, -3]])
         scores = scores.view(2, -1).permute(1, 0) # (B, 2)
 
-        self.labels = self.labels.to(device) # (B)
-        loss = self.criterion(scores, self.labels)
+        labels = torch.zeros(self.batch_size,
+            dtype=torch.long, device=device)
+        B = scores.shape[0]
+        loss = self.criterion(scores, labels[:B])
         self.backward(loss)
         self.step()
 
