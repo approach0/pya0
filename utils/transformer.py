@@ -267,6 +267,9 @@ class Trainer(BaseTrainer):
             num_labels=len(self.tag_ids)
         )
 
+        print('Resize model embedding and save new tokenizer ...')
+        self.model.resize_token_embeddings(len(self.tokenizer))
+
         print('Invoke training ...')
         self.model.train()
         self.start_training(self.finetune_loop)
