@@ -69,13 +69,10 @@ class ContrastiveQAShard(Dataset):
 
 class ColBERT(BertPreTrainedModel):
 
-    def __init__(self, config, query_maxlen=512, doc_maxlen=512, dim=128):
+    def __init__(self, config, dim=128):
         super().__init__(config)
 
-        self.query_maxlen = query_maxlen
-        self.doc_maxlen = doc_maxlen
         self.dim = dim
-
         self.bert = BertModel(config)
         self.linear = nn.Linear(config.hidden_size, dim, bias=False)
         self.init_weights()
