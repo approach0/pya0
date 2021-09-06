@@ -120,9 +120,9 @@ class Trainer(BaseTrainer):
     def prehook(self, device):
         self.optimizer = AdamW(self.model.parameters())
 
-    def save_model(self, model, save_funct, save_name):
+    def save_model(self, model, save_funct, save_name, job_id):
         model.save_pretrained(
-            f"./job-{self.job_id}-{self.caller}/{save_name}",
+            f"./job-{job_id}-{self.caller}/{save_name}",
             save_function=save_funct
         )
 

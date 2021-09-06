@@ -12,6 +12,11 @@ from torch.utils.data import DataLoader
 from torch.nn.parallel import DistributedDataParallel as DDP
 
 
+def get_env_var(name, default):
+    val = os.environ.get(name)
+    return default if val is None else int(val)
+
+
 @dataclass
 class BaseTrainer:
     """
@@ -80,7 +85,7 @@ class BaseTrainer:
     def prehook(self, device):
         pass
 
-    def save_model(self, model, save_funct, save_name):
+    def save_model(self, model, save_funct, save_name, job_id):
         raise NotImplementedError
 
     def _save_model(self, point, glob_rank):
@@ -97,7 +102,8 @@ class BaseTrainer:
             save_function = xm.save
         else:
             save_function = torch.save
-        self.save_model(model, save_function, save_name)
+        job_id = get_env_var("SLURM_JOB_ID", 0)
+        self.save_model(model, save_function, save_name, job_id)
 
     def backward(self, loss, **args):
         if self.scaler:
@@ -134,12 +140,8 @@ def _train_thread(local_rank, trainer, train_loop):
         __builtin__.print(f'[node#{node_id} rank#{glob_rank}]', *args)
 
     # get cluster information
-    def get_env_var(name, default):
-        val = os.environ.get(name)
-        return default if val is None else int(val)
     n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
     node_id = get_env_var("SLURM_NODEID", 0)
-    self.job_id = get_env_var("SLURM_JOB_ID", 0)
     n_devices = trainer.num_local_dev()
     glob_batches = n_nodes * n_devices
     glob_rank = node_id * n_devices + local_rank
