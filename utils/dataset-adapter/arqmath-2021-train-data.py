@@ -39,7 +39,7 @@ def generate_contrastive_pairs(
     if allow_vote_postive:
         answer_bank = load_pickle_file(answer_bank_file)
 
-    all_questions = q_dict.items()
+    all_questions = list(q_dict.items())
     if limit >= 0: all_questions = all_questions[:limit]
 
     aggregate = []
