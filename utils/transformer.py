@@ -17,6 +17,15 @@ from transformers import BertForPreTraining
 from transformers import BertForSequenceClassification
 from transformers import BertModel, BertPreTrainedModel
 
+CE_IGN_IDX = -100 # CrossEntropyLoss ignore index value
+MASK_PROB = 0.15
+UNK_CODE = 100
+CLS_CODE = 101
+SEP_CODE = 102
+MSK_CODE = 103
+PAD_CODE = 0
+BASE_CODE = 1000
+
 
 class SentencePairsShard(Dataset):
     def __init__(self, shard_file):
@@ -125,14 +134,6 @@ class Trainer(BaseTrainer):
 
     @staticmethod
     def mask_batch_tokens(batch_tokens, tot_vocab, decode=None):
-        CE_IGN_IDX = -100 # CrossEntropyLoss ignore index value
-        MASK_PROB = 0.15
-        UNK_CODE = 100
-        CLS_CODE = 101
-        SEP_CODE = 102
-        MSK_CODE = 103
-        PAD_CODE = 0
-        BASE_CODE = 1000
         mask_labels = numpy.full(batch_tokens.shape, fill_value=CE_IGN_IDX)
         for b, tokens in enumerate(batch_tokens):
             # dec_tokens = decode(tokens)
@@ -427,15 +428,17 @@ def attention_visualize(ckpoint, tok_ckpoint, passage_file, debug=False):
     passage = preprocess_for_transformer(passage)
     tokens = tokenizer(passage,
             padding=True, truncation=True, return_tensors="pt")
-    chars = [tokenizer.decode(c) for c in tokens['input_ids'][0]]
+    token_ids = tokens['input_ids'][0]
+    chars = [tokenizer.decode(c) for c in token_ids]
     chars = [''.join(c.split()).replace('$', '') for c in chars]
     print(chars, f'length={len(chars)}')
 
     config = model.config
+    print('bert vocabulary:', config.vocab_size)
     print('bert hiden size:', config.hidden_size)
     print('bert attention heads:', config.num_attention_heads)
 
-    def hook(l, module, inputs, outputs):
+    def attention_hook(l, module, inputs, outputs):
         multi_head_att_probs = outputs[1]
         for h in range(config.num_attention_heads):
             att_probs = multi_head_att_probs[0][h]
@@ -468,8 +471,22 @@ def attention_visualize(ckpoint, tok_ckpoint, passage_file, debug=False):
     for l in range(config.num_hidden_layers):
         layer = model.bert.encoder.layer[l]
         attention = layer.attention.self
-        partial_hook = partial(hook, l)
-        attention.register_forward_hook(partial_hook)
+        partial_hook = partial(attention_hook, l)
+        #attention.register_forward_hook(partial_hook)
+
+    def classifier_hook(topk, module, inputs, outputs):
+        unmask_scores, seq_rel_scores = outputs
+        masked_idx = (token_ids == torch.tensor([MSK_CODE]))
+        unmask_scores = unmask_scores[0][masked_idx]
+        candidates = torch.argsort(unmask_scores, dim=1, descending=True)
+        for i, mask_cands in enumerate(candidates):
+            top_cands = mask_cands[:topk].detach().cpu()
+            print(f'MASK[{i}] top candidates:', end=" ")
+            print(tokenizer.convert_ids_to_tokens(top_cands))
+
+    classifier = model.cls
+    partial_hook = partial(classifier_hook, 5)
+    classifier.register_forward_hook(partial_hook)
 
     device = torch.device(f'cuda:0' if torch.cuda.is_available() else 'cpu')
     tokens.to(device)
