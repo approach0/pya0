@@ -213,6 +213,9 @@ class Trainer(BaseTrainer):
             for b, ids in enumerate(enc_inputs['input_ids']):
                 print('Label:', enc_inputs["next_sentence_label"][b])
                 print(self.tokenizer.decode(ids))
+                print(self.tokenizer.convert_ids_to_tokens(
+                    enc_inputs["labels"][b]
+                ))
 
             inputs_overview = json.dumps({
                 attr: str(enc_inputs[attr].dtype) + ', '
