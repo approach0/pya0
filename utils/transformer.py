@@ -404,7 +404,7 @@ class Trainer(BaseTrainer):
         )
 
 
-def attention_visualize(ckpoint, tok_ckpoint, passage_file):
+def attention_visualize(ckpoint, tok_ckpoint, passage_file, debug=False):
     """
     Visualize attention layers for a given input passage
     """
@@ -455,10 +455,14 @@ def attention_visualize(ckpoint, tok_ckpoint, passage_file):
             wi, hi = fig.get_size_inches()
             plt.gcf().set_size_inches(wi * 2, hi * 2)
             plt.colorbar()
-            #plt.show()
+            plt.grid(True)
             save_path = f'./output/layer{l}-head{h}.png'
             print(f'saving to {save_path}')
-            fig.savefig(save_path)
+            if debug:
+                plt.show()
+                quit(0)
+            else:
+                fig.savefig(save_path)
             plt.close(fig)
 
     for l in range(config.num_hidden_layers):
