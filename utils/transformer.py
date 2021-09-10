@@ -131,7 +131,11 @@ class Trainer(BaseTrainer):
         )))
 
     def prehook(self, device):
-        self.optimizer = AdamW(self.model.parameters())
+        self.optimizer = AdamW(
+            self.model.parameters(),
+            lr=1e-3,
+            weight_decay=0.01
+        )
 
     def save_model(self, model, save_funct, save_name, job_id):
         model.save_pretrained(
@@ -186,8 +190,9 @@ class Trainer(BaseTrainer):
                     self.tokenizer.add_tokens(w)
             print('After loading new vocabulary:', len(self.tokenizer))
             print('Resize model embedding and save new tokenizer ...')
-            self.model.resize_token_embeddings(len(self.tokenizer))
-            #self.print_tokens()
+
+        self.model.resize_token_embeddings(len(self.tokenizer))
+        #self.print_tokens()
 
         if self.debug:
             print('Saving tokenizer ...')
