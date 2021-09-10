@@ -37,7 +37,7 @@ class SentencePairsShard(Dataset):
 
     def __getitem__(self, idx):
         row = self.shard[idx]
-        label = row[0]
+        label = 1 if row[0] == 0 else 0
         pair  = row[1:]
         return pair, label
 
@@ -133,7 +133,7 @@ class Trainer(BaseTrainer):
     def prehook(self, device):
         self.optimizer = AdamW(
             self.model.parameters(),
-            lr=1e-3,
+            lr=1e-6,
             weight_decay=0.01
         )
 
