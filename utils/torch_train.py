@@ -12,11 +12,6 @@ from torch.utils.data import DataLoader
 from torch.nn.parallel import DistributedDataParallel as DDP
 
 
-def get_env_var(name, default):
-    val = os.environ.get(name)
-    return default if val is None else int(val)
-
-
 @dataclass
 class BaseTrainer:
     """
@@ -164,6 +159,10 @@ def _train_thread(local_rank, trainer, train_loop):
     import builtins as __builtin__
     def print(*args):
         __builtin__.print(f'[node#{node_id} rank#{glob_rank}]', *args)
+
+    def get_env_var(name, default):
+        val = os.environ.get(name)
+        return default if val is None else int(val)
 
     # get cluster information
     n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
