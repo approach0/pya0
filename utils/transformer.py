@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import fire
 import numpy
@@ -28,6 +29,7 @@ BASE_CODE = 1000
 
 
 class SentencePairsShard(Dataset):
+
     def __init__(self, shard_file):
         with open(shard_file, 'rb') as fh:
             self.shard = pickle.load(fh)
@@ -42,7 +44,24 @@ class SentencePairsShard(Dataset):
         return pair, label
 
 
+class SentenceUnmaskTest(Dataset):
+
+    def __init__(self, data_file):
+        self.test_data = []
+        with open(data_file, 'r') as fh:
+            for line in fh:
+                line = line.rstrip()
+                self.test_data.append(line)
+
+    def __len__(self):
+        return len(self.test_data)
+
+    def __getitem__(self, idx):
+        return self.test_data[idx]
+
+
 class TaggedPassagesShard(Dataset):
+
     def __init__(self, tag_ids, shard_file):
         self.tag_ids = tag_ids
         self.N = len(tag_ids)
@@ -63,6 +82,7 @@ class TaggedPassagesShard(Dataset):
 
 
 class ContrastiveQAShard(Dataset):
+
     def __init__(self, shard_file):
         with open(shard_file, 'rb') as fh:
             self.shard = pickle.load(fh)
@@ -110,16 +130,9 @@ class ColBERT(BertPreTrainedModel):
 
 class Trainer(BaseTrainer):
 
-    def __init__(self, debug=False, test_cycle=0, test_file=None, **args):
+    def __init__(self, debug=False, **args):
         super().__init__(**args)
         self.debug = debug
-        self.test_cycle = test_cycle
-        self.test_data = []
-        if test_file and os.path.isfile(test_file):
-            with open(test_file, 'r') as fh:
-                for line in fh:
-                    line = line.rstrip()
-                    self.test_data.append(line)
 
     def print_tokens(self):
         print(
@@ -172,6 +185,7 @@ class Trainer(BaseTrainer):
     def pretrain(self, ckpoint, tok_ckpoint, vocab_file):
         self.start_point = self.infer_start_point(ckpoint)
         self.dataset_cls = SentencePairsShard
+        self.test_data_cls = SentenceUnmaskTest
 
         print(f'Loading model {ckpoint}...')
         self.model = BertForPreTraining.from_pretrained(ckpoint,
@@ -201,15 +215,18 @@ class Trainer(BaseTrainer):
         print('Invoke training ...')
         self.start_training(self.pretrain_loop)
 
-    def pretrain_eval(self, test_data, device):
-        enc_inputs = self.tokenizer(test_data,
+    def pretrain_test_loop(self, test_batch, test_inputs, device):
+        enc_inputs = self.tokenizer(test_inputs,
             padding=True, truncation=True, return_tensors="pt")
         enc_inputs.to(device)
+
+        def highlight_masked(txt):
+            return re.sub(r"(\[MASK\])", '\033[92m' + r"\1" + '\033[0m', txt)
 
         def classifier_hook(topk, module, inputs, outputs):
             unmask_scores, seq_rel_scores = outputs
             for b, token_ids in enumerate(enc_inputs['input_ids']):
-                print('\033[92m', self.test_data[b], '\033[0m')
+                print(highlight_masked(test_inputs[b]))
                 masked_idx = (
                     token_ids == torch.tensor([MSK_CODE], device=device)
                 )
@@ -223,19 +240,13 @@ class Trainer(BaseTrainer):
         classifier = self.model.cls
         partial_hook = partial(classifier_hook, 3)
         hook = classifier.register_forward_hook(partial_hook)
-        self.model.eval()
+        print()
         self.model(**enc_inputs)
         hook.remove()
 
     def pretrain_loop(self, inputs, device,
         progress, epoch, shard, batch,
         n_shards, save_cycle, n_nodes):
-
-        if self.test_cycle > 0 and batch % self.test_cycle == 0:
-            print('\n')
-            self.pretrain_eval(self.test_data, device)
-            print('\n')
-
         # collate inputs
         pairs = [pair for pair, label in inputs]
         labels = [label for pari, label in inputs]
@@ -275,12 +286,13 @@ class Trainer(BaseTrainer):
             print(inputs_overview)
             quit(0)
 
-        self.model.train()
         self.optimizer.zero_grad()
         outputs = self.model(**enc_inputs)
         loss = outputs.loss
         self.backward(loss)
         self.step()
+
+        self.do_testing(self.pretrain_test_loop, device)
 
         # update progress bar information
         loss_ = round(loss.item(), 2)
@@ -316,7 +328,6 @@ class Trainer(BaseTrainer):
         self.model.resize_token_embeddings(len(self.tokenizer))
 
         print('Invoke training ...')
-        self.model.train()
         self.start_training(self.finetune_loop)
 
     def finetune_loop(self, inputs, device,
@@ -378,7 +389,6 @@ class Trainer(BaseTrainer):
         self.model.resize_token_embeddings(len(self.tokenizer))
 
         print('Invoke training ...')
-        self.model.train()
         self.start_training(self.colbert_loop)
 
     def colbert_loop(self, inputs, device,

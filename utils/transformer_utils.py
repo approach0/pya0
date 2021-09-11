@@ -3,6 +3,7 @@ from preprocess import preprocess_for_transformer
 
 import os
 import fire
+import pickle
 from functools import partial
 
 import torch
@@ -84,7 +85,7 @@ def attention_visualize(ckpoint, tok_ckpoint, passage_file, debug=False):
     model(**tokens)
 
 
-def pft_file(passage_file):
+def pft_print(passage_file):
     with open(passage_file, 'r') as fh:
         for line in fh:
             line = line.rstrip()
@@ -92,9 +93,17 @@ def pft_file(passage_file):
             print(line)
 
 
+def pickle_print(pkl_file):
+    with open(pkl_file, 'rb') as fh:
+        data = pickle.load(fh)
+        for line in data:
+            print(line)
+
+
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
     fire.Fire({
-        "pft": pft_file,
         "attention": attention_visualize,
+        "pft_print": pft_print,
+        "pickle_print": pickle_print,
     })

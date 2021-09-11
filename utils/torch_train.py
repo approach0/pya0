@@ -24,6 +24,10 @@ class BaseTrainer:
     """
     model: 'typing.Any' = None
     dataset_cls: 'typing.Any' = None
+    test_loader: 'typing.Any' = None
+    test_data_cls: 'typing.Any' = None
+    test_file: str = './test.dat'
+    test_cycle: int = 50
     epochs: int = 20
     save_fold: int = 5
     batch_size: int = 2
@@ -122,6 +126,7 @@ class BaseTrainer:
             self.optimizer.step()
 
     def start_training(self, train_loop):
+        self.model.train()
         self.caller = inspect.stack()[1].function
         print('[caller]', self.caller)
         if self.xla_cores:
@@ -131,6 +136,26 @@ class BaseTrainer:
             import torch.multiprocessing as mp
             n_cores = self.num_local_dev()
             mp.spawn(_train_thread, nprocs=n_cores, args=(self, train_loop))
+
+    def _prepare_testing(self, glob_rank, mini_batch):
+        if self.test_file and self.test_data_cls and glob_rank == 0:
+            test_data = self.test_data_cls(self.test_file)
+            print(f'Loading test data: {self.test_file} (bsize={mini_batch})')
+            self.test_loader = DataLoader(test_data,
+                batch_size=mini_batch,
+                collate_fn=lambda batch: batch,
+                shuffle=False
+            )
+            self.test_cnt = 0
+
+    def do_testing(self, eval_func, *args):
+        if self.test_loader:
+            if self.test_cnt % self.test_cycle == 0:
+                self.model.eval()
+                for test_batch, test_inputs in enumerate(self.test_loader):
+                    eval_func(test_batch, test_inputs, *args)
+                self.model.train()
+            self.test_cnt += 1
 
 
 def _train_thread(local_rank, trainer, train_loop):
@@ -146,6 +171,7 @@ def _train_thread(local_rank, trainer, train_loop):
     glob_batches = n_nodes * n_devices
     glob_rank = node_id * n_devices + local_rank
     is_slave = (glob_rank > 0)
+    m_batch = trainer.batch_size // glob_batches
 
     # move model to device
     if trainer.xla_cores:
@@ -190,8 +216,10 @@ def _train_thread(local_rank, trainer, train_loop):
     shard_files = trainer._get_shard_files()
     n_shards = len(shard_files)
     print('Shards:', shard_files)
-
     print('Start training at:', trainer.start_point)
+
+    trainer._prepare_testing(glob_rank, m_batch)
+
     for epoch in range(trainer.epochs):
         if (epoch,) < trainer.start_point[:1]: continue
         for shard, shard_file in enumerate(shard_files):
@@ -218,8 +246,7 @@ def _train_thread(local_rank, trainer, train_loop):
                 for batch, inputs in enumerate(progress):
                     if (epoch, shard, batch) <= trainer.start_point[:3]:
                         continue
-                    bb = trainer.batch_size // glob_batches
-                    bi = slice(glob_rank * bb, (glob_rank + 1) * bb)
+                    bi = slice(glob_rank * m_batch, (glob_rank + 1) * m_batch)
                     inputs = inputs[bi]
                     if len(inputs) == 0:
                         continue # last (incomplete) batch?
