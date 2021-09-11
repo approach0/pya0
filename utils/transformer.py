@@ -136,6 +136,7 @@ class Trainer(BaseTrainer):
     def __init__(self, debug=False, **args):
         super().__init__(**args)
         self.debug = debug
+        self.logger = None
 
     def print_tokens(self):
         print(
@@ -146,14 +147,15 @@ class Trainer(BaseTrainer):
             self.tokenizer.all_special_ids
         )))
 
-    def prehook(self, device, job_id):
+    def prehook(self, device, job_id, glob_rank):
         self.optimizer = AdamW(
             self.model.parameters(),
             lr=1e-6,
             weight_decay=0.01
         )
-        self.logger = TensorBoardWriter(log_dir=f'job-{job_id}-logs')
-        self.acc_loss = [0.0] * self.epochs
+        if glob_rank == 0:
+            self.acc_loss = [0.0] * self.epochs
+            self.logger = TensorBoardWriter(log_dir=f'job-{job_id}-logs')
 
     def save_model(self, model, save_funct, save_name, job_id):
         model.save_pretrained(
@@ -224,7 +226,9 @@ class Trainer(BaseTrainer):
         print('Invoke training ...')
         self.start_training(self.pretrain_loop)
 
-    def pretrain_test_loop(self, test_batch, test_inputs, device, iteration):
+    def pretrain_test(self, test_batch, test_inputs, device,
+        iteration, epoch, shard):
+        # tokenize inputs
         enc_inputs = self.tokenizer(test_inputs,
             padding=True, truncation=True, return_tensors="pt")
         enc_inputs.to(device)
@@ -257,7 +261,10 @@ class Trainer(BaseTrainer):
         self.model(**enc_inputs)
         hook.remove()
         print(display[0])
-        self.logger.add_text('unmask', display[1], iteration)
+        if self.logger:
+            self.logger.add_text(
+                f'unmask/{epoch}-{shard}', display[1], iteration
+            )
 
     def pretrain_loop(self, inputs, device,
         progress, epoch, shard, batch, iteration,
@@ -308,11 +315,22 @@ class Trainer(BaseTrainer):
         self.backward(loss)
         self.step()
 
-        self.acc_loss[epoch] += loss_
-        avg_loss = self.acc_loss[epoch] / (iteration + 1)
-        self.do_testing(self.pretrain_test_loop, device, iteration)
-        self.logger.add_scalar(f'train_batch_loss/{epoch}', loss_, iteration)
-        self.logger.add_scalar(f'train_epoch_loss/{epoch}', avg_loss, iteration)
+        self.do_testing(
+            self.pretrain_test, device, iteration, epoch, shard
+        )
+
+        if self.logger:
+            self.acc_loss[epoch] += loss_
+            avg_loss = self.acc_loss[epoch] / (iteration + 1)
+            self.logger.add_scalar(
+                f'train_batch_loss/{epoch}-{shard}', loss_, batch
+            )
+            self.logger.add_scalar(
+                f'train_shard_loss/{epoch}-{shard}', avg_loss, batch
+            )
+            self.logger.add_scalar(
+                f'train_epoch_loss/{epoch}', avg_loss, iteration
+            )
 
         # update progress bar information
         input_shape = list(enc_inputs.input_ids.shape)

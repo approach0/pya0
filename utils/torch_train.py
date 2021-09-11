@@ -205,7 +205,7 @@ def _train_thread(local_rank, trainer, train_loop):
         xm.rendezvous('init')
 
     # prehook: setup optimizer etc., after DDP initialization.
-    trainer.prehook(device, job_id)
+    trainer.prehook(device, job_id, glob_rank)
 
     # Turn on FP16?
     if torch.cuda.is_available() and trainer.active_fp16:
