@@ -13,8 +13,10 @@ from torch.utils.data import Dataset
 from torch_train import BaseTrainer
 
 import transformers
-from transformers import AdamW, BertTokenizer
+from transformers import AdamW
+from transformers import BertTokenizer
 from transformers import BertForPreTraining
+from transformers import BertConfig
 from transformers import BertForSequenceClassification
 from transformers import BertModel, BertPreTrainedModel
 
@@ -188,9 +190,13 @@ class Trainer(BaseTrainer):
         self.test_data_cls = SentenceUnmaskTest
 
         print(f'Loading model {ckpoint}...')
-        self.model = BertForPreTraining.from_pretrained(ckpoint,
-            tie_word_embeddings=True
-        )
+        if ckpoint == 'bert-from-scratch':
+            config = BertConfig(tie_word_embeddings=True)
+            self.model = BertForPreTraining(config)
+        else:
+            self.model = BertForPreTraining.from_pretrained(ckpoint,
+                tie_word_embeddings=True
+            )
         self.maxlen = self.model.config.max_position_embeddings
         print(self.model.config.to_json_string(use_diff=False))
 
