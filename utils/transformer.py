@@ -133,10 +133,11 @@ class ColBERT(BertPreTrainedModel):
 
 class Trainer(BaseTrainer):
 
-    def __init__(self, debug=False, **args):
+    def __init__(self, lr='1e-6', debug=False, **args):
         super().__init__(**args)
         self.debug = debug
         self.logger = None
+        self.lr=float(lr)
 
     def print_tokens(self):
         print(
@@ -150,9 +151,11 @@ class Trainer(BaseTrainer):
     def prehook(self, device, job_id, glob_rank):
         self.optimizer = AdamW(
             self.model.parameters(),
-            lr=1e-6,
+            lr=self.lr,
             weight_decay=0.01
         )
+        print(self.optimizer)
+
         if glob_rank == 0:
             self.acc_loss = [0.0] * self.epochs
             self.logger = TensorBoardWriter(log_dir=f'job-{job_id}-logs')
