@@ -139,6 +139,8 @@ class BaseTrainer:
 
     def _prepare_testing(self, glob_rank, mini_batch):
         if self.test_file and self.test_data_cls and glob_rank == 0:
+            if not os.path.isfile(self.test_file):
+                return
             test_data = self.test_data_cls(self.test_file)
             print(f'Loading test data: {self.test_file} (bsize={mini_batch})')
             self.test_loader = DataLoader(test_data,
