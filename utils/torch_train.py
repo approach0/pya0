@@ -86,13 +86,13 @@ class BaseTrainer:
             quit(1)
         return shard_files
 
-    def prehook(self, device):
+    def prehook(self, *args):
         pass
 
     def save_model(self, model, save_funct, save_name, job_id):
         raise NotImplementedError
 
-    def _save_model(self, point, glob_rank):
+    def _save_model(self, point, glob_rank, job_id):
         if glob_rank != 0 and self.xla_cores == 0:
             return # must be master node (unless if it is TPU)
         if self.cluster:
@@ -106,7 +106,6 @@ class BaseTrainer:
             save_function = xm.save
         else:
             save_function = torch.save
-        job_id = get_env_var("SLURM_JOB_ID", 0)
         self.save_model(model, save_function, save_name, job_id)
 
     def backward(self, loss, **args):
@@ -169,6 +168,7 @@ def _train_thread(local_rank, trainer, train_loop):
     # get cluster information
     n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
     node_id = get_env_var("SLURM_NODEID", 0)
+    job_id = get_env_var("SLURM_JOB_ID", 0)
     n_devices = trainer.num_local_dev()
     glob_batches = n_nodes * n_devices
     glob_rank = node_id * n_devices + local_rank
@@ -205,7 +205,7 @@ def _train_thread(local_rank, trainer, train_loop):
         xm.rendezvous('init')
 
     # prehook: setup optimizer etc., after DDP initialization.
-    trainer.prehook(device)
+    trainer.prehook(device, job_id)
 
     # Turn on FP16?
     if torch.cuda.is_available() and trainer.active_fp16:
@@ -215,6 +215,7 @@ def _train_thread(local_rank, trainer, train_loop):
         trainer.scaler = None
         scaler_ctx = contextlib.nullcontext()
 
+    iteration = 0
     shard_files = trainer._get_shard_files()
     n_shards = len(shard_files)
     print('Shards:', shard_files)
@@ -258,15 +259,18 @@ def _train_thread(local_rank, trainer, train_loop):
                     arg_vals = tuple(args[k] for k in arg_names if k != 'self')
                     with scaler_ctx:
                         train_loop(*arg_vals)
+                        iteration += 1
                     # save on cycle
                     if save_cycle > 0 and batch % save_cycle == 0:
-                        trainer._save_model((epoch, shard, batch), glob_rank)
+                        trainer._save_model(
+                            (epoch, shard, batch), glob_rank, job_id
+                        )
                         if trainer.xla_cores:
                             import torch_xla.core.xla_model as xm
                             xm.rendezvous('save')
     # final save ...
     if save_cycle > 0:
-        trainer._save_model((epoch + 1, 0, 0), glob_rank)
+        trainer._save_model((epoch + 1, 0, 0), glob_rank, job_id)
 
     # Leaving barrier
     if trainer.cluster:

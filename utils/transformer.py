@@ -9,8 +9,9 @@ from functools import partial
 
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset
 from torch_train import BaseTrainer
+from torch.utils.data import Dataset
+from torch.utils.tensorboard import SummaryWriter as TensorBoardWriter
 
 import transformers
 from transformers import AdamW
@@ -145,12 +146,14 @@ class Trainer(BaseTrainer):
             self.tokenizer.all_special_ids
         )))
 
-    def prehook(self, device):
+    def prehook(self, device, job_id):
         self.optimizer = AdamW(
             self.model.parameters(),
             lr=1e-6,
             weight_decay=0.01
         )
+        self.logger = TensorBoardWriter(log_dir=f'job-{job_id}-logs')
+        self.acc_loss = [0.0] * self.epochs
 
     def save_model(self, model, save_funct, save_name, job_id):
         model.save_pretrained(
@@ -221,7 +224,7 @@ class Trainer(BaseTrainer):
         print('Invoke training ...')
         self.start_training(self.pretrain_loop)
 
-    def pretrain_test_loop(self, test_batch, test_inputs, device):
+    def pretrain_test_loop(self, test_batch, test_inputs, device, iteration):
         enc_inputs = self.tokenizer(test_inputs,
             padding=True, truncation=True, return_tensors="pt")
         enc_inputs.to(device)
@@ -229,10 +232,12 @@ class Trainer(BaseTrainer):
         def highlight_masked(txt):
             return re.sub(r"(\[MASK\])", '\033[92m' + r"\1" + '\033[0m', txt)
 
-        def classifier_hook(topk, module, inputs, outputs):
+        def classifier_hook(display, topk, module, inputs, outputs):
             unmask_scores, seq_rel_scores = outputs
             for b, token_ids in enumerate(enc_inputs['input_ids']):
-                print(highlight_masked(test_inputs[b]))
+                text = test_inputs[b]
+                display[0] += highlight_masked(text) + '\n'
+                display[1] += text + '  \n'
                 masked_idx = (
                     token_ids == torch.tensor([MSK_CODE], device=device)
                 )
@@ -240,18 +245,22 @@ class Trainer(BaseTrainer):
                 cands = torch.argsort(scores, dim=1, descending=True)
                 for i, mask_cands in enumerate(cands):
                     top_cands = mask_cands[:topk].detach().cpu()
-                    print(f'MASK[{i}] top candidates:', end=" ")
-                    print(self.tokenizer.convert_ids_to_tokens(top_cands))
+                    result = (f'MASK[{i}] top candidates: ' +
+                        str(self.tokenizer.convert_ids_to_tokens(top_cands)))
+                    display[0] += result + '\n'
+                    display[1] += result + '  \n'
 
+        display = ['\n', '']
         classifier = self.model.cls
-        partial_hook = partial(classifier_hook, 3)
+        partial_hook = partial(classifier_hook, display, 3)
         hook = classifier.register_forward_hook(partial_hook)
-        print()
         self.model(**enc_inputs)
         hook.remove()
+        print(display[0])
+        self.logger.add_text('unmask', display[1], iteration)
 
     def pretrain_loop(self, inputs, device,
-        progress, epoch, shard, batch,
+        progress, epoch, shard, batch, iteration,
         n_shards, save_cycle, n_nodes):
         # collate inputs
         pairs = [pair for pair, label in inputs]
@@ -295,13 +304,17 @@ class Trainer(BaseTrainer):
         self.optimizer.zero_grad()
         outputs = self.model(**enc_inputs)
         loss = outputs.loss
+        loss_ = round(loss.item(), 2)
         self.backward(loss)
         self.step()
 
-        self.do_testing(self.pretrain_test_loop, device)
+        self.acc_loss[epoch] += loss_
+        avg_loss = self.acc_loss[epoch] / (iteration + 1)
+        self.do_testing(self.pretrain_test_loop, device, iteration)
+        self.logger.add_scalar(f'train_batch_loss/{epoch}', loss_, iteration)
+        self.logger.add_scalar(f'train_epoch_loss/{epoch}', avg_loss, iteration)
 
         # update progress bar information
-        loss_ = round(loss.item(), 2)
         input_shape = list(enc_inputs.input_ids.shape)
         device_desc = self.local_device_info()
         progress.set_description(
