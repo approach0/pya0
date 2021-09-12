@@ -134,8 +134,8 @@ class BaseTrainer:
             n_cores = self.num_local_dev()
             mp.spawn(_train_thread, nprocs=n_cores, args=(self, train_loop))
 
-    def _prepare_testing(self, glob_rank, mini_batch):
-        if self.test_file and self.test_data_cls and glob_rank == 0:
+    def _prepare_testing(self, mini_batch):
+        if self.test_file and self.test_data_cls:
             if not os.path.isfile(self.test_file):
                 return
             test_data = self.test_data_cls(self.test_file)
@@ -151,8 +151,9 @@ class BaseTrainer:
         if self.test_loader:
             if self.test_cnt % self.test_cycle == 0:
                 self.model.eval()
-                for test_batch, test_inputs in enumerate(self.test_loader):
-                    eval_func(test_batch, test_inputs, *args)
+                with torch.no_grad():
+                    for test_batch, test_inputs in enumerate(self.test_loader):
+                        eval_func(test_batch, test_inputs, *args)
                 self.model.train()
             self.test_cnt += 1
 
@@ -223,7 +224,7 @@ def _train_thread(local_rank, trainer, train_loop):
     print('Shards:', shard_files)
     print('Start training at:', trainer.start_point)
 
-    trainer._prepare_testing(glob_rank, m_batch)
+    trainer._prepare_testing(m_batch)
 
     for epoch in range(trainer.epochs):
         if (epoch,) < trainer.start_point[:1]: continue
