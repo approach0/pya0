@@ -84,16 +84,19 @@ class BaseTrainer:
     def prehook(self, *args):
         pass
 
+    def unwrap_model(self):
+        if self.cluster:
+            return self.model.module # unwrap DDP layer
+        else:
+            return self.model
+
     def save_model(self, model, save_funct, save_name, job_id):
         raise NotImplementedError
 
     def _save_model(self, point, glob_rank, job_id):
         if glob_rank != 0 and self.xla_cores == 0:
             return # must be master node (unless if it is TPU)
-        if self.cluster:
-            model = self.model.module # unwrap DDP layer
-        else:
-            model = self.model
+        model = self.unwrap_model()
         save_name = ('%d-%d-%d' % point)
         print(f'Saving model "{save_name}" ...')
         if self.xla_cores:

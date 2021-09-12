@@ -258,7 +258,8 @@ class Trainer(BaseTrainer):
                     display[1] += result + '  \n'
 
         display = ['\n', '']
-        classifier = self.model.cls
+        model = self.unwrap_model()
+        classifier = model.cls
         partial_hook = partial(classifier_hook, display, 3)
         hook = classifier.register_forward_hook(partial_hook)
         self.model(**enc_inputs)
