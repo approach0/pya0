@@ -186,6 +186,7 @@ def _train_thread(local_rank, trainer, train_loop):
         device = torch.device(f'cuda:{local_rank}'
             if torch.cuda.is_available() else 'cpu')
     print('Training on device', device)
+    print(trainer.local_device_info())
     trainer.model.to(device)
 
     # Cluster/XLA barrier
