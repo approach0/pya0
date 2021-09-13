@@ -157,7 +157,7 @@ class BaseTrainer:
                         try:
                             eval_func(test_batch, test_inputs, *args)
                             done = True
-                        except:
+                        except StopIteration:
                             break
                 self.model.train()
             self.test_cnt += 1

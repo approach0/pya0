@@ -393,9 +393,12 @@ class Trainer(BaseTrainer):
                 print()
                 print(passage)
                 predict = predicts[b]
-                cands = torch.argsort(predict, dim=0, descending=True)
+                cands = torch.argsort(predict, descending=True)
                 cands = cands[:topk].detach().tolist()
-                tags = [self.tag_ids_iv[i] for i in cands]
+                tags = [
+                    (self.tag_ids_iv[i], round(predict[i].item(), 2))
+                    for i in cands
+                ]
                 true_indices = labels[b].nonzero()[0]
                 true_tags = [self.tag_ids_iv[i] for i in true_indices]
                 print(f'Predict: \033[92m {tags} \033[0m', end="\n\n")
@@ -407,7 +410,7 @@ class Trainer(BaseTrainer):
         self.test_loss_sum += loss_
         self.test_loss_cnt += 1
         if self.test_loss_cnt > 50:
-            raise
+            raise StopIteration
 
     def finetune_loop(self, inputs, device, progress, epoch, shard, batch,
         n_shards, save_cycle, n_nodes, iteration):
@@ -448,6 +451,8 @@ class Trainer(BaseTrainer):
             f"In{input_shape}, " +
             f'loss={loss_}'
         )
+        self.acc_loss[epoch] += loss_
+        avg_loss = self.acc_loss[epoch] / (iteration + 1)
 
         # invoke evaluation loop
         self.test_loss_sum = 0
@@ -456,15 +461,15 @@ class Trainer(BaseTrainer):
             test_loss = round(self.test_loss_sum / self.test_loss_cnt, 3)
             print(f'Test avg loss: {test_loss}')
             if self.logger:
-                self.acc_loss[epoch] += loss_
-                avg_loss = self.acc_loss[epoch] / (iteration + 1)
                 self.logger.add_scalar(
                     f'train_loss/{epoch}', avg_loss, iteration
                 )
                 self.logger.add_scalar(
+                    f'train_batch_loss/{epoch}', loss_, iteration
+                )
+                self.logger.add_scalar(
                     f'test_loss/{epoch}', test_loss, iteration
                 )
-
 
     def colbert(self, ckpoint, tok_ckpoint):
         self.start_point = self.infer_start_point(ckpoint)
