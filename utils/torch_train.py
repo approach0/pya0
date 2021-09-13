@@ -148,14 +148,20 @@ class BaseTrainer:
             self.test_cnt = 0
 
     def do_testing(self, eval_func, *args):
+        done = False
         if self.test_loader:
             if self.test_cnt % self.test_cycle == 0:
                 self.model.eval()
                 with torch.no_grad():
                     for test_batch, test_inputs in enumerate(self.test_loader):
-                        eval_func(test_batch, test_inputs, *args)
+                        try:
+                            eval_func(test_batch, test_inputs, *args)
+                            done = True
+                        except:
+                            break
                 self.model.train()
             self.test_cnt += 1
+        return done
 
 
 def _train_thread(local_rank, trainer, train_loop):

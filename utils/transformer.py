@@ -356,6 +356,7 @@ class Trainer(BaseTrainer):
 
         self.start_point = self.infer_start_point(ckpoint)
         self.dataset_cls = partial(TaggedPassagesShard, self.tag_ids)
+        self.test_data_cls = partial(TaggedPassagesShard, self.tag_ids)
 
         print('Loading model ...')
         self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
@@ -364,6 +365,7 @@ class Trainer(BaseTrainer):
             problem_type='multi_label_classification',
             num_labels=len(self.tag_ids)
         )
+        print(f'Number of tags: {len(self.tag_ids)}')
 
         print('Resize model embedding and save new tokenizer ...')
         self.model.resize_token_embeddings(len(self.tokenizer))
@@ -371,9 +373,54 @@ class Trainer(BaseTrainer):
         print('Invoke training ...')
         self.start_training(self.finetune_loop)
 
+    def finetune_test(self, test_batch, test_inputs, device):
+        # collate inputs
+        labels = [label for label, passage in test_inputs]
+        passages = [passage for label, passage in test_inputs]
+
+        # tokenize inputs
+        enc_inputs = self.tokenizer(passages,
+            padding=True, truncation=True, return_tensors="pt")
+        enc_inputs['labels'] = torch.tensor(labels)
+        enc_inputs.to(device)
+
+        # feed model
+        outputs = self.model(**enc_inputs)
+        predicts = outputs['logits'] # (B, totalTags)
+
+        topk = 3
+        if self.test_loss_cnt < 25:
+            for b, passage in enumerate(passages):
+                print()
+                print(passage)
+                predict = predicts[b]
+                cands = torch.argsort(predict, dim=0, descending=True)
+                cands = cands[:topk].detach().tolist()
+                tags = [self.tag_ids_iv[i] for i in cands]
+                true_indices = labels[b].nonzero()[0]
+                true_tags = [self.tag_ids_iv[i] for i in true_indices]
+                print(f'Predict: \033[92m {tags} \033[0m', end="\n\n")
+                print(f'Truth: \033[92m {true_tags} \033[0m', end="\n\n")
+
+        # calculate test loss
+        loss = outputs.loss
+        loss_ = loss.item()
+        self.test_loss_sum += loss_
+        self.test_loss_cnt += 1
+        if self.test_loss_cnt > 50:
+            raise
+
     def finetune_loop(self, inputs, device,
         progress, epoch, shard, batch,
         n_shards, save_cycle, n_nodes):
+
+        # invoke evaluation loop
+        self.test_loss_sum = 0
+        self.test_loss_cnt = 0
+        if self.do_testing(self.finetune_test, device):
+            test_loss = round(self.test_loss_sum / self.test_loss_cnt, 3)
+            print(f'Test avg loss: {test_loss}')
+
         # collate inputs
         labels = [label for label, passage in inputs]
         passages = [passage for label, passage in inputs]
@@ -400,7 +447,7 @@ class Trainer(BaseTrainer):
         self.step()
 
         # update progress bar information
-        loss_ = round(loss.item(), 2)
+        loss_ = round(loss.item(), 3)
         input_shape = list(enc_inputs.input_ids.shape)
         device_desc = self.local_device_info()
         progress.set_description(
