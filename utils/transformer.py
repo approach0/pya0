@@ -229,8 +229,7 @@ class Trainer(BaseTrainer):
         print('Invoke training ...')
         self.start_training(self.pretrain_loop)
 
-    def pretrain_test(self, test_batch, test_inputs, device,
-        iteration, epoch, shard):
+    def pretrain_test(self, test_batch, test_inputs, device, iteration, epoch):
         # tokenize inputs
         enc_inputs = self.tokenizer(test_inputs,
             padding=True, truncation=True, return_tensors="pt")
@@ -267,7 +266,7 @@ class Trainer(BaseTrainer):
         print(display[0])
         if self.logger:
             self.logger.add_text(
-                f'unmask/{epoch}-{shard}', display[1], iteration
+                f'unmask/{epoch}-{iteration}', display[1], iteration
             )
 
     def pretrain_loop(self, inputs, device,
@@ -320,7 +319,7 @@ class Trainer(BaseTrainer):
         self.step()
 
         self.do_testing(
-            self.pretrain_test, device, iteration, epoch, shard
+            self.pretrain_test, device, iteration, epoch
         )
 
         if self.logger:
@@ -410,17 +409,8 @@ class Trainer(BaseTrainer):
         if self.test_loss_cnt > 50:
             raise
 
-    def finetune_loop(self, inputs, device,
-        progress, epoch, shard, batch,
-        n_shards, save_cycle, n_nodes):
-
-        # invoke evaluation loop
-        self.test_loss_sum = 0
-        self.test_loss_cnt = 0
-        if self.do_testing(self.finetune_test, device):
-            test_loss = round(self.test_loss_sum / self.test_loss_cnt, 3)
-            print(f'Test avg loss: {test_loss}')
-
+    def finetune_loop(self, inputs, device, progress, epoch, shard, batch,
+        n_shards, save_cycle, n_nodes, iteration):
         # collate inputs
         labels = [label for label, passage in inputs]
         passages = [passage for label, passage in inputs]
@@ -458,6 +448,23 @@ class Trainer(BaseTrainer):
             f"In{input_shape}, " +
             f'loss={loss_}'
         )
+
+        # invoke evaluation loop
+        self.test_loss_sum = 0
+        self.test_loss_cnt = 0
+        if self.do_testing(self.finetune_test, device):
+            test_loss = round(self.test_loss_sum / self.test_loss_cnt, 3)
+            print(f'Test avg loss: {test_loss}')
+            if self.logger:
+                self.acc_loss[epoch] += loss_
+                avg_loss = self.acc_loss[epoch] / (iteration + 1)
+                self.logger.add_scalar(
+                    f'train_loss/{epoch}', avg_loss, iteration
+                )
+                self.logger.add_scalar(
+                    f'test_loss/{epoch}', test_loss, iteration
+                )
+
 
     def colbert(self, ckpoint, tok_ckpoint):
         self.start_point = self.infer_start_point(ckpoint)
