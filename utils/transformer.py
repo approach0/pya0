@@ -198,7 +198,7 @@ class Trainer(BaseTrainer):
         self.test_data_cls = SentenceUnmaskTest
 
         print(f'Loading model {ckpoint}...')
-        if ckpoint == 'bert-from-scratch':
+        if os.path.basename(ckpoint) == 'bert-from-scratch':
             config = BertConfig(tie_word_embeddings=True)
             self.model = BertForPreTraining(config)
         else:
