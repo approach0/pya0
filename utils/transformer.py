@@ -397,11 +397,12 @@ class Trainer(BaseTrainer):
             probs = probs.detach().cpu()
             for b, tagged_passage in enumerate(tagged_passages):
                 prob = round(probs[b][0].item(), 2)
-                success = (prob > 0.5) and labels[b] == 0
+                success = ((prob > 0.5 and labels[b] == 0)
+                    or (prob <= 0.5 and labels[b] == 1))
                 sep = '\033[1;31m' + ' [SEP] ' + '\033[0m'
                 tagged_passage = sep.join(tagged_passage)
                 if not success:
-                    print(truths[b])
+                    print(prob, truths[b])
                     print(tagged_passage)
                 else:
                     print('\033[92m' + tagged_passage + '\033[0m')
