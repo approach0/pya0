@@ -3,7 +3,7 @@ import fire
 import pickle
 from tqdm import tqdm
 from collections import defaultdict
-from random import randint, seed, random as rand, shuffle
+from random import randint, seed, random as rand, shuffle, sample
 from transformers import BertTokenizer
 
 
@@ -125,9 +125,15 @@ def generate_sentpairs(
                 pickle.dump(aggregate, fh)
 
 
+def sample_unrelated_tags(all_tags, tags):
+    left_tags = all_tags - tags
+    n_samples = randint(1, 4)
+    return sample(left_tags, n_samples)
+
+
 def generate_tag_pairs(
     docs_file='mse-aops-2021-data.pkl', debug=False,
-    maxlen=512, n_splits=20, limit=-1, min_tagfreq=200,
+    maxlen=512, n_splits=20, limit=-1, min_tagfreq=200, min_tokens=5,
     tok_ckpoint='bert-base-uncased', random_seed=123):
 
     seed(random_seed)
@@ -167,13 +173,16 @@ def generate_tag_pairs(
                 # if tokens number plus [CLS] is too long?
                 if token_cnt + len(sent_tokens) + 1 >= maxlen:
                     token_cnt = 0
-                    if token_cnt > 0: aggregate.append((tags, passage))
+                    neg_tags = sample_unrelated_tags(freq_tags, set(tags))
+                    if token_cnt > 0:
+                        aggregate.append((tags, neg_tags, passage))
                     passage = ''
                 else:
                     passage += sentence + ' '
                     token_cnt += len(sent_tokens)
-            if token_cnt > 0:
-                aggregate.append((tags, passage))
+            if token_cnt > min_tokens:
+                neg_tags = sample_unrelated_tags(freq_tags, set(tags))
+                aggregate.append((tags, neg_tags, passage))
             if debug:
                 print(aggregate)
                 quit(0)
