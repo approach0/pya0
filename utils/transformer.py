@@ -18,7 +18,7 @@ from transformers import AdamW
 from transformers import BertTokenizer
 from transformers import BertForPreTraining
 from transformers import BertConfig
-from transformers import BertForSequenceClassification
+from transformers import BertForNextSentencePrediction
 from transformers import BertModel, BertPreTrainedModel
 
 CE_IGN_IDX = -100 # CrossEntropyLoss ignore index value
@@ -75,13 +75,12 @@ class TaggedPassagesShard(Dataset):
         return len(self.shard)
 
     def __getitem__(self, idx):
-        tags, passage = self.shard[idx]
-        onehot_label = numpy.zeros((self.N))
-        for tag in tags:
-            if tag in self.tag_ids:
-                tag_id = self.tag_ids[tag]
-                onehot_label[tag_id] = 1
-        return onehot_label, passage
+        pos_tags, neg_tags, passage = self.shard[idx]
+        if random.random() < 0.5:
+            tags, label, truth = pos_tags, 0, pos_tags
+        else:
+            tags, label, truth = neg_tags, 1, pos_tags
+        return label, ['[T] ' + ','.join(tags), passage], truth
 
 
 class ContrastiveQAShard(Dataset):
@@ -351,22 +350,25 @@ class Trainer(BaseTrainer):
         print('Loading tag IDs ...')
         with open(tag_ids_file, 'rb') as fh:
             self.tag_ids = pickle.load(fh)
-            self.tag_ids_iv = {self.tag_ids[t]: t for t in self.tag_ids}
 
         self.start_point = self.infer_start_point(ckpoint)
         self.dataset_cls = partial(TaggedPassagesShard, self.tag_ids)
         self.test_data_cls = partial(TaggedPassagesShard, self.tag_ids)
+        with open(self.test_file, 'r') as fh:
+            dirname = os.path.dirname(self.test_file)
+            self.test_file = dirname + '/' + fh.read().rstrip()
 
         print('Loading model ...')
         self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
-        self.model = BertForSequenceClassification.from_pretrained(ckpoint,
-            tie_word_embeddings=True,
-            problem_type='multi_label_classification',
-            num_labels=len(self.tag_ids)
+        self.model = BertForNextSentencePrediction.from_pretrained(ckpoint,
+            tie_word_embeddings=True
         )
         print(f'Number of tags: {len(self.tag_ids)}')
 
-        print('Resize model embedding and save new tokenizer ...')
+        # adding tag prediction special tokens
+        self.tokenizer.add_special_tokens({
+            'additional_special_tokens': ['[T]']
+        })
         self.model.resize_token_embeddings(len(self.tokenizer))
 
         print('Invoke training ...')
@@ -374,63 +376,43 @@ class Trainer(BaseTrainer):
 
     def finetune_test(self, test_batch, test_inputs, device):
         # collate inputs
-        labels = [label for label, passage in test_inputs]
-        passages = [passage for label, passage in test_inputs]
+        labels = [label for label, p, truth in test_inputs]
+        tagged_passages = [p for label, p, truth in test_inputs]
+        truths = [truth for label, p, truth in test_inputs]
 
         # tokenize inputs
-        enc_inputs = self.tokenizer(passages,
+        enc_inputs = self.tokenizer(tagged_passages,
             padding=True, truncation=True, return_tensors="pt")
         enc_inputs['labels'] = torch.tensor(labels)
         enc_inputs.to(device)
 
         # feed model
         outputs = self.model(**enc_inputs)
-        predicts = outputs['logits'] # (B, totalTags)
-
-        topk = 3
-        if self.test_loss_cnt < 25:
-            for b, passage in enumerate(passages):
-                print()
-                print(passage)
-                predict = predicts[b]
-                cands = torch.argsort(predict, descending=True)
-                cands = cands[:topk].detach().tolist()
-                tags = [
-                    (self.tag_ids_iv[i], round(predict[i].item(), 2))
-                    for i in cands
-                ]
-                true_indices = labels[b].nonzero()[0]
-                true_tags = [self.tag_ids_iv[i] for i in true_indices]
-                print(f'Predict: \033[92m {tags} \033[0m', end="\n\n")
-                print(f'Truth: \033[92m {true_tags} \033[0m', end="\n\n")
-
-        # calculate test loss
         loss = outputs.loss
         loss_ = loss.item()
         self.test_loss_sum += loss_
         self.test_loss_cnt += 1
-        if self.test_loss_cnt > 50:
+        if self.test_loss_cnt > 100:
             raise StopIteration
 
     def finetune_loop(self, inputs, device, progress, epoch, shard, batch,
         n_shards, save_cycle, n_nodes, iteration):
         # collate inputs
-        labels = [label for label, passage in inputs]
-        passages = [passage for label, passage in inputs]
+        labels = [label for label, p, truth in inputs]
+        tagged_passages = [p for label, p, truth in inputs]
+        truths = [truth for label, p, truth in inputs]
 
-        enc_inputs = self.tokenizer(passages,
+        enc_inputs = self.tokenizer(tagged_passages,
             padding=True, truncation=True, return_tensors="pt")
         enc_inputs['labels'] = torch.tensor(labels)
         enc_inputs.to(device)
 
         if self.debug:
             for b, ids in enumerate(enc_inputs['input_ids']):
-                indices = labels[b].nonzero()[0]
-                tags = [self.tag_ids_iv[i] for i in indices]
-                print('tags:', tags)
+                print()
+                print('Label:', enc_inputs['labels'][b])
+                print('Truth:', truths[b])
                 print(self.tokenizer.decode(ids))
-            print(enc_inputs['labels'].shape)
-            print(enc_inputs['input_ids'].shape)
             quit(0)
 
         self.optimizer.zero_grad()
