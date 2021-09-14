@@ -365,6 +365,8 @@ class Trainer(BaseTrainer):
         )
         print(f'Number of tags: {len(self.tag_ids)}')
 
+        self.logits2probs = torch.nn.Softmax(dim=1)
+
         # adding tag prediction special tokens
         self.tokenizer.add_special_tokens({
             'additional_special_tokens': ['[T]']
@@ -389,6 +391,21 @@ class Trainer(BaseTrainer):
         # feed model
         outputs = self.model(**enc_inputs)
         loss = outputs.loss
+
+        if self.test_loss_cnt < 25:
+            probs = self.logits2probs(outputs.logits)
+            probs = probs.detach().cpu()
+            for b, tagged_passage in enumerate(tagged_passages):
+                prob = round(probs[b][0].item(), 2)
+                success = (prob > 0.5) and labels[b] == 0
+                tagged_passage = '[SEP]'.join(tagged_passage)
+                if not success:
+                    print(truths[b])
+                    print(tagged_passage)
+                else:
+                    print('\033[92m' + tagged_passage + '\033[0m')
+                print()
+
         loss_ = loss.item()
         self.test_loss_sum += loss_
         self.test_loss_cnt += 1
