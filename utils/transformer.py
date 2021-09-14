@@ -402,6 +402,7 @@ class Trainer(BaseTrainer):
                 sep = '\033[1;31m' + ' [SEP] ' + '\033[0m'
                 tagged_passage = sep.join(tagged_passage)
                 if not success:
+                    print('\033[1;31m' + 'Wrong' + '\033[0m')
                     print(prob, truths[b])
                     print(tagged_passage)
                 else:
