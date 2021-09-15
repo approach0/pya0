@@ -365,6 +365,7 @@ class Trainer(BaseTrainer):
         )
         print(f'Number of tags: {len(self.tag_ids)}')
 
+        # for testing score normalization
         self.logits2probs = torch.nn.Softmax(dim=1)
 
         # adding tag prediction special tokens
@@ -398,7 +399,7 @@ class Trainer(BaseTrainer):
             for b, tagged_passage in enumerate(tagged_passages):
                 prob = round(probs[b][0].item(), 2)
                 success = ((prob > 0.5 and labels[b] == 0)
-                    or (prob <= 0.5 and labels[b] == 1))
+                    or (prob < 0.5 and labels[b] == 1))
                 sep = '\033[1;31m' + ' [SEP] ' + '\033[0m'
                 tagged_passage = sep.join(tagged_passage)
                 if not success:
@@ -476,6 +477,10 @@ class Trainer(BaseTrainer):
     def colbert(self, ckpoint, tok_ckpoint):
         self.start_point = self.infer_start_point(ckpoint)
         self.dataset_cls = ContrastiveQAShard
+        self.test_data_cls = ContrastiveQAShard
+        with open(self.test_file, 'r') as fh:
+            dirname = os.path.dirname(self.test_file)
+            self.test_file = dirname + '/' + fh.read().rstrip()
 
         print('Loading as ColBERT model ...')
         self.model = ColBERT.from_pretrained(ckpoint,
@@ -490,19 +495,21 @@ class Trainer(BaseTrainer):
         })
         self.model.resize_token_embeddings(len(self.tokenizer))
 
+        # for testing score normalization
+        self.logits2probs = torch.nn.Softmax(dim=1)
+
         print('Invoke training ...')
         self.start_training(self.colbert_loop)
 
-    def colbert_loop(self, inputs, device,
-        progress, epoch, shard, batch,
-        n_shards, save_cycle, n_nodes):
+    def colbert_loop(self, batch, inputs, device, progress, iteration,
+        epoch, shard, n_shards, save_cycle, n_nodes, test_loop=False):
         # collate inputs
         queries = [Q for Q, pos, neg in inputs]
         positives = [pos for Q, pos, neg in inputs]
         negatives = [neg for Q, pos, neg in inputs]
 
         # each (2*B, L), where each query contains two copies,
-        # passages contains positive and negative samples.
+        # and passages contains positive and negative samples.
         queries = queries + queries
         passages = positives + negatives
 
@@ -531,7 +538,7 @@ class Trainer(BaseTrainer):
 
         scores = self.model(enc_queries, enc_passages) # (2*B)
 
-        #          +   +   +   -   -   -
+        # for B=3, +   +   +   -   -   -
         # tensor([ 1,  2,  3, -1, -2, -3])
         #
         # tensor([[ 1,  2,  3],
@@ -546,22 +553,72 @@ class Trainer(BaseTrainer):
             dtype=torch.long, device=device)
         B = scores.shape[0]
         loss = self.criterion(scores, labels[:B])
-        self.backward(loss)
-        self.step()
 
-        # update progress bar information
-        loss_ = round(loss.item(), 2)
-        Q_shape = list(enc_queries.input_ids.shape)
-        D_shape = list(enc_passages.input_ids.shape)
-        device_desc = self.local_device_info()
-        progress.set_description(
-            f"Ep#{epoch+1}/{self.epochs}, shard#{shard+1}/{n_shards}, " +
-            f"save@{batch % (save_cycle+1)}%{save_cycle}, " +
-            f"{n_nodes} nodes, " +
-            f"{device_desc}, " +
-            f"Q{Q_shape} D{D_shape}, " +
-            f'loss={loss_}'
-        )
+        if test_loop:
+            loss_ = loss.item()
+            scores_ = self.logits2probs(scores)
+            self.test_loss_sum += loss_
+            self.test_loss_cnt += 1
+
+            if self.test_loss_cnt < 25:
+                pairs = zip(
+                    enc_queries['input_ids'].cpu().tolist(),
+                    enc_passages['input_ids'].cpu().tolist(),
+                )
+                for b, (q_ids, p_ids) in enumerate(pairs):
+                    kind = 'pos pair' if b % 2 == 0 else 'neg pair'
+                    print(f'\n--- batch {batch},{kind} ---\n')
+                    print(self.tokenizer.decode(q_ids))
+                    print(self.tokenizer.decode(p_ids))
+                    score_ = round(scores_[b//2][b%2].item(), 2)
+                    if ((b % 2 == 0 and score_ > 0.5) or
+                        (b % 2 == 1 and score_ < 0.5)):
+                        color = '\033[92m' # correct prediction
+                    else:
+                        color = '\033[1;31m' # wrong prediction
+                    print(color + str(score_) + '\033[0m')
+            else:
+                raise StopIteration
+        else:
+            self.backward(loss)
+            self.step()
+
+            # update progress bar information
+            loss_ = round(loss.item(), 2)
+            Q_shape = list(enc_queries.input_ids.shape)
+            D_shape = list(enc_passages.input_ids.shape)
+            device_desc = self.local_device_info()
+            progress.set_description(
+                f"Ep#{epoch+1}/{self.epochs}, "
+                f"shard#{shard+1}/{n_shards}, " +
+                f"save@{batch % (save_cycle+1)}%{save_cycle}, " +
+                f"{n_nodes} nodes, " +
+                f"{device_desc}, " +
+                f"Q{Q_shape} D{D_shape}, " +
+                f'loss={loss_}'
+            )
+
+            self.acc_loss[epoch] += loss_
+            avg_loss = self.acc_loss[epoch] / (iteration + 1)
+
+            # invoke evaluation loop
+            self.test_loss_sum = 0
+            self.test_loss_cnt = 0
+            ellipsis = [None] * 7
+            if self.do_testing(self.colbert_loop, device, *ellipsis, True):
+                test_loss = self.test_loss_sum / self.test_loss_cnt
+                test_loss = round(test_loss, 3)
+                print(f'Test avg loss: {test_loss}')
+                if self.logger:
+                    self.logger.add_scalar(
+                        f'train_loss/{epoch}', avg_loss, iteration
+                    )
+                    self.logger.add_scalar(
+                        f'train_batch_loss/{epoch}', loss_, iteration
+                    )
+                    self.logger.add_scalar(
+                        f'test_loss/{epoch}', test_loss, iteration
+                    )
 
 
 if __name__ == '__main__':

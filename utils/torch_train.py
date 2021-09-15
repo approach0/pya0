@@ -267,7 +267,8 @@ def _train_thread(local_rank, trainer, train_loop):
                     # invoke train loop
                     args = locals()
                     arg_names = inspect.getargspec(train_loop)[0]
-                    arg_vals = tuple(args[k] for k in arg_names if k != 'self')
+                    arg_vals = tuple(args[k] if k in args else None
+                        for k in arg_names if k != 'self')
                     with scaler_ctx:
                         train_loop(*arg_vals)
                         iteration += 1
