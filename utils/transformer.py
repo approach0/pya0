@@ -88,7 +88,6 @@ class ContrastiveQAShard(Dataset):
     def __init__(self, shard_file):
         with open(shard_file, 'rb') as fh:
             self.shard = pickle.load(fh)
-        pass
 
     def __len__(self):
         return len(self.shard)
