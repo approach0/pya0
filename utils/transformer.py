@@ -560,7 +560,7 @@ class Trainer(BaseTrainer):
             self.test_loss_sum += loss_
             self.test_loss_cnt += 1
 
-            if self.test_loss_cnt < 25:
+            if self.test_loss_cnt < 100:
                 pairs = zip(
                     enc_queries['input_ids'].cpu().tolist(),
                     enc_passages['input_ids'].cpu().tolist(),
