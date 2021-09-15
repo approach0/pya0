@@ -561,24 +561,25 @@ class Trainer(BaseTrainer):
             self.test_loss_sum += loss_
             self.test_loss_cnt += 1
 
-            if self.test_loss_cnt < 100:
-                pairs = zip(
-                    enc_queries['input_ids'].cpu().tolist(),
-                    enc_passages['input_ids'].cpu().tolist(),
-                )
-                for b, (q_ids, p_ids) in enumerate(pairs):
-                    kind = 'pos pair' if b % 2 == 0 else 'neg pair'
-                    print(f'\n--- batch {batch},{kind} ---\n')
-                    print(self.tokenizer.decode(q_ids))
-                    print(self.tokenizer.decode(p_ids))
-                    score_ = round(scores_[b//2][b%2].item(), 2)
-                    if ((b % 2 == 0 and score_ > 0.5) or
-                        (b % 2 == 1 and score_ < 0.5)):
-                        color = '\033[92m' # correct prediction
-                    else:
-                        color = '\033[1;31m' # wrong prediction
-                    print(color + str(score_) + '\033[0m')
-            else:
+            pairs = zip(
+                enc_queries['input_ids'].cpu().tolist(),
+                enc_passages['input_ids'].cpu().tolist(),
+            )
+            for b, (q_ids, p_ids) in enumerate(pairs):
+                kind = 'pos pair' if b % 2 == 0 else 'neg pair'
+                print(f'\n--- batch {batch},{kind} ---\n')
+                print(self.tokenizer.decode(q_ids))
+                print(self.tokenizer.decode(p_ids))
+                score_ = round(scores_[b//2][b%2].item(), 2)
+                if ((b % 2 == 0 and score_ > 0.5) or
+                    (b % 2 == 1 and score_ < 0.5)):
+                    color = '\033[92m' # correct prediction
+                    self.test_succ_cnt += 1 / (2*B)
+                else:
+                    color = '\033[1;31m' # wrong prediction
+                print(color + str(score_) + '\033[0m')
+
+            if self.test_loss_cnt >= 100:
                 raise StopIteration
         else:
             self.backward(loss)
@@ -605,12 +606,14 @@ class Trainer(BaseTrainer):
 
             # invoke evaluation loop
             self.test_loss_sum = 0
+            self.test_succ_cnt = 0
             self.test_loss_cnt = 0
             ellipsis = [None] * 7
             if self.do_testing(self.colbert_loop, device, *ellipsis, True):
-                test_loss = self.test_loss_sum / self.test_loss_cnt
-                test_loss = round(test_loss, 3)
+                test_loss = round(self.test_loss_sum / self.test_loss_cnt, 3)
+                test_succ = round(self.test_succ_cnt / self.test_loss_cnt, 3)
                 print(f'Test avg loss: {test_loss}')
+                print('Test accuracy:', self.test_succ_cnt, self.test_loss_cnt)
                 if self.logger:
                     self.logger.add_scalar(
                         f'train_loss/{epoch}', avg_loss, iteration
@@ -620,6 +623,9 @@ class Trainer(BaseTrainer):
                     )
                     self.logger.add_scalar(
                         f'test_loss/{epoch}', test_loss, iteration
+                    )
+                    self.logger.add_scalar(
+                        f'test_accuracy/{epoch}', test_succ, iteration
                     )
 
 
