@@ -453,8 +453,10 @@ class Trainer(BaseTrainer):
             f"In{input_shape}, " +
             f'loss={loss_}'
         )
-        self.acc_loss[epoch] += loss_
-        avg_loss = self.acc_loss[epoch] / (iteration + 1)
+
+        if self.logger:
+            self.acc_loss[epoch] += loss_
+            avg_loss = self.acc_loss[epoch] / (iteration + 1)
 
         # invoke evaluation loop
         self.test_loss_sum = 0
@@ -597,8 +599,9 @@ class Trainer(BaseTrainer):
                 f'loss={loss_}'
             )
 
-            self.acc_loss[epoch] += loss_
-            avg_loss = self.acc_loss[epoch] / (iteration + 1)
+            if self.logger:
+                self.acc_loss[epoch] += loss_
+                avg_loss = self.acc_loss[epoch] / (iteration + 1)
 
             # invoke evaluation loop
             self.test_loss_sum = 0
