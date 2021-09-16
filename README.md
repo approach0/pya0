@@ -1,4 +1,3 @@
-## About
 **pya0** is a Python wrapper for Approach Zero search engine.
 It provides Python interface to make the search engine core easy to play with.
 
@@ -35,7 +34,7 @@ Result:
 
 Refer to `tests/` directory for more complete example usages.
 
-### Supported Interfaces
+## Supported Interfaces
 * `lex(TeX: str) -> list[tuple(tokID, token, symbol)]`
 * `index_open(index_path: str, option: str, segment_dict: str) -> index_handler`
 * `index_close(ix: index_handler) -> None`
