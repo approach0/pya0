@@ -12,12 +12,6 @@ tokenizer = RegexpTokenizer(r'\w+')
 detokenizer = TreebankWordDetokenizer()
 
 
-my_stopwords = (
-    stopwords.words('english') +
-    ['__EXPAND__', '__answer__']
-)
-
-
 def preprocess_text(txt):
     if len(txt) == 0:
         return txt
@@ -31,6 +25,10 @@ def preprocess_text(txt):
 def tokenize_text(txt, no_punctuation=False, rm_stopwords=False, whitelist=[]):
     toks = tokenizer.tokenize(txt) if no_punctuation else word_tokenize(txt)
     stem_toks = []
+    my_stopwords = (
+        stopwords.words('english') +
+        ['__EXPAND__', '__answer__']
+    )
     for t in toks:
         if rm_stopwords and t in my_stopwords and t not in whitelist:
             continue
