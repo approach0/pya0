@@ -151,7 +151,7 @@ class BaseTrainer:
     def do_testing(self, eval_func, *args):
         done = False
         if self.test_loader:
-            if self.test_cnt % self.test_cycle == 0:
+            if self.test_cycle != 0 and self.test_cnt % self.test_cycle == 0:
                 self.model.eval()
                 with torch.no_grad():
                     for test_batch, test_inputs in enumerate(self.test_loader):
