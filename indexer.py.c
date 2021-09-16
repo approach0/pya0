@@ -8,9 +8,10 @@
 PyObject *index_open(PyObject *self, PyObject *args, PyObject* kwargs)
 {
 	const char *path, *option = NULL, *seg_dict = NULL;
-	static char *kwlist[] = {"path", "option", "segment_dict", NULL};
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|ss", kwlist,
-		&path, &option, &seg_dict)) {
+	int highlight = true;
+	static char *kwlist[] = {"path", "option", "segment_dict", "highlight", NULL};
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|ssp", kwlist,
+		&path, &option, &seg_dict, &highlight)) {
 		PyErr_Format(PyExc_RuntimeError,
 			"PyArg_ParseTupleAndKeywords error");
 		return NULL;
@@ -31,6 +32,7 @@ PyObject *index_open(PyObject *self, PyObject *args, PyObject* kwargs)
 	}
 
 	int content_field = seg_dict ? FIELD__INDEX_MIX : FIELD__INDEX_ENG;
+	if (highlight) content_field = content_field | FIELD__INDEX_HIGHLIGHT;
 	struct indices_field fields[] = {
 		{"url", FIELD__STORE_PLAIN, FIELD__INDEX_NO},
 		{"content", FIELD__STORE_COMPRESSED, content_field},

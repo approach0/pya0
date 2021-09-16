@@ -8,10 +8,12 @@ import pya0
 
 index_path = "tmp" # output index path
 jieba_path = os.path.expanduser("~/cppjieba/dict")
+highlight = True
 
 
 if not os.path.exists(index_path):
-    ix = pya0.index_open(index_path, segment_dict=jieba_path)
+    ix = pya0.index_open(index_path,
+        segment_dict=jieba_path, highlight=highlight)
     if ix is None:
         print('Cannot open index.')
         quit(1)
@@ -34,12 +36,19 @@ if not os.path.exists(index_path):
     pya0.writer_close(writer)
     pya0.index_close(ix)
 
+
 print('Searching...')
-ix = pya0.index_open(index_path, option="r", segment_dict=jieba_path)
+ix = pya0.index_open(index_path, option="r",
+    segment_dict=jieba_path, highlight=highlight)
 pya0.index_print_summary(ix)
 JSON = pya0.search(ix, [
   {'str': 'x^3', 'type': 'tex'},
-  #{'str': '不等式', 'type': 'term'},
+  {'str': '化简', 'type': 'term'},
 ], verbose=True)
-print(json.loads(JSON))
+J = json.loads(JSON)
+if J['ret_code'] == 0:
+    for i, hit in enumerate(J['hits']):
+        print(i, hit['field_content'], end="\n\n")
+else:
+    print(J)
 pya0.index_close(ix)
