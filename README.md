@@ -8,14 +8,7 @@ However, in order to build this Python module, you will need to have this reposi
 
 There is a [specific branch](https://github.com/approach0/pya0/tree/sigir2021) for a saved snapshot of our SIGIR 2021 paper, please find a Colab link there for illustrating the usage of PyA0 from that version.
 
-### Install Necessary Dependencies (Ubuntu)
-```sh
-$ sudo apt install build-essential python-dev python3-pip
-$ make
-$ sudo pip3 install --upgrade tqdm pandas
-```
-
-### Quick Start
+## Quick Start
 Install `pya0` using pip
 ```sh
 $ sudo pip3 install --upgrade pya0
@@ -58,7 +51,7 @@ Refer to `tests/` directory for more complete example usages.
 
 (`lex` function can be useful to train a RNN and predict TeX tokens)
 
-### Local Build and Testing
+## Run Test Code
 Ensure to include and prioritize local dist:
 ```py
 import sys
@@ -69,7 +62,7 @@ then run some test case, for example:
 $ python3 tests/test-lexer.py
 ```
 
-### Packaging
+## Build for Local Package
 Build and install package locally (for testing):
 ```sh
 $ make clean
@@ -81,28 +74,7 @@ import pya0
 print(dir(pya0))
 ```
 
-Create a `pip` distribution package:
-```sh
-$ python3 -m pip install --upgrade build # install pip-build tool
-$ sudo apt install python3-venv
-$ sudo python3 -m build
-```
-
-### Upload to `pypi.org`
-Install `twine`
-```sh
-$ sudo apt install rustc libssl-dev libffi-dev
-$ sudo python3 -m pip install --user --upgrade twine
-```
-
-Upload package in `dist` directory
-```sh
-$ python3 -m twine upload --repository pypi dist/*
-```
-(use username `__token__` and your created token on `https://pypi.org`)
-
-Here if shared library is not manylinux API, we will need to use Docker to build and fix a wheel to support as many as Linux platform as possible.
-
+## Build for Manylinux Distribution
 Install Docker:
 ```sh
 apt-get update
@@ -110,27 +82,49 @@ which docker || curl -fsSL https://get.docker.com -o get-docker.sh
 which docker || sh get-docker.sh
 ```
 
-Pull and run image `quay.io/pypa/manylinux_2_24_x86_64`:
+Pull and run image `quay.io/pypa/manylinux_2_24_x86_64` at parent source directory `approach0` (and assume `$HOME` is where you put Indri and Jieba code):
 ```sh
-docker run -it -v /root:/host -v /code:/code quay.io/pypa/manylinux_2_24_x86_64 bash
+sudo docker run -it -v `pwd`:/code -v $HOME:/host quay.io/pypa/manylinux_2_24_x86_64 bash
 ```
 
-Inside docker container, build pya0 as instructed above, so that you have a linux wheel, e.g., `./dist/pya0-0.1-cp35-cp35m-linux_x86_64.whl`.
+Inside docker container, build pya0 as instructed below, so that you have a linux wheel, e.g., `./dist/pya0-0.1-cp35-cp35m-linux_x86_64.whl`.
 
 Typical build process:
 ```sh
+# Inside docker
 apt update
 apt install -y git build-essential g++ cmake wget flex bison python3
 apt install -y libz-dev libevent-dev libopenmpi-dev libxml2-dev libfl-dev
+apt install -y libiberty-dev
+cd /code
+./configure --indri-path=/host/indri --jieba-path=/host/cppjieba
+(cd /host/indri && make clean && make)
 make clean && make
-apt install -y python3-pip python3-dev python3-venv
+apt install -y build-essential python-dev python3-pip python3-venv
+cd ./pya0 && make clean && make
 python3 -m pip install --upgrade build # install pip-build tool
+pip3 install --upgrade tqdm pandas 
 ```
 Use `docker commit $(docker ps -q | head -1) quickstart` to save the container for later re-use.
 
+Create a `pip` distribution package:
+```sh
+$ rm -rf dist wheelhouse
+$ python3 -m build
+```
+
+## Upload to PyPI.org
+Edit `setup.py` and bump up version number.
+
+Install `twine`
+```sh
+$ apt install rustc libssl-dev libffi-dev
+$ python3 -m pip install --user --upgrade twine
+```
+
 Then inspect the wheel:
 ```sh
-# auditwheel show ./dist/pya0-0.1*.whl
+$ auditwheel show ./dist/pya0-*.whl
 
 pya0-0.1-cp35-cp35m-linux_x86_64.whl is consistent with the following
 platform tag: "linux_x86_64".
@@ -157,20 +151,22 @@ the `auditwheel` suggests to use platform `manylinux_2_24_x86_64`.
 
 Fix it to that platform:
 ```sh
-# auditwheel repair ./dist/pya0-0.1-cp35-cp35m-linux_x86_64.whl --plat manylinux_2_24_x86_64 -w ./wheelhouse
-INFO:auditwheel.main_repair:Repairing pya0-0.1-cp35-cp35m-linux_x86_64.whl
-INFO:auditwheel.wheeltools:Previous filename tags: linux_x86_64
+$ auditwheel repair ./dist/*.whl --plat manylinux_2_24_x86_64 -w ./wheelhouse
+INFO:auditwheel.main_repair:Repairing pya0-0.2.8-py3-none-any.whl
+INFO:auditwheel.wheeltools:Previous filename tags: any
 INFO:auditwheel.wheeltools:New filename tags: manylinux_2_24_x86_64
-INFO:auditwheel.wheeltools:Previous WHEEL info tags: cp35-cp35m-linux_x86_64
-INFO:auditwheel.wheeltools:New WHEEL info tags: cp35-cp35m-manylinux_2_24_x86_64
+INFO:auditwheel.wheeltools:Previous WHEEL info tags: py3-none-any
+INFO:auditwheel.wheeltools:Changed wheel type to Platlib
+INFO:auditwheel.wheeltools:New WHEEL info tags: py3-none-manylinux_2_24_x86_64
 INFO:auditwheel.main_repair:
-Fixed-up wheel written to /io/pya0/wheelhouse/pya0-0.1-cp35-cp35m-manylinux_2_24_x86_64.whl
+Fixed-up wheel written to /code/pya0/wheelhouse/pya0-0.2.8-py3-none-manylinux_2_24_x86_64.whl
 ```
 
 Then you should be able to upload to PIP:
 ```sh
-# python3 -m twine upload --repository pypi wheelhouse/*.whl
+$ python3 -m twine upload --repository pypi wheelhouse/*.whl
 ```
+(use username `__token__` and your created token on `https://pypi.org`)
 
 Use `unzip` to view and check if shared libraries are there in the manylinux wheel:
 ```sh
