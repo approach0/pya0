@@ -9,6 +9,7 @@ from functools import partial
 import torch
 from transformers import BertTokenizer
 from transformers import BertForPreTraining
+from transformer import ColBERT
 
 
 def attention_visualize(ckpoint, tok_ckpoint, passage_file, debug=False):
@@ -100,10 +101,50 @@ def pickle_print(pkl_file):
             print(line)
 
 
+def test_colbert(ckpoint, tok_ckpoint, test_file):
+    with open(test_file, 'r') as fh:
+        file = fh.read().rstrip()
+    lines = file.split('\n')
+    lines = [preprocess_for_transformer(l) for l in lines]
+    Q = lines[0]
+    D_list = lines[1:]
+
+    tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
+    model = ColBERT.from_pretrained(ckpoint, tie_word_embeddings=True)
+    criterion = torch.nn.CrossEntropyLoss()
+
+    tokenizer.add_special_tokens({
+        'additional_special_tokens': ['[Q]', '[D]']
+    })
+    model.resize_token_embeddings(len(tokenizer))
+
+    device = torch.device(f'cuda:0' if torch.cuda.is_available() else 'cpu')
+    model.to(device)
+    model.eval()
+
+    with torch.no_grad():
+        for D in D_list:
+            enc_queries = tokenizer(f'[Q] {Q}',
+                padding=True, truncation=True, return_tensors="pt")
+            enc_queries.to(device)
+
+            enc_passages = tokenizer(f'[D] {D}',
+                padding=True, truncation=True, return_tensors="pt")
+            enc_passages.to(device)
+
+            scores = model(enc_queries, enc_passages)
+
+            print()
+            print(tokenizer.decode(enc_queries['input_ids'][0]))
+            print(tokenizer.decode(enc_passages['input_ids'][0]))
+            print(round(scores.item(), 2))
+
+
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
     fire.Fire({
         "attention": attention_visualize,
         "pft_print": pft_print,
         "pickle_print": pickle_print,
+        "test_colbert": test_colbert,
     })

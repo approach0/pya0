@@ -114,7 +114,7 @@ class ColBERT(BertPreTrainedModel):
         Q = self.bert(**inputs)[0] # last-layer hidden state
         # Q: (B, Lq, H) -> (B, Lq, dim)
         Q = self.linear(Q)
-        # return: (B, Lq, 1) normalized
+        # return: (B, Lq, dim) normalized
         return torch.nn.functional.normalize(Q, p=2, dim=2)
 
     def doc(self, inputs):
@@ -123,10 +123,11 @@ class ColBERT(BertPreTrainedModel):
         return torch.nn.functional.normalize(D, p=2, dim=2)
 
     def score(self, Q, D):
-        # (B, Lq, 1) x (B, 1, Ld) -> (B, Lq, Ld)
+        # (B, Lq, dim) x (B, dim, Ld) -> (B, Lq, Ld)
         cmp_matrix = Q @ D.permute(0, 2, 1)
         best_match = cmp_matrix.max(2).values # best match per query
-        return best_match.sum(1) # sum score over each query
+        scores = best_match.sum(1) # sum score over each query
+        return scores
 
 
 class Trainer(BaseTrainer):
@@ -537,7 +538,8 @@ class Trainer(BaseTrainer):
                 print(self.tokenizer.decode(p_ids))
             quit(0)
 
-        scores = self.model(enc_queries, enc_passages) # (2*B)
+        # each input: (2*B, L) -> (2*B)
+        scores = self.model(enc_queries, enc_passages)
 
         # for B=3, +   +   +   -   -   -
         # tensor([ 1,  2,  3, -1, -2, -3])
