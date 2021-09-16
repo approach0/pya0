@@ -25,10 +25,15 @@ PyObject *do_search(PyObject *self, PyObject *args, PyObject* kwargs)
 	}
 
 	/* sanity check */
+	struct indices *indices = PyLong_AsVoidPtr(pyindices);
 	int list_len = PyObject_Length(pylist);
 	if (list_len <= 0) {
 		PyErr_Format(PyExc_RuntimeError,
 			"Please pass a valid list of keywords as query");
+		return NULL;
+	} else if (indices == NULL) {
+		PyErr_Format(PyExc_RuntimeError,
+			"Cannot open an empty index");
 		return NULL;
 	}
 
@@ -48,7 +53,7 @@ PyObject *do_search(PyObject *self, PyObject *args, PyObject* kwargs)
 		PyObject *py_field = PyDict_GetItemString(item, "field");
 		PyObject *py_boost = PyDict_GetItemString(item, "boost");
 
-		if (py_kw == NULL || py_type == NULL || py_field == NULL) {
+		if (py_kw == NULL || py_type == NULL) {
 			PyErr_Format(PyExc_RuntimeError,
 				"Required key(s) not found in query keyword");
 			return NULL;
@@ -56,14 +61,18 @@ PyObject *do_search(PyObject *self, PyObject *args, PyObject* kwargs)
 
 		const char *kw_str = PyUnicode_AsUTF8(py_kw);
 		const char *type_str = PyUnicode_AsUTF8(py_type);
-		const char *field_str = PyUnicode_AsUTF8(py_field);
+		const char *field = py_field ? PyUnicode_AsUTF8(py_field) : "content";
 		float boost = (py_boost == NULL) ? 1.f : PyFloat_AS_DOUBLE(py_boost);
 
 		if (0 == strcmp(type_str, "term")) {
-			query_digest_txt(&qry, field_str, kw_str, QUERY_OP_OR, boost, lex_eng_file);
+			/* lookup lexer for this field */
+			lexer_handler lexer = NULL;
+			lexer = indices_field_lexer(indices, "content");
+			query_digest_txt(&qry, field, kw_str,
+			                 QUERY_OP_OR, boost, lexer);
 
 		} else if (0 == strcmp(type_str, "tex")) {
-			query_push_kw(&qry, field_str, kw_str,
+			query_push_kw(&qry, field, kw_str,
 			              QUERY_KW_TEX, QUERY_OP_OR, boost);
 
 		} else {
@@ -78,7 +87,6 @@ PyObject *do_search(PyObject *self, PyObject *args, PyObject* kwargs)
 		query_print(qry, stdout);
 
 	/* actually perform search */
-	struct indices *indices = PyLong_AsVoidPtr(pyindices);
 	ranked_results_t srch_res; /* search results */
 	if (verbose) {
 		srch_res = indices_run_query(indices, &qry, topk, NULL, stdout);

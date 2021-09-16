@@ -21,8 +21,8 @@ if ix is None:
 print('Searching ...')
 
 JSON = pya0.search(ix, [
-    { 'str': 'b^2', 'type': 'tex'},
-    { 'str': 'induction', 'type': 'term'}
+    {'str': 'b^2', 'type': 'tex'},
+    {'str': 'induction', 'type': 'term'}
 ], verbose = False, topk= 10)
 results = json.loads(JSON)
 print(json.dumps(results, indent=4))

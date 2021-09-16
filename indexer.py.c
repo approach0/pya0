@@ -30,9 +30,10 @@ PyObject *index_open(PyObject *self, PyObject *args, PyObject* kwargs)
 		return Py_None;
 	}
 
+	int content_field = seg_dict ? FIELD__INDEX_MIX : FIELD__INDEX_ENG;
 	struct indices_field fields[] = {
 		{"url", FIELD__STORE_PLAIN, FIELD__INDEX_NO},
-		{"content", FIELD__STORE_COMPRESSED, FIELD__INDEX_ENG},
+		{"content", FIELD__STORE_COMPRESSED, content_field},
 		{"extern_id", FIELD__STORE_PLAIN, FIELD__INDEX_NO}
 	};
 	(void)indices_schema_add_field(indices, fields,
