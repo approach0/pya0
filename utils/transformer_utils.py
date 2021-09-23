@@ -155,6 +155,11 @@ def index_colbert(ckpoint, tok_ckpoint, pyserini_path,
             tmp, tokenizer_name=tok_ckpoint,
             pooling='mean', l2_norm=True)
         encoder.model.eval()
+        # adding ColBERT special tokens
+        encoder.tokenizer.add_special_tokens({
+            'additional_special_tokens': ['[Q]', '[D]']
+        })
+        encoder.model.resize_token_embeddings(len(encoder.tokenizer))
     import faiss
     import numpy as np
     index = faiss.IndexFlatIP(dim)
@@ -169,8 +174,10 @@ def index_colbert(ckpoint, tok_ckpoint, pyserini_path,
             docid_and_pos = fields[0]
             latex = ' '.join(fields[1:])
             latex = latex.replace('% ', '')
+            latex = f'[imath]{latex}[/imath]'
             tokens = preprocess_for_transformer(latex)
-            docids.append(docid_and_pos)
+            tokens = '[D] ' + tokens
+            docids.append((docid_and_pos, latex))
             embs = encoder.encode([tokens])
             index.add(np.array(embs))
             print(index.ntotal, tokens)
