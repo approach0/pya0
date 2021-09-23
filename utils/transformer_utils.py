@@ -2,6 +2,7 @@ import _pya0
 from preprocess import preprocess_for_transformer
 
 import os
+import sys
 import fire
 import pickle
 from functools import partial
@@ -140,6 +141,44 @@ def test_colbert(ckpoint, tok_ckpoint, test_file):
             print(round(scores.item(), 2))
 
 
+def index_colbert(ckpoint, tok_ckpoint, pyserini_path,
+                  dim=768, idx_dir="dense-idx"):
+    tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
+    model = ColBERT.from_pretrained(ckpoint, tie_word_embeddings=True)
+    sys.path.insert(0, pyserini_path)
+    from pyserini.dindex import AutoDocumentEncoder
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        print(f'Saving temporary raw model: {tmp}')
+        model.bert.save_pretrained(tmp)
+        encoder = AutoDocumentEncoder(
+            tmp, tokenizer_name=tok_ckpoint,
+            pooling='mean', l2_norm=True)
+        encoder.model.eval()
+    import faiss
+    import numpy as np
+    index = faiss.IndexFlatIP(dim)
+    print(f'Writing to {idx_dir}')
+    os.makedirs(idx_dir, exist_ok=True)
+    docids = []
+    ntcir12 = '/home/tk/corpus/NTCIR12/NTCIR12_latex_expressions.txt'
+    with open(ntcir12, 'r') as fh:
+        for line in fh:
+            line = line.rstrip()
+            fields = line.split()
+            docid_and_pos = fields[0]
+            latex = ' '.join(fields[1:])
+            latex = latex.replace('% ', '')
+            tokens = preprocess_for_transformer(latex)
+            docids.append(docid_and_pos)
+            embs = encoder.encode([tokens])
+            index.add(np.array(embs))
+            print(index.ntotal, tokens)
+    with open(os.path.join(idx_dir, 'docids.pkl'), 'wb') as fh:
+        pickle.dump(docids, fh)
+    faiss.write_index(index, os.path.join(idx_dir, 'index.faiss'))
+
+
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
     fire.Fire({
@@ -147,4 +186,5 @@ if __name__ == '__main__':
         "pft_print": pft_print,
         "pickle_print": pickle_print,
         "test_colbert": test_colbert,
+        "index_colbert": index_colbert,
     })
