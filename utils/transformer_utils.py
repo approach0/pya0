@@ -186,6 +186,51 @@ def index_colbert(ckpoint, tok_ckpoint, pyserini_path,
     faiss.write_index(index, os.path.join(idx_dir, 'index.faiss'))
 
 
+def search_colbert(ckpoint, tok_ckpoint, pyserini_path, index_path,
+                   idx_dir="dense-idx", k=10):
+    import faiss
+    import numpy as np
+    index_path = os.path.join(idx_dir, 'index.faiss')
+    docids_path = os.path.join(idx_dir, 'docids.pkl')
+    index = faiss.read_index(index_path)
+    with open(docids_path, 'rb') as fh:
+        docids = pickle.load(fh)
+    assert index.ntotal == len(docids)
+    dim = index.d
+    print(f'Index dim: {dim}')
+
+    tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
+    model = ColBERT.from_pretrained(ckpoint, tie_word_embeddings=True)
+    sys.path.insert(0, pyserini_path)
+    from pyserini.dindex import AutoDocumentEncoder
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        print(f'Saving temporary raw model: {tmp}')
+        model.bert.save_pretrained(tmp)
+        encoder = AutoDocumentEncoder(
+            tmp, tokenizer_name=tok_ckpoint,
+            pooling='mean', l2_norm=True)
+        encoder.model.eval()
+        # adding ColBERT special tokens
+        encoder.tokenizer.add_special_tokens({
+            'additional_special_tokens': ['[Q]', '[D]']
+        })
+        encoder.model.resize_token_embeddings(len(encoder.tokenizer))
+    latex = 'a^2 + b^2 + c^2'
+    latex = f'[imath]{latex}[/imath]'
+    tokens = preprocess_for_transformer(latex)
+    tokens = '[Q] ' + tokens
+    emb = encoder.encode([tokens])
+    faiss.omp_set_num_threads(1)
+    scores, ids = index.search(emb, k)
+    scores = scores.flat
+    ids = ids.flat
+    results = [(score, docids[i]) for score, i in zip(scores, ids)]
+    print('[query]', latex)
+    for res in results:
+        print(res)
+
+
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
     fire.Fire({
@@ -194,4 +239,5 @@ if __name__ == '__main__':
         "pickle_print": pickle_print,
         "test_colbert": test_colbert,
         "index_colbert": index_colbert,
+        "search_colbert": search_colbert,
     })
