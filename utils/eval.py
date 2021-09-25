@@ -4,9 +4,9 @@ import json
 import copy
 import tempfile
 import subprocess
-from .index_manager import get_cache_home
-from .msearch import cascade_run
-from .preprocess import preprocess_query
+from index_manager import get_cache_home
+from msearch import cascade_run
+from preprocess import preprocess_query
 import collection_driver
 import tracemalloc
 
@@ -96,10 +96,10 @@ def TREC_output(hits, queryID, append=False, output_file="tmp.run"):
     if len(hits) == 0: return
     with open(output_file, 'a' if append else 'w') as fh:
         for i, hit in enumerate(hits):
-            print("%s %s %u %u %f %s" % (
+            print("%s %s %s %u %f %s" % (
                 queryID,
                 str(hit['_']),
-                hit['docid'],
+                str(hit['docid']),
                 i + 1,
                 hit['score'],
                 "APPROACH0"
@@ -167,7 +167,7 @@ def run_fold_topics(index, collection, k, fold, cascades, output, topk, purpose,
 
 
 def run_topics(index, collection, output, topk=1000, verbose=False, log=None,
-    trec_eval_args=[], cascades=[('baseline', None)], training_output=None,
+    trec_eval_args=[], cascades=[('first-stage', None)], training_output=None,
     kfold=None, math_expansion=None, fork_search=False, select_topic=None):
     # prepare K-fold evaluation
     topic_queries = list(gen_topics_queries(collection))

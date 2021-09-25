@@ -13,15 +13,19 @@ from .msearch import cascade_run, msearch
 from .mergerun import concatenate_run_files, merge_run_files
 from .l2r import L2R_gen_train_data, L2R_train
 from .preprocess import preprocess_query
+from .dsearch import get_dense_encoder
 
 
-def abort_on_network_index(index):
+def abort_on_non_a0_index(index):
     if isinstance(index, str):
         print('Abort on network index')
         exit(1)
+    elif isinstance(index, tuple):
+        print('Abort on dense index')
+        exit(1)
 
 
-def abort_on_invalid_collection(collection):
+def abort_on_empty_collection(collection):
     if collection is None:
         print('Please specify collection name using --collection')
         exit(1)
@@ -85,6 +89,8 @@ if __name__ == '__main__':
         help="Automatically evaluate multiple experiments specified by TSV file. E.g., '--auto-eval <name>'")
     parser.add_argument('--auto-eval-summary', type=str, required=False,
         help="Print automatic evaluation summary in TSV. E.g., '--auto-eval <name>'")
+    parser.add_argument('--dense', type=str, required=False,
+        help="Perform dense retrieval. E.g., '--dense faiss,colbert:model_ckpt,tok_ckpt'")
 
     args = parser.parse_args()
 
@@ -109,7 +115,9 @@ if __name__ == '__main__':
         file_format, file_path = args.read_file.split(':')
         cascades.append(('reader', [file_format, file_path]))
     else:
-        cascades.append(('baseline', None))
+        cascades.append(('first-stage', {
+            'dense': args.dense
+        }))
 
     # add cascade layers
     if args.rm3:
@@ -129,7 +137,7 @@ if __name__ == '__main__':
 
     # print auto-eval summary?
     elif args.auto_eval_summary:
-        abort_on_invalid_collection(args.collection)
+        abort_on_empty_collection(args.collection)
         name = args.auto_eval_summary
         header, rows = auto_eval.tsv_eval_read('product.tsv')
         def wrap_summary(idx, run_name, _):
@@ -184,7 +192,23 @@ if __name__ == '__main__':
 
     elif isinstance(args.index, str) and args.index.startswith('http'):
         index = args.index
-        pass
+
+    elif args.dense:
+        index_type, model_spec, tok_ckpt = args.dense.split(',')
+        model_type, model_ckpt = model_spec.split(':')
+        if index_type == 'faiss':
+            import faiss
+            index_path = os.path.join(args.index, 'index.faiss')
+            faiss_index = faiss.read_index(index_path)
+
+            docids_path = os.path.join(args.index, 'docids.pkl')
+            with open(docids_path, 'rb') as fh:
+                docids = pickle.load(fh)
+
+            encoder = get_dense_encoder(model_type, model_ckpt, tok_ckpt)
+            index = (faiss_index, docids, encoder)
+        else:
+            raise NotImplementedError
 
     elif not os.path.exists(args.index):
         index_path = pya0.from_prebuilt_index(args.index, verbose=verbose)
@@ -213,27 +237,27 @@ if __name__ == '__main__':
     # output HTML file
     elif args.visualize_run and not args.query:
         from .visualize import visualize
-        abort_on_network_index(index)
+        abort_on_non_a0_index(index)
         visualize(index, args.visualize_run, collection=args.collection)
         exit(0)
 
     # generate l2r training data
     elif args.training_data_from_run:
-        abort_on_network_index(index)
-        abort_on_invalid_collection(args.collection)
+        abort_on_non_a0_index(index)
+        abort_on_empty_collection(args.collection)
         L2R_gen_train_data(args.collection, index, args.training_data_from_run)
         exit(0)
 
     # print index stats
     elif args.print_index_stats:
-        abort_on_network_index(index)
+        abort_on_non_a0_index(index)
         print(f' --- index stats ({args.index}) ---')
         pya0.index_print_summary(index)
         exit(0)
 
     # auto evaluation?
     elif args.auto_eval:
-        abort_on_invalid_collection(args.collection)
+        abort_on_empty_collection(args.collection)
         name = args.auto_eval
         print('reading auto_eval.tsv ...')
         out_tsv_content = auto_eval.tsv_product('auto_eval.tsv')
@@ -308,17 +332,17 @@ if __name__ == '__main__':
         # output HTML file
         if args.visualize_run:
             from .visualize import visualize
-            abort_on_network_index(index)
+            abort_on_non_a0_index(index)
             visualize(index, args.visualize_run,
                 adhoc_query=origin_query, collection=collection)
 
     elif args.docid:
-        abort_on_network_index(index)
+        abort_on_non_a0_index(index)
         doc = pya0.index_lookup_doc(index, args.docid)
         print(json.dumps(doc, indent=4))
 
     elif args.collection:
-        abort_on_invalid_collection(args.collection)
+        abort_on_empty_collection(args.collection)
 
         if args.trec_output is None:
             print('Error: Must specify a TREC output file to run topics')

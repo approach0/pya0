@@ -1,8 +1,8 @@
 import os
 import pya0
 import numpy as np
-from .mergerun import parse_trec_file
-from .lambdaMART import LambdaMART
+from mergerun import parse_trec_file
+from lambdaMART import LambdaMART
 from preprocess import preprocess_query
 import collection_driver
 import pickle

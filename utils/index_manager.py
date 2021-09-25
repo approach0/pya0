@@ -7,7 +7,7 @@ import tarfile
 import subprocess
 from tqdm import tqdm
 from urllib.request import urlretrieve
-from .mindex_info import MINDEX_INFO
+from mindex_info import MINDEX_INFO
 
 
 # https://gist.github.com/leimao/37ff6e990b3226c2c9670a2cd1e4a6f5

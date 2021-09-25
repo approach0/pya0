@@ -1,5 +1,5 @@
 from collections import Counter
-from .preprocess import tokenize_query, tokenize_content
+from preprocess import tokenize_query, tokenize_content
 import pya0
 import re
 

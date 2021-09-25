@@ -187,7 +187,7 @@ def index_colbert(ckpoint, tok_ckpoint, pyserini_path,
 
 
 def search_colbert(ckpoint, tok_ckpoint, pyserini_path, index_path,
-                   idx_dir="dense-idx", k=10):
+                   idx_dir="dense-idx", k=10, query='[imath]\\lim(1+1/n)^n[/imath]'):
     import faiss
     import numpy as np
     index_path = os.path.join(idx_dir, 'index.faiss')
@@ -216,9 +216,7 @@ def search_colbert(ckpoint, tok_ckpoint, pyserini_path, index_path,
             'additional_special_tokens': ['[Q]', '[D]']
         })
         encoder.model.resize_token_embeddings(len(encoder.tokenizer))
-    latex = 'a^2 + b^2 + c^2'
-    latex = f'[imath]{latex}[/imath]'
-    tokens = preprocess_for_transformer(latex)
+    tokens = preprocess_for_transformer(query)
     tokens = '[Q] ' + tokens
     emb = encoder.encode([tokens])
     faiss.omp_set_num_threads(1)
@@ -226,7 +224,7 @@ def search_colbert(ckpoint, tok_ckpoint, pyserini_path, index_path,
     scores = scores.flat
     ids = ids.flat
     results = [(score, docids[i]) for score, i in zip(scores, ids)]
-    print('[query]', latex)
+    print('[query]', query)
     for res in results:
         print(res)
 

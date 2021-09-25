@@ -3,19 +3,36 @@ import json
 from preprocess import tokenize_text
 
 
+def index_docid_to_doc(index, docid):
+    if isinstance(index, tuple):
+        _, docids, _ = index
+        formula_id_and_pos, content = docids[docid]
+        return {
+            'url': formula_id_and_pos,
+            'content': content
+        }
+    else:
+        doc = pya0.index_lookup_doc(index, hit['docid'])
+
+
 def TREC_preprocess(collection, index, hits):
     if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1', 'arqmath-2021-task1-refined']:
         for hit in hits:
-            doc = pya0.index_lookup_doc(index, hit['docid'])
+            doc = index_docid_to_doc(index, hit['docid'])
             hit['_'] = hit['docid']
             hit['docid'] = int(doc['url'])
 
     elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined']:
         for hit in hits:
-            doc = pya0.index_lookup_doc(index, hit['docid'])
+            doc = index_docid_to_doc(index, hit['docid'])
             formulaID, postID, threadID, type_, visualID = doc['url'].split(',')
             hit['_'] = formulaID
             hit['docid'] = int(postID)
+    elif collection in ['ntcir12-math-browsing', 'ntcir12-math-browsing-concrete', 'ntcir12-math-browsing-wildcards']:
+        for hit in hits:
+            doc = index_docid_to_doc(index, hit['docid'])
+            hit['_'] = hit['docid']
+            hit['docid'] = doc['url']
     else:
         raise NotImplementedError
 
@@ -25,14 +42,14 @@ def TREC_reverse(collection, index, hits):
         for hit in hits:
             trec_docid = hit['docid']
             hit['trec_docid'] = trec_docid
-            doc = pya0.index_lookup_doc(index, trec_docid)
+            doc = index_docid_to_doc(index, trec_docid)
             hit['docid'] = int(doc['extern_id']) # get internal doc ID
     elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined']:
         for hit in hits:
             trec_docid = int(hit['_'])
             hit['trec_docid'] = trec_docid
             hit['_'] = str(hit['docid']) # docid is actually post ID here
-            doc = pya0.index_lookup_doc(index, trec_docid)
+            doc = index_docid_to_doc(index, trec_docid)
             hit['docid'] = int(doc['extern_id']) # get internal doc ID
     else:
         raise NotImplementedError
@@ -137,7 +154,7 @@ def _featslookup__arqmath_2020_task1(topic_query, index, docid):
     # qnum
     qnum = int(qid.split('.')[1])
     # doc
-    doc = pya0.index_lookup_doc(index, docid)
+    doc = index_docid_to_doc(index, docid)
     # doc score
     result_JSON = pya0.search(index, query, verbose=False, topk=1, log=None, docid=docid)
     results = json.loads(result_JSON)
