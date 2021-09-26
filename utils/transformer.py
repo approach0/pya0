@@ -581,7 +581,7 @@ class Trainer(BaseTrainer):
                     color = '\033[1;31m' # wrong prediction
                 print(color + str(score_) + '\033[0m')
 
-            if self.test_loss_cnt >= 100:
+            if self.test_loss_cnt >= 500:
                 raise StopIteration
         else:
             self.backward(loss)
