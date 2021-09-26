@@ -122,7 +122,10 @@ def parse_qrel_file(file_path):
     with open(file_path, 'r') as fh:
         for line in fh.readlines():
             line = line.rstrip()
-            fields = line.split('\t')
+            if '\t' in line:
+                fields = line.split('\t')
+            else:
+                fields = line.split(' ')
             qryID = fields[0]
             _     = fields[1]
             docID = fields[2]

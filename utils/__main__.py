@@ -205,7 +205,10 @@ if __name__ == '__main__':
             with open(docids_path, 'rb') as fh:
                 docids = pickle.load(fh)
 
-            encoder = get_dense_encoder(model_type, model_ckpt, tok_ckpt)
+            if model_type != 'null':
+                encoder = get_dense_encoder(model_type, model_ckpt, tok_ckpt)
+            else:
+                encoder = None
             index = (faiss_index, docids, encoder)
         else:
             raise NotImplementedError
@@ -237,7 +240,6 @@ if __name__ == '__main__':
     # output HTML file
     elif args.visualize_run and not args.query:
         from .visualize import visualize
-        abort_on_non_a0_index(index)
         visualize(index, args.visualize_run, collection=args.collection)
         exit(0)
 
@@ -332,7 +334,6 @@ if __name__ == '__main__':
         # output HTML file
         if args.visualize_run:
             from .visualize import visualize
-            abort_on_non_a0_index(index)
             visualize(index, args.visualize_run,
                 adhoc_query=origin_query, collection=collection)
 

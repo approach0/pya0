@@ -2,10 +2,10 @@ import pya0
 import copy
 import os
 import re
-from .eval import gen_topics_queries
-from .eval import get_qrels_filepath, parse_qrel_file
-from .mergerun import parse_trec_file
-from .preprocess import preprocess_query
+from eval import gen_topics_queries
+from eval import get_qrels_filepath, parse_qrel_file
+from mergerun import parse_trec_file
+from preprocess import preprocess_query
 import collection_driver
 
 
@@ -48,6 +48,8 @@ def degree_color(relev):
         return '#FFEB3B'
     elif relev == 3:
         return 'gold'
+    elif relev == 4:
+        return 'goldenrod'
     else:
         return 'red'
 
@@ -59,7 +61,7 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
         qrel_id = f'{qid}/{docID}'
         relev = -1
         if qrels and qrel_id in qrels:
-            relev = int(qrels[qrel_id])
+            relev = int(float(qrels[qrel_id]))
         hit['relev'] = relev
     # generate judged-only results, if specified
     if judged_only:
@@ -137,8 +139,8 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
 def visualize_hits(index, run_name, qid, query, hits, qrels=None, scores=None):
     # lookup document content
     for hit in hits:
-        docid = hit['docid']
-        doc = pya0.index_lookup_doc(index, docid)
+        docid = int(hit['docid'])
+        doc = collection_driver.index_docid_to_doc(index, docid)
         hit['content'] = doc['content']
     # output HTML preview
     if qrels:
@@ -171,7 +173,7 @@ def visualize(index, tsv_file_path, collection=None, adhoc_query=None):
             collection_driver.TREC_reverse(collection, index, hits)
             visualize_hits(index, run_name, qid, adhoc_query, hits)
     else:
-        print('Error: Please specify --query and --collection for visualization.')
+        print('Error: Please specify --collection for visualization.')
         quit(1)
 
 

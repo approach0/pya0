@@ -51,6 +51,10 @@ def TREC_reverse(collection, index, hits):
             hit['_'] = str(hit['docid']) # docid is actually post ID here
             doc = index_docid_to_doc(index, trec_docid)
             hit['docid'] = int(doc['extern_id']) # get internal doc ID
+    elif collection in ['ntcir12-math-browsing', 'ntcir12-math-browsing-concrete', 'ntcir12-math-browsing-wildcards']:
+        for hit in hits:
+            hit['trec_docid'] = hit['docid']
+            hit['docid'] = hit['_']
     else:
         raise NotImplementedError
 

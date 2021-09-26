@@ -25,7 +25,7 @@ def parse_trec_file(file_path):
             if qryID not in run_per_topic:
                 run_per_topic[qryID] = []
             run_per_topic[qryID].append({
-                'docid': int(docid),
+                'docid': docid,
                 '_': _,
                 'rank': int(rank),
                 'score': float(score)
