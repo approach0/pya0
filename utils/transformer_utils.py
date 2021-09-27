@@ -12,6 +12,26 @@ from transformers import BertTokenizer
 from transformers import BertForPreTraining
 from transformer import ColBERT
 
+import numpy as np
+
+def file_iterator(corpus, endat, ext):
+    cnt = 0
+    for dirname, dirs, files in os.walk(corpus):
+        print(dirname)
+        for f in files:
+            if cnt >= endat and endat > 0:
+                return
+            elif f.split('.')[-1] == ext:
+                cnt += 1
+                yield (cnt, dirname, f)
+
+
+def file_read(path):
+    if not os.path.isfile(path):
+        return None
+    with open(path, 'r') as fh:
+        return fh.read()
+
 
 def attention_visualize(ckpoint, tok_ckpoint, passage_file, debug=False):
     """
@@ -141,8 +161,54 @@ def test_colbert(ckpoint, tok_ckpoint, test_file):
             print(round(scores.item(), 2))
 
 
-def index_colbert(ckpoint, tok_ckpoint, pyserini_path,
-                  dim=768, idx_dir="dense-idx"):
+def _index_colbert__ntcir12(docids, encoder, index,
+    corpus_path='~/corpus/NTCIR12/NTCIR12_latex_expressions.txt'):
+    corpus_path = os.path.expanduser(corpus_path)
+    with open(corpus_path, 'r') as fh:
+        for line in fh:
+            line = line.rstrip()
+            fields = line.split()
+            docid_and_pos = fields[0]
+            latex = ' '.join(fields[1:])
+            latex = latex.replace('% ', '')
+            latex = f'[imath]{latex}[/imath]'
+            tokens = preprocess_for_transformer(latex)
+            tokens = '[D] ' + tokens
+            docids.append((docid_and_pos, latex))
+            embs = encoder.encode([tokens])
+            index.add(np.array(embs))
+            print(index.ntotal, tokens)
+
+
+def _index_colbert__arqmath(docids, encoder, index,
+    corpus_path='~/corpus/arqmath-v2', endat=-1):
+    corpus_path = os.path.expanduser(corpus_path)
+    print('Loading Question Dictionary ...')
+    with open(f'{corpus_path}/../arqmath-question-dict.pkl', 'rb') as fh:
+        Q_dict = pickle.load(fh)
+    for cnt, dirname, fname in file_iterator(corpus_path, endat, 'answer'):
+        path = dirname + '/' + fname
+        A = file_read(path)
+        fields = os.path.basename(path).split('.')
+        A_id = int(fields[0])
+        Q_id = int(fields[1])
+        if Q_id not in Q_dict:
+            continue
+        Q = Q_dict[Q_id][2]
+        content = Q + '\n\n' + A
+        docids.append((A_id, content))
+        tokens = preprocess_for_transformer(content)
+        tokens_len = len(tokens.split())
+        if tokens_len > 500:
+            tokens = preprocess_for_transformer(A)
+        tokens = '[D] ' + tokens
+        embs = encoder.encode([tokens])
+        index.add(np.array(embs))
+        print(index.ntotal, tokens_len, dirname)
+
+
+def index_colbert(ckpoint, tok_ckpoint, pyserini_path, dim=768,
+    idx_dir="dense-idx", corpus_path=None, corpus_name='ntcir12'):
     tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
     model = ColBERT.from_pretrained(ckpoint, tie_word_embeddings=True)
     sys.path.insert(0, pyserini_path)
@@ -161,26 +227,18 @@ def index_colbert(ckpoint, tok_ckpoint, pyserini_path,
         })
         encoder.model.resize_token_embeddings(len(encoder.tokenizer))
     import faiss
-    import numpy as np
     index = faiss.IndexFlatIP(dim)
     print(f'Writing to {idx_dir}')
     os.makedirs(idx_dir, exist_ok=True)
     docids = []
-    ntcir12 = '/home/tk/corpus/NTCIR12/NTCIR12_latex_expressions.txt'
-    with open(ntcir12, 'r') as fh:
-        for line in fh:
-            line = line.rstrip()
-            fields = line.split()
-            docid_and_pos = fields[0]
-            latex = ' '.join(fields[1:])
-            latex = latex.replace('% ', '')
-            latex = f'[imath]{latex}[/imath]'
-            tokens = preprocess_for_transformer(latex)
-            tokens = '[D] ' + tokens
-            docids.append((docid_and_pos, latex))
-            embs = encoder.encode([tokens])
-            index.add(np.array(embs))
-            print(index.ntotal, tokens)
+    args = [docids, encoder, index]
+    if corpus_path: args.append(corpus_path)
+    if corpus_name == 'ntcir12':
+        _index_colbert__ntcir12(*args)
+    elif corpus_name == 'arqmath':
+        _index_colbert__arqmath(*args)
+    else:
+        raise NotImplementedError
     with open(os.path.join(idx_dir, 'docids.pkl'), 'wb') as fh:
         pickle.dump(docids, fh)
     faiss.write_index(index, os.path.join(idx_dir, 'index.faiss'))
