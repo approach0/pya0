@@ -12,7 +12,8 @@ def index_docid_to_doc(index, docid):
             'content': content
         }
     else:
-        doc = pya0.index_lookup_doc(index, hit['docid'])
+        doc = pya0.index_lookup_doc(index, docid)
+        return doc
 
 
 def TREC_preprocess(collection, index, hits):
