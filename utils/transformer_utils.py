@@ -196,14 +196,15 @@ def _index_colbert__arqmath(docids, encoder, index,
             continue
         Q = Q_dict[Q_id][2]
         content = Q + '\n\n' + A
-        docids.append((A_id, content))
         tokens = preprocess_for_transformer(content)
         tokens_len = len(tokens.split())
         if tokens_len > 500:
-            tokens = preprocess_for_transformer(A)
+            content = Q[:128] + '\n\n' + A
+            tokens = preprocess_for_transformer(content)
         tokens = '[D] ' + tokens
         embs = encoder.encode([tokens])
         index.add(np.array(embs))
+        docids.append((A_id, content, tokens))
         print(index.ntotal, tokens_len, dirname)
 
 
