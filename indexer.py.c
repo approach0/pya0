@@ -34,7 +34,7 @@ PyObject *index_open(PyObject *self, PyObject *args, PyObject* kwargs)
 	int content_field = seg_dict ? FIELD__INDEX_MIX : FIELD__INDEX_ENG;
 	if (highlight) content_field = content_field | FIELD__INDEX_HIGHLIGHT;
 	struct indices_field fields[] = {
-		{"url", FIELD__STORE_PLAIN, FIELD__INDEX_NO},
+		{"url", FIELD__STORE_COMPRESSED, FIELD__INDEX_NO},
 		{"content", FIELD__STORE_COMPRESSED, content_field},
 		{"extern_id", FIELD__STORE_PLAIN, FIELD__INDEX_NO}
 	};

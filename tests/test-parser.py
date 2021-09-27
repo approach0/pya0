@@ -23,4 +23,5 @@ def test(tex):
 test("a^2 - b^2 = -\\frac{c^3}{2}")
 
 # parse an invalid TeX
+pya0.use_fallback_parser(True)
 test("(a")
