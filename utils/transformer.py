@@ -581,8 +581,10 @@ class Trainer(BaseTrainer):
                     else:
                         color = '\033[1;31m' # wrong prediction
                     print(color + str(score_) + '\033[0m')
-            elif self.test_loss_cnt >= 500:
+            elif self.test_loss_cnt >= 200:
                 raise StopIteration
+            else:
+                print('[test_cnt]', self.test_loss_cnt)
         else:
             self.backward(loss)
             self.step()
@@ -613,9 +615,11 @@ class Trainer(BaseTrainer):
             ellipsis = [None] * 7
             if self.do_testing(self.colbert_loop, device, *ellipsis, True):
                 test_loss = round(self.test_loss_sum / self.test_loss_cnt, 3)
-                test_succ = round(self.test_succ_cnt / self.test_loss_cnt, 3)
+                test_accu = round(self.test_succ_cnt / self.test_loss_cnt, 3)
+                print()
                 print(f'Test avg loss: {test_loss}')
-                print('Test accuracy:', self.test_succ_cnt, self.test_loss_cnt)
+                print('Test accuracy:',
+                    self.test_succ_cnt, self.test_loss_cnt, test_accu)
                 if self.logger:
                     self.logger.add_scalar(
                         f'train_loss/{epoch}', avg_loss, iteration
@@ -627,7 +631,7 @@ class Trainer(BaseTrainer):
                         f'test_loss/{epoch}', test_loss, iteration
                     )
                     self.logger.add_scalar(
-                        f'test_accuracy/{epoch}', test_succ, iteration
+                        f'test_accu/{epoch}', test_accu, iteration
                     )
 
 
