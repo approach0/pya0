@@ -563,25 +563,25 @@ class Trainer(BaseTrainer):
             self.test_loss_sum += loss_
             self.test_loss_cnt += 1
 
-            pairs = zip(
-                enc_queries['input_ids'].cpu().tolist(),
-                enc_passages['input_ids'].cpu().tolist(),
-            )
-            for b, (q_ids, p_ids) in enumerate(pairs):
-                kind = 'pos pair' if b % 2 == 0 else 'neg pair'
-                print(f'\n--- batch {batch},{kind} ---\n')
-                print(self.tokenizer.decode(q_ids))
-                print(self.tokenizer.decode(p_ids))
-                score_ = round(scores_[b//2][b%2].item(), 2)
-                if ((b % 2 == 0 and score_ > 0.5) or
-                    (b % 2 == 1 and score_ < 0.5)):
-                    color = '\033[92m' # correct prediction
-                    self.test_succ_cnt += 1 / (2*B)
-                else:
-                    color = '\033[1;31m' # wrong prediction
-                print(color + str(score_) + '\033[0m')
-
-            if self.test_loss_cnt >= 500:
+            if self.test_loss_cnt <= 50:
+                pairs = zip(
+                    enc_queries['input_ids'].cpu().tolist(),
+                    enc_passages['input_ids'].cpu().tolist(),
+                )
+                for b, (q_ids, p_ids) in enumerate(pairs):
+                    kind = 'pos pair' if b % 2 == 0 else 'neg pair'
+                    print(f'\n--- batch {batch},{kind} ---\n')
+                    print(self.tokenizer.decode(q_ids))
+                    print(self.tokenizer.decode(p_ids))
+                    score_ = round(scores_[b//2][b%2].item(), 2)
+                    if ((b % 2 == 0 and score_ > 0.5) or
+                        (b % 2 == 1 and score_ < 0.5)):
+                        color = '\033[92m' # correct prediction
+                        self.test_succ_cnt += 1 / (2*B)
+                    else:
+                        color = '\033[1;31m' # wrong prediction
+                    print(color + str(score_) + '\033[0m')
+            elif self.test_loss_cnt >= 500:
                 raise StopIteration
         else:
             self.backward(loss)
