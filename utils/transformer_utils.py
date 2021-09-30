@@ -210,6 +210,7 @@ def _index_colbert__arqmath(docids, encoder, index,
 
 def index_colbert(ckpoint, tok_ckpoint, pyserini_path, dim=768,
     idx_dir="dense-idx", corpus_path=None, corpus_name='ntcir12'):
+    idx_dir = os.path.expanduser(idx_dir)
     tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
     model = ColBERT.from_pretrained(ckpoint, tie_word_embeddings=True)
     sys.path.insert(0, pyserini_path)
@@ -245,10 +246,11 @@ def index_colbert(ckpoint, tok_ckpoint, pyserini_path, dim=768,
     faiss.write_index(index, os.path.join(idx_dir, 'index.faiss'))
 
 
-def search_colbert(ckpoint, tok_ckpoint, pyserini_path, index_path,
+def search_colbert(ckpoint, tok_ckpoint, pyserini_path,
                    idx_dir="dense-idx", k=10, query='[imath]\\lim(1+1/n)^n[/imath]'):
     import faiss
     import numpy as np
+    idx_dir = os.path.expanduser(idx_dir)
     index_path = os.path.join(idx_dir, 'index.faiss')
     docids_path = os.path.join(idx_dir, 'docids.pkl')
     index = faiss.read_index(index_path)
