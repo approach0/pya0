@@ -3,37 +3,48 @@ import json
 from preprocess import tokenize_text
 
 
-def index_docid_to_doc(index, docid):
+def docid_to_doc(index, docid):
+    docid = int(docid)
     if isinstance(index, tuple):
         _, docids, _ = index
-        formula_id_and_pos, content = docids[docid]
         return {
-            'url': formula_id_and_pos,
-            'content': content
+            'docid': docid,
+            'url': docids[docid][0],
+            'content': docids[docid][1]
         }
     else:
         doc = pya0.index_lookup_doc(index, docid)
         return doc
 
 
+def trec_docid_to_docid(index, trec_docid):
+    trec_docid = int(trec_docid)
+    if isinstance(index, tuple):
+        raise NotImplementedError
+    else:
+        doc = pya0.index_lookup_doc(index, trec_docid)
+        docid = int(doc['extern_id'])
+        return docid
+
+
 def TREC_preprocess(collection, index, hits):
     if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1', 'arqmath-2021-task1-refined']:
         for hit in hits:
-            doc = index_docid_to_doc(index, hit['docid'])
-            hit['_'] = hit['docid']
-            hit['docid'] = int(doc['url'])
+            doc = docid_to_doc(index, hit['docid'])
+            hit['_'] = hit['docid'] # save internal docid
+            hit['docid'] = int(doc['url']) # output trec docid
 
     elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined']:
         for hit in hits:
-            doc = index_docid_to_doc(index, hit['docid'])
+            doc = docid_to_doc(index, hit['docid'])
             formulaID, postID, threadID, type_, visualID = doc['url'].split(',')
-            hit['_'] = formulaID
-            hit['docid'] = int(postID)
+            hit['_'] = formulaID # output formula id
+            hit['docid'] = int(postID) # output trec docid
     elif collection in ['ntcir12-math-browsing', 'ntcir12-math-browsing-concrete', 'ntcir12-math-browsing-wildcards']:
         for hit in hits:
-            doc = index_docid_to_doc(index, hit['docid'])
-            hit['_'] = hit['docid']
-            hit['docid'] = doc['url']
+            doc = docid_to_doc(index, hit['docid'])
+            hit['_'] = hit['docid'] # save internal docid
+            hit['docid'] = doc['url'] # output trec docid (doc:pos string)
     else:
         raise NotImplementedError
 
@@ -43,19 +54,24 @@ def TREC_reverse(collection, index, hits):
         for hit in hits:
             trec_docid = hit['docid']
             hit['trec_docid'] = trec_docid
-            doc = index_docid_to_doc(index, trec_docid)
-            hit['docid'] = int(doc['extern_id']) # get internal doc ID
+            try:
+                hit['docid'] = trec_docid_to_docid(index, trec_docid)
+            except NotImplementedError:
+                hit['docid'] = hit['_']
     elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined']:
         for hit in hits:
-            trec_docid = int(hit['_'])
+            trec_docid = int(hit['_']) # internal (formula) ID
             hit['trec_docid'] = trec_docid
-            hit['_'] = str(hit['docid']) # docid is actually post ID here
-            doc = index_docid_to_doc(index, trec_docid)
-            hit['docid'] = int(doc['extern_id']) # get internal doc ID
+            hit['_'] = str(hit['docid']) # save post ID
+            hit['docid'] = trec_docid_to_docid(index, trec_docid)
     elif collection in ['ntcir12-math-browsing', 'ntcir12-math-browsing-concrete', 'ntcir12-math-browsing-wildcards']:
         for hit in hits:
-            hit['trec_docid'] = hit['docid']
-            hit['docid'] = hit['_']
+            trec_docid = hit['docid']
+            hit['trec_docid'] = trec_docid
+            try:
+                hit['docid'] = trec_docid_to_docid(index, trec_docid)
+            except NotImplementedError:
+                hit['docid'] = hit['_']
     else:
         raise NotImplementedError
 
@@ -159,7 +175,7 @@ def _featslookup__arqmath_2020_task1(topic_query, index, docid):
     # qnum
     qnum = int(qid.split('.')[1])
     # doc
-    doc = index_docid_to_doc(index, docid)
+    doc = docid_to_doc(index, docid)
     # doc score
     result_JSON = pya0.search(index, query, verbose=False, topk=1, log=None, docid=docid)
     results = json.loads(result_JSON)
