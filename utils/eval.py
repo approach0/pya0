@@ -19,7 +19,7 @@ def gen_topics_queries(collection, fold=None, qfilter=None):
     prefix = f'{curdir}/topics-and-qrels/topics.{collection}'
     print(f'Searching topics file at: {prefix} ...')
     found = False
-    for src in [f'{prefix}.{ent}' for ent in ['txt', 'json']]:
+    for src in [f'{prefix}.{ent}' for ent in ['txt', 'json', 'xml']]:
         if not os.path.exists(src):
             continue
         else:
@@ -41,6 +41,9 @@ def gen_topics_queries(collection, fold=None, qfilter=None):
                     if qfilter:
                         query = list(filter(qfilter, query))
                     yield qid, query, args
+        elif ext == 'xml':
+            for qid, query, args in handler(src):
+                yield qid, query, args
     if not found:
         raise ValueError(f'Unrecognized index name {collection}')
 

@@ -71,7 +71,7 @@ def topics_text_for_transformer(query):
         str_ = kw['str']
         if kw['type'] == 'tex':
             txt += f'[imath]{str_}[/imath] '
-        else:
+        else: # text or term
             txt += f'{str_} '
     tok_txt = preprocess_for_transformer(txt)
     return txt, tok_txt

@@ -28,13 +28,13 @@ def trec_docid_to_docid(index, trec_docid):
 
 
 def TREC_preprocess(collection, index, hits):
-    if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1', 'arqmath-2021-task1-refined']:
+    if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1', 'arqmath-2021-task1-refined', 'arqmath-2020-task1-origin', 'arqmath-2021-task1-origin']:
         for hit in hits:
             doc = docid_to_doc(index, hit['docid'])
             hit['_'] = hit['docid'] # save internal docid
             hit['docid'] = int(doc['url']) # output trec docid
 
-    elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined']:
+    elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined', 'arqmath-2020-task2-origin', 'arqmath-2021-task2-origin']:
         for hit in hits:
             doc = docid_to_doc(index, hit['docid'])
             formulaID, postID, threadID, type_, visualID = doc['url'].split(',')
@@ -131,6 +131,22 @@ def _topic_process__arqmath_2020_task1(idx, json_item):
     return qid, query, json_item['tags']
 
 
+def _topic_process__arqmath_2020_task1_origin(xmlfile):
+    from xmlr import xmliter
+    from bs4 import BeautifulSoup
+    import replace_post_tex
+    print(xmlfile)
+    for attrs in xmliter(xmlfile, 'Topic'):
+        qid = attrs['@number']
+        title = attrs['Title']
+        post_xml = title + '\n' + attrs['Question']
+        s = BeautifulSoup(post_xml, "html.parser")
+        post = replace_post_tex.replace_dollar_tex(s.text)
+        post = replace_post_tex.replace_alignS_tex(post)
+        query = [{'type': 'text', 'str': post}]
+        yield qid, query, None
+
+
 def _topic_process__arqmath_2020_task2(idx, line):
     if line.startswith('#'):
         return None, None, None
@@ -156,6 +172,11 @@ def _topic_process__arqmath_2021_task1(idx, line):
 
 def _topic_process__arqmath_2021_task1_refined(idx, line):
     return _topic_process__arqmath_2021_task1(idx, line)
+
+
+def _topic_process__arqmath_2021_task1_origin(xmlfile):
+    for qid, query, _ in _topic_process__arqmath_2020_task1_origin(xmlfile):
+        yield qid, query, None
 
 
 def _topic_process__arqmath_2021_task2(idx, line):
