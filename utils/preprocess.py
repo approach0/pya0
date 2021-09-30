@@ -6,10 +6,19 @@ from nltk.tokenize.treebank import TreebankWordDetokenizer
 from nltk.corpus import stopwords
 from _pya0 import tokenize as tex_tokenize
 
-
-stemmer = LancasterStemmer()
+stemmer_func = lambda x: x
 tokenizer = RegexpTokenizer(r'\w+')
 detokenizer = TreebankWordDetokenizer()
+
+
+def use_stemmer(name='lancaster'):
+    global stemmer_func
+    if name is None:
+        stemmer_func = lambda x: x
+    elif name == 'lancaster':
+        stemmer_func = LancasterStemmer().stem
+    else:
+        raise NotImplementedError
 
 
 def preprocess_text(txt):
@@ -33,7 +42,7 @@ def tokenize_text(txt, no_punctuation=False, rm_stopwords=False, whitelist=[]):
         if rm_stopwords and t in my_stopwords and t not in whitelist:
             continue
         tt = t.split('-')
-        t = '-'.join([stemmer.stem(x) for x in tt])
+        t = '-'.join([stemmer_func(x) for x in tt])
         stem_toks.append(t)
     return stem_toks
 

@@ -12,7 +12,7 @@ from .eval import run_topics, evaluate_run, evaluate_log
 from .msearch import cascade_run, msearch
 from .mergerun import concatenate_run_files, merge_run_files
 from .l2r import L2R_gen_train_data, L2R_train
-from .preprocess import preprocess_query
+from .preprocess import preprocess_query, use_stemmer
 from .dsearch import get_dense_encoder
 
 
@@ -36,6 +36,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--query', type=str, required=False, nargs='+',
         help="Mixed type of keywords, math keywords are written in TeX and wrapped up in dollars")
+    parser.add_argument('--stemmer', type=str, required=False,
+        help="Specified stemmer name. E.g., lancaster")
     parser.add_argument('--direct-search', type=str, required=False,
         help="Issue direct search query in pickle, and output JSON results")
     parser.add_argument('--select-topic', type=str, required=False,
@@ -103,6 +105,11 @@ if __name__ == '__main__':
     if args.use_fallback_parser:
         print('use fallback parser.')
         pya0.use_fallback_parser(True)
+
+    # use stemmer?
+    if args.stemmer:
+        print('use stemmer', args.stemmer)
+        use_stemmer(name=args.stemmer)
 
     # initial filter layer
     if args.filter:

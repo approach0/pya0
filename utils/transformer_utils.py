@@ -284,7 +284,8 @@ def search_colbert(ckpoint, tok_ckpoint, pyserini_path,
     scores, ids = index.search(emb, k)
     scores = scores.flat
     ids = ids.flat
-    results = [(score, docids[i]) for score, i in zip(scores, ids)]
+    results = [(i, score, docids[i]) for score, i in zip(scores, ids)]
+    print('[tokens]', tokens)
     print('[query]', query)
     for res in results:
         print(res)

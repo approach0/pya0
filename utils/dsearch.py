@@ -95,7 +95,7 @@ def dsearch(dense, index, query, verbose, topk):
         results = {'ret_code': 0, 'ret_str': 'successful', 'hits': []}
         hits = [(score, docid) for score, docid in zip(scores, ids)]
         results['hits'] = [{
-            "docid": docid,
+            "docid": docid, # internal ID
             "rank": i,
             'score': score
         } for i, (score, docid) in enumerate(hits)]
