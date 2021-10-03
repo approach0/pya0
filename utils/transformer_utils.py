@@ -205,7 +205,23 @@ def _index_colbert__arqmath(docids, encoder, index,
         embs = encoder.encode([tokens])
         index.add(np.array(embs))
         docids.append((A_id, content, tokens))
-        print(index.ntotal, tokens_len, dirname)
+        print(index.ntotal, dirname)
+
+
+def _index_colbert__arqmath_answeronly(docids, encoder, index,
+    corpus_path='~/corpus/arqmath-v2', endat=-1):
+    corpus_path = os.path.expanduser(corpus_path)
+    for cnt, dirname, fname in file_iterator(corpus_path, endat, 'answer'):
+        path = dirname + '/' + fname
+        content = file_read(path)
+        fields = os.path.basename(path).split('.')
+        A_id = int(fields[0])
+        tokens = preprocess_for_transformer(content)
+        tokens = '[D] ' + tokens
+        embs = encoder.encode([tokens])
+        index.add(np.array(embs))
+        docids.append((A_id, content, tokens))
+        print(index.ntotal, dirname)
 
 
 def index_colbert(ckpoint, tok_ckpoint, pyserini_path, dim=768,
@@ -239,6 +255,8 @@ def index_colbert(ckpoint, tok_ckpoint, pyserini_path, dim=768,
         _index_colbert__ntcir12(*args)
     elif corpus_name == 'arqmath':
         _index_colbert__arqmath(*args)
+    elif corpus_name == 'arqmath_answeronly':
+        _index_colbert__arqmath_answeronly(*args)
     else:
         raise NotImplementedError
     with open(os.path.join(idx_dir, 'docids.pkl'), 'wb') as fh:
