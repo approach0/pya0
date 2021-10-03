@@ -207,9 +207,9 @@ def _train_thread(local_rank, trainer, train_loop):
             timeout=datetime.timedelta(0, 5 * 60) # 5min timeout
         )
         print('Enter Torch DDP.')
-        dist.barrier()
+        dist.barrier(device_ids=int(local_rank))
         trainer.model = DDP(trainer.model)
-        dist.barrier()
+        dist.barrier(device_ids=int(local_rank))
     elif trainer.xla_cores:
         import torch_xla.core.xla_model as xm
         print('Enter XLA barrier.')
