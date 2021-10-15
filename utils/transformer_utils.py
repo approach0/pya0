@@ -4,7 +4,9 @@ from preprocess import preprocess_for_transformer
 import os
 import sys
 import fire
+import json
 import pickle
+from tqdm import tqdm
 from functools import partial
 
 import torch
@@ -309,6 +311,45 @@ def search_colbert(ckpoint, tok_ckpoint, pyserini_path,
         print(res)
 
 
+def convert2jsonl_ntcir12(
+    corpus_path='~/corpus/NTCIR12/NTCIR12_latex_expressions.txt',
+    output_path='~/corpus/NTCIR12/jsonl',
+    max_docs_per_file=50_000):
+
+    corpus_path = os.path.expanduser(corpus_path)
+    output_path = os.path.expanduser(output_path)
+
+    if not os.path.exists(output_path):
+        print(f'Creating directory {output_path}...')
+        os.mkdir(output_path)
+
+    out_idx = 0
+    jsonl_file = None
+    with open(corpus_path, 'r') as fh:
+        for idx, line in enumerate(tqdm(fh.readlines())):
+            line = line.rstrip()
+            fields = line.split()
+            docid_and_pos = fields[0]
+            latex = ' '.join(fields[1:])
+            latex = latex.replace('% ', '')
+            latex = f'[imath]{latex}[/imath]'
+            tokens = preprocess_for_transformer(latex)
+            doc_json = json.dumps({
+                "id": docid_and_pos,
+                "contents": tokens,
+            })
+
+            if idx % max_docs_per_file == 0:
+                output_file = os.path.join(output_path, f'docs.{out_idx}.jsonl')
+                if jsonl_file: jsonl_file.close()
+                jsonl_file = open(output_file, 'w', encoding='utf-8')
+                out_idx += 1
+
+            jsonl_file.write(doc_json + '\n')
+
+    if jsonl_file: jsonl_file.close()
+
+
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
     fire.Fire({
@@ -318,4 +359,5 @@ if __name__ == '__main__':
         "test_colbert": test_colbert,
         "index_colbert": index_colbert,
         "search_colbert": search_colbert,
+        "convert2jsonl_ntcir12": convert2jsonl_ntcir12,
     })
