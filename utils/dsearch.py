@@ -110,7 +110,7 @@ def dsearch(dense, index, query, verbose, topk):
             "docid": docid, # internal ID
             "rank": i,
             'score': score
-        } for i, (docid, score) in enumerate(hits)]
+        } for i, (docid, _, score, _) in enumerate(hits)]
         return results
 
     else:
