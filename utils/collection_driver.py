@@ -4,27 +4,37 @@ from preprocess import tokenize_text
 
 
 def docid_to_doc(index, docid):
-    docid = int(docid)
-    if isinstance(index, tuple):
+    if type(index).__name__ == 'int':
+        docid = int(docid)
+        doc = pya0.index_lookup_doc(index, docid)
+        return doc
+    elif isinstance(index, tuple):
         _, docids, _ = index
         return {
             'docid': docid,
             'url': docids[docid][0],
             'content': docids[docid][1]
         }
+    elif type(index).__name__ == 'ColBertSearcher':
+        docids = index.ext_docIDs
+        return {
+            'docid': docid,
+            'url': docid,
+            'content': 'Unindexed'
+        }
+        quit()
     else:
-        doc = pya0.index_lookup_doc(index, docid)
-        return doc
+        raise NotImplementedError
 
 
 def trec_docid_to_docid(index, trec_docid):
-    trec_docid = int(trec_docid)
-    if isinstance(index, tuple):
-        raise NotImplementedError
-    else:
+    if type(index).__name__ == 'int':
+        trec_docid = int(trec_docid)
         doc = pya0.index_lookup_doc(index, trec_docid)
         docid = int(doc['extern_id'])
         return docid
+    else:
+        raise NotImplementedError
 
 
 def TREC_preprocess(collection, index, hits):

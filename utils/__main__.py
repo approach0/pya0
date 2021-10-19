@@ -217,6 +217,15 @@ if __name__ == '__main__':
             else:
                 encoder = None
             index = (faiss_index, docids, encoder)
+
+        elif index_type == 'pyserini':
+            sys.path.insert(0, './pyserini/')
+            from pyserini.encode import ColBertEncoder
+            from pyserini.dsearch import ColBertSearcher
+            encoder = ColBertEncoder(model_ckpt, '[Q]',
+                tokenizer=tok_ckpt, device='cpu')
+            index = ColBertSearcher(args.index, encoder)
+
         else:
             raise NotImplementedError
 

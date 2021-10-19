@@ -100,5 +100,18 @@ def dsearch(dense, index, query, verbose, topk):
             'score': score
         } for i, (score, docid) in enumerate(hits)]
         return results
+
+    elif index_type == 'pyserini':
+        qtxt, tok_qtxt = topics_text_for_transformer(query)
+        hits = index.search(tok_qtxt, k=topk)
+        print(tok_qtxt)
+        results = {'ret_code': 0, 'ret_str': 'successful', 'hits': []}
+        results['hits'] = [{
+            "docid": docid, # internal ID
+            "rank": i,
+            'score': score
+        } for i, (docid, score) in enumerate(hits)]
+        return results
+
     else:
         raise NotImplementedError
