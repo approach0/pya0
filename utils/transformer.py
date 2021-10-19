@@ -157,6 +157,7 @@ class Trainer(BaseTrainer):
 
         if glob_rank == 0:
             self.acc_loss = [0.0] * self.epochs
+            self.ep_iters = [0] * self.epochs
             self.logger = TensorBoardWriter(log_dir=f'job-{job_id}-logs')
 
     def save_model(self, model, save_funct, save_name, job_id):
@@ -308,7 +309,6 @@ class Trainer(BaseTrainer):
                 'next_sentence_label'
             ]}, sort_keys=True, indent=4)
             print(inputs_overview)
-            quit(0)
 
         self.optimizer.zero_grad()
         outputs = self.model(**enc_inputs)
@@ -323,10 +323,11 @@ class Trainer(BaseTrainer):
 
         if self.logger:
             self.acc_loss[epoch] += loss_
-            avg_loss = self.acc_loss[epoch] / (iteration + 1)
-            self.logger.add_scalar(
-                f'train_batch_loss/{epoch}-{shard}', loss_, batch
-            )
+            self.ep_iters[epoch] += 1
+            avg_loss = self.acc_loss[epoch] / self.ep_iters[epoch]
+            #self.logger.add_scalar(
+            #    f'train_batch_loss/{epoch}-{shard}', loss_, batch
+            #)
             self.logger.add_scalar(
                 f'train_shard_loss/{epoch}-{shard}', avg_loss, batch
             )
@@ -434,7 +435,6 @@ class Trainer(BaseTrainer):
                 print('Label:', enc_inputs['labels'][b])
                 print('Truth:', truths[b])
                 print(self.tokenizer.decode(ids))
-            quit(0)
 
         self.optimizer.zero_grad()
         outputs = self.model(**enc_inputs)
@@ -457,7 +457,8 @@ class Trainer(BaseTrainer):
 
         if self.logger:
             self.acc_loss[epoch] += loss_
-            avg_loss = self.acc_loss[epoch] / (iteration + 1)
+            self.ep_iters[epoch] += 1
+            avg_loss = self.acc_loss[epoch] / self.ep_iters[epoch]
 
         # invoke evaluation loop
         self.test_loss_sum = 0
@@ -466,11 +467,11 @@ class Trainer(BaseTrainer):
             test_loss = round(self.test_loss_sum / self.test_loss_cnt, 3)
             print(f'Test avg loss: {test_loss}')
             if self.logger:
+                #self.logger.add_scalar(
+                #    f'train_batch_loss/{epoch}', loss_, iteration
+                #)
                 self.logger.add_scalar(
                     f'train_loss/{epoch}', avg_loss, iteration
-                )
-                self.logger.add_scalar(
-                    f'train_batch_loss/{epoch}', loss_, iteration
                 )
                 self.logger.add_scalar(
                     f'test_loss/{epoch}', test_loss, iteration
@@ -536,7 +537,6 @@ class Trainer(BaseTrainer):
                 print(f'\n--- batch {b} ---\n')
                 print(self.tokenizer.decode(q_ids))
                 print(self.tokenizer.decode(p_ids))
-            quit(0)
 
         # each input: (2*B, L) -> (2*B)
         scores = self.model(enc_queries, enc_passages)
@@ -563,28 +563,26 @@ class Trainer(BaseTrainer):
             self.test_loss_sum += loss_
             self.test_loss_cnt += 1
 
-            if self.test_loss_cnt <= 50:
-                pairs = zip(
-                    enc_queries['input_ids'].cpu().tolist(),
-                    enc_passages['input_ids'].cpu().tolist(),
-                )
-                for b, (q_ids, p_ids) in enumerate(pairs):
-                    kind = 'pos pair' if b % 2 == 0 else 'neg pair'
+            pairs = zip(
+                enc_queries['input_ids'].cpu().tolist(),
+                enc_passages['input_ids'].cpu().tolist(),
+            )
+            for b, (q_ids, p_ids) in enumerate(pairs):
+                kind = 'pos pair' if b % 2 == 0 else 'neg pair'
+                score_ = round(scores_[b//2][b%2].item(), 2)
+                if ((b % 2 == 0 and score_ > 0.5) or
+                    (b % 2 == 1 and score_ < 0.5)):
+                    color = '\033[92m' # correct prediction
+                    self.test_succ_cnt += 1 / (2*B)
+                else:
+                    color = '\033[1;31m' # wrong prediction
+                if self.debug:
                     print(f'\n--- batch {batch},{kind} ---\n')
                     print(self.tokenizer.decode(q_ids))
                     print(self.tokenizer.decode(p_ids))
-                    score_ = round(scores_[b//2][b%2].item(), 2)
-                    if ((b % 2 == 0 and score_ > 0.5) or
-                        (b % 2 == 1 and score_ < 0.5)):
-                        color = '\033[92m' # correct prediction
-                        self.test_succ_cnt += 1 / (2*B)
-                    else:
-                        color = '\033[1;31m' # wrong prediction
                     print(color + str(score_) + '\033[0m')
-            elif self.test_loss_cnt >= 200:
+            if self.test_loss_cnt >= 150:
                 raise StopIteration
-            else:
-                print('[test_cnt]', self.test_loss_cnt)
         else:
             self.backward(loss)
             self.step()
@@ -606,7 +604,8 @@ class Trainer(BaseTrainer):
 
             if self.logger:
                 self.acc_loss[epoch] += loss_
-                avg_loss = self.acc_loss[epoch] / (iteration + 1)
+                self.ep_iters[epoch] += 1
+                avg_loss = self.acc_loss[epoch] / self.ep_iters[epoch]
 
             # invoke evaluation loop
             self.test_loss_sum = 0
@@ -621,11 +620,11 @@ class Trainer(BaseTrainer):
                 print('Test accuracy:',
                     self.test_succ_cnt, self.test_loss_cnt, test_accu)
                 if self.logger:
+                    #self.logger.add_scalar(
+                    #    f'train_batch_loss/{epoch}', loss_, iteration
+                    #)
                     self.logger.add_scalar(
                         f'train_loss/{epoch}', avg_loss, iteration
-                    )
-                    self.logger.add_scalar(
-                        f'train_batch_loss/{epoch}', loss_, iteration
                     )
                     self.logger.add_scalar(
                         f'test_loss/{epoch}', test_loss, iteration
