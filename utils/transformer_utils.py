@@ -350,6 +350,77 @@ def convert2jsonl_ntcir12(
     if jsonl_file: jsonl_file.close()
 
 
+def convert2jsonl_arqmath(
+    corpus_path='~/corpus/arqmath/Posts.V1.2.xml',
+    output_path='~/corpus/arqmath/jsonl',
+    max_docs_per_file=50_000):
+    corpus_path = os.path.expanduser(corpus_path)
+    output_path = os.path.expanduser(output_path)
+    from xmlr import xmliter
+    from bs4 import BeautifulSoup
+    if not os.path.exists(output_path):
+        print(f'Creating directory {output_path}...')
+        os.mkdir(output_path)
+    def html2text(html):
+        soup = BeautifulSoup(html, "html.parser")
+        for elem in soup.select('span.math-container'):
+            elem.replace_with('[imath]' + elem.text + '[/imath]')
+        text = soup.text
+        tokens = preprocess_for_transformer(text)
+        return text, tokens
+    out_idx = 0
+    post_idx = 0
+    jsonl_file = None
+    Q_output_file = os.path.join(output_path, f'questions.jsonl')
+    Q_output_fh = open(Q_output_file, 'w', encoding='utf-8')
+    for attrs in xmliter(corpus_path, 'row'):
+        postType = attrs['@PostTypeId']
+        ID = int(attrs['@Id'])
+        if '@Body' not in attrs:
+            continue
+        body = attrs['@Body']
+        body, body_toks = html2text(body)
+        vote = attrs['@Score']
+        if postType == "1": # it is a question
+            title = attrs['@Title']
+            title, title_toks = html2text(title)
+            tags = attrs['@Tags']
+            tags = tags.replace('-', '_')
+            Q_obj = {
+                "id": ID,
+                "contents": title_toks + "\n\n" + body_toks,
+                "contents_": title + "\n\n" + body,
+                "tags": tags,
+                "vote": vote
+            }
+            if '@AcceptedAnswerId' in attrs:
+                accept = attrs['@AcceptedAnswerId']
+                Q_obj["acceptted"] = accept
+            print(f'Q#{ID}: {title}')
+            Q_output_fh.write(json.dumps(Q_obj) + '\n')
+            continue
+        else:
+            parentID = int(attrs['@ParentId'])
+            doc_json = json.dumps({
+                "id": ID,
+                "parentID": parentID,
+                "contents": body_toks,
+                "contents_": body,
+                "vote": vote
+            })
+
+        if post_idx % max_docs_per_file == 0:
+            output_file = os.path.join(output_path, f'docs.{out_idx}.jsonl')
+            if jsonl_file: jsonl_file.close()
+            jsonl_file = open(output_file, 'w', encoding='utf-8')
+            out_idx += 1
+
+        jsonl_file.write(doc_json + '\n')
+        post_idx += 1
+
+    if jsonl_file: jsonl_file.close()
+    if Q_output_fh: Q_output_fh.close()
+
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
     fire.Fire({
@@ -360,4 +431,5 @@ if __name__ == '__main__':
         "index_colbert": index_colbert,
         "search_colbert": search_colbert,
         "convert2jsonl_ntcir12": convert2jsonl_ntcir12,
+        "convert2jsonl_arqmath": convert2jsonl_arqmath,
     })
