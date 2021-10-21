@@ -3,3 +3,10 @@ tqdm
 nltk
 scikit-learn
 numba
+requests
+fire
+GPUtil
+tensorboard
+transformers
+python-dateutil
+pyjnius
