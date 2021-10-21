@@ -93,6 +93,8 @@ if __name__ == '__main__':
         help="Print automatic evaluation summary in TSV. E.g., '--auto-eval <name>'")
     parser.add_argument('--dense', type=str, required=False,
         help="Perform dense retrieval. E.g., '--dense faiss,colbert:model_ckpt,tok_ckpt'")
+    parser.add_argument('--device', type=str, required=False, default='cuda:0',
+        help="Choose dense retrieval device, e.g., cuda:0")
 
     args = parser.parse_args()
 
@@ -225,7 +227,7 @@ if __name__ == '__main__':
             from pyserini.encode import ColBertEncoder
             from pyserini.dsearch import ColBertSearcher
             encoder = ColBertEncoder(model_ckpt, '[Q]',
-                tokenizer=tok_ckpt, device='cpu')
+                tokenizer=tok_ckpt, device=args.device)
             index = ColBertSearcher(args.index, encoder)
 
         else:
