@@ -203,6 +203,8 @@ if __name__ == '__main__':
     elif args.dense:
         index_type, model_spec, tok_ckpt = args.dense.split(',')
         model_type, model_ckpt = model_spec.split(':')
+        model_ckpt = os.path.expanduser(model_ckpt)
+        tok_ckpt = os.path.expanduser(tok_ckpt)
         if index_type == 'faiss':
             import faiss
             index_path = os.path.join(args.index, 'index.faiss')
