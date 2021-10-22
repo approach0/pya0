@@ -103,8 +103,8 @@ def dsearch(dense, index, query, verbose, topk):
 
     elif index_type == 'pyserini':
         qtxt, tok_qtxt = topics_text_for_transformer(query)
-        hits = index.search(tok_qtxt, k=topk)
         print(tok_qtxt)
+        hits = index.search(tok_qtxt, k=topk)
         results = {'ret_code': 0, 'ret_str': 'successful', 'hits': []}
         results['hits'] = [{
             "docid": docid, # internal ID
