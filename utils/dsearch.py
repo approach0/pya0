@@ -107,10 +107,10 @@ def dsearch(dense, index, query, verbose, topk):
         hits = index.search(tok_qtxt, k=topk)
         results = {'ret_code': 0, 'ret_str': 'successful', 'hits': []}
         results['hits'] = [{
-            "docid": docid, # internal ID
+            "docid": h.docid, # internal ID
             "rank": i,
-            'score': score
-        } for i, (docid, _, score, _) in enumerate(hits)]
+            'score': h.score
+        } for i, h in enumerate(hits)]
         return results
 
     else:
