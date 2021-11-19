@@ -29,7 +29,7 @@ static LIST_IT_CALLBK(append_subtree_pyobject)
 		PyObject *py_list = PyList_New(0);
 		PyList_Append(py_list, subtree);
 
-		PyTuple_SetItem(rank, 0, PyLong_FromLong(0));
+		PyTuple_SetItem(rank, 0, PyLong_FromLong(opt->sign));
 		PyTuple_SetItem(rank, 1, PyUnicode_FromString("RANK"));
 		PyTuple_SetItem(rank, 2, PyUnicode_FromFormat("rank_%d", args->rank));
 		PyTuple_SetItem(rank, 3, span);
@@ -65,7 +65,7 @@ static PyObject *get_opt_pyobject(struct optr_node *opt, int insert_rank_node)
 	PyTuple_SetItem(span, 0, PyLong_FromLong(opt->pos_begin));
 	PyTuple_SetItem(span, 1, PyLong_FromLong(opt->pos_end));
 
-	PyTuple_SetItem(result, 0, PyLong_FromLong(opt->node_id));
+	PyTuple_SetItem(result, 0, PyLong_FromLong(opt->sign));
 	PyTuple_SetItem(result, 1, PyUnicode_FromString(token));
 	PyTuple_SetItem(result, 2, PyUnicode_FromString(symbol));
 	PyTuple_SetItem(result, 3, span);
