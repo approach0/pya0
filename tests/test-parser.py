@@ -30,3 +30,6 @@ test("a^2 - b^2 = -\\frac{c^3}{2} + 2/(-3)")
 # parse an invalid TeX
 pya0.use_fallback_parser(True)
 test("x__1")
+
+# parse wildcards
+test("\\qvar{x} + \\qvar y")

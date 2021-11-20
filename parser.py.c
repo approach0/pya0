@@ -59,6 +59,17 @@ static PyObject *get_opt_pyobject(struct optr_node *opt, int insert_rank_node)
 	char *token = trans_token(opt->token_id);
 	char *symbol = trans_symbol(opt->symbol_id);
 
+	/* prepend a start at the symbol of wildcards */
+	if (opt->wildcard) {
+		size_t l = strlen(symbol);
+		symbol[l + 1] = '\0';
+		for (size_t i = l; i >= 1; i--) {
+			symbol[i] = symbol[i - 1];
+		}
+		symbol[0] = '*';
+	}
+
+
 	PyObject *result = PyTuple_New(5);
 	PyObject *span = PyTuple_New(2);
 
