@@ -5,13 +5,17 @@
 #include "tex-parser/head.h"
 #include "tex-parser/y.tab.h"
 
+extern size_t lex_cur_bytes;
+extern int yyleng;
+
 PyObject *do_lexing(PyObject *self, PyObject *args, PyObject* kwargs)
 {
 	char *string;
-	int include_syntatic_literal = 0;
-	static char *kwlist[] = {"latex", "include_syntatic_literal", NULL};
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|p", kwlist,
-		&string, &include_syntatic_literal)) {
+	int include_syntatic_literal = 0, include_spans = 0;
+	static char *kwlist[] = {"latex",
+        "include_syntatic_literal", "include_spans", NULL};
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|pp", kwlist,
+		&string, &include_syntatic_literal, &include_spans)) {
 		PyErr_Format(PyExc_RuntimeError,
 			"PyArg_ParseTupleAndKeywords error");
 		return NULL;
@@ -33,12 +37,17 @@ PyObject *do_lexing(PyObject *self, PyObject *args, PyObject* kwargs)
 	yylval.nd = NULL; /* FIX: avoid non-NULL */
 	while ((next = yylex())) {
 		struct optr_node* nd = yylval.nd;
+		int span[2] = {lex_cur_bytes - yyleng, lex_cur_bytes};
 		if (nd) {
 			/* get token and symbol in string */
 			token = trans_token(nd->token_id);
 			symbol = trans_symbol(nd->symbol_id);
 			/* append item */
-			item = Py_BuildValue("lss", next, token, symbol);
+			if (include_spans)
+				item = Py_BuildValue("lss(ii)",
+					next, token, symbol, span[0], span[1]);
+			else
+				item = Py_BuildValue("lss", next, token, symbol);
 			PyList_Append(list, item); /* only lend the ref */
 			Py_DECREF(item);
 			/* release union */
@@ -46,10 +55,14 @@ PyObject *do_lexing(PyObject *self, PyObject *args, PyObject* kwargs)
 			yylval.nd = NULL;
 		} else if (include_syntatic_literal) {
 			Py_INCREF(Py_None);
-			item = Py_BuildValue("lOs", next, Py_None, yytext);
+			if (include_spans)
+				item = Py_BuildValue("lOs(ii)",
+					next, Py_None, yytext, span[0], span[1]);
+			else
+				item = Py_BuildValue("lOs", next, Py_None, yytext);
 			PyList_Append(list, item); /* only lend the ref */
 			Py_DECREF(item);
-		}
+        }
 	}
 
 	yy_delete_buffer(state_buf);
