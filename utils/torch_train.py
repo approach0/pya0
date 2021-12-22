@@ -32,6 +32,8 @@ class BaseTrainer:
     shards_list: str = './shards.txt'
     active_fp16: bool = False
     caller: str = 'nocaller'
+    dev_map: tuple = ()
+    device_ordinal: int = 0
 
     def infer_start_point(self, save_name):
         if '/' in save_name:
@@ -40,18 +42,29 @@ class BaseTrainer:
                 return tuple(int(v) for v in fields)
         return 0, 0, -1
 
-    def num_local_dev(self):
-        if torch.cuda.is_available():
-            return torch.cuda.device_count() # GPU
-        elif self.xla_cores > 0:
-            return self.xla_cores # TPU
+    def map_device(self, ordinal):
+        if len(self.dev_map) == 0:
+            return ordinal, float('inf')
         else:
-            return 1 # CPU
+            map_arr = list(self.dev_map)
+            map_arr = list(map(lambda x: int(x), map_arr))
+            return map_arr[ordinal], len(map_arr)
+
+    def num_local_dev(self):
+        num = 1 # CPU
+        if torch.cuda.is_available():
+            num = torch.cuda.device_count() # GPU
+        elif self.xla_cores > 0:
+            num = self.xla_cores # TPU
+
+        _, device_max_num = self.map_device(0)
+        return min(num, device_max_num)
 
     def local_device_info(self):
         n_devices = self.num_local_dev()
         if torch.cuda.is_available():
-            gpu = GPUtil.getGPUs()[0]
+            ordinal = self.device_ordinal
+            gpu = GPUtil.getGPUs()[ordinal]
             gpu_name = gpu.name
             gpu_total = int(gpu.memoryTotal // 1000)
             gpu_load = int(gpu.load * 100)
@@ -188,9 +201,11 @@ def _train_thread(local_rank, trainer, train_loop):
     # move model to device
     if trainer.xla_cores:
         import torch_xla.core.xla_model as xm
+        trainer.device_ordinal = 0
         device = xm.xla_device()
     else:
-        device = torch.device(f'cuda:{local_rank}'
+        trainer.device_ordinal, _ = trainer.map_device(local_rank)
+        device = torch.device(f'cuda:{trainer.device_ordinal}'
             if torch.cuda.is_available() else 'cpu')
     print('Training on device', device)
     print(trainer.local_device_info())
@@ -207,9 +222,9 @@ def _train_thread(local_rank, trainer, train_loop):
             timeout=datetime.timedelta(0, 5 * 60) # 5min timeout
         )
         print('Enter Torch DDP.')
-        dist.barrier(device_ids=[int(local_rank)])
+        dist.barrier(device_ids=[int(trainer.device_ordinal)])
         trainer.model = DDP(trainer.model)
-        dist.barrier(device_ids=[int(local_rank)])
+        dist.barrier(device_ids=[int(trainer.device_ordinal)])
     elif trainer.xla_cores:
         import torch_xla.core.xla_model as xm
         print('Enter XLA barrier.')
