@@ -97,7 +97,7 @@ PyObject *do_search(PyObject *self, PyObject *args, PyObject* kwargs)
 	}
 
 	/* convert search results to JSON stringified */
-	const char *ret = search_results_json(&srch_res, -1, indices);
+	const char *ret = search_results_json(&srch_res, -1, 0, indices);
 
 	/* release resources */
 	free_ranked_results(&srch_res);
