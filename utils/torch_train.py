@@ -187,8 +187,8 @@ def _train_thread(local_rank, trainer, train_loop):
         return default if val is None else val
 
     # get cluster information
-    n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
-    node_id = get_env_var("SLURM_NODEID", 0)
+    n_nodes = int(get_env_var("SLURM_JOB_NUM_NODES", 1))
+    node_id = int(get_env_var("SLURM_NODEID", 0))
     job_id = get_env_var("SLURM_JOB_ID", 0)
     n_devices = trainer.num_local_dev()
     glob_batches = n_nodes * n_devices
