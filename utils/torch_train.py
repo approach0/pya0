@@ -184,7 +184,7 @@ def _train_thread(local_rank, trainer, train_loop):
 
     def get_env_var(name, default):
         val = os.environ.get(name)
-        return default if val is None else int(val)
+        return default if val is None else val
 
     # get cluster information
     n_nodes = get_env_var("SLURM_JOB_NUM_NODES", 1)
