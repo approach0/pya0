@@ -30,6 +30,8 @@ MSK_CODE = 103
 PAD_CODE = 0
 BASE_CODE = 1000
 
+transformers.logging.set_verbosity_error()
+
 
 class SentencePairsShard(Dataset):
 

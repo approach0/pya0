@@ -1,5 +1,4 @@
 import os
-import GPUtil
 import inspect
 import datetime
 import contextlib
@@ -64,13 +63,12 @@ class BaseTrainer:
         n_devices = self.num_local_dev()
         if torch.cuda.is_available():
             ordinal = self.device_ordinal
-            gpu = GPUtil.getGPUs()[ordinal]
-            gpu_name = gpu.name
-            gpu_total = int(gpu.memoryTotal // 1000)
-            gpu_load = int(gpu.load * 100)
-            gpu_temp = int(gpu.temperature)
+            device = torch.device('cuda:' + str(ordinal))
+            gpu_name = torch.cuda.get_device_name(device)
+            gpu_props = torch.cuda.get_device_properties(device)
+            gpu_total = gpu_props.total_memory // (1024 ** 2)
             fp16 = ' (FP16)' if self.active_fp16 else ''
-            return f"{n_devices} x {gpu_name}{fp16}: {gpu_load}%"
+            return f"{n_devices} x {gpu_name}{fp16}: {gpu_total}MiB"
         elif xla_cores:
             import torch_xla
             import torch_xla.core.xla_model as xm
