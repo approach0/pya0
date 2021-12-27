@@ -31,7 +31,7 @@ class BaseTrainer:
     shards_list: str = './shards.txt'
     active_fp16: bool = False
     caller: str = 'nocaller'
-    dev_map: tuple = ()
+    dev_map: tuple = None
     device_ordinal: int = 0
 
     def infer_start_point(self, save_name):
@@ -42,10 +42,14 @@ class BaseTrainer:
         return 0, 0, -1
 
     def map_device(self, ordinal):
-        if len(self.dev_map) == 0:
+        if self.dev_map is None:
             return ordinal, float('inf')
         else:
-            map_arr = list(self.dev_map)
+            if isinstance(self.dev_map, int):
+                map_arr = [self.dev_map]
+            else:
+                assert isinstance(self.dev_map, tuple)
+                map_arr = list(self.dev_map)
             map_arr = list(map(lambda x: int(x), map_arr))
             return map_arr[ordinal], len(map_arr)
 

@@ -99,6 +99,28 @@ class ContrastiveQAShard(Dataset):
         return [Q, pos, neg]
 
 
+class PsgWithTagLabelsShard(Dataset):
+
+    def __init__(self, tag_ids, shard_file):
+        self.tag_ids = tag_ids
+        self.N = len(tag_ids)
+        with open(shard_file, 'rb') as fh:
+            self.shard = pickle.load(fh)
+
+    def __len__(self):
+        return len(self.shard)
+
+    def __getitem__(self, idx):
+        pos_tags, neg_tags, passage = self.shard[idx]
+        label = [0] * self.N
+        for tag in pos_tags:
+            if tag not in self.tag_ids:
+                continue # only frequent tags are considered
+            tag_id = self.tag_ids[tag]
+            label[tag_id] = 1
+        return label, pos_tags, passage
+
+
 class ColBERT(BertPreTrainedModel):
 
     def __init__(self, config, dim=128):
@@ -130,6 +152,42 @@ class ColBERT(BertPreTrainedModel):
         best_match = cmp_matrix.max(2).values # best match per query
         scores = best_match.sum(1) # sum score over each query
         return scores
+
+
+class BertForTagsPrediction(BertPreTrainedModel):
+    def __init__(self, config, n_labels, ib_dim=128, n_samples=5):
+        super().__init__(config)
+        self.bert = BertModel(config)
+        self.n_labels = n_labels
+        self.ib_dim = ib_dim
+        self.n_samples = n_samples
+
+        self.latent_dim = (config.hidden_size + self.ib_dim) // 2
+        self.mlp = nn.Sequential(
+            nn.Linear(config.hidden_size, config.hidden_size), nn.Tanh(),
+            nn.Linear(config.hidden_size, self.latent_dim), nn.Tanh()
+        )
+        self.latent2mu = nn.Linear(self.latent_dim, self.ib_dim)
+        self.latent2std = nn.Linear(self.latent_dim, self.ib_dim)
+        self.classifier = nn.Linear(self.ib_dim, self.n_labels)
+
+    def reparameterize(self, mu, std):
+        batch_size, ib_dim = mu.shape
+        epsilon = torch.randn(self.n_samples, batch_size, ib_dim)
+        epsilon = epsilon.to(mu.device)
+        return mu + std * epsilon.detach()
+
+    def forward(self, inputs):
+        bert_outputs = self.bert(**inputs)
+        cls_output = bert_outputs.last_hidden_state[:,0]
+        pooled_output = self.mlp(bert_outputs.pooler_output)
+        mu = self.latent2mu(pooled_output) # batch_size, ib_dim
+        log_std = self.latent2std(pooled_output)
+        std = torch.nn.functional.softplus(log_std) # non-zero and stablized
+        z = self.reparameterize(mu, std) # n_samples, batch_size, ib_dim
+        logits = self.classifier(z) # n_samples, batch_size, n_labels
+        mean_logits = logits.mean(dim=0) # batch_size, n_labels
+        return mean_logits
 
 
 class Trainer(BaseTrainer):
@@ -634,6 +692,119 @@ class Trainer(BaseTrainer):
                     self.logger.add_scalar(
                         f'test_accu/{epoch}', test_accu, iteration
                     )
+
+    def tag_prediction(self, ckpoint, tok_ckpoint, tag_ids_file):
+        print('Loading tag IDs ...')
+        with open(tag_ids_file, 'rb') as fh:
+            self.tag_ids = pickle.load(fh)
+        print(f'Number of tags: {len(self.tag_ids)}')
+
+        self.start_point = self.infer_start_point(ckpoint)
+        self.dataset_cls = partial(PsgWithTagLabelsShard, self.tag_ids)
+        self.test_data_cls = partial(PsgWithTagLabelsShard, self.tag_ids)
+
+        # build invert tag index for testing/debug purpose
+        self.inv_tag_ids = {self.tag_ids[k]:k for k in self.tag_ids}
+
+        print('Loading model ...')
+        self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
+        self.model = BertForTagsPrediction.from_pretrained(ckpoint,
+            tie_word_embeddings=True,
+            n_labels = len(self.tag_ids)
+        )
+
+        self.loss_func = nn.BCEWithLogitsLoss()
+        self.logits2probs = torch.nn.Softmax(dim=1)
+        self.start_training(self.tag_prediction_training)
+
+    def tag_prediction_training(self, inputs, device, progress,
+        epoch, shard, batch, n_shards, save_cycle, n_nodes, iteration):
+        # collate inputs
+        labels = [label for label, tags, p in inputs]
+        tags = [tags for label, tags, p in inputs]
+        passages = [p for label, tags, p in inputs]
+
+        enc_inputs = self.tokenizer(passages,
+            padding=True, truncation=True, return_tensors="pt")
+        enc_inputs.to(device)
+
+        labels = torch.tensor(labels, device=device).float()
+
+        if self.debug:
+            for b, ids in enumerate(enc_inputs['input_ids']):
+                print()
+                #print('Label:', labels[b])
+                print('Tags:', tags[b])
+                print(self.tokenizer.decode(ids))
+
+        self.optimizer.zero_grad()
+        outputs = self.model(enc_inputs) # [B, n_labels]
+        loss = self.loss_func(outputs, labels)
+        self.backward(loss)
+        self.step()
+
+        loss_ = round(loss.item(), 3)
+        device_desc = self.local_device_info()
+        input_shape = list(enc_inputs.input_ids.shape)
+        progress.set_description(
+            f"Ep#{epoch+1}/{self.epochs}, "
+            f"shard#{shard+1}/{n_shards}, " +
+            f"save@{batch % (save_cycle+1)}%{save_cycle}, " +
+            f"{n_nodes} nodes, " +
+            f"{device_desc}, " +
+            f"In{input_shape}, " +
+            f'loss={loss_}'
+        )
+
+        if self.logger:
+            self.logger.add_scalar(
+                f'train_loss/{epoch}', loss_, iteration
+            )
+
+        self.test_loss_sum = 0
+        self.test_loss_cnt = 0
+        if self.do_testing(self.tag_prediction_test, device):
+            test_loss = round(self.test_loss_sum / self.test_loss_cnt, 3)
+            print(f'Test avg loss: {test_loss}')
+            if self.logger:
+                self.logger.add_scalar(
+                    f'test_loss/{epoch}', test_loss, iteration
+                )
+
+    def tag_prediction_test(self, test_batch, test_inputs, device):
+        # collate inputs
+        labels = [label for label, tags, p in test_inputs]
+        tags = [tags for label, tags, p in test_inputs]
+        passages = [p for label, tags, p in test_inputs]
+
+        # tokenize inputs
+        enc_inputs = self.tokenizer(passages,
+            padding=True, truncation=True, return_tensors="pt")
+        enc_inputs.to(device)
+
+        labels = torch.tensor(labels, device=device).float()
+
+        self.optimizer.zero_grad()
+        outputs = self.model(enc_inputs) # [B, n_labels]
+        loss = self.loss_func(outputs, labels)
+
+        probs = self.logits2probs(outputs)
+        probs = probs.detach().cpu()
+        topk_probs = torch.topk(probs, 3)
+        for b, passage in enumerate(passages[:1]):
+            print(passage)
+            for k, index in enumerate(topk_probs.indices[b]):
+                prob = round(topk_probs.values[b][k].item(), 5)
+                index = index.item()
+                tag = self.inv_tag_ids[index]
+                print(prob, tag)
+            print()
+
+        loss_ = loss.item()
+        self.test_loss_sum += loss_
+        self.test_loss_cnt += 1
+        if self.test_loss_cnt >= 20:
+            raise StopIteration
 
 
 if __name__ == '__main__':
