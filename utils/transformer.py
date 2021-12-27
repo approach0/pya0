@@ -208,6 +208,12 @@ class Trainer(BaseTrainer):
         )))
 
     def prehook(self, device, job_id, glob_rank):
+        if self.caller == 'tag_prediction':
+            self.positive_weights = torch.ones([len(self.tag_ids)])
+            self.positive_weights *= len(self.tag_ids) / 5
+            self.positive_weights = self.positive_weights.to(device)
+            self.loss_func = nn.BCEWithLogitsLoss(self.positive_weights)
+
         self.optimizer = AdamW(
             self.model.parameters(),
             lr=self.lr,
@@ -713,7 +719,6 @@ class Trainer(BaseTrainer):
             n_labels = len(self.tag_ids)
         )
 
-        self.loss_func = nn.BCEWithLogitsLoss()
         self.logits2probs = torch.nn.Softmax(dim=1)
         self.start_training(self.tag_prediction_training)
 
@@ -743,7 +748,7 @@ class Trainer(BaseTrainer):
         self.backward(loss)
         self.step()
 
-        loss_ = round(loss.item(), 3)
+        loss_ = round(loss.item(), 5)
         device_desc = self.local_device_info()
         input_shape = list(enc_inputs.input_ids.shape)
         progress.set_description(
@@ -764,7 +769,7 @@ class Trainer(BaseTrainer):
         self.test_loss_sum = 0
         self.test_loss_cnt = 0
         if self.do_testing(self.tag_prediction_test, device):
-            test_loss = round(self.test_loss_sum / self.test_loss_cnt, 3)
+            test_loss = round(self.test_loss_sum / self.test_loss_cnt, 5)
             print(f'Test avg loss: {test_loss}')
             if self.logger:
                 self.logger.add_scalar(
@@ -774,7 +779,7 @@ class Trainer(BaseTrainer):
     def tag_prediction_test(self, test_batch, test_inputs, device):
         # collate inputs
         labels = [label for label, tags, p in test_inputs]
-        tags = [tags for label, tags, p in test_inputs]
+        truth_tags = [tags for label, tags, p in test_inputs]
         passages = [p for label, tags, p in test_inputs]
 
         # tokenize inputs
@@ -793,6 +798,7 @@ class Trainer(BaseTrainer):
         topk_probs = torch.topk(probs, 3)
         for b, passage in enumerate(passages[:1]):
             print(passage)
+            print('ground truth:', truth_tags[b])
             for k, index in enumerate(topk_probs.indices[b]):
                 prob = round(topk_probs.values[b][k].item(), 5)
                 index = index.item()
