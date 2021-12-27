@@ -209,10 +209,10 @@ class Trainer(BaseTrainer):
 
     def prehook(self, device, job_id, glob_rank):
         if self.caller == 'tag_prediction':
-            self.positive_weights = torch.ones([len(self.tag_ids)])
-            self.positive_weights *= len(self.tag_ids) / 5
-            self.positive_weights = self.positive_weights.to(device)
-            self.loss_func = nn.BCEWithLogitsLoss(self.positive_weights)
+            weights = self.negative_weights / self.positive_weights
+            weights = weights.to(device)
+            print(weights)
+            self.loss_func = nn.BCEWithLogitsLoss(weights)
 
         self.optimizer = AdamW(
             self.model.parameters(),
@@ -720,7 +720,37 @@ class Trainer(BaseTrainer):
         )
 
         self.logits2probs = torch.nn.Softmax(dim=1)
+
+        print('Calculating BCE positive weights')
+        from torch.utils.data import DataLoader
+        from tqdm import tqdm
+        self.positive_weights = torch.ones([len(self.tag_ids)])
+        self.negative_weights = torch.ones([len(self.tag_ids)])
+        shard_files = self._get_shard_files()
+        n_shards = len(shard_files)
+        for shard, shard_file in enumerate(shard_files):
+            dataset = self.dataset_cls(shard_file)
+            loader = DataLoader(dataset,
+                batch_size=self.batch_size,
+                collate_fn=lambda batch: batch,
+            )
+            with tqdm(loader) as progress:
+                for batch, inputs in enumerate(progress):
+                    self.calc_pos_w(inputs, progress, shard, n_shards)
+
         self.start_training(self.tag_prediction_training)
+
+    def calc_pos_w(self, inputs, progress, shard, n_shards):
+        labels = [label for label, tags, p in inputs]
+        labels = torch.tensor(labels)
+        batch_size, n_labels = labels.shape
+        sum_labels = labels.sum(0)
+        self.positive_weights += sum_labels
+        self.negative_weights += batch_size - sum_labels
+
+        progress.set_description(
+            f"shard#{shard+1}/{n_shards}"
+        )
 
     def tag_prediction_training(self, inputs, device, progress,
         epoch, shard, batch, n_shards, save_cycle, n_nodes, iteration):
