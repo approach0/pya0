@@ -133,7 +133,7 @@ def sample_unrelated_tags(all_tags, tags):
 
 def generate_tag_pairs(
     docs_file='mse-aops-2021-data.pkl', debug=False,
-    maxlen=512, n_splits=20, limit=-1, min_tagfreq=200, min_tokens=5,
+    maxlen=512, n_splits=10, limit=-1, min_tagfreq=5000, min_tokens=128,
     tok_ckpoint='bert-base-uncased', random_seed=123):
 
     seed(random_seed)
@@ -172,17 +172,19 @@ def generate_tag_pairs(
                 sent_tokens = tokenize(sentence)
                 # if tokens number plus [CLS] is too long?
                 if token_cnt + len(sent_tokens) + 1 >= maxlen:
-                    token_cnt = 0
                     neg_tags = sample_unrelated_tags(freq_tags, set(tags))
                     if token_cnt > 0:
-                        aggregate.append((tags, neg_tags, passage))
+                        aggregate.append((tags, neg_tags, passage, url))
+                        #print(passage, '\n', tags, '\n', url, '\n')
+                    token_cnt = 0
                     passage = ''
                 else:
                     passage += sentence + ' '
                     token_cnt += len(sent_tokens)
             if token_cnt > min_tokens:
                 neg_tags = sample_unrelated_tags(freq_tags, set(tags))
-                aggregate.append((tags, neg_tags, passage))
+                aggregate.append((tags, neg_tags, passage, url))
+                #print(passage, '\n', tags, '\n', url, '-- \n')
             if debug:
                 print(aggregate)
                 quit(0)
