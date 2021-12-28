@@ -77,7 +77,8 @@ class TaggedPassagesShard(Dataset):
         return len(self.shard)
 
     def __getitem__(self, idx):
-        pos_tags, neg_tags, passage = self.shard[idx]
+        row = self.shard[idx]
+        pos_tags, neg_tags, passage = row[:3] # for compatibility
         if random.random() < 0.5:
             tags, label, truth = pos_tags, 0, pos_tags
         else:
@@ -111,7 +112,8 @@ class PsgWithTagLabelsShard(Dataset):
         return len(self.shard)
 
     def __getitem__(self, idx):
-        pos_tags, neg_tags, passage = self.shard[idx]
+        row = self.shard[idx]
+        pos_tags, neg_tags, passage = row[:3] # for compatibility
         label = [0] * self.N
         for tag in pos_tags:
             if tag not in self.tag_ids:
@@ -155,7 +157,7 @@ class ColBERT(BertPreTrainedModel):
 
 
 class BertForTagsPrediction(BertPreTrainedModel):
-    def __init__(self, config, n_labels, ib_dim=128, n_samples=5):
+    def __init__(self, config, n_labels, ib_dim=32, n_samples=5):
         super().__init__(config)
         self.bert = BertModel(config)
         self.n_labels = n_labels
@@ -469,9 +471,9 @@ class Trainer(BaseTrainer):
                     or (prob < 0.5 and labels[b] == 1))
                 sep = '\033[1;31m' + ' [SEP] ' + '\033[0m'
                 tagged_passage = sep.join(tagged_passage)
+                print('Truth:', prob, truths[b])
                 if not success:
                     print('\033[1;31m' + 'Wrong' + '\033[0m')
-                    print(prob, truths[b])
                     print(tagged_passage)
                 else:
                     print('\033[92m' + tagged_passage + '\033[0m')
@@ -839,7 +841,7 @@ class Trainer(BaseTrainer):
         loss_ = loss.item()
         self.test_loss_sum += loss_
         self.test_loss_cnt += 1
-        if self.test_loss_cnt >= 20:
+        if self.test_loss_cnt >= 40:
             raise StopIteration
 
 
