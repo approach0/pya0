@@ -52,17 +52,17 @@ class SentencePairsShard(Dataset):
 class SentenceUnmaskTest(Dataset):
 
     def __init__(self, data_file):
-        self.test_data = []
+        self.data = []
         with open(data_file, 'r') as fh:
             for line in fh:
                 line = line.rstrip()
-                self.test_data.append(line)
+                self.data.append(line)
 
     def __len__(self):
-        return len(self.test_data)
+        return len(self.data)
 
     def __getitem__(self, idx):
-        return self.test_data[idx]
+        return self.data[idx]
 
 
 class TaggedPassagesShard(Dataset):
@@ -121,6 +121,26 @@ class PsgWithTagLabelsShard(Dataset):
             tag_id = self.tag_ids[tag]
             label[tag_id] = 1
         return label, pos_tags, passage
+
+
+class QueryInferShard(Dataset):
+
+    def __init__(self, tag_ids, data_file):
+        self.tags = list(tag_ids.keys())
+        self.N = len(self.tags)
+        self.data = []
+        with open(data_file, 'r') as fh:
+            for line in fh:
+                line = line.rstrip()
+                self.data.append(line)
+
+    def __len__(self):
+        return self.N * len(self.data)
+
+    def __getitem__(self, idx):
+        tag = self.tags[idx % self.N]
+        qry = self.data[idx // self.N]
+        return tag, qry
 
 
 class ColBERT(BertPreTrainedModel):
@@ -293,22 +313,23 @@ class Trainer(BaseTrainer):
         print('Invoke training ...')
         self.start_training(self.pretrain_loop)
 
+    @staticmethod
+    def highlight_masked(txt):
+        txt = re.sub(r"(\[MASK\])", '\033[92m' + r"\1" + '\033[0m', txt)
+        txt = re.sub(r"(\[SEP\])", '\033[31m' + r"\1" + '\033[0m', txt)
+        return txt
+
     def pretrain_test(self, test_batch, test_inputs, device):
         # tokenize inputs
         enc_inputs = self.tokenizer(test_inputs,
             padding=True, truncation=True, return_tensors="pt")
         enc_inputs.to(device)
 
-        def highlight_masked(txt):
-            txt = re.sub(r"(\[MASK\])", '\033[92m' + r"\1" + '\033[0m', txt)
-            txt = re.sub(r"(\[SEP\])", '\033[31m' + r"\1" + '\033[0m', txt)
-            return txt
-
         def classifier_hook(display, topk, module, inputs, outputs):
             unmask_scores, seq_rel_scores = outputs
             for b, token_ids in enumerate(enc_inputs['input_ids']):
                 text = test_inputs[b]
-                display[0] += highlight_masked(text) + '\n'
+                display[0] += Trainer.highlight_masked(text) + '\n'
                 display[1] += text + '  \n'
                 masked_idx = (
                     token_ids == torch.tensor([MSK_CODE], device=device)
@@ -855,6 +876,55 @@ class Trainer(BaseTrainer):
         self.test_loss_cnt += 1
         if self.test_loss_cnt >= 40:
             raise StopIteration
+
+    def query_tag_inference(self, ckpoint, tok_ckpoint, tag_ids_file):
+        print('Loading tag IDs ...')
+        with open(tag_ids_file, 'rb') as fh:
+            self.tag_ids = pickle.load(fh)
+        print(f'Number of tags: {len(self.tag_ids)}')
+
+        self.dataset_cls = partial(QueryInferShard, self.tag_ids)
+        self.test_only = True
+
+        print('Loading model ...')
+        self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
+        self.model = BertForPreTraining.from_pretrained(ckpoint,
+            tie_word_embeddings=True
+        )
+
+        self.logits2probs = torch.nn.Softmax(dim=1)
+
+        # adding tag prediction special tokens
+        self.tokenizer.add_special_tokens({
+            'additional_special_tokens': ['[T]']
+        })
+        self.model.resize_token_embeddings(len(self.tokenizer))
+
+        self.start_training(self.query_tag_inference_loop)
+
+    def query_tag_inference_loop(self, inputs, device, progress):
+        # collate inputs
+        tags = ['[T] ' + tag for tag, qry in inputs]
+        qrys = [qry for tag, qry in inputs]
+        collate_inputs = list(zip(tags, qrys))
+
+        # tokenize inputs
+        enc_inputs = self.tokenizer(collate_inputs,
+            padding=True, truncation=True, return_tensors="pt")
+        enc_inputs.to(device)
+
+        # feed model
+        outputs = self.model(**enc_inputs)
+        probs = self.logits2probs(outputs.seq_relationship_logits)
+
+        for b, ids in enumerate(enc_inputs['input_ids']):
+            prob = round(probs[b][0].item(), 2)
+            #if prob > 0.95:
+            if prob >= 0.85:
+                print()
+                text = self.tokenizer.decode(ids)
+                print(Trainer.highlight_masked(text))
+                print('Confidence:', prob)
 
 
 if __name__ == '__main__':
