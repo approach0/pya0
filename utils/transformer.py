@@ -200,14 +200,10 @@ class Trainer(BaseTrainer):
         self.logger = None
         self.lr=float(lr)
 
-    def print_tokens(self):
+    def print_vocab(self):
         print(
             self.tokenizer.get_vocab()
         )
-        print(dict(zip(
-            self.tokenizer.all_special_tokens,
-            self.tokenizer.all_special_ids
-        )))
 
     def prehook(self, device, job_id, glob_rank):
         if self.caller == 'tag_prediction':
@@ -235,13 +231,14 @@ class Trainer(BaseTrainer):
         )
 
     @staticmethod
-    def mask_batch_tokens(batch_tokens, tot_vocab, decode=None):
+    def mask_batch_tokens(batch_tokens, tot_vocab, mask_before=None):
         mask_labels = numpy.full(batch_tokens.shape, fill_value=CE_IGN_IDX)
         for b, tokens in enumerate(batch_tokens):
-            # dec_tokens = decode(tokens)
             mask_indexes = []
             for i in range(len(tokens)):
-                if tokens[i] == PAD_CODE:
+                if tokens[i] == mask_before:
+                    break
+                elif tokens[i] == PAD_CODE:
                     break
                 elif tokens[i] in [CLS_CODE, SEP_CODE]:
                     continue
@@ -252,7 +249,7 @@ class Trainer(BaseTrainer):
                 r = random.random()
                 if r <= 0.8:
                     batch_tokens[b][i] = MSK_CODE
-                elif r <= 0.1:
+                elif r <= 0.1 and mask_before is None:
                     random_tok = random.randint(BASE_CODE, tot_vocab - 1)
                     batch_tokens[b][i] = random_tok
                     #batch_tokens[b][i] = UNK_CODE
@@ -288,7 +285,6 @@ class Trainer(BaseTrainer):
             print('Resize model embedding and save new tokenizer ...')
 
         self.model.resize_token_embeddings(len(self.tokenizer))
-        #self.print_tokens()
 
         if self.debug:
             print('Saving tokenizer ...')
@@ -297,14 +293,16 @@ class Trainer(BaseTrainer):
         print('Invoke training ...')
         self.start_training(self.pretrain_loop)
 
-    def pretrain_test(self, test_batch, test_inputs, device, iteration, epoch):
+    def pretrain_test(self, test_batch, test_inputs, device):
         # tokenize inputs
         enc_inputs = self.tokenizer(test_inputs,
             padding=True, truncation=True, return_tensors="pt")
         enc_inputs.to(device)
 
         def highlight_masked(txt):
-            return re.sub(r"(\[MASK\])", '\033[92m' + r"\1" + '\033[0m', txt)
+            txt = re.sub(r"(\[MASK\])", '\033[92m' + r"\1" + '\033[0m', txt)
+            txt = re.sub(r"(\[SEP\])", '\033[31m' + r"\1" + '\033[0m', txt)
+            return txt
 
         def classifier_hook(display, topk, module, inputs, outputs):
             unmask_scores, seq_rel_scores = outputs
@@ -319,7 +317,7 @@ class Trainer(BaseTrainer):
                 cands = torch.argsort(scores, dim=1, descending=True)
                 for i, mask_cands in enumerate(cands):
                     top_cands = mask_cands[:topk].detach().cpu()
-                    result = (f'MASK[{i}] top candidates: ' +
+                    result = (f'\033[92m MASK[{i}] \033[0m top candidates: ' +
                         str(self.tokenizer.convert_ids_to_tokens(top_cands)))
                     display[0] += result + '\n'
                     display[1] += result + '  \n'
@@ -332,10 +330,6 @@ class Trainer(BaseTrainer):
         self.model(**enc_inputs)
         hook.remove()
         print(display[0])
-        if self.logger:
-            self.logger.add_text(
-                f'unmask/{epoch}-{iteration}', display[1], iteration
-            )
 
     def pretrain_loop(self, inputs, device,
         progress, epoch, shard, batch, iteration,
@@ -350,7 +344,7 @@ class Trainer(BaseTrainer):
         # mask sentence tokens
         unmask_tokens = enc_inputs['input_ids'].numpy()
         mask_tokens, mask_labels = Trainer.mask_batch_tokens(
-            unmask_tokens, len(self.tokenizer), decode=self.tokenizer.decode
+            unmask_tokens, len(self.tokenizer)
         )
         enc_inputs['input_ids'] = torch.tensor(mask_tokens)
         enc_inputs["labels"] = torch.tensor(mask_labels)
@@ -385,9 +379,7 @@ class Trainer(BaseTrainer):
         self.backward(loss)
         self.step()
 
-        self.do_testing(
-            self.pretrain_test, device, iteration, epoch
-        )
+        self.do_testing(self.pretrain_test, device)
 
         if self.logger:
             self.acc_loss[epoch] += loss_
@@ -429,7 +421,7 @@ class Trainer(BaseTrainer):
 
         print('Loading model ...')
         self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
-        self.model = BertForNextSentencePrediction.from_pretrained(ckpoint,
+        self.model = BertForPreTraining.from_pretrained(ckpoint,
             tie_word_embeddings=True
         )
         print(f'Number of tags: {len(self.tag_ids)}')
@@ -455,29 +447,42 @@ class Trainer(BaseTrainer):
         # tokenize inputs
         enc_inputs = self.tokenizer(tagged_passages,
             padding=True, truncation=True, return_tensors="pt")
-        enc_inputs['labels'] = torch.tensor(labels)
+
+        special_tokens_dict = dict(zip(
+            self.tokenizer.all_special_tokens,
+            self.tokenizer.all_special_ids
+        ))
+        sep_tok_id = special_tokens_dict['[SEP]']
+        unmask_tokens = enc_inputs['input_ids'].numpy()
+        mask_tokens, mask_labels = Trainer.mask_batch_tokens(
+            unmask_tokens, len(self.tokenizer), mask_before=sep_tok_id
+        )
+
+        enc_inputs['input_ids'] = torch.tensor(mask_tokens)
+        enc_inputs["labels"] = torch.tensor(mask_labels)
+        enc_inputs["next_sentence_label"] = torch.tensor(labels)
         enc_inputs.to(device)
 
         # feed model
         outputs = self.model(**enc_inputs)
         loss = outputs.loss
 
-        if self.test_loss_cnt < 25:
-            probs = self.logits2probs(outputs.logits)
+        if self.test_loss_cnt < 40:
+            # test visualization
+            probs = self.logits2probs(outputs.seq_relationship_logits)
             probs = probs.detach().cpu()
-            for b, tagged_passage in enumerate(tagged_passages):
+            print('-' * 10, self.test_loss_cnt, '-' * 10)
+            for b in range(len(tagged_passages[:1])):
+                # testing judgement
                 prob = round(probs[b][0].item(), 2)
                 success = ((prob > 0.5 and labels[b] == 0)
                     or (prob < 0.5 and labels[b] == 1))
-                sep = '\033[1;31m' + ' [SEP] ' + '\033[0m'
-                tagged_passage = sep.join(tagged_passage)
-                print('Truth:', prob, truths[b])
+                print('Tags Truth:', prob, truths[b])
                 if not success:
-                    print('\033[1;31m' + 'Wrong' + '\033[0m')
-                    print(tagged_passage)
-                else:
-                    print('\033[92m' + tagged_passage + '\033[0m')
-                print()
+                    print('\033[1;31m' + 'Wrong judgement' + '\033[0m')
+                # testing unmasking
+                test_input = self.tokenizer.decode(mask_tokens[b])
+                self.pretrain_test(test_batch, [test_input], device)
 
         loss_ = loss.item()
         self.test_loss_sum += loss_
@@ -494,7 +499,14 @@ class Trainer(BaseTrainer):
 
         enc_inputs = self.tokenizer(tagged_passages,
             padding=True, truncation=True, return_tensors="pt")
-        enc_inputs['labels'] = torch.tensor(labels)
+
+        unmask_tokens = enc_inputs['input_ids'].numpy()
+        mask_tokens, mask_labels = Trainer.mask_batch_tokens(
+            unmask_tokens, len(self.tokenizer)
+        )
+        enc_inputs['input_ids'] = torch.tensor(mask_tokens)
+        enc_inputs["labels"] = torch.tensor(mask_labels)
+        enc_inputs["next_sentence_label"] = torch.tensor(labels)
         enc_inputs.to(device)
 
         if self.debug:
