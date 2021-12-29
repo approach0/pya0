@@ -22,6 +22,7 @@ class BaseTrainer:
     test_data_cls: 'typing.Any' = None
     test_file: str = './test.dat'
     test_cycle: int = 50
+    test_only: bool = False
     epochs: int = 20
     save_fold: int = 5
     batch_size: int = 2
@@ -259,7 +260,7 @@ def _train_thread(local_rank, trainer, train_loop):
             dataset = trainer.dataset_cls(shard_file)
             # calculating save fold ...
             n_batches = len(dataset) // trainer.batch_size + 1
-            if trainer.save_fold == 0:
+            if trainer.save_fold == 0 or trainer.test_only:
                 save_cycle = 0
             else:
                 save_cycle = n_batches // trainer.save_fold
@@ -267,7 +268,7 @@ def _train_thread(local_rank, trainer, train_loop):
             loader = DataLoader(dataset,
                 batch_size=trainer.batch_size,
                 collate_fn=lambda batch: batch,
-                shuffle=True # each shard should shuffle
+                shuffle=True if not trainer.test_only else False
             )
             if trainer.xla_cores:
                 import torch_xla.distributed.parallel_loader as pl
@@ -287,7 +288,12 @@ def _train_thread(local_rank, trainer, train_loop):
                     arg_vals = tuple(args[k] if k in args else None
                         for k in arg_names if k != 'self')
                     with scaler_ctx:
-                        train_loop(*arg_vals)
+                        if trainer.test_only:
+                            trainer.model.eval()
+                            with torch.no_grad():
+                                train_loop(*arg_vals)
+                        else:
+                            train_loop(*arg_vals)
                         iteration += 1
                     # save on cycle
                     if save_cycle > 0 and batch % save_cycle == 0:
