@@ -132,15 +132,16 @@ class QueryInferShard(Dataset):
         with open(data_file, 'r') as fh:
             for line in fh:
                 line = line.rstrip()
-                self.data.append(line)
+                fields = line.split(None, maxsplit=1)
+                self.data.append(fields)
 
     def __len__(self):
         return self.N * len(self.data)
 
     def __getitem__(self, idx):
         tag = self.tags[idx % self.N]
-        qry = self.data[idx // self.N]
-        return tag, qry
+        qry_id, qry = self.data[idx // self.N]
+        return tag, qry, qry_id
 
 
 class ColBERT(BertPreTrainedModel):
@@ -904,8 +905,9 @@ class Trainer(BaseTrainer):
 
     def query_tag_inference_loop(self, inputs, device, progress):
         # collate inputs
-        tags = ['[T] ' + tag for tag, qry in inputs]
-        qrys = [qry for tag, qry in inputs]
+        tags = ['[T] ' + tag for tag, qry, qryid in inputs]
+        qrys = [qry for tag, qry, qryid in inputs]
+        qry_ids = [qryid for tag, qry, qryid in inputs]
         collate_inputs = list(zip(tags, qrys))
 
         # tokenize inputs
@@ -917,14 +919,18 @@ class Trainer(BaseTrainer):
         outputs = self.model(**enc_inputs)
         probs = self.logits2probs(outputs.seq_relationship_logits)
 
-        for b, ids in enumerate(enc_inputs['input_ids']):
-            prob = round(probs[b][0].item(), 2)
-            #if prob > 0.95:
-            if prob >= 0.85:
-                print()
-                text = self.tokenizer.decode(ids)
-                print(Trainer.highlight_masked(text))
-                print('Confidence:', prob)
+        with open('output_tag_inference.txt', 'a') as fh:
+            for b, ids in enumerate(enc_inputs['input_ids']):
+                prob = round(probs[b][0].item(), 2)
+                #if prob > 0.95:
+                if prob >= 0.85:
+                    if self.debug:
+                        print()
+                        text = self.tokenizer.decode(ids)
+                        print(Trainer.highlight_masked(text))
+                        print('Confidence:', prob)
+                    out = [qry_ids[b], prob, tags[b]]
+                    fh.write('\t'.join(map(str, out)) + '\n')
 
 
 if __name__ == '__main__':
