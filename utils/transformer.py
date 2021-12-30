@@ -12,6 +12,7 @@ import torch.nn as nn
 from torch_train import BaseTrainer
 from torch.utils.data import Dataset
 from torch.utils.tensorboard import SummaryWriter as TensorBoardWriter
+from torch.distributions import Categorical
 
 import transformers
 from transformers import AdamW
@@ -178,7 +179,7 @@ class ColBERT(BertPreTrainedModel):
 
 
 class BertForTagsPrediction(BertPreTrainedModel):
-    def __init__(self, config, n_labels, ib_dim=32, n_samples=5):
+    def __init__(self, config, n_labels, ib_dim=64, n_samples=5):
         super().__init__(config)
         self.bert = BertModel(config)
         self.n_labels = n_labels
@@ -192,7 +193,7 @@ class BertForTagsPrediction(BertPreTrainedModel):
         )
         self.latent2mu = nn.Linear(self.latent_dim, self.ib_dim)
         self.latent2std = nn.Linear(self.latent_dim, self.ib_dim)
-        self.classifier = nn.Linear(self.ib_dim, self.n_labels)
+        self.pooler = nn.Linear(self.ib_dim, 2 * self.n_labels)
 
     def reparameterize(self, mu, std):
         batch_size, ib_dim = mu.shape
@@ -208,9 +209,10 @@ class BertForTagsPrediction(BertPreTrainedModel):
         log_std = self.latent2std(pooled_output)
         std = torch.nn.functional.softplus(log_std) # non-zero and stablized
         z = self.reparameterize(mu, std) # n_samples, batch_size, ib_dim
-        logits = self.classifier(z) # n_samples, batch_size, n_labels
-        mean_logits = logits.mean(dim=0) # batch_size, n_labels
-        return mean_logits
+        logits = self.pooler(z) # n_samples, batch_size, 2 * n_labels
+        mean_logits = logits.mean(dim=0) # batch_size, 2 * n_labels
+        batch_size = mean_logits.shape[0]
+        return mean_logits.reshape(batch_size, self.n_labels, 2)
 
 
 class Trainer(BaseTrainer):
@@ -741,9 +743,12 @@ class Trainer(BaseTrainer):
             self.tag_ids = pickle.load(fh)
         print(f'Number of tags: {len(self.tag_ids)}')
 
-        self.start_point = self.infer_start_point(ckpoint)
+        #self.start_point = self.infer_start_point(ckpoint)
         self.dataset_cls = partial(PsgWithTagLabelsShard, self.tag_ids)
         self.test_data_cls = partial(PsgWithTagLabelsShard, self.tag_ids)
+        with open(self.test_file, 'r') as fh:
+            dirname = os.path.dirname(self.test_file)
+            self.test_file = dirname + '/' + fh.read().rstrip()
 
         # build invert tag index for testing/debug purpose
         self.inv_tag_ids = {self.tag_ids[k]:k for k in self.tag_ids}
@@ -756,12 +761,14 @@ class Trainer(BaseTrainer):
         )
 
         self.logits2probs = torch.nn.Softmax(dim=1)
+        self.softmax = torch.nn.Softmax(dim=-1)
 
         print('Calculating BCE positive weights')
-        from torch.utils.data import DataLoader
-        from tqdm import tqdm
         self.positive_weights = torch.ones([len(self.tag_ids)])
         self.negative_weights = torch.ones([len(self.tag_ids)])
+
+        from torch.utils.data import DataLoader
+        from tqdm import tqdm
         shard_files = self._get_shard_files()
         n_shards = len(shard_files)
         for shard, shard_file in enumerate(shard_files):
@@ -809,8 +816,15 @@ class Trainer(BaseTrainer):
                 print(self.tokenizer.decode(ids))
 
         self.optimizer.zero_grad()
-        outputs = self.model(enc_inputs) # [B, n_labels]
-        loss = self.loss_func(outputs, labels)
+        outputs = self.model(enc_inputs) # [B, n_labels * 2]
+        outputs = self.softmax(outputs)
+        B = outputs.shape[0]
+        outputs = outputs.reshape(-1, 2)
+        dist = Categorical(outputs)
+        sample_tags = dist.sample()
+        sample_probs = dist.log_prob(sample_tags) # [B, n_labels]
+        sample_probs = sample_probs.reshape(B, -1)
+        loss = self.loss_func(sample_probs, labels)
         self.backward(loss)
         self.step()
 
@@ -832,15 +846,15 @@ class Trainer(BaseTrainer):
                 f'train_loss/{epoch}', loss_, iteration
             )
 
-        self.test_loss_sum = 0
-        self.test_loss_cnt = 0
-        if self.do_testing(self.tag_prediction_test, device):
-            test_loss = round(self.test_loss_sum / self.test_loss_cnt, 5)
-            print(f'Test avg loss: {test_loss}')
-            if self.logger:
-                self.logger.add_scalar(
-                    f'test_loss/{epoch}', test_loss, iteration
-                )
+        #self.test_loss_sum = 0
+        #self.test_loss_cnt = 0
+        #if self.do_testing(self.tag_prediction_test, device):
+        #    test_loss = round(self.test_loss_sum / self.test_loss_cnt, 5)
+        #    print(f'Test avg loss: {test_loss}')
+        #    if self.logger:
+        #        self.logger.add_scalar(
+        #            f'test_loss/{epoch}', test_loss, iteration
+        #        )
 
     def tag_prediction_test(self, test_batch, test_inputs, device):
         # collate inputs
