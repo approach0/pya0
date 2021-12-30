@@ -252,6 +252,7 @@ def _train_thread(local_rank, trainer, train_loop):
 
     trainer._prepare_testing(m_batch)
 
+    save_cycle = 0
     for epoch in range(trainer.epochs):
         if (epoch,) < trainer.start_point[:1]: continue
         for shard, shard_file in enumerate(shard_files):
