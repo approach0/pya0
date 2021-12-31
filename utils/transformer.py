@@ -178,7 +178,7 @@ class ColBERT(BertPreTrainedModel):
 
 
 class BertForTagsPrediction(BertPreTrainedModel):
-    def __init__(self, config, n_labels, ib_dim=64, n_samples=2, h_dim=300):
+    def __init__(self, config, n_labels, ib_dim=64, n_samples=5, h_dim=300):
         super().__init__(config)
         self.bert = BertModel(config)
         self.n_labels = n_labels
@@ -832,6 +832,8 @@ class Trainer(BaseTrainer):
         rec_loss = BertForTagsPrediction.reconstruct_loss(probs, labels)
         loss = rec_loss + kl_loss
         self.backward(loss)
+
+        torch.nn.utils.clip_grad_value_(self.model.parameters(), 1.0)
         self.step()
 
         rec_loss_ = round(rec_loss.item(), 2)
