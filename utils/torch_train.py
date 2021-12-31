@@ -89,11 +89,13 @@ class BaseTrainer:
             assert os.path.isfile(self.shards_list)
             dirname = os.path.dirname(self.shards_list)
             with open(self.shards_list, 'r') as fh:
-                shard_files = [dirname + '/' + line.rstrip() for line in fh]
+                shard_files = [
+                    os.path.join(dirname, line.rstrip()) for line in fh
+                ]
                 exists = [os.path.isfile(f) for f in shard_files]
                 assert(all(exists))
         except Exception as e:
-            print(f'Error: {self.shards_list} exists?')
+            print('Error when reading:', self.shards_list)
             quit(1)
         return shard_files
 
