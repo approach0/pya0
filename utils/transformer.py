@@ -203,8 +203,9 @@ class BertForTagsPrediction(BertPreTrainedModel):
 
     @staticmethod
     def reconstruct_loss(probs, labels):
+        batch_size = labels.shape[0]
         occur_probs = probs[labels.bool()]
-        log_prob = occur_probs.log().mean()
+        log_prob = occur_probs.log().sum() / batch_size
         return -log_prob
 
     def forward(self, inputs):
@@ -222,8 +223,8 @@ class BertForTagsPrediction(BertPreTrainedModel):
         # KL(q(z|x), q(z))
         mean_sq = mu * mu
         std_sq = std * std
-        kl_div = 0.5 * (mean_sq + std_sq - std_sq.log() - 1).mean()
-        return probs, kl_div
+        kl_div = 0.5 * (mean_sq + std_sq - std_sq.log() - 1).sum(dim=1)
+        return probs, kl_div.mean()
 
 
 class Trainer(BaseTrainer):
@@ -901,7 +902,7 @@ class Trainer(BaseTrainer):
         loss_ = loss.item()
         self.test_loss_sum += loss_
         self.test_loss_cnt += 1
-        if self.test_loss_cnt >= 40:
+        if self.test_loss_cnt >= 20: # 40
             raise StopIteration
 
     def query_tag_inference(self, ckpoint, tok_ckpoint, tag_ids_file):
