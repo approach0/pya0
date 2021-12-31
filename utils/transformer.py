@@ -202,7 +202,8 @@ class BertForTagsPrediction(BertPreTrainedModel):
         epsilon = epsilon.to(mu.device)
         return mu + std * epsilon.detach()
 
-    def reconstruct_loss(self, probs, labels):
+    @staticmethod
+    def reconstruct_loss(probs, labels):
         batch_size = labels.shape[0]
         occur_probs = probs[labels.bool()]
         log_prob = occur_probs.log().sum() / batch_size
@@ -830,7 +831,7 @@ class Trainer(BaseTrainer):
 
         self.optimizer.zero_grad()
         probs, kl_loss = self.model(enc_inputs) # batch_size, n_labels
-        rec_loss = self.model.reconstruct_loss(probs, labels)
+        rec_loss = BertForTagsPrediction.reconstruct_loss(probs, labels)
         loss = rec_loss + self.beta * kl_loss
         self.backward(loss)
 
@@ -883,7 +884,7 @@ class Trainer(BaseTrainer):
 
         self.optimizer.zero_grad()
         probs, kl_loss = self.model(enc_inputs) # batch_size, n_labels
-        rec_loss = self.model.reconstruct_loss(probs, labels)
+        rec_loss = BertForTagsPrediction.reconstruct_loss(probs, labels)
         loss = rec_loss + self.beta * kl_loss
 
         probs = self.logits2probs(probs)
