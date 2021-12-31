@@ -191,7 +191,8 @@ class BertForTagsPrediction(BertPreTrainedModel):
         )
         self.latent2mu = nn.Linear(self.ib_dim , self.ib_dim)
         self.latent2std = nn.Linear(self.ib_dim, self.ib_dim)
-        self.topic_tag = nn.Linear(self.ib_dim, self.n_labels)
+        self.topic_tag = torch.randn(
+            (self.ib_dim, self.n_labels), requires_grad=True)
         self.softmax = torch.nn.Softmax(dim=-1)
 
     def reparameterize(self, mu, std):
@@ -199,6 +200,12 @@ class BertForTagsPrediction(BertPreTrainedModel):
         epsilon = torch.randn(self.n_samples, batch_size, ib_dim)
         epsilon = epsilon.to(mu.device)
         return mu + std * epsilon.detach()
+
+    @staticmethod
+    def reconstruct_loss(probs, labels):
+        occur_probs = probs[labels.bool()]
+        log_prob = occur_probs.log().mean()
+        return -log_prob
 
     def forward(self, inputs):
         bert_outputs = self.bert(**inputs)
@@ -208,14 +215,15 @@ class BertForTagsPrediction(BertPreTrainedModel):
         log_std = self.latent2std(z_priors)
         std = torch.nn.functional.softplus(log_std) # non-zero and stablized
         z = self.reparameterize(mu, std) # n_samples, batch_size, ib_dim
-        z_mean = z.mean(dim=0) # batch_size, n_labels
+        z_mean = z.mean(dim=0) # batch_size, ib_dim
         theta = self.softmax(z_mean)
-        logprobs = self.topic_tag(theta)
+        topic_tag = self.softmax(self.topic_tag)
+        probs = theta @ topic_tag
         # KL(q(z|x), q(z))
         mean_sq = mu * mu
         std_sq = std * std
         kl_div = 0.5 * (mean_sq + std_sq - std_sq.log() - 1).mean()
-        return logprobs, kl_div
+        return probs, kl_div
 
 
 class Trainer(BaseTrainer):
@@ -236,7 +244,8 @@ class Trainer(BaseTrainer):
             weights = self.negative_weights / self.positive_weights
             weights = weights.to(device)
             print(weights)
-            self.loss_func = nn.BCEWithLogitsLoss(weights)
+            self.model.topic_tag = self.model.topic_tag.to(device)
+            #self.reconstruct_loss = nn.BCEWithLogitsLoss(weights)
 
         self.optimizer = AdamW(
             self.model.parameters(),
@@ -769,7 +778,7 @@ class Trainer(BaseTrainer):
         self.positive_weights = torch.ones([len(self.tag_ids)])
         self.negative_weights = torch.ones([len(self.tag_ids)])
 
-        if not self.debug:
+        if not True:
             from torch.utils.data import DataLoader
             from tqdm import tqdm
             shard_files = self._get_shard_files()
@@ -819,8 +828,8 @@ class Trainer(BaseTrainer):
                 print(self.tokenizer.decode(ids))
 
         self.optimizer.zero_grad()
-        log_probs, kl_loss = self.model(enc_inputs) # batch_size, n_labels
-        rec_loss = self.loss_func(log_probs, labels)
+        probs, kl_loss = self.model(enc_inputs) # batch_size, n_labels
+        rec_loss = BertForTagsPrediction.reconstruct_loss(probs, labels)
         loss = rec_loss + kl_loss
         self.backward(loss)
         self.step()
@@ -870,13 +879,13 @@ class Trainer(BaseTrainer):
         labels = torch.tensor(labels, device=device).float()
 
         self.optimizer.zero_grad()
-        log_probs, kl_loss = self.model(enc_inputs) # batch_size, n_labels
-        rec_loss = self.loss_func(log_probs, labels)
+        probs, kl_loss = self.model(enc_inputs) # batch_size, n_labels
+        rec_loss = BertForTagsPrediction.reconstruct_loss(probs, labels)
         loss = rec_loss + kl_loss
 
-        probs = self.logits2probs(log_probs)
+        probs = self.logits2probs(probs)
         probs = probs.detach().cpu()
-        topk_probs = torch.topk(probs, 3)
+        topk_probs = torch.topk(probs, 5)
         for b, passage in enumerate(passages[:1]):
             print(passage)
             print('ground truth:', truth_tags[b])
