@@ -12,7 +12,6 @@ import torch.nn as nn
 from torch_train import BaseTrainer
 from torch.utils.data import Dataset
 from torch.utils.tensorboard import SummaryWriter as TensorBoardWriter
-from torch.distributions import Categorical
 
 import transformers
 from transformers import AdamW
@@ -179,21 +178,21 @@ class ColBERT(BertPreTrainedModel):
 
 
 class BertForTagsPrediction(BertPreTrainedModel):
-    def __init__(self, config, n_labels, ib_dim=64, n_samples=5):
+    def __init__(self, config, n_labels, ib_dim=64, n_samples=1, h_dim=300):
         super().__init__(config)
         self.bert = BertModel(config)
         self.n_labels = n_labels
         self.ib_dim = ib_dim
         self.n_samples = n_samples
 
-        self.latent_dim = (config.hidden_size + self.ib_dim) // 2
         self.mlp = nn.Sequential(
-            nn.Linear(config.hidden_size, config.hidden_size), nn.Tanh(),
-            nn.Linear(config.hidden_size, self.latent_dim), nn.Tanh()
+            nn.Linear(config.hidden_size, h_dim), nn.Tanh(),
+            nn.Linear(h_dim, self.ib_dim), nn.Tanh()
         )
-        self.latent2mu = nn.Linear(self.latent_dim, self.ib_dim)
-        self.latent2std = nn.Linear(self.latent_dim, self.ib_dim)
-        self.pooler = nn.Linear(self.ib_dim, 2 * self.n_labels)
+        self.latent2mu = nn.Linear(self.ib_dim , self.ib_dim)
+        self.latent2std = nn.Linear(self.ib_dim, self.ib_dim)
+        self.topic_tag = nn.Linear(self.ib_dim, self.n_labels)
+        self.softmax = torch.nn.Softmax(dim=-1)
 
     def reparameterize(self, mu, std):
         batch_size, ib_dim = mu.shape
@@ -204,15 +203,19 @@ class BertForTagsPrediction(BertPreTrainedModel):
     def forward(self, inputs):
         bert_outputs = self.bert(**inputs)
         cls_output = bert_outputs.last_hidden_state[:,0]
-        pooled_output = self.mlp(bert_outputs.pooler_output)
-        mu = self.latent2mu(pooled_output) # batch_size, ib_dim
-        log_std = self.latent2std(pooled_output)
+        z_priors = self.mlp(cls_output) # batch_size, ib_dim
+        mu = self.latent2mu(z_priors) # batch_size, ib_dim
+        log_std = self.latent2std(z_priors)
         std = torch.nn.functional.softplus(log_std) # non-zero and stablized
         z = self.reparameterize(mu, std) # n_samples, batch_size, ib_dim
-        logits = self.pooler(z) # n_samples, batch_size, 2 * n_labels
-        mean_logits = logits.mean(dim=0) # batch_size, 2 * n_labels
-        batch_size = mean_logits.shape[0]
-        return mean_logits.reshape(batch_size, self.n_labels, 2)
+        z_mean = z.mean(dim=0) # batch_size, n_labels
+        theta = self.softmax(z_mean)
+        logprobs = self.topic_tag(theta)
+        # KL(q(z|x), q(z))
+        mean_sq = mu * mu
+        std_sq = std * std
+        kl_div = 0.5 * (mean_sq + std_sq - std_sq.log() - 1).mean()
+        return logprobs, kl_div
 
 
 class Trainer(BaseTrainer):
@@ -761,25 +764,25 @@ class Trainer(BaseTrainer):
         )
 
         self.logits2probs = torch.nn.Softmax(dim=1)
-        self.softmax = torch.nn.Softmax(dim=-1)
 
         print('Calculating BCE positive weights')
         self.positive_weights = torch.ones([len(self.tag_ids)])
         self.negative_weights = torch.ones([len(self.tag_ids)])
 
-        from torch.utils.data import DataLoader
-        from tqdm import tqdm
-        shard_files = self._get_shard_files()
-        n_shards = len(shard_files)
-        for shard, shard_file in enumerate(shard_files):
-            dataset = self.dataset_cls(shard_file)
-            loader = DataLoader(dataset,
-                batch_size=self.batch_size,
-                collate_fn=lambda batch: batch,
-            )
-            with tqdm(loader) as progress:
-                for batch, inputs in enumerate(progress):
-                    self.calc_pos_w(inputs, progress, shard, n_shards)
+        if not self.debug:
+            from torch.utils.data import DataLoader
+            from tqdm import tqdm
+            shard_files = self._get_shard_files()
+            n_shards = len(shard_files)
+            for shard, shard_file in enumerate(shard_files):
+                dataset = self.dataset_cls(shard_file)
+                loader = DataLoader(dataset,
+                    batch_size=self.batch_size,
+                    collate_fn=lambda batch: batch,
+                )
+                with tqdm(loader) as progress:
+                    for batch, inputs in enumerate(progress):
+                        self.calc_pos_w(inputs, progress, shard, n_shards)
 
         self.start_training(self.tag_prediction_training)
 
@@ -816,15 +819,9 @@ class Trainer(BaseTrainer):
                 print(self.tokenizer.decode(ids))
 
         self.optimizer.zero_grad()
-        outputs = self.model(enc_inputs) # [B, n_labels * 2]
-        outputs = self.softmax(outputs)
-        B = outputs.shape[0]
-        outputs = outputs.reshape(-1, 2)
-        dist = Categorical(outputs)
-        sample_tags = dist.sample()
-        sample_probs = dist.log_prob(sample_tags) # [B, n_labels]
-        sample_probs = sample_probs.reshape(B, -1)
-        loss = self.loss_func(sample_probs, labels)
+        log_probs, kl_loss = self.model(enc_inputs) # batch_size, n_labels
+        rec_loss = self.loss_func(log_probs, labels)
+        loss = rec_loss + kl_loss
         self.backward(loss)
         self.step()
 
@@ -846,15 +843,15 @@ class Trainer(BaseTrainer):
                 f'train_loss/{epoch}', loss_, iteration
             )
 
-        #self.test_loss_sum = 0
-        #self.test_loss_cnt = 0
-        #if self.do_testing(self.tag_prediction_test, device):
-        #    test_loss = round(self.test_loss_sum / self.test_loss_cnt, 5)
-        #    print(f'Test avg loss: {test_loss}')
-        #    if self.logger:
-        #        self.logger.add_scalar(
-        #            f'test_loss/{epoch}', test_loss, iteration
-        #        )
+        self.test_loss_sum = 0
+        self.test_loss_cnt = 0
+        if self.do_testing(self.tag_prediction_test, device):
+            test_loss = round(self.test_loss_sum / self.test_loss_cnt, 5)
+            print(f'Test avg loss: {test_loss}')
+            if self.logger:
+                self.logger.add_scalar(
+                    f'test_loss/{epoch}', test_loss, iteration
+                )
 
     def tag_prediction_test(self, test_batch, test_inputs, device):
         # collate inputs
@@ -870,10 +867,11 @@ class Trainer(BaseTrainer):
         labels = torch.tensor(labels, device=device).float()
 
         self.optimizer.zero_grad()
-        outputs = self.model(enc_inputs) # [B, n_labels]
-        loss = self.loss_func(outputs, labels)
+        log_probs, kl_loss = self.model(enc_inputs) # [B, n_labels]
+        rec_loss = self.loss_func(log_probs, labels)
+        loss = rec_loss + kl_loss
 
-        probs = self.logits2probs(outputs)
+        probs = self.logits2probs(log_probs)
         probs = probs.detach().cpu()
         topk_probs = torch.topk(probs, 3)
         for b, passage in enumerate(passages[:1]):
