@@ -178,7 +178,7 @@ class ColBERT(BertPreTrainedModel):
 
 
 class BertForTagsPrediction(BertPreTrainedModel):
-    def __init__(self, config, n_labels, ib_dim=64, n_samples=1, h_dim=300):
+    def __init__(self, config, n_labels, ib_dim=64, n_samples=2, h_dim=300):
         super().__init__(config)
         self.bert = BertModel(config)
         self.n_labels = n_labels
@@ -825,7 +825,10 @@ class Trainer(BaseTrainer):
         self.backward(loss)
         self.step()
 
-        loss_ = round(loss.item(), 5)
+        rec_loss_ = round(rec_loss.item(), 2)
+        kl_loss_ = round(kl_loss.item(), 2)
+        loss_ = round(rec_loss_ + kl_loss_, 2)
+
         device_desc = self.local_device_info()
         input_shape = list(enc_inputs.input_ids.shape)
         progress.set_description(
@@ -835,7 +838,7 @@ class Trainer(BaseTrainer):
             f"{n_nodes} nodes, " +
             f"{device_desc}, " +
             f"In{input_shape}, " +
-            f'loss={loss_}'
+            f'loss={rec_loss_} + {kl_loss_} = {loss_}'
         )
 
         if self.logger:
@@ -867,7 +870,7 @@ class Trainer(BaseTrainer):
         labels = torch.tensor(labels, device=device).float()
 
         self.optimizer.zero_grad()
-        log_probs, kl_loss = self.model(enc_inputs) # [B, n_labels]
+        log_probs, kl_loss = self.model(enc_inputs) # batch_size, n_labels
         rec_loss = self.loss_func(log_probs, labels)
         loss = rec_loss + kl_loss
 
