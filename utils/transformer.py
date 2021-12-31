@@ -114,6 +114,7 @@ class PsgWithTagLabelsShard(Dataset):
     def __getitem__(self, idx):
         row = self.shard[idx]
         pos_tags, neg_tags, passage = row[:3] # for compatibility
+        #pos_tags = ['group-theory'] ### DEBUG ###
         label = [0] * self.N
         for tag in pos_tags:
             if tag not in self.tag_ids:
@@ -191,8 +192,8 @@ class BertForTagsPrediction(BertPreTrainedModel):
         )
         self.latent2mu = nn.Linear(self.ib_dim , self.ib_dim)
         self.latent2std = nn.Linear(self.ib_dim, self.ib_dim)
-        self.topic_tag = torch.randn(
-            (self.ib_dim, self.n_labels), requires_grad=True)
+        self.topic_tag = nn.Parameter(torch.randn(
+            (self.ib_dim, self.n_labels), requires_grad=True))
         self.softmax = torch.nn.Softmax(dim=-1)
 
     def reparameterize(self, mu, std):
@@ -201,8 +202,7 @@ class BertForTagsPrediction(BertPreTrainedModel):
         epsilon = epsilon.to(mu.device)
         return mu + std * epsilon.detach()
 
-    @staticmethod
-    def reconstruct_loss(probs, labels):
+    def reconstruct_loss(self, probs, labels):
         batch_size = labels.shape[0]
         occur_probs = probs[labels.bool()]
         log_prob = occur_probs.log().sum() / batch_size
@@ -245,7 +245,6 @@ class Trainer(BaseTrainer):
             weights = self.negative_weights / self.positive_weights
             weights = weights.to(device)
             print(weights)
-            self.model.topic_tag = self.model.topic_tag.to(device)
             #self.reconstruct_loss = nn.BCEWithLogitsLoss(weights)
 
         self.optimizer = AdamW(
@@ -794,6 +793,7 @@ class Trainer(BaseTrainer):
                     for batch, inputs in enumerate(progress):
                         self.calc_pos_w(inputs, progress, shard, n_shards)
 
+        self.beta = 1
         self.start_training(self.tag_prediction_training)
 
     def calc_pos_w(self, inputs, progress, shard, n_shards):
@@ -830,8 +830,8 @@ class Trainer(BaseTrainer):
 
         self.optimizer.zero_grad()
         probs, kl_loss = self.model(enc_inputs) # batch_size, n_labels
-        rec_loss = BertForTagsPrediction.reconstruct_loss(probs, labels)
-        loss = rec_loss + kl_loss
+        rec_loss = self.model.reconstruct_loss(probs, labels)
+        loss = rec_loss + self.beta * kl_loss
         self.backward(loss)
 
         torch.nn.utils.clip_grad_value_(self.model.parameters(), 1.0)
@@ -839,7 +839,7 @@ class Trainer(BaseTrainer):
 
         rec_loss_ = round(rec_loss.item(), 2)
         kl_loss_ = round(kl_loss.item(), 2)
-        loss_ = round(rec_loss_ + kl_loss_, 2)
+        loss_ = round(loss.item(), 2)
 
         device_desc = self.local_device_info()
         input_shape = list(enc_inputs.input_ids.shape)
@@ -883,8 +883,8 @@ class Trainer(BaseTrainer):
 
         self.optimizer.zero_grad()
         probs, kl_loss = self.model(enc_inputs) # batch_size, n_labels
-        rec_loss = BertForTagsPrediction.reconstruct_loss(probs, labels)
-        loss = rec_loss + kl_loss
+        rec_loss = self.model.reconstruct_loss(probs, labels)
+        loss = rec_loss + self.beta * kl_loss
 
         probs = self.logits2probs(probs)
         probs = probs.detach().cpu()
