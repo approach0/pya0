@@ -232,6 +232,21 @@ class BertForTagsPrediction(BertPreTrainedModel):
         return probs, kl_div.mean()
 
 
+class DprEncoder(BertPreTrainedModel):
+
+    def __init__(self, config):
+        super().__init__(config)
+
+        self.bert_model = BertModel(config)
+        self.init_weights()
+
+    def forward(self, inputs):
+        outputs = self.bert_model(**inputs)
+        last_hidden_state = outputs.last_hidden_state
+        pooler_output = outputs.pooler_output
+        return last_hidden_state, pooler_output
+
+
 class Trainer(BaseTrainer):
 
     def __init__(self, lr='1e-6', debug=False, **args):
@@ -963,6 +978,92 @@ class Trainer(BaseTrainer):
                         print('Confidence:', prob)
                     out = [qry_ids[b], prob, tags[b]]
                     fh.write('\t'.join(map(str, out)) + '\n')
+
+    def dpr(self, ckpoint, tok_ckpoint):
+        self.dataset_cls = ContrastiveQAShard
+        self.test_data_cls = ContrastiveQAShard
+        with open(self.test_file, 'r') as fh:
+            dirname = os.path.dirname(self.test_file)
+            self.test_file = dirname + '/' + fh.read().rstrip()
+
+        print('Loading as ColBERT model ...')
+        self.model = DprEncoder.from_pretrained(ckpoint,
+            tie_word_embeddings=True
+        )
+        self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
+        self.criterion = nn.CrossEntropyLoss()
+
+        print('Invoke training ...')
+        self.start_training(self.dpr_loop)
+
+    def dpr_loop(self, batch, inputs, device, progress, iteration,
+        epoch, shard, n_shards, save_cycle, n_nodes, test_loop=False):
+        # collate inputs
+        queries = [Q for Q, pos, neg in inputs]
+        positives = [pos for Q, pos, neg in inputs]
+        negatives = [neg for Q, pos, neg in inputs]
+
+        # encode triples
+        enc_queries = self.tokenizer(queries,
+            padding=True, truncation=True, return_tensors="pt")
+        enc_queries.to(device)
+        vec_queries = self.model(enc_queries)[1]
+
+        passages = positives + negatives
+        enc_passages = self.tokenizer(passages,
+            padding=True, truncation=True, return_tensors="pt")
+        enc_passages.to(device)
+        vec_passages = self.model(enc_passages)[1]
+
+        # compute loss: [n_query, dim] @ [dim, n_pos + n_neg]
+        scores = vec_queries @ vec_passages.T
+        labels = torch.arange(len(queries), device=device)
+        loss = self.criterion(scores, labels)
+        loss_ = round(loss.item(), 2)
+
+        if test_loop:
+            # evaluate test loss
+            self.test_acc_loss += loss_
+            self.test_n_iters += 1
+            if self.test_n_iters >= 200:
+                raise StopIteration
+
+        else:
+            # training steps
+            self.optimizer.zero_grad()
+            self.backward(loss)
+            self.step()
+
+            # update progress bar information
+            device_desc = self.local_device_info()
+            progress.set_description(
+                f"Ep#{epoch+1}/{self.epochs}, "
+                f"shard#{shard+1}/{n_shards}, " +
+                f"save@{batch % (save_cycle+1)}%{save_cycle}, " +
+                f"{n_nodes} nodes, " +
+                f"{device_desc}, " +
+                f'loss={loss_}'
+            )
+
+            # log training loss
+            if self.logger:
+                self.acc_loss[epoch] += loss_
+                self.ep_iters[epoch] += 1
+                avg_loss = self.acc_loss[epoch] / self.ep_iters[epoch]
+
+            # invoke evaluation loop
+            self.test_acc_loss = 0
+            self.test_n_iters = 0
+            ellipsis = [None] * 7
+            ellipsis = [None] * 7
+            if self.do_testing(self.dpr_loop, device, *ellipsis, True):
+                # log testing loss
+                test_avg_loss = self.test_acc_loss / self.test_n_iters
+                print(f'Test avg loss: {test_avg_loss}')
+                if self.logger:
+                    self.logger.add_scalar(
+                        f'test_loss/{epoch}', test_avg_loss, iteration
+                    )
 
 
 if __name__ == '__main__':
