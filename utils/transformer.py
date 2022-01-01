@@ -1025,7 +1025,7 @@ class Trainer(BaseTrainer):
             # evaluate test loss
             self.test_acc_loss += loss_
             self.test_n_iters += 1
-            if self.test_n_iters >= 200:
+            if self.test_n_iters >= 100:
                 raise StopIteration
 
         else:
