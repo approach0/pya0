@@ -141,8 +141,12 @@ class QueryInferShard(Dataset):
 
     def __getitem__(self, idx):
         tag = self.tags[idx % self.N]
-        qry_id, qry = self.data[idx // self.N]
-        return tag, qry, qry_id
+        if len(self.data[idx // self.N]) == 2:
+            qry_id, qry = self.data[idx // self.N]
+            return tag, qry, qry_id
+        else:
+            qry_id = self.data[idx // self.N]
+            return tag, '', qry_id[0]
 
 
 class ColBERT(BertPreTrainedModel):
