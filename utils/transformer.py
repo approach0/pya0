@@ -1050,6 +1050,9 @@ class Trainer(BaseTrainer):
                 self.acc_loss[epoch] += loss_
                 self.ep_iters[epoch] += 1
                 avg_loss = self.acc_loss[epoch] / self.ep_iters[epoch]
+                self.logger.add_scalar(
+                    f'train_loss/{epoch}', avg_loss, iteration
+                )
 
             # invoke evaluation loop
             self.test_acc_loss = 0
