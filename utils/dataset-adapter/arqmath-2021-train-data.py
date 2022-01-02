@@ -122,7 +122,7 @@ def generate_contrastive_pairs(
                 positive_A = preprocess_for_transformer(positive_A)
                 negative_A = preprocess_for_transformer(negative_A)
 
-                aggregate.append((Q, None, positive_A, negative_A))
+                aggregate.append((Q, all_tags, positive_A, negative_A))
                 aggregate_cnt += 1
                 if aggregate_cnt % n_per_split == 0:
                     aggregate = dump_split(aggregate, aggregate_cnt)
