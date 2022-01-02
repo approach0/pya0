@@ -12,7 +12,7 @@ from functools import partial
 import torch
 from transformers import BertTokenizer
 from transformers import BertForPreTraining
-from transformer import ColBERT
+from transformer import ColBERT, DprEncoder
 
 import numpy as np
 
@@ -124,7 +124,7 @@ def pickle_print(pkl_file):
             print(line)
 
 
-def test_colbert(ckpoint, tok_ckpoint, test_file):
+def test_similarity_model(ckpoint, tok_ckpoint, test_file, model_type='dpr'):
     with open(test_file, 'r') as fh:
         file = fh.read().rstrip()
     lines = file.split('\n')
@@ -133,13 +133,19 @@ def test_colbert(ckpoint, tok_ckpoint, test_file):
     D_list = lines[1:]
 
     tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
-    model = ColBERT.from_pretrained(ckpoint, tie_word_embeddings=True)
+    if model_type == 'dpr':
+        model = DprEncoder.from_pretrained(ckpoint, tie_word_embeddings=True)
+        prefix = ('', '')
+    elif model_type == 'colbert':
+        model = ColBERT.from_pretrained(ckpoint, tie_word_embeddings=True)
+        tokenizer.add_special_tokens({
+            'additional_special_tokens': ['[Q]', '[D]']
+        })
+        model.resize_token_embeddings(len(tokenizer))
+        prefix = ('[Q]', '[D]')
+    else:
+        raise NotImplementedError
     criterion = torch.nn.CrossEntropyLoss()
-
-    tokenizer.add_special_tokens({
-        'additional_special_tokens': ['[Q]', '[D]']
-    })
-    model.resize_token_embeddings(len(tokenizer))
 
     device = torch.device(f'cuda:0' if torch.cuda.is_available() else 'cpu')
     model.to(device)
@@ -147,15 +153,22 @@ def test_colbert(ckpoint, tok_ckpoint, test_file):
 
     with torch.no_grad():
         for D in D_list:
-            enc_queries = tokenizer(f'[Q] {Q}',
+            enc_queries = tokenizer(prefix[0] + Q,
                 padding=True, truncation=True, return_tensors="pt")
             enc_queries.to(device)
 
-            enc_passages = tokenizer(f'[D] {D}',
+            enc_passages = tokenizer(prefix[1] + D,
                 padding=True, truncation=True, return_tensors="pt")
             enc_passages.to(device)
 
-            scores = model(enc_queries, enc_passages)
+            if model_type == 'dpr':
+                code_qry = model(enc_queries)[1]
+                code_doc = model(enc_passages)[1]
+                scores = code_qry @ code_doc.T
+            elif model_type == 'colbert':
+                scores = model(enc_queries, enc_passages)
+            else:
+                raise NotImplementedError
 
             print()
             print(tokenizer.decode(enc_queries['input_ids'][0]))
@@ -427,7 +440,7 @@ if __name__ == '__main__':
         "attention": attention_visualize,
         "pft_print": pft_print,
         "pickle_print": pickle_print,
-        "test_colbert": test_colbert,
+        "test_similarity_model": test_similarity_model,
         "index_colbert": index_colbert,
         "search_colbert": search_colbert,
         "convert2jsonl_ntcir12": convert2jsonl_ntcir12,
