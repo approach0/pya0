@@ -21,6 +21,9 @@ from transformers import BertConfig
 from transformers import BertForNextSentencePrediction
 from transformers import BertModel, BertPreTrainedModel
 
+from nltk import LancasterStemmer
+from nltk.corpus import stopwords
+
 CE_IGN_IDX = -100 # CrossEntropyLoss ignore index value
 MASK_PROB = 0.15
 UNK_CODE = 100
@@ -249,8 +252,18 @@ class DprEncoder(BertPreTrainedModel):
 
 class Trainer(BaseTrainer):
 
-    def __init__(self, lr='1e-6', debug=False, **args):
+    def __init__(self, lr='1e-6', debug=False,
+        math_keywords_file=None, **args):
         super().__init__(**args)
+        if math_keywords_file is not None:
+            print('Enable extracting keywords ...')
+            self.do_keyword_extraction = True
+            self.stemmer = LancasterStemmer()
+            stop_set = set(stopwords.words('english'))
+            self.en_stops = {self.stemmer.stem(w) for w in stop_set}
+            with open(math_keywords_file, 'rb') as fh:
+                kw_set = pickle.load(fh)
+                self.ma_keywords = {self.stemmer.stem(w) for w in kw_set}
         self.debug = debug
         self.logger = None
         self.lr=float(lr)
@@ -284,6 +297,21 @@ class Trainer(BaseTrainer):
             f"./job-{job_id}-{self.caller}/{save_name}",
             save_function=save_funct
         )
+
+    def extract_keywords(self, psg):
+        tokens = psg.split()
+        filter_tokens = []
+        for tok in tokens:
+            stem_tok = self.stemmer.stem(tok)
+            if stem_tok in self.en_stops:
+                continue
+            elif '-' in stem_tok:
+                pass
+            elif stem_tok not in self.ma_keywords:
+                continue
+            filter_tokens.append(tok)
+        psg = ' '.join(filter_tokens)
+        return psg
 
     @staticmethod
     def mask_batch_tokens(batch_tokens, tot_vocab, mask_before=None):
@@ -1003,6 +1031,10 @@ class Trainer(BaseTrainer):
         positives = [pos for Q, pos, neg in inputs]
         negatives = [neg for Q, pos, neg in inputs]
 
+        if self.do_keyword_extraction:
+            queries = [self.extract_keywords(Q) for Q in queries]
+            #print(queries)
+
         # encode triples
         enc_queries = self.tokenizer(queries,
             padding=True, truncation=True, return_tensors="pt")
@@ -1036,12 +1068,13 @@ class Trainer(BaseTrainer):
 
             # update progress bar information
             device_desc = self.local_device_info()
+            shape = scores.shape
             progress.set_description(
                 f"Ep#{epoch+1}/{self.epochs}, "
                 f"shard#{shard+1}/{n_shards}, " +
                 f"save@{batch % (save_cycle+1)}%{save_cycle}, " +
                 f"{n_nodes} nodes, " +
-                f"{device_desc}, " +
+                f"{device_desc}, {shape} " +
                 f'loss={loss_}'
             )
 
