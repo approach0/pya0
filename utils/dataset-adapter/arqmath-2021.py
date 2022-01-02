@@ -37,6 +37,7 @@ def generate_qdict(corpus, endat=-1):
             continue
         Q_dict[int(Q_id)] = (int(ac), tags, Q)
 
+    # Q_id -> (ac, tags, Q)
     with open('arqmath-question-dict.pkl', 'wb') as fh:
         pickle.dump(Q_dict, fh)
 
@@ -62,8 +63,10 @@ def generate_tag_bank(corpus, endat=-1):
         for tag in tags:
             tag_dict[tag].append(A_id)
 
+    # A_id -> A
     with open('arqmath-answer-dict.pkl', 'wb') as fh:
         pickle.dump(A_dict, fh)
+    # tag -> [A_id, ...]
     with open('arqmath-tag-bank.pkl', 'wb') as fh:
         pickle.dump(tag_dict, fh)
 
@@ -87,6 +90,7 @@ def generate_answer_bank(corpus, endat=-1):
         upvotes = int(file_read(vote_file))
         answer_bank[Q_id].append((A_id, upvotes))
 
+    # Q_id -> [(A_id, upvotes), ...]
     with open('arqmath-answer-bank.pkl', 'wb') as fh:
         pickle.dump(answer_bank, fh)
 
