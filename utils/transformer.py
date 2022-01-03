@@ -186,53 +186,70 @@ class ColBERT(BertPreTrainedModel):
 
 
 class BertForTagsPrediction(BertPreTrainedModel):
-    def __init__(self, config, n_labels, ib_dim=64, n_samples=5, h_dim=300):
+    def __init__(self, config, n_labels, h_dim=300, method='direct'):
         super().__init__(config)
         self.bert = BertModel(config)
         self.n_labels = n_labels
-        self.ib_dim = ib_dim
-        self.n_samples = n_samples
+        self.method = method
 
-        self.mlp = nn.Sequential(
-            nn.Linear(config.hidden_size, h_dim), nn.Tanh(),
-            nn.Linear(h_dim, self.ib_dim), nn.Tanh()
-        )
-        self.latent2mu = nn.Linear(self.ib_dim , self.ib_dim)
-        self.latent2std = nn.Linear(self.ib_dim, self.ib_dim)
-        self.topic_tag = nn.Parameter(torch.randn(
-            (self.ib_dim, self.n_labels), requires_grad=True))
-        self.softmax = torch.nn.Softmax(dim=-1)
+        if self.method == 'direct':
+            self.classifier = nn.Sequential(
+                nn.Linear(config.hidden_size, n_labels)
+            )
+            self.zero = nn.Parameter(torch.zeros(1))
+
+        elif self.method == 'variational':
+            self.ib_dim = 32
+            h_dim = 300
+            self.n_samples = 3
+            self.mlp = nn.Sequential(
+                nn.Linear(config.hidden_size, h_dim), nn.Tanh(),
+                nn.Linear(h_dim, self.ib_dim)
+            )
+            self.std = nn.Parameter(
+                torch.ones(self.ib_dim, requires_grad=False) * 0.003
+            )
+            self.topic_tag = nn.Parameter(
+                torch.randn(
+                    (self.ib_dim, self.n_labels),
+                    requires_grad=True
+                )
+            )
+            self.softmax = torch.nn.Softmax(dim=-1)
+
+        else:
+            raise NotImplementedError
+
+    def forward(self, inputs):
+        if self.method == 'direct':
+            bert_outputs = self.bert(**inputs)
+            cls_output = bert_outputs.pooler_output
+            logits = self.classifier(cls_output)
+            return logits, self.zero
+
+        elif self.method == 'variational':
+            bert_outputs = self.bert(**inputs)
+            cls_output = bert_outputs.pooler_output # B, 768
+            mu = self.mlp(cls_output) # B, ib_dim
+            std = self.std
+            z = self.reparameterize(mu, std) # n_samples, B, ib_dim
+            z_mean = z.mean(dim=0) # B, ib_dim
+            theta = self.softmax(z_mean)
+            logits = theta @ self.topic_tag # [B, ib_dim] * [ib_dim, n_labels]
+            # KL(q(z|x), q(z))
+            mean_sq = mu * mu
+            std_sq = std * std
+            kl_div = 0.5 * (mean_sq + std_sq - std_sq.log() - 1).sum(dim=1)
+            return logits, kl_div.mean()
+
+        else:
+            raise NotImplementedError
 
     def reparameterize(self, mu, std):
         batch_size, ib_dim = mu.shape
         epsilon = torch.randn(self.n_samples, batch_size, ib_dim)
         epsilon = epsilon.to(mu.device)
         return mu + std * epsilon.detach()
-
-    @staticmethod
-    def reconstruct_loss(probs, labels):
-        batch_size = labels.shape[0]
-        occur_probs = probs[labels.bool()]
-        log_prob = occur_probs.log().sum() / batch_size
-        return -log_prob
-
-    def forward(self, inputs):
-        bert_outputs = self.bert(**inputs)
-        cls_output = bert_outputs.last_hidden_state[:,0]
-        z_priors = self.mlp(cls_output) # batch_size, ib_dim
-        mu = self.latent2mu(z_priors) # batch_size, ib_dim
-        log_std = self.latent2std(z_priors)
-        std = torch.nn.functional.softplus(log_std) # non-zero and stablized
-        z = self.reparameterize(mu, std) # n_samples, batch_size, ib_dim
-        z_mean = z.mean(dim=0) # batch_size, ib_dim
-        theta = self.softmax(z_mean)
-        topic_tag = self.softmax(self.topic_tag)
-        probs = theta @ topic_tag
-        # KL(q(z|x), q(z))
-        mean_sq = mu * mu
-        std_sq = std * std
-        kl_div = 0.5 * (mean_sq + std_sq - std_sq.log() - 1).sum(dim=1)
-        return probs, kl_div.mean()
 
 
 class DprEncoder(BertPreTrainedModel):
@@ -278,7 +295,7 @@ class Trainer(BaseTrainer):
             weights = self.negative_weights / self.positive_weights
             weights = weights.to(device)
             print(weights)
-            #self.reconstruct_loss = nn.BCEWithLogitsLoss(weights)
+            self.bce_loss = nn.BCEWithLogitsLoss(weights)
 
         self.optimizer = AdamW(
             self.model.parameters(),
@@ -797,7 +814,7 @@ class Trainer(BaseTrainer):
                         f'test_accu/{epoch}', test_accu, iteration
                     )
 
-    def tag_prediction(self, ckpoint, tok_ckpoint, tag_ids_file):
+    def tag_prediction(self, ckpoint, tok_ckpoint, tag_ids_file, method):
         print('Loading tag IDs ...')
         with open(tag_ids_file, 'rb') as fh:
             self.tag_ids = pickle.load(fh)
@@ -817,7 +834,8 @@ class Trainer(BaseTrainer):
         self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
         self.model = BertForTagsPrediction.from_pretrained(ckpoint,
             tie_word_embeddings=True,
-            n_labels = len(self.tag_ids)
+            n_labels = len(self.tag_ids),
+            method = method
         )
 
         self.logits2probs = torch.nn.Softmax(dim=1)
@@ -825,8 +843,9 @@ class Trainer(BaseTrainer):
         print('Calculating BCE positive weights')
         self.positive_weights = torch.ones([len(self.tag_ids)])
         self.negative_weights = torch.ones([len(self.tag_ids)])
+        uniform_bce_weights = self.debug
 
-        if not True:
+        if not uniform_bce_weights:
             from torch.utils.data import DataLoader
             from tqdm import tqdm
             shard_files = self._get_shard_files()
@@ -839,16 +858,17 @@ class Trainer(BaseTrainer):
                 )
                 with tqdm(loader) as progress:
                     for batch, inputs in enumerate(progress):
-                        self.calc_pos_w(inputs, progress, shard, n_shards)
+                        self.update_posneg_w(inputs, progress, shard, n_shards)
 
-        self.beta = 1
+        #self.beta = 0.01
+        self.beta = 0.
         self.start_training(self.tag_prediction_training)
 
-    def calc_pos_w(self, inputs, progress, shard, n_shards):
+    def update_posneg_w(self, inputs, progress, shard, n_shards):
         labels = [label for label, tags, p in inputs]
         labels = torch.tensor(labels)
         batch_size, n_labels = labels.shape
-        sum_labels = labels.sum(0)
+        sum_labels = labels.sum(dim=0)
         self.positive_weights += sum_labels
         self.negative_weights += batch_size - sum_labels
 
@@ -869,25 +889,20 @@ class Trainer(BaseTrainer):
 
         labels = torch.tensor(labels, device=device).float()
 
-        if self.debug:
-            for b, ids in enumerate(enc_inputs['input_ids']):
-                print()
-                #print('Label:', labels[b])
-                print('Tags:', tags[b])
-                print(self.tokenizer.decode(ids))
+        #if self.debug:
+        #    for b, ids in enumerate(enc_inputs['input_ids']):
+        #        print()
+        #        print('Tags:', tags[b])
+        #        print(self.tokenizer.decode(ids))
 
         self.optimizer.zero_grad()
-        probs, kl_loss = self.model(enc_inputs) # batch_size, n_labels
-        rec_loss = BertForTagsPrediction.reconstruct_loss(probs, labels)
-        loss = rec_loss + self.beta * kl_loss
+        logits, kl_loss = self.model(enc_inputs)
+        rc_loss = self.bce_loss(logits, labels)
+        kl_loss = self.beta * kl_loss
+        loss = rc_loss + kl_loss
+
         self.backward(loss)
-
-        torch.nn.utils.clip_grad_value_(self.model.parameters(), 1.0)
         self.step()
-
-        rec_loss_ = round(rec_loss.item(), 2)
-        kl_loss_ = round(kl_loss.item(), 2)
-        loss_ = round(loss.item(), 2)
 
         device_desc = self.local_device_info()
         input_shape = list(enc_inputs.input_ids.shape)
@@ -898,12 +913,12 @@ class Trainer(BaseTrainer):
             f"{n_nodes} nodes, " +
             f"{device_desc}, " +
             f"In{input_shape}, " +
-            f'loss={rec_loss_} + {kl_loss_} = {loss_}'
+            f'loss: {rc_loss.item():.2f}+{kl_loss.item():.2f}={loss.item():.2f}'
         )
 
         if self.logger:
             self.logger.add_scalar(
-                f'train_loss/{epoch}', loss_, iteration
+                f'train_loss/{epoch}', loss.item(), iteration
             )
 
         self.test_loss_sum = 0
@@ -929,12 +944,12 @@ class Trainer(BaseTrainer):
 
         labels = torch.tensor(labels, device=device).float()
 
-        self.optimizer.zero_grad()
-        probs, kl_loss = self.model(enc_inputs) # batch_size, n_labels
-        rec_loss = BertForTagsPrediction.reconstruct_loss(probs, labels)
-        loss = rec_loss + self.beta * kl_loss
+        logits, kl_loss = self.model(enc_inputs)
+        rc_loss = self.bce_loss(logits, labels)
+        kl_loss = self.beta * kl_loss
+        loss = rc_loss + kl_loss
 
-        probs = self.logits2probs(probs)
+        probs = self.logits2probs(logits)
         probs = probs.detach().cpu()
         topk_probs = torch.topk(probs, 5)
         for b, passage in enumerate(passages[:1]):
@@ -947,13 +962,12 @@ class Trainer(BaseTrainer):
                 print(prob, tag)
             print()
 
-        loss_ = loss.item()
-        self.test_loss_sum += loss_
+        self.test_loss_sum += loss.item()
         self.test_loss_cnt += 1
-        if self.test_loss_cnt >= 20: # 40
+        if self.test_loss_cnt >= 25: # 40
             raise StopIteration
 
-    def query_tag_inference(self, ckpoint, tok_ckpoint, tag_ids_file):
+    def one_vs_all_tag_prediction(self, ckpoint, tok_ckpoint, tag_ids_file):
         print('Loading tag IDs ...')
         with open(tag_ids_file, 'rb') as fh:
             self.tag_ids = pickle.load(fh)
@@ -976,9 +990,9 @@ class Trainer(BaseTrainer):
         })
         self.model.resize_token_embeddings(len(self.tokenizer))
 
-        self.start_training(self.query_tag_inference_loop)
+        self.start_training(self.one_vs_all_tag_prediction_loop)
 
-    def query_tag_inference_loop(self, inputs, device, progress):
+    def one_vs_all_tag_prediction_loop(self, inputs, device, progress):
         # collate inputs
         tags = ['[T] ' + tag for tag, qry, qryid in inputs]
         qrys = [qry for tag, qry, qryid in inputs]
