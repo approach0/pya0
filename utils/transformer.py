@@ -861,7 +861,7 @@ class Trainer(BaseTrainer):
                         self.update_posneg_w(inputs, progress, shard, n_shards)
 
         #self.beta = 0.01
-        self.beta = 0.
+        self.beta = 1.
         self.start_training(self.tag_prediction_training)
 
     def update_posneg_w(self, inputs, progress, shard, n_shards):
