@@ -176,7 +176,7 @@ def test_similarity_model(ckpoint, tok_ckpoint, test_file, model_type='dpr'):
             print(round(scores.item(), 2))
 
 
-def _index_colbert__ntcir12(docids, encoder, index,
+def _index__ntcir12(docids, encode_func, index,
     corpus_path='~/corpus/NTCIR12/NTCIR12_latex_expressions.txt'):
     corpus_path = os.path.expanduser(corpus_path)
     with open(corpus_path, 'r') as fh:
@@ -187,93 +187,66 @@ def _index_colbert__ntcir12(docids, encoder, index,
             latex = ' '.join(fields[1:])
             latex = latex.replace('% ', '')
             latex = f'[imath]{latex}[/imath]'
+
             tokens = preprocess_for_transformer(latex)
-            tokens = '[D] ' + tokens
+            embs = encode_func([tokens])
+
             docids.append((docid_and_pos, latex))
-            embs = encoder.encode([tokens])
             index.add(np.array(embs))
             print(index.ntotal, tokens)
 
 
-def _index_colbert__arqmath(docids, encoder, index,
-    corpus_path='~/corpus/arqmath-v2', endat=-1):
-    corpus_path = os.path.expanduser(corpus_path)
-    print('Loading Question Dictionary ...')
-    with open(f'{corpus_path}/../arqmath-question-dict.pkl', 'rb') as fh:
-        Q_dict = pickle.load(fh)
-    for cnt, dirname, fname in file_iterator(corpus_path, endat, 'answer'):
-        path = dirname + '/' + fname
-        A = file_read(path)
-        fields = os.path.basename(path).split('.')
-        A_id = int(fields[0])
-        Q_id = int(fields[1])
-        if Q_id not in Q_dict:
-            continue
-        Q = Q_dict[Q_id][2]
-        content = Q + '\n\n' + A
-        tokens = preprocess_for_transformer(content)
-        tokens_len = len(tokens.split())
-        if tokens_len > 500:
-            content = Q[:128] + '\n\n' + A
-            tokens = preprocess_for_transformer(content)
-        tokens = '[D] ' + tokens
-        embs = encoder.encode([tokens])
-        index.add(np.array(embs))
-        docids.append((A_id, content, tokens))
-        print(index.ntotal, dirname)
-
-
-def _index_colbert__arqmath_answeronly(docids, encoder, index,
+def _index__arqmath_answeronly(docids, encode_func, index,
     corpus_path='~/corpus/arqmath-v2', endat=-1):
     corpus_path = os.path.expanduser(corpus_path)
     for cnt, dirname, fname in file_iterator(corpus_path, endat, 'answer'):
         path = dirname + '/' + fname
         content = file_read(path)
         fields = os.path.basename(path).split('.')
-        A_id = int(fields[0])
+        A_id, Q_id = int(fields[0]), int(fields[1])
+
         tokens = preprocess_for_transformer(content)
-        tokens = '[D] ' + tokens
-        embs = encoder.encode([tokens])
+        embs = encode_func([tokens])
+
+        docids.append((Q_id, A_id, content))
         index.add(np.array(embs))
-        docids.append((A_id, content, tokens))
         print(index.ntotal, dirname)
 
 
-def index_colbert(ckpoint, tok_ckpoint, pyserini_path, dim=768,
-    idx_dir="dense-idx", corpus_path=None, corpus_name='ntcir12'):
-    idx_dir = os.path.expanduser(idx_dir)
-    tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
-    model = ColBERT.from_pretrained(ckpoint, tie_word_embeddings=True)
-    sys.path.insert(0, pyserini_path)
-    from pyserini.dindex import AutoDocumentEncoder
-    import tempfile
-    with tempfile.TemporaryDirectory() as tmp:
-        print(f'Saving temporary raw model: {tmp}')
-        model.bert.save_pretrained(tmp)
-        encoder = AutoDocumentEncoder(
-            tmp, tokenizer_name=tok_ckpoint,
-            pooling='mean', l2_norm=True)
-        encoder.model.eval()
-        # adding ColBERT special tokens
-        encoder.tokenizer.add_special_tokens({
-            'additional_special_tokens': ['[Q]', '[D]']
-        })
-        encoder.model.resize_token_embeddings(len(encoder.tokenizer))
+def index_similarity_model(ckpoint, tok_ckpoint, pyserini_path='~/pyserini',
+    dim=768, idx_dir="dense-idx", corpus_path=None, corpus_name='ntcir12',
+    model_type='dpr'):
+    # prepare faiss index ...
     import faiss
     index = faiss.IndexFlatIP(dim)
+    idx_dir = os.path.expanduser(idx_dir)
     print(f'Writing to {idx_dir}')
     os.makedirs(idx_dir, exist_ok=True)
     docids = []
-    args = [docids, encoder, index]
-    if corpus_path: args.append(corpus_path)
-    if corpus_name == 'ntcir12':
-        _index_colbert__ntcir12(*args)
-    elif corpus_name == 'arqmath':
-        _index_colbert__arqmath(*args)
-    elif corpus_name == 'arqmath_answeronly':
-        _index_colbert__arqmath_answeronly(*args)
+
+    # load model
+    tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
+    if model_type == 'dpr':
+        model = DprEncoder.from_pretrained(ckpoint, tie_word_embeddings=True)
+        def encode_func(x):
+            inputs = tokenizer(x, truncation=True, return_tensors="pt")
+            outputs = model.forward(inputs)[1]
+            return outputs.detach().numpy()
     else:
         raise NotImplementedError
+
+    #sys.path.insert(0, pyserini_path)
+    #from pyserini.encode import DprDocumentEncoder, ColBertEncoder
+
+    args = [docids, encode_func, index]
+    if corpus_path: args.append(corpus_path)
+    if corpus_name == 'ntcir12':
+        _index__ntcir12(*args)
+    elif corpus_name == 'arqmath':
+        _index__arqmath_answeronly(*args)
+    else:
+        raise NotImplementedError
+
     with open(os.path.join(idx_dir, 'docids.pkl'), 'wb') as fh:
         pickle.dump(docids, fh)
     faiss.write_index(index, os.path.join(idx_dir, 'index.faiss'))
@@ -281,6 +254,7 @@ def index_colbert(ckpoint, tok_ckpoint, pyserini_path, dim=768,
 
 def search_colbert(ckpoint, tok_ckpoint, pyserini_path,
                    idx_dir="dense-idx", k=10, query='[imath]\\lim(1+1/n)^n[/imath]'):
+    # prepare faiss index ...
     import faiss
     import numpy as np
     idx_dir = os.path.expanduser(idx_dir)
@@ -293,26 +267,22 @@ def search_colbert(ckpoint, tok_ckpoint, pyserini_path,
     dim = index.d
     print(f'Index dim: {dim}')
 
+    # load model
     tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
-    model = ColBERT.from_pretrained(ckpoint, tie_word_embeddings=True)
-    sys.path.insert(0, pyserini_path)
-    from pyserini.dindex import AutoDocumentEncoder
-    import tempfile
-    with tempfile.TemporaryDirectory() as tmp:
-        print(f'Saving temporary raw model: {tmp}')
-        model.bert.save_pretrained(tmp)
-        encoder = AutoDocumentEncoder(
-            tmp, tokenizer_name=tok_ckpoint,
-            pooling='mean', l2_norm=True)
-        encoder.model.eval()
-        # adding ColBERT special tokens
-        encoder.tokenizer.add_special_tokens({
-            'additional_special_tokens': ['[Q]', '[D]']
-        })
-        encoder.model.resize_token_embeddings(len(encoder.tokenizer))
+    if model_type == 'dpr':
+        model = DprEncoder.from_pretrained(ckpoint, tie_word_embeddings=True)
+        def encode_func(x):
+            inputs = tokenizer(x, truncation=True, return_tensors="pt")
+            outputs = model.forward(inputs)[1]
+            return outputs.detach().numpy()
+    else:
+        raise NotImplementedError
+
+    #sys.path.insert(0, pyserini_path)
+    #from pyserini.dindex import AutoDocumentEncoder
+
     tokens = preprocess_for_transformer(query)
-    tokens = '[Q] ' + tokens
-    emb = encoder.encode([tokens])
+    emb = encode_func([tokens])
     faiss.omp_set_num_threads(1)
     scores, ids = index.search(emb, k)
     scores = scores.flat
@@ -441,7 +411,7 @@ if __name__ == '__main__':
         "pft_print": pft_print,
         "pickle_print": pickle_print,
         "test_similarity_model": test_similarity_model,
-        "index_colbert": index_colbert,
+        "index_similarity_model": index_similarity_model,
         "search_colbert": search_colbert,
         "convert2jsonl_ntcir12": convert2jsonl_ntcir12,
         "convert2jsonl_arqmath": convert2jsonl_arqmath,
