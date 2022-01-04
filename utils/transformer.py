@@ -186,7 +186,7 @@ class ColBERT(BertPreTrainedModel):
 
 
 class BertForTagsPrediction(BertPreTrainedModel):
-    def __init__(self, config, n_labels, h_dim=300, method='direct'):
+    def __init__(self, config, n_labels, std=0.01, method='direct'):
         super().__init__(config)
         self.bert = BertModel(config)
         self.n_labels = n_labels
@@ -202,13 +202,15 @@ class BertForTagsPrediction(BertPreTrainedModel):
             self.ib_dim = 32
             h_dim = 300
             self.n_samples = 3
+
             self.mlp = nn.Sequential(
                 nn.Linear(config.hidden_size, h_dim), nn.Tanh(),
                 nn.Linear(h_dim, self.ib_dim)
             )
             self.std = nn.Parameter(
-                torch.ones(self.ib_dim, requires_grad=False) * 0.003
+                torch.tensor(std, requires_grad=False)
             )
+
             self.topic_tag = nn.Parameter(
                 torch.randn(
                     (self.ib_dim, self.n_labels),
@@ -840,6 +842,10 @@ class Trainer(BaseTrainer):
 
         self.logits2probs = torch.nn.Softmax(dim=1)
 
+        if method == 'variational':
+            self.beta = 2 * (self.model.std.item() ** 2)
+            print('Beta:', self.beta)
+
         print('Calculating BCE positive weights')
         self.positive_weights = torch.ones([len(self.tag_ids)])
         self.negative_weights = torch.ones([len(self.tag_ids)])
@@ -860,8 +866,6 @@ class Trainer(BaseTrainer):
                     for batch, inputs in enumerate(progress):
                         self.update_posneg_w(inputs, progress, shard, n_shards)
 
-        #self.beta = 0.01
-        self.beta = 1.
         self.start_training(self.tag_prediction_training)
 
     def update_posneg_w(self, inputs, progress, shard, n_shards):
@@ -913,7 +917,7 @@ class Trainer(BaseTrainer):
             f"{n_nodes} nodes, " +
             f"{device_desc}, " +
             f"In{input_shape}, " +
-            f'loss: {rc_loss.item():.2f}+{kl_loss.item():.2f}={loss.item():.2f}'
+            f'loss: {rc_loss.item():.4f}+{kl_loss.item():.4f}={loss.item():.2f}'
         )
 
         if self.logger:
