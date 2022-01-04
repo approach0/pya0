@@ -1052,7 +1052,7 @@ class Trainer(BaseTrainer):
             dirname = os.path.dirname(self.test_file)
             self.test_file = dirname + '/' + fh.read().rstrip()
 
-        print('Loading as ColBERT model ...')
+        print('Loading as DPR model ...')
         self.model = DprEncoder.from_pretrained(ckpoint,
             tie_word_embeddings=True
         )
@@ -1085,11 +1085,9 @@ class Trainer(BaseTrainer):
         enc_passages.to(device)
         vec_passages = self.model(enc_passages)[1]
 
-        if random.random() < 0.1:
-            print()
-            print(queries[0])
-            print(passages[0])
-            print(passages[1])
+        if random.random() < 0.05:
+            print('\n', queries[0], '\n')
+            print('\n', passages[0], '\n')
 
         # compute loss: [n_query, dim] @ [dim, n_pos + n_neg]
         scores = vec_queries @ vec_passages.T
