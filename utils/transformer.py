@@ -186,11 +186,13 @@ class ColBERT(BertPreTrainedModel):
 
 
 class BertForTagsPrediction(BertPreTrainedModel):
-    def __init__(self, config, n_labels, std=0.01, method='direct'):
+    def __init__(self, config, n_labels, debug=False,
+                 std=1.0, method='direct'):
         super().__init__(config)
         self.bert = BertModel(config)
         self.n_labels = n_labels
         self.method = method
+        self.debug = debug
 
         if self.method == 'direct':
             self.classifier = nn.Sequential(
@@ -210,14 +212,14 @@ class BertForTagsPrediction(BertPreTrainedModel):
             self.std = nn.Parameter(
                 torch.tensor(std, requires_grad=False)
             )
-
             self.topic_tag = nn.Parameter(
                 torch.randn(
                     (self.ib_dim, self.n_labels),
                     requires_grad=True
                 )
             )
-            self.softmax = torch.nn.Softmax(dim=-1)
+            self.theta_softmax = torch.nn.Softmax(dim=-1)
+            self.topic_tag_softmax = torch.nn.Softmax(dim=-1)
 
         else:
             raise NotImplementedError
@@ -236,13 +238,18 @@ class BertForTagsPrediction(BertPreTrainedModel):
             std = self.std
             z = self.reparameterize(mu, std) # n_samples, B, ib_dim
             z_mean = z.mean(dim=0) # B, ib_dim
-            theta = self.softmax(z_mean)
-            logits = theta @ self.topic_tag # [B, ib_dim] * [ib_dim, n_labels]
+            theta = self.theta_softmax(z_mean)
+            topic_tag = self.topic_tag_softmax(self.topic_tag)
+            probs = theta @ topic_tag # [B, ib_dim] * [ib_dim, n_labels]
+            if random.random() < 0.10:
+                torch.set_printoptions(profile="full")
+                print(topic_tag.argmax(dim=1))
+                print(probs.argmax(dim=1))
             # KL(q(z|x), q(z))
             mean_sq = mu * mu
             std_sq = std * std
             kl_div = 0.5 * (mean_sq + std_sq - std_sq.log() - 1).sum(dim=1)
-            return logits, kl_div.mean()
+            return probs, kl_div.mean()
 
         else:
             raise NotImplementedError
@@ -297,7 +304,10 @@ class Trainer(BaseTrainer):
             weights = self.negative_weights / self.positive_weights
             weights = weights.to(device)
             print(weights)
-            self.bce_loss = nn.BCEWithLogitsLoss(weights)
+            if self.method == 'variational':
+                self.bce_loss = nn.BCELoss(weights)
+            else:
+                self.bce_loss = nn.BCEWithLogitsLoss(weights)
 
         self.optimizer = AdamW(
             self.model.parameters(),
@@ -837,21 +847,26 @@ class Trainer(BaseTrainer):
         self.model = BertForTagsPrediction.from_pretrained(ckpoint,
             tie_word_embeddings=True,
             n_labels = len(self.tag_ids),
+            debug = self.debug,
             method = method
         )
 
         self.logits2probs = torch.nn.Softmax(dim=1)
 
         if method == 'variational':
-            self.beta = 2 * (self.model.std.item() ** 2)
+            #self.beta = 2 * (self.model.std.item() ** 2)
+            self.beta = 0.0001
             print('Beta:', self.beta)
+        else:
+            self.beta = 0
 
         print('Calculating BCE positive weights')
         self.positive_weights = torch.ones([len(self.tag_ids)])
         self.negative_weights = torch.ones([len(self.tag_ids)])
-        uniform_bce_weights = self.debug
+        self.method = method
+        use_uniform_bce_weights = self.debug
 
-        if not uniform_bce_weights:
+        if not use_uniform_bce_weights:
             from torch.utils.data import DataLoader
             from tqdm import tqdm
             shard_files = self._get_shard_files()
@@ -968,7 +983,8 @@ class Trainer(BaseTrainer):
 
         self.test_loss_sum += loss.item()
         self.test_loss_cnt += 1
-        if self.test_loss_cnt >= 25: # 40
+        test_iters = 5 if self.debug else 25
+        if self.test_loss_cnt >= test_iters:
             raise StopIteration
 
     def one_vs_all_tag_prediction(self, ckpoint, tok_ckpoint, tag_ids_file):
