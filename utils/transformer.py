@@ -201,8 +201,8 @@ class BertForTagsPrediction(BertPreTrainedModel):
             self.zero = nn.Parameter(torch.zeros(1))
 
         elif self.method == 'variational':
-            self.ib_dim = 100
-            h_dim = 300
+            self.ib_dim = 32
+            h_dim = 256
             self.n_samples = 3
 
             self.mlp = nn.Sequential(
@@ -332,13 +332,16 @@ class Trainer(BaseTrainer):
         tokens = psg.split()
         filter_tokens = []
         for tok in tokens:
-            stem_tok = self.stemmer.stem(tok)
-            if stem_tok in self.en_stops:
-                continue
-            elif '-' in stem_tok:
+            if tok.startswith('$'):
                 pass
-            elif stem_tok not in self.ma_keywords:
-                continue
+            else:
+                stem_tok = self.stemmer.stem(tok)
+                if stem_tok in self.en_stops:
+                    continue
+                elif '-' in stem_tok:
+                    pass
+                elif stem_tok not in self.ma_keywords:
+                    continue
             filter_tokens.append(tok)
         psg = ' '.join(filter_tokens)
         return psg
@@ -1081,6 +1084,12 @@ class Trainer(BaseTrainer):
             padding=True, truncation=True, return_tensors="pt")
         enc_passages.to(device)
         vec_passages = self.model(enc_passages)[1]
+
+        if random.random() < 0.1:
+            print()
+            print(queries[0])
+            print(passages[0])
+            print(passages[1])
 
         # compute loss: [n_query, dim] @ [dim, n_pos + n_neg]
         scores = vec_queries @ vec_passages.T
