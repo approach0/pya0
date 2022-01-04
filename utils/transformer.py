@@ -187,7 +187,7 @@ class ColBERT(BertPreTrainedModel):
 
 class BertForTagsPrediction(BertPreTrainedModel):
     def __init__(self, config, n_labels, debug=False,
-                 std=1.0, method='direct'):
+                 std=0.5, method='direct'):
         super().__init__(config)
         self.bert = BertModel(config)
         self.n_labels = n_labels
@@ -201,7 +201,7 @@ class BertForTagsPrediction(BertPreTrainedModel):
             self.zero = nn.Parameter(torch.zeros(1))
 
         elif self.method == 'variational':
-            self.ib_dim = 32
+            self.ib_dim = 100
             h_dim = 300
             self.n_samples = 3
 
@@ -243,12 +243,13 @@ class BertForTagsPrediction(BertPreTrainedModel):
             probs = theta @ topic_tag # [B, ib_dim] * [ib_dim, n_labels]
             if random.random() < 0.10:
                 torch.set_printoptions(profile="full")
+                print(mu.mean())
                 print(topic_tag.argmax(dim=1))
                 print(probs.argmax(dim=1))
             # KL(q(z|x), q(z))
             mean_sq = mu * mu
             std_sq = std * std
-            kl_div = 0.5 * (mean_sq + std_sq - std_sq.log() - 1).sum(dim=1)
+            kl_div = 0.5 * (mean_sq + std_sq - std_sq.log() - 1).sum(dim=-1)
             return probs, kl_div.mean()
 
         else:
@@ -305,9 +306,9 @@ class Trainer(BaseTrainer):
             weights = weights.to(device)
             print(weights)
             if self.method == 'variational':
-                self.bce_loss = nn.BCELoss(weights)
+                self.bce_loss = nn.BCELoss(weights, reduction='mean')
             else:
-                self.bce_loss = nn.BCEWithLogitsLoss(weights)
+                self.bce_loss = nn.BCEWithLogitsLoss(weights, reduction='mean')
 
         self.optimizer = AdamW(
             self.model.parameters(),
@@ -855,7 +856,7 @@ class Trainer(BaseTrainer):
 
         if method == 'variational':
             #self.beta = 2 * (self.model.std.item() ** 2)
-            self.beta = 0.0001
+            self.beta = 0.01
             print('Beta:', self.beta)
         else:
             self.beta = 0
@@ -916,8 +917,8 @@ class Trainer(BaseTrainer):
 
         self.optimizer.zero_grad()
         logits, kl_loss = self.model(enc_inputs)
-        rc_loss = self.bce_loss(logits, labels)
         kl_loss = self.beta * kl_loss
+        rc_loss = self.bce_loss(logits, labels)
         loss = rc_loss + kl_loss
 
         self.backward(loss)
@@ -964,8 +965,8 @@ class Trainer(BaseTrainer):
         labels = torch.tensor(labels, device=device).float()
 
         logits, kl_loss = self.model(enc_inputs)
-        rc_loss = self.bce_loss(logits, labels)
         kl_loss = self.beta * kl_loss
+        rc_loss = self.bce_loss(logits, labels)
         loss = rc_loss + kl_loss
 
         probs = self.logits2probs(logits)
