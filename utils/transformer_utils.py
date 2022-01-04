@@ -252,8 +252,9 @@ def index_similarity_model(ckpoint, tok_ckpoint, pyserini_path='~/pyserini',
     faiss.write_index(index, os.path.join(idx_dir, 'index.faiss'))
 
 
-def search_colbert(ckpoint, tok_ckpoint, pyserini_path,
-                   idx_dir="dense-idx", k=10, query='[imath]\\lim(1+1/n)^n[/imath]'):
+def retrieve_similarity_model(ckpoint, tok_ckpoint, pyserini_path='~/pyserini',
+    idx_dir="dense-idx", k=10, query='[imath]\\lim(1+1/n)^n[/imath]',
+    model_type='dpr'):
     # prepare faiss index ...
     import faiss
     import numpy as np
@@ -412,7 +413,7 @@ if __name__ == '__main__':
         "pickle_print": pickle_print,
         "test_similarity_model": test_similarity_model,
         "index_similarity_model": index_similarity_model,
-        "search_colbert": search_colbert,
+        "retrieve_similarity_model": retrieve_similarity_model,
         "convert2jsonl_ntcir12": convert2jsonl_ntcir12,
         "convert2jsonl_arqmath": convert2jsonl_arqmath,
     })
