@@ -208,7 +208,7 @@ class BertForTagsPrediction(BertPreTrainedModel):
             self.zero = nn.Parameter(torch.zeros(1))
 
         elif self.method == 'variational':
-            self.ib_dim = 32
+            self.ib_dim = 64
             h_dim = 256
             self.n_samples = 3
 
@@ -248,7 +248,7 @@ class BertForTagsPrediction(BertPreTrainedModel):
             theta = self.theta_softmax(z_mean)
             topic_tag = self.topic_tag_softmax(self.topic_tag)
             probs = theta @ topic_tag # [B, ib_dim] * [ib_dim, n_labels]
-            if random.random() < 0.10:
+            if random.random() < 0.05:
                 torch.set_printoptions(profile="full")
                 print(mu.mean())
                 print(topic_tag.argmax(dim=1))
@@ -862,13 +862,7 @@ class Trainer(BaseTrainer):
         )
 
         self.logits2probs = torch.nn.Softmax(dim=1)
-
-        if method == 'variational':
-            #self.beta = 2 * (self.model.std.item() ** 2)
-            self.beta = 0.01
-            print('Beta:', self.beta)
-        else:
-            self.beta = 0
+        self.beta = 0
 
         print('Calculating BCE positive weights')
         self.positive_weights = torch.ones([len(self.tag_ids)])
@@ -905,6 +899,13 @@ class Trainer(BaseTrainer):
             f"shard#{shard+1}/{n_shards}"
         )
 
+    def update_beta(self, iteration):
+        if self.method == 'variational':
+            new_beta = min(iteration / 20_000,  1.0)
+            if new_beta > self.beta:
+                self.beta = new_beta
+        return self.beta
+
     def tag_prediction_training(self, inputs, device, progress,
         epoch, shard, batch, n_shards, save_cycle, n_nodes, iteration):
         # collate inputs
@@ -932,6 +933,7 @@ class Trainer(BaseTrainer):
 
         self.backward(loss)
         self.step()
+        beta = self.update_beta(iteration)
 
         device_desc = self.local_device_info()
         input_shape = list(enc_inputs.input_ids.shape)
@@ -942,13 +944,31 @@ class Trainer(BaseTrainer):
             f"{n_nodes} nodes, " +
             f"{device_desc}, " +
             f"In{input_shape}, " +
+            f"beta: {beta}, " +
             f'loss: {rc_loss.item():.4f}+{kl_loss.item():.4f}={loss.item():.2f}'
         )
 
         if self.logger:
+            loss_ = loss.item()
+            self.acc_loss[epoch] += loss_
+            self.ep_iters[epoch] += 1
+            avg_loss = self.acc_loss[epoch] / self.ep_iters[epoch]
             self.logger.add_scalar(
-                f'train_loss/{epoch}', loss.item(), iteration
+                f'train_avg_loss/{epoch}', avg_loss, iteration
             )
+            self.logger.add_scalar(
+                f'train_batch_loss/{epoch}', loss_, iteration
+            )
+            if self.method == 'variational':
+                self.logger.add_scalar(
+                    f'train_beta/{epoch}', beta, iteration
+                )
+                self.logger.add_scalar(
+                    f'train_batch_rc_loss/{epoch}', rc_loss.item(), iteration
+                )
+                self.logger.add_scalar(
+                    f'train_batch_kl_loss/{epoch}', kl_loss.item(), iteration
+                )
 
         self.test_loss_sum = 0
         self.test_loss_cnt = 0
