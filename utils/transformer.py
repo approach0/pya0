@@ -129,10 +129,11 @@ class PsgWithTagLabelsShard(Dataset):
 
 class QueryInferShard(Dataset):
 
-    def __init__(self, tag_ids, data_file):
+    def __init__(self, tag_ids, method, data_file):
         self.tags = list(tag_ids.keys())
         self.N = len(self.tags)
         self.data = []
+        self.method = method
         with open(data_file, 'r') as fh:
             for line in fh:
                 line = line.rstrip()
@@ -140,15 +141,23 @@ class QueryInferShard(Dataset):
                 self.data.append(fields)
 
     def __len__(self):
-        return self.N * len(self.data)
+        if self.method == 'one-vs-all':
+            return self.N * len(self.data)
+        else:
+            return len(self.data)
 
     def __getitem__(self, idx):
-        tag = self.tags[idx % self.N]
-        if len(self.data[idx // self.N]) == 2:
-            qry_id, qry = self.data[idx // self.N]
+        if self.method == 'one-vs-all':
+            tag = self.tags[idx % self.N]
+            index = idx // self.N
+        else:
+            index = idx
+            tag = ''
+        if len(self.data[index]) == 2:
+            qry_id, qry = self.data[index]
             return tag, qry, qry_id
         else:
-            qry_id = self.data[idx // self.N]
+            qry_id = self.data[index]
             return tag, '', qry_id[0]
 
 
@@ -186,13 +195,11 @@ class ColBERT(BertPreTrainedModel):
 
 
 class BertForTagsPrediction(BertPreTrainedModel):
-    def __init__(self, config, n_labels, debug=False,
-                 std=0.5, method='direct'):
+    def __init__(self, config, n_labels, std=0.5, method='direct'):
         super().__init__(config)
         self.bert = BertModel(config)
         self.n_labels = n_labels
         self.method = method
-        self.debug = debug
 
         if self.method == 'direct':
             self.classifier = nn.Sequential(
@@ -851,7 +858,6 @@ class Trainer(BaseTrainer):
         self.model = BertForTagsPrediction.from_pretrained(ckpoint,
             tie_word_embeddings=True,
             n_labels = len(self.tag_ids),
-            debug = self.debug,
             method = method
         )
 
@@ -991,59 +997,93 @@ class Trainer(BaseTrainer):
         if self.test_loss_cnt >= test_iters:
             raise StopIteration
 
-    def one_vs_all_tag_prediction(self, ckpoint, tok_ckpoint, tag_ids_file):
+    def tag_prediction_genn(self, ckpoint, tok_ckpoint, tag_ids_file, method):
         print('Loading tag IDs ...')
         with open(tag_ids_file, 'rb') as fh:
             self.tag_ids = pickle.load(fh)
         print(f'Number of tags: {len(self.tag_ids)}')
 
-        self.dataset_cls = partial(QueryInferShard, self.tag_ids)
+        self.dataset_cls = partial(QueryInferShard, self.tag_ids, method)
         self.test_only = True
 
-        print('Loading model ...')
-        self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
-        self.model = BertForPreTraining.from_pretrained(ckpoint,
-            tie_word_embeddings=True
-        )
+        self.method = method
+        print('Loading tag-prediction model using method:', method)
+        if method == 'one-vs-all':
+            self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
+            self.model = BertForPreTraining.from_pretrained(ckpoint,
+                tie_word_embeddings=True
+            )
+            # adding tag prediction special tokens
+            self.tokenizer.add_special_tokens({
+                'additional_special_tokens': ['[T]']
+            })
+            self.model.resize_token_embeddings(len(self.tokenizer))
+
+        elif method in ['direct', 'variational']:
+            self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
+            self.model = BertForTagsPrediction.from_pretrained(ckpoint,
+                tie_word_embeddings=True,
+                n_labels = len(self.tag_ids),
+                method = method
+            )
+
+        else:
+            raise NotImplementedError
 
         self.logits2probs = torch.nn.Softmax(dim=1)
+        self.start_training(self.tag_prediction_genn_loop)
 
-        # adding tag prediction special tokens
-        self.tokenizer.add_special_tokens({
-            'additional_special_tokens': ['[T]']
-        })
-        self.model.resize_token_embeddings(len(self.tokenizer))
-
-        self.start_training(self.one_vs_all_tag_prediction_loop)
-
-    def one_vs_all_tag_prediction_loop(self, inputs, device, progress):
+    def tag_prediction_genn_loop(self, inputs, device, progress, dataset):
         # collate inputs
         tags = ['[T] ' + tag for tag, qry, qryid in inputs]
         qrys = [qry for tag, qry, qryid in inputs]
         qry_ids = [qryid for tag, qry, qryid in inputs]
-        collate_inputs = list(zip(tags, qrys))
 
-        # tokenize inputs
-        enc_inputs = self.tokenizer(collate_inputs,
-            padding=True, truncation=True, return_tensors="pt")
-        enc_inputs.to(device)
+        if self.method == 'one-vs-all':
+            collate_inputs = list(zip(tags, qrys))
 
-        # feed model
-        outputs = self.model(**enc_inputs)
-        probs = self.logits2probs(outputs.seq_relationship_logits)
+            # tokenize inputs
+            enc_inputs = self.tokenizer(collate_inputs,
+                padding=True, truncation=True, return_tensors="pt")
+            enc_inputs.to(device)
 
-        with open('output_tag_inference.txt', 'a') as fh:
-            for b, ids in enumerate(enc_inputs['input_ids']):
-                prob = round(probs[b][0].item(), 2)
-                #if prob > 0.95:
-                if prob >= 0.85:
-                    if self.debug:
-                        print()
-                        text = self.tokenizer.decode(ids)
-                        print(Trainer.highlight_masked(text))
-                        print('Confidence:', prob)
-                    out = [qry_ids[b], prob, tags[b]]
-                    fh.write('\t'.join(map(str, out)) + '\n')
+            # feed model
+            outputs = self.model(**enc_inputs)
+            probs = self.logits2probs(outputs.seq_relationship_logits)
+
+            with open('output_tag_inference.txt', 'a') as fh:
+                for b, ids in enumerate(enc_inputs['input_ids']):
+                    prob = round(probs[b][0].item(), 2)
+                    #if prob > 0.95:
+                    if prob >= 0.85:
+                        if self.debug:
+                            print()
+                            text = self.tokenizer.decode(ids)
+                            print(Trainer.highlight_masked(text))
+                            print('Confidence:', prob)
+                        out = [qry_ids[b], prob, tags[b]]
+                        fh.write('\t'.join(map(str, out)) + '\n')
+                        fh.flush()
+        else:
+            # tokenize inputs
+            enc_inputs = self.tokenizer(qrys,
+                padding=True, truncation=True, return_tensors="pt")
+            enc_inputs.to(device)
+
+            # feed model
+            logits, kl_loss = self.model(enc_inputs)
+            probs = self.logits2probs(logits) # [B, n_labels]
+
+            probs = probs.cpu().numpy()
+            with open('output_tag_inference.txt', 'a') as fh:
+                for b, b_probs in enumerate(probs):
+                    top_probs_idx = numpy.argwhere(b_probs > 0.1).flatten()
+                    top_probs = b_probs[top_probs_idx]
+                    for prob, idx in zip(top_probs, top_probs_idx):
+                        out = [qry_ids[b], prob, dataset.tags[idx]]
+                        fh.write('\t'.join(map(str, out)) + '\n')
+                        fh.flush()
+
 
     def dpr(self, ckpoint, tok_ckpoint):
         self.dataset_cls = ContrastiveQAShard
