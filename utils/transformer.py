@@ -1013,7 +1013,7 @@ class Trainer(BaseTrainer):
 
         self.test_loss_sum += loss.item()
         self.test_loss_cnt += 1
-        test_iters = 5 if self.debug else 25
+        test_iters = 5 if self.debug else 100
         if self.test_loss_cnt >= test_iters:
             raise StopIteration
 
