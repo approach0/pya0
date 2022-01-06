@@ -313,9 +313,9 @@ class Trainer(BaseTrainer):
             weights = weights.to(device)
             print(weights)
             if self.method == 'variational':
-                self.bce_loss = nn.BCELoss(weights, reduction='mean')
+                self.bce_loss = nn.BCELoss(weights, reduction='none')
             else:
-                self.bce_loss = nn.BCEWithLogitsLoss(weights, reduction='mean')
+                self.bce_loss = nn.BCEWithLogitsLoss(weights, reduction='none')
 
         self.optimizer = AdamW(
             self.model.parameters(),
@@ -929,6 +929,7 @@ class Trainer(BaseTrainer):
         logits, kl_loss = self.model(enc_inputs)
         kl_loss = self.beta * kl_loss
         rc_loss = self.bce_loss(logits, labels)
+        rc_loss = rc_loss.sum(-1).mean()
         loss = rc_loss + kl_loss
 
         self.backward(loss)
@@ -996,6 +997,7 @@ class Trainer(BaseTrainer):
         logits, kl_loss = self.model(enc_inputs)
         kl_loss = self.beta * kl_loss
         rc_loss = self.bce_loss(logits, labels)
+        rc_loss = rc_loss.sum(-1).mean()
         loss = rc_loss + kl_loss
 
         probs = self.logits2probs(logits)
@@ -1013,7 +1015,7 @@ class Trainer(BaseTrainer):
 
         self.test_loss_sum += loss.item()
         self.test_loss_cnt += 1
-        test_iters = 5 if self.debug else 100
+        test_iters = 5 if self.debug else 50
         if self.test_loss_cnt >= test_iters:
             raise StopIteration
 
