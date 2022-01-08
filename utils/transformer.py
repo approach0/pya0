@@ -274,11 +274,11 @@ class DprEncoder(BertPreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
 
-        self.bert_model = BertModel(config)
+        self.m_bert = BertModel(config)
         self.init_weights()
 
     def forward(self, inputs):
-        outputs = self.bert_model(**inputs)
+        outputs = self.m_bert(**inputs)
         last_hidden_state = outputs.last_hidden_state
         pooler_output = outputs.pooler_output
         return last_hidden_state, pooler_output

@@ -284,6 +284,7 @@ def retrieve_similarity_model(ckpoint, tok_ckpoint, pyserini_path='~/pyserini',
 
     tokens = preprocess_for_transformer(query)
     emb = encode_func([tokens])
+
     faiss.omp_set_num_threads(1)
     scores, ids = index.search(emb, k)
     scores = scores.flat
@@ -291,8 +292,10 @@ def retrieve_similarity_model(ckpoint, tok_ckpoint, pyserini_path='~/pyserini',
     results = [(i, score, docids[i]) for score, i in zip(scores, ids)]
     print('[tokens]', tokens)
     print('[query]', query)
-    for res in results:
-        print(res)
+    for rank, score, result in results:
+        if rank == -1:
+            break
+        print(score, result)
 
 
 def convert2jsonl_ntcir12(
@@ -405,7 +408,23 @@ def convert2jsonl_arqmath(
     if jsonl_file: jsonl_file.close()
     if Q_output_fh: Q_output_fh.close()
 
+
+def test_determinisity(path, tokenizer_path='math-dpr/bert-tokenizer-for-math'):
+    m = torch.load(path + '/pytorch_model.bin')
+    for mpath, value in m.items():
+        print(mpath)
+    model, info = DprEncoder.from_pretrained(path, output_loading_info=True)
+    tokenizer = BertTokenizer.from_pretrained(tokenizer_path)
+    inputs = tokenizer('foo bar baz', truncation=True, return_tensors="pt")
+    model.eval()
+    with torch.no_grad():
+        outputs = model.forward(inputs)[1]
+        print(outputs.sum())
+
+
 if __name__ == '__main__':
+    ### test_determinisity(path='./job-dpr-dpr/0-0-0'); quit()
+
     os.environ["PAGER"] = 'cat'
     fire.Fire({
         "attention": attention_visualize,
