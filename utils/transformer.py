@@ -1148,8 +1148,9 @@ class Trainer(BaseTrainer):
         vec_passages = self.model(enc_passages)[1]
 
         if random.random() < 0.05:
-            print('\n', queries[0], '\n')
-            print('\n', passages[0], '\n')
+            print('---' * 10)
+            print(queries[0], '\n\n')
+            print(passages[0])
 
         # compute loss: [n_query, dim] @ [dim, n_pos + n_neg]
         scores = vec_queries @ vec_passages.T
