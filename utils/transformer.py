@@ -1092,6 +1092,11 @@ class Trainer(BaseTrainer):
                 padding=True, truncation=True, return_tensors="pt")
             enc_inputs.to(device)
 
+            if self.method == 'direct':
+                threshold = 0.1
+            else:
+                threshold = 0.009
+
             # feed model
             logits, kl_loss = self.model(enc_inputs)
             probs = self.logits2probs(logits) # [B, n_labels]
@@ -1099,7 +1104,7 @@ class Trainer(BaseTrainer):
             probs = probs.cpu().numpy()
             with open('output_tag_inference.txt', 'a') as fh:
                 for b, b_probs in enumerate(probs):
-                    top_probs_idx = numpy.argwhere(b_probs > 0.1).flatten()
+                    top_probs_idx = numpy.argwhere(b_probs > threshold).flatten()
                     top_probs = b_probs[top_probs_idx]
                     for prob, idx in zip(top_probs, top_probs_idx):
                         out = [qry_ids[b], prob, dataset.tags[idx]]
