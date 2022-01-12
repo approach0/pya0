@@ -423,8 +423,6 @@ def test_determinisity(path, tokenizer_path='math-dpr/bert-tokenizer-for-math'):
 
 
 if __name__ == '__main__':
-    ### test_determinisity(path='./job-dpr-dpr/0-0-0'); quit()
-
     os.environ["PAGER"] = 'cat'
     fire.Fire({
         "attention": attention_visualize,
@@ -435,4 +433,5 @@ if __name__ == '__main__':
         "retrieve_similarity_model": retrieve_similarity_model,
         "convert2jsonl_ntcir12": convert2jsonl_ntcir12,
         "convert2jsonl_arqmath": convert2jsonl_arqmath,
+        "test_determinisity": test_determinisity,
     })
