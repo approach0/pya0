@@ -5,7 +5,10 @@ from transformer import ColBERT
 
 from preprocess import preprocess_for_transformer
 
-import faiss
+try:
+    import faiss
+except ImportError:
+    pass
 
 class SimpleEncoder:
     def __init__(self, model, tokenizer,
