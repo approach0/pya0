@@ -8,7 +8,7 @@ from _pya0 import *
 from .mindex_info import MINDEX_INFO
 from .index_manager import download_prebuilt_index, mount_image_index
 from .preprocess import preprocess, preprocess_query, preprocess_text
-from .preprocess import preprocess_for_transformer
+from .preprocess import preprocess_for_transformer, use_stemmer
 
 
 def from_prebuilt_index(prebuilt_index_name, verbose=True):
