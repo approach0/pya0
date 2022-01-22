@@ -12,7 +12,7 @@ from .eval import run_topics, evaluate_run, evaluate_log
 from .msearch import cascade_run, msearch
 from .mergerun import concatenate_run_files, merge_run_files
 from .l2r import L2R_gen_train_data, L2R_train
-from .preprocess import preprocess_query, use_stemmer
+import preprocess
 from .dsearch import get_dense_encoder
 
 
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     # use stemmer?
     if args.stemmer:
         print('use stemmer', args.stemmer)
-        use_stemmer(name=args.stemmer)
+        preprocess.use_stemmer(name=args.stemmer)
 
     # initial filter layer
     if args.filter:
@@ -329,7 +329,7 @@ if __name__ == '__main__':
 
         # process initial query
         origin_query = copy.deepcopy(query)
-        query = preprocess_query(query, expansion=args.math_expansion)
+        query = preprocess.preprocess_query(query, expansion=args.math_expansion)
         collection = args.collection if args.collection else 'test'
 
         if verbose:
