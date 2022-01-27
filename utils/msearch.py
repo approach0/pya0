@@ -62,10 +62,16 @@ def msearch(index, query, verbose=False, topk=1000, log=None, fork_search=False,
         results = json.loads(result_JSON)
 
     else:
-        result_JSON = pya0.search(
-            index, query, verbose=verbose, topk=topk, log=log
-        )
-        results = json.loads(result_JSON)
+        try:
+            result_JSON = pya0.search(
+                index, query, verbose=verbose, topk=topk, log=log
+            )
+            results = json.loads(result_JSON)
+        except UnicodeDecodeError:
+            return {
+                "ret_code": 1000,
+                "ret_str": 'UnicodeDecodeError'
+            }
 
     return results
 
