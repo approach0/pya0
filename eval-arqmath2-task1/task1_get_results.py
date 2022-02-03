@@ -36,14 +36,26 @@ def calculated_p_at_10(res_directory, trec_eval_tool, qre_file_path):
     return result
 
 
+def calculated_bpref(res_directory, trec_eval_tool, qre_file_path):
+    result = {}
+    for file in os.listdir(res_directory):
+        output = check_output([trec_eval_tool, qre_file_path, res_directory + file, "-l2", "-m", "bpref"])
+        output = output.decode('utf-8').split("\n")[0]
+        score = output.split("\t")[2].strip()
+        submission = file.split(".")[0].split("prime_")[1]
+        result[submission] = score
+    return result
+
+
 def get_result(trec_eval_tool, qre_file_path, prim_result_dir, evaluation_result_file):
     file_res = open(evaluation_result_file, "w")
     res_ndcg = calculated_ndcg(prim_result_dir, trec_eval_tool, qre_file_path)
     res_map = calculated_map(prim_result_dir, trec_eval_tool, qre_file_path)
     res_p10 = calculated_p_at_10(prim_result_dir, trec_eval_tool, qre_file_path)
-    file_res.write("System\tnDCG'\tmAP'\tp@10\n")
+    res_bpref = calculated_bpref(prim_result_dir, trec_eval_tool, qre_file_path)
+    file_res.write("System\tnDCG'\tmAP'\tp@10\tBPref\n")
     for sub in res_ndcg:
-        file_res.write(str(sub)+"\t"+str(res_ndcg[sub])+"\t"+str(res_map[sub])+"\t"+str(res_p10[sub])+"\n")
+        file_res.write(str(sub)+"\t"+str(res_ndcg[sub])+"\t"+str(res_map[sub])+"\t"+str(res_p10[sub])+"\t"+str(res_bpref[sub])+"\n")
     file_res.close()
 
 
