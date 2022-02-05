@@ -106,7 +106,6 @@ cd /code
 (cd /host/indri && make clean && make) # this one takes minutes to build
 make clean && make
 cd ./pya0 && make clean && make
-pip3 install --upgrade tqdm pandas 
 ```
 
 Use `docker commit $(docker ps -q | head -1) quickstart` to save the container for later re-use:
