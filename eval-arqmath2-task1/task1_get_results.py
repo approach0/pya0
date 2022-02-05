@@ -6,7 +6,9 @@ import argparse
 def calculated_ndcg(res_directory, trec_eval_tool, qre_file_path):
     result = {}
     for file in os.listdir(res_directory):
-        output = check_output([trec_eval_tool, qre_file_path, res_directory+file, "-m", "ndcg"])
+        cmd = [trec_eval_tool, qre_file_path, res_directory+file, "-m", "ndcg"]
+        print(' '.join(cmd))
+        output = check_output(cmd)
         output = output.decode('utf-8')
         score = output.split("\t")[2].strip()
         submission = file.split(".")[0].split("prime_")[1]
@@ -17,7 +19,9 @@ def calculated_ndcg(res_directory, trec_eval_tool, qre_file_path):
 def calculated_map(res_directory, trec_eval_tool, qre_file_path):
     result = {}
     for file in os.listdir(res_directory):
-        output = check_output([trec_eval_tool, qre_file_path, res_directory+file, "-l2", "-m", "map"])
+        cmd = [trec_eval_tool, qre_file_path, res_directory+file, "-l2", "-m", "map"]
+        print(' '.join(cmd))
+        output = check_output(cmd)
         output = output.decode('utf-8')
         score = output.split("\t")[2].strip()
         submission = file.split(".")[0].split("prime_")[1]
@@ -28,7 +32,9 @@ def calculated_map(res_directory, trec_eval_tool, qre_file_path):
 def calculated_p_at_10(res_directory, trec_eval_tool, qre_file_path):
     result = {}
     for file in os.listdir(res_directory):
-        output = check_output([trec_eval_tool, qre_file_path, res_directory + file, "-l2", "-m", "P"])
+        cmd = [trec_eval_tool, qre_file_path, res_directory + file, "-l2", "-m", "P"]
+        print(' '.join(cmd))
+        output = check_output(cmd)
         output = output.decode('utf-8').split("\n")[1]
         score = output.split("\t")[2].strip()
         submission = file.split(".")[0].split("prime_")[1]
@@ -39,7 +45,9 @@ def calculated_p_at_10(res_directory, trec_eval_tool, qre_file_path):
 def calculated_bpref(res_directory, trec_eval_tool, qre_file_path):
     result = {}
     for file in os.listdir(res_directory):
-        output = check_output([trec_eval_tool, qre_file_path, res_directory + file, "-l2", "-m", "bpref"])
+        cmd = [trec_eval_tool, qre_file_path, res_directory + file, "-l2", "-m", "bpref"]
+        print(' '.join(cmd))
+        output = check_output(cmd)
         output = output.decode('utf-8').split("\n")[0]
         score = output.split("\t")[2].strip()
         submission = file.split(".")[0].split("prime_")[1]
