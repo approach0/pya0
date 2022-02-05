@@ -2,6 +2,7 @@
 It provides Python interface to make the search engine core easy to play with.
 
 Source code of this Python binding can be found in this [repository](https://github.com/approach0/pya0).
+A [PyPI package](https://pypi.org/project/pya0/) is available, try it out!
 
 However, in order to build this Python module, you will need to have this repository fetched as a git submodule from its parent [repository](https://github.com/approach0/search-engine/tree/pya0).
 
@@ -36,6 +37,7 @@ Refer to `tests/` directory for more complete example usages.
 
 ## Supported Interfaces
 * `lex(TeX: str) -> list[tuple(tokID, token, symbol)]`
+* `parse(TeX: str, insert_rank_node: Option[bool]) -> tuple(str, OPT)`
 * `index_open(index_path: str, option: str, segment_dict: str) -> index_handler`
 * `index_close(ix: index_handler) -> None`
 * `index_memcache(ix: index_handler, term_cache: int, math_cache: int) -> None`
@@ -81,7 +83,7 @@ which docker || curl -fsSL https://get.docker.com -o get-docker.sh
 which docker || sh get-docker.sh
 ```
 
-Pull and run image `quay.io/pypa/manylinux_2_24_x86_64` at parent source directory `approach0` (and assume `$HOME` is where you put Indri and Jieba code):
+Pull and run image `quay.io/pypa/manylinux_2_24_x86_64` at the parent source directory of `approach0` and assume `$HOME` is where you put Indri and Jieba code:
 ```sh
 sudo docker run -it -v `pwd`:/code -v $HOME:/host quay.io/pypa/manylinux_2_24_x86_64 bash
 ```
@@ -90,21 +92,27 @@ Inside docker container, build pya0 as instructed below, so that you have a linu
 
 Typical build process:
 ```sh
-# Inside docker
+# Inside docker, setup system environment...
 apt update
 apt install -y git build-essential g++ cmake wget flex bison python3
 apt install -y libz-dev libevent-dev libopenmpi-dev libxml2-dev libfl-dev
 apt install -y libiberty-dev
+apt install -y build-essential python-dev python3-pip python3-venv
+python3 -m pip install --upgrade build # install pip-build tool
+
+# Now, start building (or if you enter from the quickstart image)...
 cd /code
 ./configure --indri-path=/host/indri --jieba-path=/host/cppjieba
-(cd /host/indri && make clean && make)
+(cd /host/indri && make clean && make) # this one takes minutes to build
 make clean && make
-apt install -y build-essential python-dev python3-pip python3-venv
 cd ./pya0 && make clean && make
-python3 -m pip install --upgrade build # install pip-build tool
 pip3 install --upgrade tqdm pandas 
 ```
-Use `docker commit $(docker ps -q | head -1) quickstart` to save the container for later re-use.
+
+Use `docker commit $(docker ps -q | head -1) quickstart` to save the container for later re-use:
+```
+sudo docker run -it -v `pwd`:/code -v $HOME:/host quickstart bash
+```
 
 Create a `pip` distribution package:
 ```sh
