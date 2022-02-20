@@ -154,7 +154,9 @@ def visualize_collection_runs(index, collection, tsv_file_path):
     scores_file_path = '.'.join(tsv_file_path.split('.')[0:-1]) + '.scores'
     scores = parse_scores_file(scores_file_path)
     run_name = os.path.basename(tsv_file_path)
-    qrels = parse_qrel_file(get_qrels_filepath(collection))
+    qrels_path = get_qrels_filepath(collection)
+    print('QRELS:', qrels_path)
+    qrels = parse_qrel_file(qrels_path)
     for i, (qid, query, _) in enumerate(gen_topics_queries(collection)):
         print(qid, query)
         topic_hits = run_per_topic[qid] if qid in run_per_topic else []
