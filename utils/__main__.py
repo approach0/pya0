@@ -342,7 +342,13 @@ if __name__ == '__main__':
                            topk=topk, collection=collection, docid=args.docid)
         # print hits
         for hit in hits:
-            print(hit)
+            snippet = hit['field_content']
+            del hit['field_content']
+            snippet = snippet.replace('<em class="hl">', "\033[91m")
+            snippet = snippet.replace('</em>', "\033[0m")
+            print("\033[94m" + json.dumps(hit) + "\033[0m")
+            print(snippet)
+            print()
 
         # output run file
         if args.trec_output is not None:
