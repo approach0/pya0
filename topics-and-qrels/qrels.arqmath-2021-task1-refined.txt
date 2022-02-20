@@ -1,1 +1,0 @@
-qrels.arqmath-2021-task1-official.txt

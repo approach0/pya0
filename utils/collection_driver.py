@@ -60,7 +60,7 @@ def TREC_preprocess(collection, index, hits):
 
 
 def TREC_reverse(collection, index, hits):
-    if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1', 'arqmath-2021-task1-refined']:
+    if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1', 'arqmath-2021-task1-refined', 'arqmath-2021-task1-official']:
         for hit in hits:
             trec_docid = hit['docid']
             hit['trec_docid'] = trec_docid
@@ -178,6 +178,10 @@ def _topic_process__arqmath_2021_task1(idx, line):
     query_terms = [{'type': 'term', 'str': terms}] if len(terms) > 0 else []
     query_formulas = [{'type': 'tex', 'str': s.strip()} for s in formulas]
     return qid, query_terms + query_formulas, None
+
+
+def _topic_process__arqmath_2021_task1_official(idx, line):
+    return _topic_process__arqmath_2021_task1(idx, line)
 
 
 def _topic_process__arqmath_2021_task1_refined(idx, line):
