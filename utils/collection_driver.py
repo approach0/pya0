@@ -31,7 +31,9 @@ def trec_docid_to_docid(index, trec_docid):
     if type(index).__name__ == 'int':
         trec_docid = int(trec_docid)
         doc = pya0.index_lookup_doc(index, trec_docid)
-        docid = int(doc['extern_id'])
+        docid = int(doc['extern_id']) if doc['extern_id'] != '' else 1
+        if doc['extern_id'] == '':
+            print(f'Cannot lookup TREC docID {trec_docid} from a0 index.')
         return docid
     else:
         raise NotImplementedError
@@ -68,7 +70,7 @@ def TREC_reverse(collection, index, hits):
                 hit['docid'] = trec_docid_to_docid(index, trec_docid)
             except NotImplementedError:
                 hit['docid'] = hit['_']
-    elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined']:
+    elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined', 'arqmath-2021-task2-official']:
         for hit in hits:
             trec_docid = int(hit['_']) # internal (formula) ID
             hit['trec_docid'] = trec_docid
@@ -199,6 +201,10 @@ def _topic_process__arqmath_2021_task2(idx, line):
     formulas = fields[1:]
     query = [{'type': 'tex', 'str': s.strip()} for s in formulas]
     return qid, query, None
+
+
+def _topic_process__arqmath_2021_task2_official(idx, line):
+    return _topic_process__arqmath_2021_task2(idx, line)
 
 
 def _topic_process__arqmath_2021_task2_refined(idx, line):
