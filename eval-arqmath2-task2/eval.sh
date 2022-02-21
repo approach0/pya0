@@ -1,5 +1,5 @@
 DIR=$(dirname $0)
-default_qrels='topics-and-qrels/qrels.arqmath-2021-task2.txt'
+default_qrels='topics-and-qrels/qrels.arqmath-2021-task2-official.txt'
 TSV=${1-"./latex_representation_v2"}
 QREL=${2-$default_qrels}
 
