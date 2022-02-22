@@ -14,26 +14,6 @@ from transformers import BertTokenizer
 from transformers import BertForPreTraining
 from transformer import ColBERT, DprEncoder
 
-import numpy as np
-
-def file_iterator(corpus, endat, ext):
-    cnt = 0
-    for dirname, dirs, files in os.walk(corpus):
-        print(dirname)
-        for f in files:
-            if cnt >= endat and endat > 0:
-                return
-            elif f.split('.')[-1] == ext:
-                cnt += 1
-                yield (cnt, dirname, f)
-
-
-def file_read(path):
-    if not os.path.isfile(path):
-        return None
-    with open(path, 'r') as fh:
-        return fh.read()
-
 
 def attention_visualize(ckpoint, tok_ckpoint, passage_file, debug=False):
     """
@@ -176,88 +156,11 @@ def test_similarity_model(ckpoint, tok_ckpoint, test_file, model_type='dpr'):
             print(round(scores.item(), 2))
 
 
-def _index__ntcir12(docids, encode_func, index,
-    corpus_path='~/corpus/NTCIR12/NTCIR12_latex_expressions.txt'):
-    corpus_path = os.path.expanduser(corpus_path)
-    with open(corpus_path, 'r') as fh:
-        for line in fh:
-            line = line.rstrip()
-            fields = line.split()
-            docid_and_pos = fields[0]
-            latex = ' '.join(fields[1:])
-            latex = latex.replace('% ', '')
-            latex = f'[imath]{latex}[/imath]'
-
-            tokens = preprocess_for_transformer(latex)
-            embs = encode_func([tokens])
-
-            docids.append((docid_and_pos, latex))
-            index.add(np.array(embs))
-            print(index.ntotal, tokens)
-
-
-def _index__arqmath_answeronly(docids, encode_func, index,
-    corpus_path='~/corpus/arqmath-v2', endat=-1):
-    corpus_path = os.path.expanduser(corpus_path)
-    for cnt, dirname, fname in file_iterator(corpus_path, endat, 'answer'):
-        path = dirname + '/' + fname
-        content = file_read(path)
-        fields = os.path.basename(path).split('.')
-        A_id, Q_id = int(fields[0]), int(fields[1])
-
-        tokens = preprocess_for_transformer(content)
-        embs = encode_func([tokens])
-
-        docids.append((Q_id, A_id, content))
-        index.add(np.array(embs))
-        print(index.ntotal, dirname)
-
-
-def index_similarity_model(ckpoint, tok_ckpoint, pyserini_path='~/pyserini',
-    dim=768, idx_dir="dense-idx", corpus_path=None, corpus_name='ntcir12',
-    model_type='dpr'):
-    # prepare faiss index ...
-    import faiss
-    index = faiss.IndexFlatIP(dim)
-    idx_dir = os.path.expanduser(idx_dir)
-    print(f'Writing to {idx_dir}')
-    os.makedirs(idx_dir, exist_ok=True)
-    docids = []
-
-    # load model
-    tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
-    if model_type == 'dpr':
-        model = DprEncoder.from_pretrained(ckpoint, tie_word_embeddings=True)
-        def encode_func(x):
-            inputs = tokenizer(x, truncation=True, return_tensors="pt")
-            outputs = model.forward(inputs)[1]
-            return outputs.detach().numpy()
-    else:
-        raise NotImplementedError
-
-    #sys.path.insert(0, pyserini_path)
-    #from pyserini.encode import DprDocumentEncoder, ColBertEncoder
-
-    args = [docids, encode_func, index]
-    if corpus_path: args.append(corpus_path)
-    if corpus_name == 'ntcir12':
-        _index__ntcir12(*args)
-    elif corpus_name == 'arqmath':
-        _index__arqmath_answeronly(*args)
-    else:
-        raise NotImplementedError
-
-    with open(os.path.join(idx_dir, 'docids.pkl'), 'wb') as fh:
-        pickle.dump(docids, fh)
-    faiss.write_index(index, os.path.join(idx_dir, 'index.faiss'))
-
-
 def retrieve_similarity_model(ckpoint, tok_ckpoint, pyserini_path='~/pyserini',
     idx_dir="dense-idx", k=10, query='[imath]\\lim(1+1/n)^n[/imath]',
     model_type='dpr'):
     # prepare faiss index ...
     import faiss
-    import numpy as np
     idx_dir = os.path.expanduser(idx_dir)
     index_path = os.path.join(idx_dir, 'index.faiss')
     docids_path = os.path.join(idx_dir, 'docids.pkl')
@@ -429,7 +332,6 @@ if __name__ == '__main__':
         "pft_print": pft_print,
         "pickle_print": pickle_print,
         "test_similarity_model": test_similarity_model,
-        "index_similarity_model": index_similarity_model,
         "retrieve_similarity_model": retrieve_similarity_model,
         "convert2jsonl_ntcir12": convert2jsonl_ntcir12,
         "convert2jsonl_arqmath": convert2jsonl_arqmath,
