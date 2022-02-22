@@ -1,6 +1,7 @@
 import os
 import json
 import fire
+import torch
 import configparser
 from tqdm import tqdm
 
@@ -78,12 +79,14 @@ def psg_encoder__dpr_default(tok_ckpoint, model_ckpoint):
 
     tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
     model = DprEncoder.from_pretrained(model_ckpoint, tie_word_embeddings=True)
+    model.eval()
     def encode_func(batch_psg, debug=False):
         batch_psg = [preprocess_for_transformer(p) for p in batch_psg]
         inputs = tokenizer(batch_psg, truncation=True, return_tensors="pt")
         if debug:
             print(tokenizer.decode(inputs['input_ids'][0]))
-        outputs = model.forward(inputs)[1]
+        with torch.no_grad():
+            outputs = model.forward(inputs)[1]
         return outputs.detach().numpy()
     return tokenizer, model, encode_func
 
