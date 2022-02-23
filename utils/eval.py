@@ -11,7 +11,7 @@ import collection_driver
 import tracemalloc
 
 
-def gen_topics_queries(collection, fold=None, qfilter=None):
+def gen_topics_queries(collection, qfilter=None):
     func_name = '_topic_process__' + collection.replace('-', '_')
     handler = getattr(collection_driver, func_name)
     cache = get_cache_home()

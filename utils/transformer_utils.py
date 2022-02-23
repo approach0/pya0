@@ -104,103 +104,6 @@ def pickle_print(pkl_file):
             print(line)
 
 
-def test_similarity_model(ckpoint, tok_ckpoint, test_file, model_type='dpr'):
-    with open(test_file, 'r') as fh:
-        file = fh.read().rstrip()
-    lines = file.split('\n')
-    lines = [preprocess_for_transformer(l) for l in lines]
-    Q = lines[0]
-    D_list = lines[1:]
-
-    tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
-    if model_type == 'dpr':
-        model = DprEncoder.from_pretrained(ckpoint, tie_word_embeddings=True)
-        prefix = ('', '')
-    elif model_type == 'colbert':
-        model = ColBERT.from_pretrained(ckpoint, tie_word_embeddings=True)
-        tokenizer.add_special_tokens({
-            'additional_special_tokens': ['[Q]', '[D]']
-        })
-        model.resize_token_embeddings(len(tokenizer))
-        prefix = ('[Q]', '[D]')
-    else:
-        raise NotImplementedError
-    criterion = torch.nn.CrossEntropyLoss()
-
-    device = torch.device(f'cuda:0' if torch.cuda.is_available() else 'cpu')
-    model.to(device)
-    model.eval()
-
-    with torch.no_grad():
-        for D in D_list:
-            enc_queries = tokenizer(prefix[0] + Q,
-                padding=True, truncation=True, return_tensors="pt")
-            enc_queries.to(device)
-
-            enc_passages = tokenizer(prefix[1] + D,
-                padding=True, truncation=True, return_tensors="pt")
-            enc_passages.to(device)
-
-            if model_type == 'dpr':
-                code_qry = model(enc_queries)[1]
-                code_doc = model(enc_passages)[1]
-                scores = code_qry @ code_doc.T
-            elif model_type == 'colbert':
-                scores = model(enc_queries, enc_passages)
-            else:
-                raise NotImplementedError
-
-            print()
-            print(tokenizer.decode(enc_queries['input_ids'][0]))
-            print(tokenizer.decode(enc_passages['input_ids'][0]))
-            print(round(scores.item(), 2))
-
-
-def retrieve_similarity_model(ckpoint, tok_ckpoint, pyserini_path='~/pyserini',
-    idx_dir="dense-idx", k=10, query='[imath]\\lim(1+1/n)^n[/imath]',
-    model_type='dpr'):
-    # prepare faiss index ...
-    import faiss
-    idx_dir = os.path.expanduser(idx_dir)
-    index_path = os.path.join(idx_dir, 'index.faiss')
-    docids_path = os.path.join(idx_dir, 'docids.pkl')
-    index = faiss.read_index(index_path)
-    with open(docids_path, 'rb') as fh:
-        docids = pickle.load(fh)
-    assert index.ntotal == len(docids)
-    dim = index.d
-    print(f'Index dim: {dim}')
-
-    # load model
-    tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
-    if model_type == 'dpr':
-        model = DprEncoder.from_pretrained(ckpoint, tie_word_embeddings=True)
-        def encode_func(x):
-            inputs = tokenizer(x, truncation=True, return_tensors="pt")
-            outputs = model.forward(inputs)[1]
-            return outputs.detach().numpy()
-    else:
-        raise NotImplementedError
-
-    #sys.path.insert(0, pyserini_path)
-    #from pyserini.dindex import AutoDocumentEncoder
-
-    tokens = preprocess_for_transformer(query)
-    emb = encode_func([tokens])
-
-    faiss.omp_set_num_threads(1)
-    scores, ids = index.search(emb, k)
-    scores = scores.flat
-    ids = ids.flat
-    results = [(i, score, docids[i]) for score, i in zip(scores, ids)]
-    print('[tokens]', tokens)
-    print('[query]', query)
-    for rank, score, result in results:
-        if rank == -1:
-            break
-        print(score, result)
-
-
 def convert2jsonl_ntcir12(
     corpus_path='~/corpus/NTCIR12/NTCIR12_latex_expressions.txt',
     output_path='~/corpus/NTCIR12/jsonl',
@@ -331,8 +234,6 @@ if __name__ == '__main__':
         "attention": attention_visualize,
         "pft_print": pft_print,
         "pickle_print": pickle_print,
-        "test_similarity_model": test_similarity_model,
-        "retrieve_similarity_model": retrieve_similarity_model,
         "convert2jsonl_ntcir12": convert2jsonl_ntcir12,
         "convert2jsonl_arqmath": convert2jsonl_arqmath,
         "test_determinisity": test_determinisity,

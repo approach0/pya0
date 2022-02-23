@@ -80,7 +80,7 @@ def psg_encoder__dpr_default(tok_ckpoint, model_ckpoint):
     tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
     model = DprEncoder.from_pretrained(model_ckpoint, tie_word_embeddings=True)
     model.eval()
-    def encode_func(batch_psg, debug=False):
+    def encoder(batch_psg, debug=False):
         batch_psg = [preprocess_for_transformer(p) for p in batch_psg]
         inputs = tokenizer(batch_psg, truncation=True, return_tensors="pt")
         if debug:
@@ -88,20 +88,18 @@ def psg_encoder__dpr_default(tok_ckpoint, model_ckpoint):
         with torch.no_grad():
             outputs = model.forward(inputs)[1]
         return outputs.detach().numpy()
-    return tokenizer, model, encode_func
+    return encoder, (tokenizer, model)
 
 
-def indexer__docid_vec_flat_faiss(output_path, tokenizer, model, sample_frq):
+def indexer__docid_vec_flat_faiss(output_path, dim, sample_frq):
     os.makedirs(output_path, exist_ok=False)
     import faiss
     import pickle
-    dim = model.config.hidden_size
-    print('embedding dim:', dim)
     faiss_index = faiss.IndexFlatIP(dim)
     docids = []
-    def indexer(i, doc, encode_func):
+    def indexer(i, doc, encoder):
         docid, psg = doc
-        embs = encode_func([psg], debug=(i % sample_frq == 0))
+        embs = encoder([psg], debug=(i % sample_frq == 0))
         faiss_index.add(embs)
         docids.append((docid, psg))
         return docid
@@ -125,16 +123,18 @@ def index(config_file, section):
 
     # prepare tokenizer, model and encoder
     passage_encoder = config[section]['passage_encoder']
-    tok, model, encode_func = auto_invoke('psg_encoder', passage_encoder)
+    encoder, (tokenizer, model) = auto_invoke('psg_encoder', passage_encoder)
 
-    # prepare tokenizer, model and encoder
+    # prepare indexer
     indexer = config[section]['indexer']
+    dim = model.config.hidden_size
+    print('embedding dim:', dim)
     display_sample_frq = config.getint('DEFAULT', 'display_sample_frq')
     indexer, indexer_finalize = auto_invoke('indexer', indexer, [
-        tok, model, display_sample_frq
+        dim, display_sample_frq
     ])
 
-    # loop through corpus and index
+    # go through corpus and index
     n = auto_invoke('corpus_length', corpus_reader, [corpus_max_reads])
     if n is None: n = 0
     progress = tqdm(auto_invoke('corpus_reader', corpus_reader), total=n)
@@ -143,15 +143,78 @@ def index(config_file, section):
             continue
         elif corpus_reader_end > 0 and row_idx >= corpus_reader_end:
             break
-        idx_res = indexer(row_idx, doc, encode_func)
-        progress.set_description(f"Indexing: {idx_res}")
+        index_result = indexer(row_idx, doc, encoder)
+        progress.set_description(f"Indexing: {index_result}")
     indexer_finalize()
+
+
+def searcher__docid_vec_flat_faiss(idx_dir):
+    import faiss
+    import pickle
+    # read index
+    index_path = os.path.join(idx_dir, 'index.faiss')
+    docids_path = os.path.join(idx_dir, 'docids.pkl')
+    faiss_index = faiss.read_index(index_path)
+    with open(docids_path, 'rb') as fh:
+        docids = pickle.load(fh)
+    assert faiss_index.ntotal == len(docids)
+    dim = faiss_index.d
+    print(f'Index: {idx_dir}, dim: {dim}')
+    # initialize searcher
+    faiss.omp_set_num_threads(1)
+
+    def searcher(query, encoder, topk=1000, debug=False):
+        embs = encoder([query], debug=debug)
+        scores, ids = faiss_index.search(embs, topk)
+        scores, ids = scores.flat, ids.flat
+        results = [(i, score, docids[i]) for i, score in zip(ids, scores)]
+        return results
+    def finalize():
+        pass
+    return searcher, finalize
+
+
+def search(config_file, section):
+    config = configparser.ConfigParser()
+    config.read(config_file)
+
+    # get collection name for topics
+    collection = config[section]['topics_collection']
+
+    # prepare tokenizer, model and encoder
+    passage_encoder = config[section]['passage_encoder']
+    encoder, _ = auto_invoke('psg_encoder', passage_encoder)
+
+    # prepare searcher
+    topk = config.getint(section, 'topk')
+    verbose = config.getboolean(section, 'verbose')
+    searcher = config[section]['searcher']
+    searcher, seacher_finalize = auto_invoke('searcher', searcher)
+
+    # go through topics and search
+    from .eval import gen_topics_queries
+    from .preprocess import tokenize_query
+    for qid, query, _ in gen_topics_queries(collection):
+        # query example: [{'type': 'tex', 'str': '-0.026838601\\ldots'}]
+        query = tokenize_query(query)
+        query = ', '.join(query)
+        print(qid, query)
+        search_results = searcher(query, encoder, topk=topk, debug=verbose)
+        if verbose:
+            print(search_results[:3])
+        print()
+    seacher_finalize()
+
 
 #sys.path.insert(0, pyserini_path)
 #from pyserini.encode import DprDocumentEncoder, ColBertEncoder
 
 if __name__ == '__main__':
+    """
+    USAGE: python -m pya0.transformer_eval
+    """
     os.environ["PAGER"] = 'cat'
     fire.Fire({
-        'index': index
+        'index': index,
+        'search': search
     })
