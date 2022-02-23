@@ -209,7 +209,7 @@ def search(config_file, section, adhoc_query=None, max_print_res=3):
 
     # prepare tokenizer, model and encoder
     passage_encoder = config[section]['passage_encoder']
-    encoder, _ = auto_invoke('psg_encoder', passage_encoder)
+    encoder, _ = auto_invoke('psg_encoder', passage_encoder, ['cpu'])
 
     # prepare searcher
     topk = config.getint(section, 'topk')
