@@ -72,22 +72,25 @@ def auto_invoke(prefix, value, extra_args=[]):
         return None
 
 
-def psg_encoder__dpr_default(tok_ckpoint, model_ckpoint):
+def psg_encoder__dpr_default(tok_ckpoint, model_ckpoint, gpu_dev):
     from transformers import BertTokenizer
     from transformer import DprEncoder
     from preprocess import preprocess_for_transformer
 
     tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
     model = DprEncoder.from_pretrained(model_ckpoint, tie_word_embeddings=True)
+    model.to(gpu_dev)
     model.eval()
     def encoder(batch_psg, debug=False):
         batch_psg = [preprocess_for_transformer(p) for p in batch_psg]
-        inputs = tokenizer(batch_psg, truncation=True, return_tensors="pt")
+        inputs = tokenizer(batch_psg, truncation=True,
+                           return_tensors="pt", padding=True)
+        inputs = inputs.to(gpu_dev)
         if debug:
             print(tokenizer.decode(inputs['input_ids'][0]))
         with torch.no_grad():
             outputs = model.forward(inputs)[1]
-        return outputs.detach().numpy()
+        return outputs.cpu().numpy()
     return encoder, (tokenizer, model)
 
 
@@ -97,11 +100,12 @@ def indexer__docid_vec_flat_faiss(output_path, dim, sample_frq):
     import pickle
     faiss_index = faiss.IndexFlatIP(dim)
     docids = []
-    def indexer(i, doc, encoder):
-        docid, psg = doc
-        embs = encoder([psg], debug=(i % sample_frq == 0))
+    def indexer(i, docs, encoder):
+        passages = [psg for docid, psg in docs]
+        embs = encoder(passages, debug=(i % sample_frq == 0))
         faiss_index.add(embs)
-        docids.append((docid, psg))
+        for docid, psg in docs:
+            docids.append((docid, psg))
         return docid
     def finalize():
         with open(os.path.join(output_path, 'docids.pkl'), 'wb') as fh:
@@ -121,9 +125,20 @@ def index(config_file, section):
     corpus_max_reads = corpus_reader_end - corpus_reader_begin
     corpus_reader = config[section]['corpus_reader']
 
+    # calculate batch size
+    gpu_dev = config['DEFAULT']['gpu_dev']
+    gpu_mem = config['DEFAULT']['gpu_mem']
+    dev_name = 'cpu' if gpu_dev == 'cpu' else torch.cuda.get_device_name(gpu_dev)
+    batch_map = json.loads(config[section]['batch_map'])
+    batch_sz = batch_map[gpu_mem]
+    print('batch size:', batch_sz)
+    print('device:', gpu_dev, dev_name)
+
     # prepare tokenizer, model and encoder
     passage_encoder = config[section]['passage_encoder']
-    encoder, (tokenizer, model) = auto_invoke('psg_encoder', passage_encoder)
+    encoder, (tokenizer, model) = auto_invoke(
+        'psg_encoder', passage_encoder, [gpu_dev]
+    )
 
     # prepare indexer
     indexer = config[section]['indexer']
@@ -138,13 +153,24 @@ def index(config_file, section):
     n = auto_invoke('corpus_length', corpus_reader, [corpus_max_reads])
     if n is None: n = 0
     progress = tqdm(auto_invoke('corpus_reader', corpus_reader), total=n)
+    batch = []
+    batch_cnt = 0
     for row_idx, doc in enumerate(progress):
         if row_idx < corpus_reader_begin:
             continue
         elif corpus_reader_end > 0 and row_idx >= corpus_reader_end:
             break
-        index_result = indexer(row_idx, doc, encoder)
-        progress.set_description(f"Indexing: {index_result}")
+        batch.append(doc)
+        if len(batch) == batch_sz:
+            index_result = indexer(batch_cnt, batch, encoder)
+            progress.set_description(f"Indexed doc: {index_result}")
+            batch = []
+            batch_cnt += 1
+
+    if len(batch) > 0:
+        index_result = indexer(batch_cnt, batch, encoder)
+        progress.set_description(f"Final indexed doc: {index_result}")
+
     indexer_finalize()
 
 
