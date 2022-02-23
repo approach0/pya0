@@ -216,6 +216,7 @@ def search(config_file, section, adhoc_query=None, max_print_res=3):
     verbose = (config.getboolean(section, 'verbose') or adhoc_query is not None)
     searcher = config[section]['searcher']
     searcher, seacher_finalize = auto_invoke('searcher', searcher)
+    kw_sep = config[section]['query_keyword_separator']
 
     # output config
     from .eval import TREC_output
@@ -228,14 +229,23 @@ def search(config_file, section, adhoc_query=None, max_print_res=3):
     # go through topics and search
     from .eval import gen_topics_queries
     from .preprocess import tokenize_query
+    print('collection:', collection)
     topics = gen_topics_queries(collection) if adhoc_query is None else [
         ('adhoc_query', adhoc_query, None)
     ]
     for i, (qid, query, _) in enumerate(topics):
+        # skip topic file header / comments
+        if qid is None or query is None or len(query) == 0:
+            continue
         # query example: [{'type': 'tex', 'str': '-0.026838601\\ldots'}]
         if adhoc_query is None:
             query = tokenize_query(query)
-            query = ', '.join(query)
+            if kw_sep == 'comma':
+                query = ', '.join(query)
+            elif kw_sep == 'space':
+                query = ' '.join(query)
+            else:
+                raise NotImplementedError
         print(qid, query)
         search_results = searcher(query, encoder, topk=topk, debug=verbose)
         if verbose:
