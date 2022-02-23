@@ -95,7 +95,7 @@ def evaluate_log(collection, path):
     return header, row
 
 
-def TREC_output(hits, queryID, append=False, output_file="tmp.run"):
+def TREC_output(hits, queryID, append=False, output_file="tmp.run", name="APPROACH0"):
     if len(hits) == 0: return
     with open(output_file, 'a' if append else 'w') as fh:
         for i, hit in enumerate(hits):
@@ -105,7 +105,7 @@ def TREC_output(hits, queryID, append=False, output_file="tmp.run"):
                 str(hit['docid']),
                 i + 1,
                 hit['score'],
-                "APPROACH0"
+                name
             ), file=fh);
 
 

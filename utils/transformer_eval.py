@@ -191,13 +191,21 @@ def search(config_file, section, adhoc_query=None, max_print_res=3):
     searcher = config[section]['searcher']
     searcher, seacher_finalize = auto_invoke('searcher', searcher)
 
+    # output config
+    from .eval import TREC_output
+    output_format = config[section]['output_format']
+    output_dir = config['DEFAULT']['run_outdir']
+    output_filename = f'{section}.run' if adhoc_query is None else 'adhoc.run'
+    output_path = os.path.join(output_dir, output_filename)
+    os.makedirs(output_dir, exist_ok=True)
+
     # go through topics and search
     from .eval import gen_topics_queries
     from .preprocess import tokenize_query
     topics = gen_topics_queries(collection) if adhoc_query is None else [
-        ('adhoc', adhoc_query, None)
+        ('adhoc_query', adhoc_query, None)
     ]
-    for qid, query, _ in topics:
+    for i, (qid, query, _) in enumerate(topics):
         # query example: [{'type': 'tex', 'str': '-0.026838601\\ldots'}]
         if adhoc_query is None:
             query = tokenize_query(query)
@@ -209,7 +217,19 @@ def search(config_file, section, adhoc_query=None, max_print_res=3):
                 idx, score, item = search_results[j]
                 print(idx, score)
                 print(item, end="\n\n")
+        if output_format == 'TREC':
+            hits = [{
+                "_": idx,
+                "docid": item[0],
+                "score": score
+            } for idx, score, item in search_results]
+
+            TREC_output(hits, qid, append=(i!=0),
+                output_file=output_path, name=section)
+        else:
+            assert NotImplementedError
         print()
+
     seacher_finalize()
 
 
