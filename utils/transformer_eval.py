@@ -174,7 +174,7 @@ def searcher__docid_vec_flat_faiss(idx_dir):
     return searcher, finalize
 
 
-def search(config_file, section):
+def search(config_file, section, adhoc_query=None, max_print_res=3):
     config = configparser.ConfigParser()
     config.read(config_file)
 
@@ -187,21 +187,28 @@ def search(config_file, section):
 
     # prepare searcher
     topk = config.getint(section, 'topk')
-    verbose = config.getboolean(section, 'verbose')
+    verbose = (config.getboolean(section, 'verbose') or adhoc_query is not None)
     searcher = config[section]['searcher']
     searcher, seacher_finalize = auto_invoke('searcher', searcher)
 
     # go through topics and search
     from .eval import gen_topics_queries
     from .preprocess import tokenize_query
-    for qid, query, _ in gen_topics_queries(collection):
+    topics = gen_topics_queries(collection) if adhoc_query is None else [
+        ('adhoc', adhoc_query, None)
+    ]
+    for qid, query, _ in topics:
         # query example: [{'type': 'tex', 'str': '-0.026838601\\ldots'}]
-        query = tokenize_query(query)
-        query = ', '.join(query)
+        if adhoc_query is None:
+            query = tokenize_query(query)
+            query = ', '.join(query)
         print(qid, query)
         search_results = searcher(query, encoder, topk=topk, debug=verbose)
         if verbose:
-            print(search_results[:3])
+            for j in range(max_print_res):
+                idx, score, item = search_results[j]
+                print(idx, score)
+                print(item, end="\n\n")
         print()
     seacher_finalize()
 
