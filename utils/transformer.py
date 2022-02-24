@@ -1111,7 +1111,6 @@ class Trainer(BaseTrainer):
                         fh.write('\t'.join(map(str, out)) + '\n')
                         fh.flush()
 
-
     def dpr(self, ckpoint, tok_ckpoint):
         self.dataset_cls = ContrastiveQAShard
         self.test_data_cls = ContrastiveQAShard

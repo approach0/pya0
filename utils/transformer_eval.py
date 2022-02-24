@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import fire
 import torch
@@ -72,7 +73,7 @@ def auto_invoke(prefix, value, extra_args=[]):
         return None
 
 
-def psg_encoder__dpr_default(tok_ckpoint, model_ckpoint, gpu_dev):
+def psg_encoder__dpr_default(tok_ckpoint, model_ckpoint, mold, gpu_dev):
     from transformers import BertTokenizer
     from transformer import DprEncoder
     from preprocess import preprocess_for_transformer
@@ -81,6 +82,7 @@ def psg_encoder__dpr_default(tok_ckpoint, model_ckpoint, gpu_dev):
     model = DprEncoder.from_pretrained(model_ckpoint, tie_word_embeddings=True)
     model.to(gpu_dev)
     model.eval()
+
     def encoder(batch_psg, debug=False):
         batch_psg = [preprocess_for_transformer(p) for p in batch_psg]
         inputs = tokenizer(batch_psg, truncation=True,
@@ -91,27 +93,73 @@ def psg_encoder__dpr_default(tok_ckpoint, model_ckpoint, gpu_dev):
         with torch.no_grad():
             outputs = model.forward(inputs)[1]
         return outputs.cpu().numpy()
-    return encoder, (tokenizer, model)
+
+    dim = model.config.hidden_size
+    return encoder, (tokenizer, model, dim)
+
+
+def psg_encoder__colbert_default(tok_ckpoint, model_ckpoint, mold, gpu_dev):
+    from pyserini.encode import ColBertEncoder
+    from preprocess import preprocess_for_transformer
+
+    colbert = ColBertEncoder(model_ckpoint, '[D]' if mold == 'D' else '[Q]',
+        tokenizer=tok_ckpoint, device=gpu_dev)
+
+    def encoder(batch_psg, debug=False):
+        batch_psg = [preprocess_for_transformer(p) for p in batch_psg]
+        embs, lengths = colbert.encode(batch_psg, fp16=True, debug=debug)
+        return embs, lengths
+
+    dim = colbert.dim
+    return encoder, (None, colbert, dim)
 
 
 def indexer__docid_vec_flat_faiss(output_path, dim, sample_frq):
     os.makedirs(output_path, exist_ok=False)
-    import faiss
     import pickle
+    import faiss
     faiss_index = faiss.IndexFlatIP(dim)
-    docids = []
+    doclist = []
+
     def indexer(i, docs, encoder):
         passages = [psg for docid, psg in docs]
         embs = encoder(passages, debug=(i % sample_frq == 0))
         faiss_index.add(embs)
         for docid, psg in docs:
-            docids.append((docid, psg))
+            doclist.append((docid, psg))
         return docid
+
     def finalize():
-        with open(os.path.join(output_path, 'docids.pkl'), 'wb') as fh:
-            pickle.dump(docids, fh)
+        with open(os.path.join(output_path, 'doclist.pkl'), 'wb') as fh:
+            pickle.dump(doclist, fh)
         faiss.write_index(faiss_index, os.path.join(output_path, 'index.faiss'))
         print('Done!')
+
+    return indexer, finalize
+
+
+def indexer__docid_vecs_colbert(output_path, dim, sample_frq):
+    os.makedirs(output_path, exist_ok=False)
+    import pickle
+    from pyserini.index import ColBertIndexer
+    colbert_index = ColBertIndexer(output_path, dim=dim)
+    doclist = []
+
+    def indexer(i, docs, encoder):
+        doc_ids = [docid for docid, psg in docs]
+        passages = [psg for docid, psg in docs]
+        embs, lengths = encoder(passages, debug=(i % sample_frq == 0))
+        colbert_index.write(embs, doc_ids, lengths)
+        for docid, psg in docs:
+            doclist.append(psg)
+        return docid
+
+    def finalize():
+        with open(os.path.join(output_path, 'doclist.pkl'), 'wb') as fh:
+            pickle.dump(doclist, fh)
+        colbert_index.close()
+        print('Done!')
+
     return indexer, finalize
 
 
@@ -125,6 +173,12 @@ def index(config_file, section):
     corpus_max_reads = corpus_reader_end - corpus_reader_begin
     corpus_reader = config[section]['corpus_reader']
 
+    # pyserini path
+    if 'pyserini_path' in config[section]:
+        pyserini_path = config[section]['pyserini_path']
+        print('Add sys path:', pyserini_path)
+        sys.path.insert(0, pyserini_path)
+
     # calculate batch size
     gpu_dev = config['DEFAULT']['gpu_dev']
     gpu_mem = config['DEFAULT']['gpu_mem']
@@ -136,13 +190,12 @@ def index(config_file, section):
 
     # prepare tokenizer, model and encoder
     passage_encoder = config[section]['passage_encoder']
-    encoder, (tokenizer, model) = auto_invoke(
-        'psg_encoder', passage_encoder, [gpu_dev]
+    encoder, (tokenizer, model, dim) = auto_invoke(
+        'psg_encoder', passage_encoder, ['D', gpu_dev]
     )
 
     # prepare indexer
     indexer = config[section]['indexer']
-    dim = model.config.hidden_size
     print('embedding dim:', dim)
     display_sample_frq = config.getint('DEFAULT', 'display_sample_frq')
     indexer, indexer_finalize = auto_invoke('indexer', indexer, [
@@ -179,11 +232,11 @@ def searcher__docid_vec_flat_faiss(idx_dir):
     import pickle
     # read index
     index_path = os.path.join(idx_dir, 'index.faiss')
-    docids_path = os.path.join(idx_dir, 'docids.pkl')
+    doclist_path = os.path.join(idx_dir, 'doclist.pkl')
     faiss_index = faiss.read_index(index_path)
-    with open(docids_path, 'rb') as fh:
-        docids = pickle.load(fh)
-    assert faiss_index.ntotal == len(docids)
+    with open(doclist_path, 'rb') as fh:
+        doclist = pickle.load(fh)
+    assert faiss_index.ntotal == len(doclist)
     dim = faiss_index.d
     print(f'Index: {idx_dir}, dim: {dim}')
     # initialize searcher
@@ -193,7 +246,7 @@ def searcher__docid_vec_flat_faiss(idx_dir):
         embs = encoder([query], debug=debug)
         scores, ids = faiss_index.search(embs, topk)
         scores, ids = scores.flat, ids.flat
-        results = [(i, score, docids[i]) for i, score in zip(ids, scores)]
+        results = [(i, score, doclist[i]) for i, score in zip(ids, scores)]
         return results
     def finalize():
         pass
@@ -207,9 +260,15 @@ def search(config_file, section, adhoc_query=None, max_print_res=3):
     # get collection name for topics
     collection = config[section]['topics_collection']
 
+    # pyserini path
+    if 'pyserini_path' in config[section]:
+        pyserini_path = config[section]['pyserini_path']
+        print('Add sys path:', pyserini_path)
+        sys.path.insert(0, pyserini_path)
+
     # prepare tokenizer, model and encoder
     passage_encoder = config[section]['passage_encoder']
-    encoder, _ = auto_invoke('psg_encoder', passage_encoder, ['cpu'])
+    encoder, _ = auto_invoke('psg_encoder', passage_encoder, ['Q', 'cpu'])
 
     # prepare searcher
     topk = config.getint(section, 'topk')
@@ -268,9 +327,6 @@ def search(config_file, section, adhoc_query=None, max_print_res=3):
 
     seacher_finalize()
 
-
-#sys.path.insert(0, pyserini_path)
-#from pyserini.encode import DprDocumentEncoder, ColBertEncoder
 
 if __name__ == '__main__':
     """
