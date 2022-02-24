@@ -103,7 +103,11 @@ def psg_encoder__colbert_default(tok_ckpoint, model_ckpoint, mold, gpu_dev):
     from preprocess import preprocess_for_transformer
 
     colbert_encoder = ColBertEncoder(model_ckpoint,
-        '[D]' if mold == 'D' else '[Q]', tokenizer=tok_ckpoint, device=gpu_dev)
+        '[D]' if mold == 'D' else '[Q]',
+        max_ql=128, max_dl=512,
+        tokenizer=tok_ckpoint, device=gpu_dev,
+        query_augment=True, use_puct_mask=True
+    )
 
     def encoder(batch_psg, debug=False):
         batch_psg = [preprocess_for_transformer(p) for p in batch_psg]
