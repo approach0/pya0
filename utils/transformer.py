@@ -163,35 +163,61 @@ class QueryInferShard(Dataset):
 
 class ColBERT(BertPreTrainedModel):
 
-    def __init__(self, config, dim=128):
+    def __init__(self, config):
         super().__init__(config)
-
-        self.dim = dim
-        self.bert = BertModel(config, add_pooling_layer=False)
-        self.linear = nn.Linear(config.hidden_size, dim, bias=False)
+        self.dim = 128
+        self.bert = BertModel(config, add_pooling_layer=True)
+        self.linear = nn.Linear(config.hidden_size, self.dim, bias=False)
+        self.skiplist = dict()
         self.init_weights()
 
-    def forward(self, Q, D):
-        return self.score(self.query(Q), self.doc(D))
+    def use_puct_mask(self, tokenizer):
+        encode = lambda x: tokenizer.encode(x, add_special_tokens=False)[0]
+        self.skiplist = {w: True
+                for symbol in string.punctuation
+                for w in [symbol, encode(symbol)]}
+
+    def punct_mask(self, input_ids):
+        PAD_CODE = 0
+        mask = [
+            [(x not in self.skiplist) and (x != PAD_CODE) for x in d]
+            for d in input_ids.cpu().tolist()
+        ]
+        return mask
 
     def query(self, inputs):
         Q = self.bert(**inputs)[0] # last-layer hidden state
         # Q: (B, Lq, H) -> (B, Lq, dim)
         Q = self.linear(Q)
         # return: (B, Lq, dim) normalized
-        return torch.nn.functional.normalize(Q, p=2, dim=2)
+        lengths = inputs['attention_mask'].sum(1).cpu().numpy()
+        return torch.nn.functional.normalize(Q, p=2, dim=2), lengths
 
     def doc(self, inputs):
         D = self.bert(**inputs)[0]
-        D = self.linear(D)
-        return torch.nn.functional.normalize(D, p=2, dim=2)
+        D = self.linear(D) # (B, Ld, dim)
+        # apply punctuation mask
+        if self.skiplist:
+            ids = inputs['input_ids']
+            mask = torch.tensor(self.punct_mask(ids), device=ids.device)
+            D = D * mask.unsqueeze(2).float()
+        lengths = inputs['attention_mask'].sum(1).cpu().numpy()
+        return torch.nn.functional.normalize(D, p=2, dim=2), lengths
 
-    def score(self, Q, D):
-        # (B, Lq, dim) x (B, dim, Ld) -> (B, Lq, Ld)
-        cmp_matrix = Q @ D.permute(0, 2, 1)
-        best_match = cmp_matrix.max(2).values # best match per query
-        scores = best_match.sum(1) # sum score over each query
-        return scores
+    def score(self, Q, D, mask):
+        # (B, Ld, dim) x (B, dim, Lq) -> (B, Ld, Lq)
+        cmp_matrix = D @ Q.permute(0, 2, 1)
+        # only mask doc dim, query dim will be filled with [MASK]s
+        cmp_matrix = cmp_matrix * mask # [B, Ld, Lq]
+        best_match = cmp_matrix.max(1).values # best match per query
+        scores = best_match.sum(-1) # sum score over each query
+        return scores, cmp_matrix
+
+    def forward(self, Q, D):
+        q_reps, _ = self.query(Q)
+        d_reps, _ = self.doc(D)
+        d_mask = D['attention_mask'].unsqueeze(-1)
+        return self.score(q_reps, d_reps, d_mask)
 
 
 class BertForTagsPrediction(BertPreTrainedModel):
@@ -683,7 +709,7 @@ class Trainer(BaseTrainer):
                     f'test_loss/{epoch}', test_loss, iteration
                 )
 
-    def colbert(self, ckpoint, tok_ckpoint):
+    def colbert(self, ckpoint, tok_ckpoint, max_ql=128, max_dl=512):
         self.start_point = self.infer_start_point(ckpoint)
         self.dataset_cls = ContrastiveQAShard
         self.test_data_cls = ContrastiveQAShard
@@ -698,11 +724,20 @@ class Trainer(BaseTrainer):
         self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
         self.criterion = nn.CrossEntropyLoss()
 
+        self.max_ql = max_ql
+        self.max_dl = max_dl
+
+        # for compatibility of the original Colbert ckpt
+        self.prepend_tokens = ['[unused0]', '[unused1]']
+
         # adding ColBERT special tokens
         self.tokenizer.add_special_tokens({
-            'additional_special_tokens': ['[Q]', '[D]']
+            'additional_special_tokens': self.prepend_tokens
         })
         self.model.resize_token_embeddings(len(self.tokenizer))
+
+        # mask punctuations
+        self.model.use_puct_mask(self.tokenizer)
 
         # for testing score normalization
         self.logits2probs = torch.nn.Softmax(dim=1)
@@ -723,15 +758,18 @@ class Trainer(BaseTrainer):
         passages = positives + negatives
 
         # prepend ColBERT special tokens
-        queries = ['[Q] ' + q for q in queries]
-        passages = ['[D] ' + p for p in passages]
+        prepend_q, prepend_d = self.prepend_tokens
+        queries = [f'{prepend_q} ' + q for q in queries]
+        passages = [f'{prepend_d} ' + p for p in passages]
 
         enc_queries = self.tokenizer(queries,
-            padding=True, truncation=True, return_tensors="pt")
+            padding='max_length', max_length=self.max_ql,
+            truncation=True, return_tensors="pt")
         enc_queries.to(device)
 
         enc_passages = self.tokenizer(passages,
-            padding=True, truncation=True, return_tensors="pt")
+            padding='max_length', max_length=self.max_dl,
+            truncation=True, return_tensors="pt")
         enc_passages.to(device)
 
         if self.debug:
@@ -745,7 +783,7 @@ class Trainer(BaseTrainer):
                 print(self.tokenizer.decode(p_ids))
 
         # each input: (2*B, L) -> (2*B)
-        scores = self.model(enc_queries, enc_passages)
+        scores, _ = self.model(enc_queries, enc_passages)
 
         # for B=3, +   +   +   -   -   -
         # tensor([ 1,  2,  3, -1, -2, -3])
