@@ -102,16 +102,16 @@ def psg_encoder__colbert_default(tok_ckpoint, model_ckpoint, mold, gpu_dev):
     from pyserini.encode import ColBertEncoder
     from preprocess import preprocess_for_transformer
 
-    colbert = ColBertEncoder(model_ckpoint, '[D]' if mold == 'D' else '[Q]',
-        tokenizer=tok_ckpoint, device=gpu_dev)
+    colbert_encoder = ColBertEncoder(model_ckpoint,
+        '[D]' if mold == 'D' else '[Q]', tokenizer=tok_ckpoint, device=gpu_dev)
 
     def encoder(batch_psg, debug=False):
         batch_psg = [preprocess_for_transformer(p) for p in batch_psg]
-        embs, lengths = colbert.encode(batch_psg, fp16=True, debug=debug)
+        embs, lengths = colbert_encoder.encode(batch_psg,
+            fp16=True, debug=debug)
         return embs, lengths
 
-    dim = colbert.dim
-    return encoder, (None, colbert, dim)
+    return encoder, (None, colbert_encoder, colbert_encoder.dim)
 
 
 def indexer__docid_vec_flat_faiss(output_path, dim, sample_frq):
@@ -143,7 +143,7 @@ def indexer__docid_vecs_colbert(output_path, dim, sample_frq):
     import pickle
     from pyserini.index import ColBertIndexer
     colbert_index = ColBertIndexer(output_path, dim=dim)
-    doclist = []
+    docdict = dict()
 
     def indexer(i, docs, encoder):
         doc_ids = [docid for docid, psg in docs]
@@ -151,12 +151,12 @@ def indexer__docid_vecs_colbert(output_path, dim, sample_frq):
         embs, lengths = encoder(passages, debug=(i % sample_frq == 0))
         colbert_index.write(embs, doc_ids, lengths)
         for docid, psg in docs:
-            doclist.append(psg)
+            docdict[docid] = psg
         return docid
 
     def finalize():
-        with open(os.path.join(output_path, 'doclist.pkl'), 'wb') as fh:
-            pickle.dump(doclist, fh)
+        with open(os.path.join(output_path, 'docdict.pkl'), 'wb') as fh:
+            pickle.dump(docdict, fh)
         colbert_index.close()
         print('Done!')
 
@@ -227,7 +227,7 @@ def index(config_file, section):
     indexer_finalize()
 
 
-def searcher__docid_vec_flat_faiss(idx_dir):
+def searcher__docid_vec_flat_faiss(idx_dir, config, enc_utils):
     import faiss
     import pickle
     # read index
@@ -248,8 +248,43 @@ def searcher__docid_vec_flat_faiss(idx_dir):
         scores, ids = scores.flat, ids.flat
         results = [(i, score, doclist[i]) for i, score in zip(ids, scores)]
         return results
+
     def finalize():
         pass
+
+    return searcher, finalize
+
+
+def searcher__docid_vecs_colbert(idx_dir, config, enc_utils):
+    import pickle
+    from pyserini.dsearch import ColBertSearcher
+
+    _, colbert_encoder, dim = enc_utils
+    print(f'Index: {idx_dir}, dim: {dim}')
+
+    # read docdict
+    doclist_path = os.path.join(idx_dir, 'docdict.pkl')
+    with open(doclist_path, 'rb') as fh:
+        docdict = pickle.load(fh)
+
+    # initialize searcher
+    dev = config['search_device']
+    rng = json.loads(config['search_range'])
+    print(f'Colbert Searcher: device={dev}, range={rng}')
+    colbert_searcher = ColBertSearcher(idx_dir, colbert_encoder,
+        device=dev, search_range=rng)
+
+    def searcher(query, _, topk=1000, debug=False):
+        hits = colbert_searcher.search(query, k=topk)
+        results = [
+            (h.docid, h.score, [h.docid, docdict[h.docid]])
+            for h in hits
+        ]
+        return results
+
+    def finalize():
+        pass
+
     return searcher, finalize
 
 
@@ -268,13 +303,17 @@ def search(config_file, section, adhoc_query=None, max_print_res=3):
 
     # prepare tokenizer, model and encoder
     passage_encoder = config[section]['passage_encoder']
-    encoder, _ = auto_invoke('psg_encoder', passage_encoder, ['Q', 'cpu'])
+    encoder, enc_utils = auto_invoke('psg_encoder', passage_encoder,
+        ['Q', 'cpu']
+    )
 
     # prepare searcher
     topk = config.getint(section, 'topk')
     verbose = (config.getboolean(section, 'verbose') or adhoc_query is not None)
     searcher = config[section]['searcher']
-    searcher, seacher_finalize = auto_invoke('searcher', searcher)
+    searcher, seacher_finalize = auto_invoke('searcher', searcher,
+        [config[section], enc_utils]
+    )
     kw_sep = config[section]['query_keyword_separator']
 
     # output config
