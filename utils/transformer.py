@@ -711,7 +711,7 @@ class Trainer(BaseTrainer):
                 )
 
     def colbert(self, ckpoint, tok_ckpoint, max_ql=128, max_dl=512):
-        self.start_point = self.infer_start_point(ckpoint)
+        #self.start_point = self.infer_start_point(ckpoint)
         self.dataset_cls = ContrastiveQAShard
         self.test_data_cls = ContrastiveQAShard
         with open(self.test_file, 'r') as fh:
@@ -818,16 +818,18 @@ class Trainer(BaseTrainer):
                 if ((b % 2 == 0 and score_ > 0.5) or
                     (b % 2 == 1 and score_ < 0.5)):
                     color = '\033[92m' # correct prediction
-                    self.test_succ_cnt += 1 / (2*B)
+                    self.test_succ_cnt += 0.5 # count twice for a (q/pos/neg)
                 else:
                     color = '\033[1;31m' # wrong prediction
                 if self.debug:
-                    print(f'\n--- batch {batch},{kind} ---\n')
+                    print(f'\n--- batch {batch}, {kind} ---\n')
                     print(self.tokenizer.decode(q_ids))
                     print(self.tokenizer.decode(p_ids))
-                    print(color + str(score_) + '\033[0m')
-            if self.test_loss_cnt >= 150:
+                print(color + str(score_) + '\033[0m', end=" ", flush=True)
+            print()
+            if self.test_loss_cnt >= 10:
                 raise StopIteration
+
         else:
             self.backward(loss)
             self.step()
@@ -859,11 +861,10 @@ class Trainer(BaseTrainer):
             ellipsis = [None] * 7
             if self.do_testing(self.colbert_loop, device, *ellipsis, True):
                 test_loss = round(self.test_loss_sum / self.test_loss_cnt, 3)
-                test_accu = round(self.test_succ_cnt / self.test_loss_cnt, 3)
+                test_accu = round(self.test_succ_cnt / (B * self.test_loss_cnt), 3)
                 print()
-                print(f'Test avg loss: {test_loss}')
-                print('Test accuracy:',
-                    self.test_succ_cnt, self.test_loss_cnt, test_accu)
+                print('Test avg loss:', test_loss)
+                print('Test accuracy:', test_accu)
                 if self.logger:
                     #self.logger.add_scalar(
                     #    f'train_batch_loss/{epoch}', loss_, iteration
