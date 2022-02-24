@@ -5,6 +5,7 @@ import fire
 import numpy
 import random
 import pickle
+import string
 from functools import partial
 
 import torch
