@@ -298,6 +298,8 @@ class Trainer(BaseTrainer):
             with open(math_keywords_file, 'rb') as fh:
                 kw_set = pickle.load(fh)
                 self.ma_keywords = {self.stemmer.stem(w) for w in kw_set}
+        else:
+            self.do_keyword_extraction = False
         self.debug = debug
         self.logger = None
         self.lr=float(lr)
