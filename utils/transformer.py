@@ -784,6 +784,7 @@ class Trainer(BaseTrainer):
                 print(self.tokenizer.decode(p_ids))
 
         # each input: (2*B, L) -> (2*B)
+        self.optimizer.zero_grad()
         scores, _ = self.model(enc_queries, enc_passages)
 
         # for B=3, +   +   +   -   -   -
@@ -826,7 +827,7 @@ class Trainer(BaseTrainer):
                     print(self.tokenizer.decode(q_ids))
                     print(self.tokenizer.decode(p_ids))
                 print(color + str(score_) + '\033[0m', end=" ", flush=True)
-            print()
+            print('#success:', self.test_succ_cnt)
             if self.test_loss_cnt >= 10:
                 raise StopIteration
 
