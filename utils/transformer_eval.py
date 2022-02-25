@@ -278,8 +278,9 @@ def searcher__docid_vecs_colbert(idx_dir, config, enc_utils):
     colbert_searcher = ColBertSearcher(idx_dir, colbert_encoder,
         device=dev, search_range=rng)
 
-    def searcher(query, _, topk=1000, debug=False):
-        hits = colbert_searcher.search(query, k=topk)
+    def searcher(query, colbert_encoder, topk=1000, debug=False):
+        qcode, lengths = colbert_encoder([query], debug=debug)
+        hits = colbert_searcher.search_code(qcode, k=topk)
         results = [
             (h.docid, h.score, [h.docid, docdict[h.docid]])
             for h in hits
