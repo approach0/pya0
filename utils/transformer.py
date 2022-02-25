@@ -357,6 +357,7 @@ class Trainer(BaseTrainer):
             self.acc_loss = [0.0] * self.epochs
             self.ep_iters = [0] * self.epochs
             self.logger = TensorBoardWriter(log_dir=f'job-{job_id}-logs')
+        self.glob_rank = glob_rank
 
     def save_model(self, model, save_funct, save_name, job_id):
         model.save_pretrained(
@@ -803,6 +804,10 @@ class Trainer(BaseTrainer):
         B = scores.shape[0]
         loss = self.criterion(scores, labels[:B])
 
+        def pr(*args, **kwargs):
+            if self.glob_rank != 0: return
+            print(*args, **kwargs)
+
         if test_loop:
             loss_ = loss.item()
             scores_ = self.logits2probs(scores)
@@ -823,11 +828,11 @@ class Trainer(BaseTrainer):
                 else:
                     color = '\033[1;31m' # wrong prediction
                 if self.debug:
-                    print(f'\n--- batch {batch}, {kind} ---\n')
-                    print(self.tokenizer.decode(q_ids))
-                    print(self.tokenizer.decode(p_ids))
-                print(color + str(score_) + '\033[0m', end=" ", flush=True)
-            print('#success:', self.test_succ_cnt)
+                    pr(f'\n--- batch {batch}, {kind} ---\n')
+                    pr(self.tokenizer.decode(q_ids))
+                    pr(self.tokenizer.decode(p_ids))
+                pr(color + str(score_) + '\033[0m', end=" ", flush=True)
+            pr('#success:', self.test_succ_cnt)
             if self.test_loss_cnt >= 10:
                 raise StopIteration
 
@@ -863,9 +868,9 @@ class Trainer(BaseTrainer):
             if self.do_testing(self.colbert_loop, device, *ellipsis, True):
                 test_loss = round(self.test_loss_sum / self.test_loss_cnt, 3)
                 test_accu = round(self.test_succ_cnt / (B * self.test_loss_cnt), 3)
-                print()
-                print('Test avg loss:', test_loss)
-                print('Test accuracy:', test_accu)
+                pr()
+                pr('Test avg loss:', test_loss, flush=True)
+                pr('Test accuracy:', test_accu, flush=True)
                 if self.logger:
                     #self.logger.add_scalar(
                     #    f'train_batch_loss/{epoch}', loss_, iteration
