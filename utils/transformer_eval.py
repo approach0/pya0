@@ -336,7 +336,8 @@ def search(config_file, section, adhoc_query=None, max_print_res=3):
     topics = gen_topics_queries(collection) if adhoc_query is None else [
         ('adhoc_query', adhoc_query, None)
     ]
-    for i, (qid, query, _) in enumerate(topics):
+    append = False
+    for qid, query, _ in topics:
         # skip topic file header / comments
         if qid is None or query is None or len(query) == 0:
             continue
@@ -363,8 +364,9 @@ def search(config_file, section, adhoc_query=None, max_print_res=3):
                 "score": score
             } for idx, score, item in search_results]
 
-            TREC_output(hits, qid, append=(i!=0),
+            TREC_output(hits, qid, append=append,
                 output_file=output_path, name=section)
+            append = True
         else:
             assert NotImplementedError
         print()
