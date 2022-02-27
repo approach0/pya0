@@ -8,21 +8,20 @@ def docid_to_doc(index, docid):
         docid = int(docid)
         doc = pya0.index_lookup_doc(index, docid)
         return doc
-    elif isinstance(index, tuple):
-        _, docids, _ = index
-        return {
-            'docid': docid,
-            'url': docids[docid][0],
-            'content': docids[docid][1]
-        }
-    elif type(index).__name__ == 'ColBertSearcher':
-        docids = index.ext_docIDs
+    elif type(index).__name__ == 'tuple':
+        idx_type, idx_load = index
+        if idx_type == 'doclist':
+            docid = int(docid)
+            content = idx_load[docid]
+        elif idx_type == 'docdict':
+            content = idx_load[docid]
+        else:
+            raise NotImplementedError
         return {
             'docid': docid,
             'url': docid,
-            'content': 'Unindexed'
+            'content': content
         }
-        quit()
     else:
         raise NotImplementedError
 

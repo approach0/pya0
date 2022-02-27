@@ -13,15 +13,11 @@ from .msearch import cascade_run, msearch
 from .mergerun import concatenate_run_files, merge_run_files
 from .l2r import L2R_gen_train_data, L2R_train
 import preprocess
-from .dsearch import get_dense_encoder
 
 
 def abort_on_non_a0_index(index):
     if isinstance(index, str):
         print('Abort on network index')
-        exit(1)
-    elif isinstance(index, tuple):
-        print('Abort on dense index')
         exit(1)
 
 
@@ -91,10 +87,6 @@ if __name__ == '__main__':
         help="Automatically evaluate multiple experiments specified by TSV file. E.g., '--auto-eval <name>'")
     parser.add_argument('--auto-eval-summary', type=str, required=False,
         help="Print automatic evaluation summary in TSV. E.g., '--auto-eval <name>'")
-    parser.add_argument('--dense', type=str, required=False,
-        help="Perform dense retrieval. E.g., '--dense faiss,colbert:model_ckpt,tok_ckpt'")
-    parser.add_argument('--device', type=str, required=False, default='cuda:0',
-        help="Choose dense retrieval device, e.g., cuda:0")
 
     args = parser.parse_args()
 
@@ -125,7 +117,7 @@ if __name__ == '__main__':
         cascades.append(('reader', [file_format, file_path]))
     else:
         cascades.append(('first-stage', {
-            'dense': args.dense
+            'first-stage-args': None
         }))
 
     # add cascade layers
@@ -199,37 +191,18 @@ if __name__ == '__main__':
         print('No index specified, abort.')
         exit(1)
 
-    elif isinstance(args.index, str) and args.index.startswith('http'):
-        index = args.index
-
-    elif args.dense:
-        index_type, model_spec, tok_ckpt = args.dense.split(',')
-        model_type, model_ckpt = model_spec.split(':')
-        model_ckpt = os.path.expanduser(model_ckpt)
-        tok_ckpt = os.path.expanduser(tok_ckpt)
-        if index_type == 'faiss':
-            import faiss
-            index_path = os.path.join(args.index, 'index.faiss')
-            faiss_index = faiss.read_index(index_path)
-
-            docids_path = os.path.join(args.index, 'docids.pkl')
-            with open(docids_path, 'rb') as fh:
-                docids = pickle.load(fh)
-
-            if model_type != 'null':
-                encoder = get_dense_encoder(model_type, model_ckpt, tok_ckpt)
-            else:
-                encoder = None
-            index = (faiss_index, docids, encoder)
-
-        elif index_type == 'pyserini':
-            sys.path.insert(0, './pyserini/')
-            from pyserini.encode import ColBertEncoder
-            from pyserini.dsearch import ColBertSearcher
-            encoder = ColBertEncoder(model_ckpt, '[Q]',
-                tokenizer=tok_ckpt, device=args.device)
-            index = ColBertSearcher(args.index, encoder)
-
+    elif isinstance(args.index, str) and ':' in args.index:
+        idx_type, idx_path = args.index.split(':')
+        if idx_type == 'doclist':
+            idx_path = os.path.join(idx_path, 'doclist.pkl')
+            with open(idx_path, 'rb') as fh:
+                idx_load = pickle.load(fh)
+            index = idx_type, idx_load
+        elif idx_type == 'docdict':
+            idx_path = os.path.join(idx_path, 'docdict.pkl')
+            with open(idx_path, 'rb') as fh:
+                idx_load = pickle.load(fh)
+            index = idx_type, idx_load
         else:
             raise NotImplementedError
 

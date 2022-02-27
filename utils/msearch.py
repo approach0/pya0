@@ -9,7 +9,6 @@ import subprocess
 from rm3 import rm3_expand_query
 from l2r import L2R_rerank, parse_svmlight_by_topic
 from mergerun import parse_trec_file, parse_qrel_file_to_run
-from dsearch import dsearch
 import collection_driver
 
 def send_json(url, obj, verbose=False):
@@ -96,14 +95,11 @@ def cascade_run(index, cascades, topic_query,
 
         if cascade == 'first-stage':
             print_query_oneline(query)
-            dense = args['dense']
-            if dense is not None:
-                results = dsearch(dense, index, query, verbose, topk)
-            else:
-                results = msearch(
-                    index, query, verbose=verbose, log=log,
-                    topk=topk, fork_search=fork_search, docid=docid
-                )
+            fs_args = args['first-stage-args']
+            results = msearch(
+                index, query, verbose=verbose, log=log,
+                topk=topk, fork_search=fork_search, docid=docid
+            )
 
         elif cascade == 'reader':
             results = {

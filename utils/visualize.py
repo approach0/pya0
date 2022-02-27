@@ -139,7 +139,7 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
 def visualize_hits(index, run_name, qid, query, hits, qrels=None, scores=None):
     # lookup document content
     for hit in hits:
-        docid = int(hit['docid']) # must be internal docid
+        docid = hit['docid'] # must be internal docid
         doc = collection_driver.docid_to_doc(index, docid)
         hit['content'] = doc['content']
     # output HTML preview
