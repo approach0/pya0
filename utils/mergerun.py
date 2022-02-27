@@ -139,6 +139,7 @@ def merge_run_files(f1, f2, alpha, topk, verbose=False, option="both", merge_nul
     runs1, run_name1 = parse_trec_file(f1)
     runs2, run_name2 = parse_trec_file(f2)
     f_out = f"mergerun-merged-{run_name1}-{run_name2}-alpha{alpha}-top{topk}-{option}.run"
+    f_out = f_out.replace('.', '_')
     with open(f_out, "w") as f:
         for qid, combined in interpolate_generator(
             runs1, alpha, runs2, 1 - alpha, whichtokeep=option
@@ -156,3 +157,9 @@ def merge_run_files(f1, f2, alpha, topk, verbose=False, option="both", merge_nul
                         continue
                 f.write(f"{qid} {_1}-{_2} {doc} {rank+1} {score} {run_name1}-{run_name2}\n")
     print(f"Output: {f_out}")
+
+
+if __name__ == '__main__':
+    import fire
+    os.environ["PAGER"] = 'cat'
+    fire.Fire(merge_run_files)
