@@ -14,7 +14,10 @@ def docid_to_doc(index, docid):
             docid = int(docid)
             content = idx_load[docid]
         elif idx_type == 'docdict':
-            content = idx_load[docid]
+            if docid in idx_load:
+                content = idx_load[docid]
+            else:
+                content = idx_load[int(docid)]
         else:
             raise NotImplementedError
         return {
