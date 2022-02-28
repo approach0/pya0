@@ -82,10 +82,7 @@ def TREC_reverse(collection, index, hits):
         for hit in hits:
             trec_docid = hit['docid']
             hit['trec_docid'] = trec_docid
-            try:
-                hit['docid'] = trec_docid_to_docid(index, trec_docid)
-            except NotImplementedError:
-                hit['docid'] = hit['_']
+            hit['docid'] = hit['_']
     else:
         raise NotImplementedError
 
