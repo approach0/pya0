@@ -12,7 +12,7 @@ def docid_to_doc(index, docid):
         idx_type, idx_load = index
         if idx_type == 'doclist':
             docid = int(docid)
-            content = idx_load[docid]
+            content = idx_load[docid][1]
         elif idx_type == 'docdict':
             if docid in idx_load:
                 content = idx_load[docid]
