@@ -44,8 +44,10 @@ def corpus_reader__ntcir12_txt(latex_list_file):
 
 
 def corpus_length__arqmath_answer(corpus_dir, max_length):
-    print('counting json files:', corpus_dir)
-    return len(list(file_iterator(corpus_dir, max_length, 'answer')))
+    print('counting answer files:', corpus_dir)
+    return sum(1 for _ in
+        file_iterator(corpus_dir, max_length, 'answer')
+    )
 
 
 def corpus_reader__arqmath_answer(corpus_dir):
@@ -55,6 +57,44 @@ def corpus_reader__arqmath_answer(corpus_dir):
         fields = os.path.basename(path).split('.')
         A_id, Q_id = int(fields[0]), int(fields[1])
         yield A_id, content
+
+
+def corpus_length__arqmath_task2_tsv(corpus_dir, max_length):
+    print('counting tsv file lengths:', corpus_dir)
+    cnt = 0
+    for _, dirname, fname in file_iterator(corpus_dir, max_length, 'tsv'):
+        path = dirname + '/' + fname
+        with open(path, 'r') as fh:
+            n_lines = sum(1 for _ in fh)
+        cnt += n_lines
+        print(fname, n_lines)
+    return cnt
+
+
+def corpus_reader__arqmath_task2_tsv(corpus_dir):
+    import csv
+    import html
+    from collections import defaultdict
+
+    visual_id_cnt = defaultdict(lambda: 0)
+    for cnt, dirname, fname in file_iterator(corpus_dir, -1, 'tsv'):
+        path = dirname + '/' + fname
+        with open(path) as tsvfile:
+            tsvreader = csv.reader(tsvfile, delimiter="\t")
+            for i, line in enumerate(tsvreader):
+                if i == 0: continue
+                formulaID = line[0]
+                post_id = line[1]
+                thread_id = line[2]
+                type_ = line[3] # 'question,' 'comment,' 'answer,' or 'title.'
+                visual_id = line[4]
+                latex = html.unescape(line[5])
+                if visual_id_cnt[visual_id] >= 5:
+                    continue
+                else:
+                    visual_id_cnt[visual_id] += 1
+                latex = f'[imath]{latex}[/imath]'
+                yield (formulaID, post_id), latex
 
 
 def auto_invoke(prefix, value, extra_args=[]):
@@ -209,6 +249,7 @@ def index(config_file, section):
     # go through corpus and index
     n = auto_invoke('corpus_length', corpus_reader, [corpus_max_reads])
     if n is None: n = 0
+    print('corpus length:', n)
     progress = tqdm(auto_invoke('corpus_reader', corpus_reader), total=n)
     batch = []
     batch_cnt = 0
