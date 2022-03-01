@@ -97,10 +97,14 @@ def TREC_reverse(collection, index, hits):
                 hit['docid'] = hit['_']
     elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined', 'arqmath-2021-task2-official']:
         for hit in hits:
-            trec_docid = int(hit['_']) # internal (formula) ID
-            hit['trec_docid'] = trec_docid
+            # Query_Id Formula_Id Post_Id Rank Score Run
+            formula_id = int(hit['_']) # formula ID
+            hit['trec_docid'] = formula_id
             hit['_'] = str(hit['docid']) # save post ID
-            hit['docid'] = trec_docid_to_docid(index, trec_docid)
+            try:
+                hit['docid'] = trec_docid_to_docid(index, formula_id)
+            except NotImplementedError:
+                hit['docid'] = formula_id
     elif collection in ['ntcir12-math-browsing', 'ntcir12-math-browsing-concrete', 'ntcir12-math-browsing-wildcards']:
         for hit in hits:
             trec_docid = hit['docid']
