@@ -493,6 +493,7 @@ def maprun(config_file, section, input_trecfile):
 
     # map TREC input to output
     batch = []
+    batch_cnt = 0
     with open(input_trecfile, 'r') as fh:
         n_lines = sum(1 for line in fh)
         fh.seek(0)
@@ -527,10 +528,11 @@ def maprun(config_file, section, input_trecfile):
                 qrys = [qid2query[item["qid"]] for item in batch]
                 docs = [convert(item['docid']) for item in batch]
                 scores = scorer(qrys, docs, verbose=verbose)
-                flush_batch(batch, scores, (i!=0))
+                flush_batch(batch, scores, (batch_cnt!=0))
                 batch = []
+                batch_cnt += 1
         # flush the last batch
-        flush_batch(batch, scores, True)
+        flush_batch(batch, scores, (batch_cnt!=0))
 
 
 if __name__ == '__main__':
