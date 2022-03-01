@@ -424,28 +424,32 @@ def psg_scorer__dpr_default(tok_ckpoint, model_ckpoint, gpu_dev):
     from transformer import DprEncoder
     from preprocess import preprocess_for_transformer
 
-    tok = BertTokenizer.from_pretrained(tok_ckpoint)
+    tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
     model = DprEncoder.from_pretrained(model_ckpoint, tie_word_embeddings=True)
     model.to(gpu_dev)
     model.eval()
 
-    def scorer(query, doc, verbose=False):
-        q = preprocess_for_transformer(query)
-        d = preprocess_for_transformer(doc)
-        enc_q = tok(q, truncation=True, return_tensors="pt").to(gpu_dev)
-        enc_d = tok(d, truncation=True, return_tensors="pt").to(gpu_dev)
+    def scorer(batch_query, batch_doc, verbose=False):
+        batch_q = [preprocess_for_transformer(q) for q in batch_query]
+        batch_d = [preprocess_for_transformer(d) for d in batch_doc]
+        enc_q = tokenizer(batch_q, truncation=True, return_tensors="pt",
+                          padding=True)
+        enc_d = tokenizer(batch_d, truncation=True, return_tensors="pt",
+                          padding=True)
+        enc_q = enc_q.to(gpu_dev)
+        enc_d = enc_d.to(gpu_dev)
         with torch.no_grad():
-            code_qry = model(enc_q)[1]
-            code_doc = model(enc_d)[1]
-            scores = code_qry @ code_doc.T
-            score = scores.item()
+            code_qry = model.forward(enc_q)[1]
+            code_doc = model.forward(enc_d)[1]
+            scores = torch.sum(code_qry * code_doc, dim=-1)
+            scores = scores.cpu().numpy()
         if verbose:
-            print(tok.decode(enc_q['input_ids'][0]))
-            print(tok.decode(enc_d['input_ids'][0]))
-            print('Similarity:', score)
-        return score
+            print(tokenizer.decode(enc_q['input_ids'][0]))
+            print(tokenizer.decode(enc_d['input_ids'][0]))
+            print('Similarity:', scores[0])
+        return scores
 
-    return scorer, (tok, model)
+    return scorer, (tokenizer, model)
 
 
 def maprun(config_file, section, input_trecfile):
@@ -453,10 +457,19 @@ def maprun(config_file, section, input_trecfile):
     config = configparser.ConfigParser()
     config.read(config_file)
 
+    # calculate batch size
+    gpu_dev = config['DEFAULT']['gpu_dev']
+    gpu_mem = config['DEFAULT']['gpu_mem']
+    dev_name = 'cpu' if gpu_dev == 'cpu' else torch.cuda.get_device_name(gpu_dev)
+    batch_map = json.loads(config[section]['batch_map'])
+    batch_sz = batch_map[gpu_mem]
+    print('batch size:', batch_sz)
+    print('device:', gpu_dev, dev_name)
+
     # prepare scorer
     verbose = config.getboolean(section, 'verbose')
     scorer = config[section]['passage_scorer']
-    scorer, _ = auto_invoke('psg_scorer', scorer, ['cpu'])
+    scorer, _ = auto_invoke('psg_scorer', scorer, [gpu_dev])
 
     # prepare lookup index
     lookup_index = config[section]['lookup_index']
@@ -479,6 +492,7 @@ def maprun(config_file, section, input_trecfile):
     }
 
     # map TREC input to output
+    batch = []
     with open(input_trecfile, 'r') as fh:
         n_lines = sum(1 for line in fh)
         fh.seek(0)
@@ -487,25 +501,36 @@ def maprun(config_file, section, input_trecfile):
             line = line.rstrip()
             sp = '\t' if line.find('\t') != -1 else None
             fields = line.split(sp)
-            qryID = fields[0]
-            _     = fields[1]
-            docid = fields[2]
-            rank  = fields[3]
-            score = fields[4]
-            run   = fields[5]
-            # lookup query and document and score them
-            query = qid2query[qryID]
-            doc = collection_driver.docid_to_doc(lookup_index, docid)
-            doc = doc['content']
-            sim = scorer(query, doc, verbose=verbose)
-            # rewrite fields
-            hit = [{
-                "_": _,
-                "docid": docid,
-                "score": sim
-            }]
-            TREC_output(hit, qryID, append=(i!=0),
-                output_file=output_path, name=section)
+            # add to batch
+            batch.append({
+                "qid"   : fields[0],
+                "_"     : fields[1],
+                "docid" : fields[2],
+                "rank"  : fields[3],
+                "score" : fields[4],
+                "run"   : fields[5]
+            })
+            def convert(docid):
+                doc = collection_driver.docid_to_doc(lookup_index, docid)
+                return doc['content']
+            def flush_batch(batch, scores, append):
+                for j, item in enumerate(batch):
+                    hit = [{
+                        "_": item['_'],
+                        "docid": item['docid'],
+                        "score": scores[j]
+                    }]
+                    TREC_output(hit, item['qid'], append=append,
+                        output_file=output_path, name=section)
+            if len(batch) == batch_sz:
+                # lookup query and document and score them
+                qrys = [qid2query[item["qid"]] for item in batch]
+                docs = [convert(item['docid']) for item in batch]
+                scores = scorer(qrys, docs, verbose=verbose)
+                flush_batch(batch, scores, (i!=0))
+                batch = []
+        # flush the last batch
+        flush_batch(batch, scores, True)
 
 
 if __name__ == '__main__':
