@@ -82,7 +82,9 @@ def corpus_reader__arqmath_task2_tsv(corpus_dir):
         with open(path) as tsvfile:
             tsvreader = csv.reader(tsvfile, delimiter="\t")
             for i, line in enumerate(tsvreader):
-                if i == 0: continue
+                if i == 0:
+                    yield None
+                    continue
                 formulaID = line[0]
                 post_id = line[1]
                 thread_id = line[2]
@@ -90,6 +92,7 @@ def corpus_reader__arqmath_task2_tsv(corpus_dir):
                 visual_id = line[4]
                 latex = html.unescape(line[5])
                 if visual_id_cnt[visual_id] >= 5:
+                    yield None
                     continue
                 else:
                     visual_id_cnt[visual_id] += 1
@@ -254,6 +257,7 @@ def index(config_file, section):
     batch = []
     batch_cnt = 0
     for row_idx, doc in enumerate(progress):
+        if doc is None: continue
         if row_idx < corpus_reader_begin:
             continue
         elif corpus_reader_end > 0 and row_idx >= corpus_reader_end:
@@ -267,7 +271,7 @@ def index(config_file, section):
 
     if len(batch) > 0:
         index_result = indexer(batch_cnt, batch, encoder)
-        progress.set_description(f"Final indexed doc: {index_result}")
+        print(f"Final indexed doc: {index_result}")
 
     indexer_finalize()
 
