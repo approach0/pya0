@@ -106,7 +106,8 @@ def TREC_output(hits, queryID, append=False, output_file="tmp.run", name="APPROA
                 i + 1,
                 hit['score'],
                 name
-            ), file=fh);
+            ), file=fh)
+            fh.flush()
 
 
 def get_qrels_filepath(collection: str):

@@ -393,7 +393,7 @@ def search(config_file, section, adhoc_query=None, max_print_res=3):
     ]
 
     # search
-    append = False
+    open(output_path, 'w').close() # clear output file
     for qid, query in topics:
         print(qid, query)
         search_results = searcher(query, encoder, topk=topk, debug=verbose)
@@ -409,9 +409,8 @@ def search(config_file, section, adhoc_query=None, max_print_res=3):
                 "score": score
             } for idx, score, item in search_results]
 
-            TREC_output(hits, qid, append=append,
+            TREC_output(hits, qid, append=True,
                 output_file=output_path, name=section)
-            append = True
         else:
             assert NotImplementedError
         print()
@@ -493,7 +492,7 @@ def maprun(config_file, section, input_trecfile):
 
     # map TREC input to output
     batch = []
-    batch_cnt = 0
+    open(output_path, 'w').close() # clear output file
     with open(input_trecfile, 'r') as fh:
         n_lines = sum(1 for line in fh)
         fh.seek(0)
@@ -514,25 +513,24 @@ def maprun(config_file, section, input_trecfile):
             def convert(docid):
                 doc = collection_driver.docid_to_doc(lookup_index, docid)
                 return doc['content']
-            def flush_batch(batch, scores, append):
+            def flush_batch(batch, scores):
                 for j, item in enumerate(batch):
                     hit = [{
                         "_": item['_'],
                         "docid": item['docid'],
                         "score": scores[j]
                     }]
-                    TREC_output(hit, item['qid'], append=append,
+                    TREC_output(hit, item['qid'], append=True,
                         output_file=output_path, name=section)
             if len(batch) == batch_sz:
                 # lookup query and document and score them
                 qrys = [qid2query[item["qid"]] for item in batch]
                 docs = [convert(item['docid']) for item in batch]
                 scores = scorer(qrys, docs, verbose=verbose)
-                flush_batch(batch, scores, (batch_cnt!=0))
+                flush_batch(batch, scores)
                 batch = []
-                batch_cnt += 1
         # flush the last batch
-        flush_batch(batch, scores, (batch_cnt!=0))
+        flush_batch(batch, scores)
 
 
 if __name__ == '__main__':
