@@ -33,10 +33,14 @@ def docid_to_doc(index, docid):
             docid = int(docid)
             content = idx_load[docid][1]
         elif idx_type == 'docdict':
-            if docid in idx_load:
-                content = idx_load[docid]
-            else:
-                content = idx_load[int(docid)]
+            try:
+                if docid in idx_load:
+                    content = idx_load[docid]
+                else:
+                    content = idx_load[int(docid)]
+            except KeyError:
+                content = f'KeyError: docid={docid}'
+                print(content)
         else:
             raise NotImplementedError
         return {
