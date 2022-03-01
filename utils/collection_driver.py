@@ -1,6 +1,25 @@
+import os
 import pya0
 import json
+import pickle
 from preprocess import tokenize_text
+
+
+def open_index(index_url):
+    idx_type, idx_path = index_url.split(':')
+    if idx_type == 'doclist':
+        idx_path = os.path.join(idx_path, 'doclist.pkl')
+        with open(idx_path, 'rb') as fh:
+            idx_load = pickle.load(fh)
+        index = idx_type, idx_load
+    elif idx_type == 'docdict':
+        idx_path = os.path.join(idx_path, 'docdict.pkl')
+        with open(idx_path, 'rb') as fh:
+            idx_load = pickle.load(fh)
+        index = idx_type, idx_load
+    else:
+        raise NotImplementedError
+    return index
 
 
 def docid_to_doc(index, docid):

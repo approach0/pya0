@@ -334,12 +334,27 @@ def searcher__docid_vecs_colbert(idx_dir, config, enc_utils):
     return searcher, finalize
 
 
+def gen_flat_topics(collection, kw_sep):
+    from .eval import gen_topics_queries
+    from .preprocess import tokenize_query
+    for qid, query, _ in gen_topics_queries(collection):
+        # skip topic file header / comments
+        if qid is None or query is None or len(query) == 0:
+            continue
+        # query example: [{'type': 'tex', 'str': '-0.026838601\\ldots'}]
+        query = tokenize_query(query)
+        if kw_sep == 'comma':
+            query = ', '.join(query)
+        elif kw_sep == 'space':
+            query = ' '.join(query)
+        else:
+            raise NotImplementedError
+        yield qid, query
+
+
 def search(config_file, section, adhoc_query=None, max_print_res=3):
     config = configparser.ConfigParser()
     config.read(config_file)
-
-    # get collection name for topics
-    collection = config[section]['topics_collection']
 
     # pyserini path
     if 'pyserini_path' in config[section]:
@@ -360,7 +375,6 @@ def search(config_file, section, adhoc_query=None, max_print_res=3):
     searcher, seacher_finalize = auto_invoke('searcher', searcher,
         [config[section], enc_utils]
     )
-    kw_sep = config[section]['query_keyword_separator']
 
     # output config
     from .eval import TREC_output
@@ -370,27 +384,17 @@ def search(config_file, section, adhoc_query=None, max_print_res=3):
     output_path = os.path.join(output_dir, output_filename)
     os.makedirs(output_dir, exist_ok=True)
 
-    # go through topics and search
-    from .eval import gen_topics_queries
-    from .preprocess import tokenize_query
+    # get topics
+    kw_sep = config[section]['query_keyword_separator']
+    collection = config[section]['topics_collection']
     print('collection:', collection)
-    topics = gen_topics_queries(collection) if adhoc_query is None else [
-        ('adhoc_query', adhoc_query, None)
+    topics = gen_flat_topics(collection, kw_sep) if adhoc_query is None else [
+        ('adhoc_query', adhoc_query)
     ]
+
+    # search
     append = False
-    for qid, query, _ in topics:
-        # skip topic file header / comments
-        if qid is None or query is None or len(query) == 0:
-            continue
-        # query example: [{'type': 'tex', 'str': '-0.026838601\\ldots'}]
-        if adhoc_query is None:
-            query = tokenize_query(query)
-            if kw_sep == 'comma':
-                query = ', '.join(query)
-            elif kw_sep == 'space':
-                query = ' '.join(query)
-            else:
-                raise NotImplementedError
+    for qid, query in topics:
         print(qid, query)
         search_results = searcher(query, encoder, topk=topk, debug=verbose)
         if verbose:
@@ -415,6 +419,95 @@ def search(config_file, section, adhoc_query=None, max_print_res=3):
     seacher_finalize()
 
 
+def psg_scorer__dpr_default(tok_ckpoint, model_ckpoint, gpu_dev):
+    from transformers import BertTokenizer
+    from transformer import DprEncoder
+    from preprocess import preprocess_for_transformer
+
+    tok = BertTokenizer.from_pretrained(tok_ckpoint)
+    model = DprEncoder.from_pretrained(model_ckpoint, tie_word_embeddings=True)
+    model.to(gpu_dev)
+    model.eval()
+
+    def scorer(query, doc, verbose=False):
+        q = preprocess_for_transformer(query)
+        d = preprocess_for_transformer(doc)
+        enc_q = tok(q, truncation=True, return_tensors="pt").to(gpu_dev)
+        enc_d = tok(d, truncation=True, return_tensors="pt").to(gpu_dev)
+        with torch.no_grad():
+            code_qry = model(enc_q)[1]
+            code_doc = model(enc_d)[1]
+            scores = code_qry @ code_doc.T
+            score = scores.item()
+        if verbose:
+            print(tok.decode(enc_q['input_ids'][0]))
+            print(tok.decode(enc_d['input_ids'][0]))
+            print('Similarity:', score)
+        return score
+
+    return scorer, (tok, model)
+
+
+def maprun(config_file, section, input_trecfile):
+    import collection_driver
+    config = configparser.ConfigParser()
+    config.read(config_file)
+
+    # prepare scorer
+    verbose = config.getboolean(section, 'verbose')
+    scorer = config[section]['passage_scorer']
+    scorer, _ = auto_invoke('psg_scorer', scorer, ['cpu'])
+
+    # prepare lookup index
+    lookup_index = config[section]['lookup_index']
+    print('Lookup index:', lookup_index)
+    lookup_index = collection_driver.open_index(lookup_index)
+
+    # output config
+    from .eval import TREC_output
+    output_dir = config['DEFAULT']['run_outdir']
+    output_filename = f'{section}.run'
+    output_path = os.path.join(output_dir, output_filename)
+    os.makedirs(output_dir, exist_ok=True)
+
+    # build collection topic maps
+    kw_sep = config[section]['query_keyword_separator']
+    collection = config[section]['topics_collection']
+    print('collection:', collection)
+    qid2query = {qid: query for qid, query in
+        gen_flat_topics(collection, kw_sep)
+    }
+
+    # map TREC input to output
+    with open(input_trecfile, 'r') as fh:
+        n_lines = sum(1 for line in fh)
+        fh.seek(0)
+        progress = tqdm(fh, total=n_lines)
+        for i, line in enumerate(progress):
+            line = line.rstrip()
+            sp = '\t' if line.find('\t') != -1 else None
+            fields = line.split(sp)
+            qryID = fields[0]
+            _     = fields[1]
+            docid = fields[2]
+            rank  = fields[3]
+            score = fields[4]
+            run   = fields[5]
+            # lookup query and document and score them
+            query = qid2query[qryID]
+            doc = collection_driver.docid_to_doc(lookup_index, docid)
+            doc = doc['content']
+            sim = scorer(query, doc, verbose=verbose)
+            # rewrite fields
+            hit = [{
+                "_": _,
+                "docid": docid,
+                "score": sim
+            }]
+            TREC_output(hit, qryID, append=(i!=0),
+                output_file=output_path, name=section)
+
+
 if __name__ == '__main__':
     """
     USAGE: python -m pya0.transformer_eval
@@ -422,5 +515,6 @@ if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
     fire.Fire({
         'index': index,
-        'search': search
+        'search': search,
+        'maprun': maprun
     })

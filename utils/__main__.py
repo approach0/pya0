@@ -192,19 +192,8 @@ if __name__ == '__main__':
         exit(1)
 
     elif isinstance(args.index, str) and ':' in args.index:
-        idx_type, idx_path = args.index.split(':')
-        if idx_type == 'doclist':
-            idx_path = os.path.join(idx_path, 'doclist.pkl')
-            with open(idx_path, 'rb') as fh:
-                idx_load = pickle.load(fh)
-            index = idx_type, idx_load
-        elif idx_type == 'docdict':
-            idx_path = os.path.join(idx_path, 'docdict.pkl')
-            with open(idx_path, 'rb') as fh:
-                idx_load = pickle.load(fh)
-            index = idx_type, idx_load
-        else:
-            raise NotImplementedError
+        import collection_driver
+        index = collection_driver.open_index(args.index)
 
     elif not os.path.exists(args.index):
         index_path = pya0.from_prebuilt_index(args.index, verbose=verbose)
