@@ -40,7 +40,7 @@ def corpus_reader__ntcir12_txt(latex_list_file):
             latex = ' '.join(fields[1:])
             latex = latex.replace('% ', '')
             latex = f'[imath]{latex}[/imath]'
-            yield docid_and_pos, latex
+            yield docid_and_pos, latex # docid, contents
 
 
 def corpus_length__arqmath_answer(corpus_dir, max_length):
@@ -56,7 +56,7 @@ def corpus_reader__arqmath_answer(corpus_dir):
         content = file_read(path)
         fields = os.path.basename(path).split('.')
         A_id, Q_id = int(fields[0]), int(fields[1])
-        yield A_id, content
+        yield A_id, content # docid, contents
 
 
 def corpus_length__arqmath_task2_tsv(corpus_dir, max_length):
@@ -94,7 +94,7 @@ def corpus_reader__arqmath_task2_tsv(corpus_dir):
                 else:
                     visual_id_cnt[visual_id] += 1
                 latex = f'[imath]{latex}[/imath]'
-                yield (formulaID, post_id), latex
+                yield (formulaID, post_id), latex # docid, contents
 
 
 def auto_invoke(prefix, value, extra_args=[]):
@@ -291,6 +291,7 @@ def searcher__docid_vec_flat_faiss(idx_dir, config, enc_utils):
         embs = encoder([query], debug=debug)
         scores, ids = faiss_index.search(embs, topk)
         scores, ids = scores.flat, ids.flat
+        # results is a list of (internal_ID, score, doc)
         results = [(i, score, doclist[i]) for i, score in zip(ids, scores)]
         return results
 
@@ -322,6 +323,7 @@ def searcher__docid_vecs_colbert(idx_dir, config, enc_utils):
     def searcher(query, colbert_encoder, topk=1000, debug=False):
         qcode, lengths = colbert_encoder([query], debug=debug)
         hits = colbert_searcher.search_code(qcode, k=topk)
+        # results is a list of (internal_ID, score, doc)
         results = [
             (h.docid, h.score, [h.docid, docdict[h.docid]])
             for h in hits
@@ -399,15 +401,21 @@ def search(config_file, section, adhoc_query=None, max_print_res=3):
         search_results = searcher(query, encoder, topk=topk, debug=verbose)
         if verbose:
             for j in range(max_print_res):
-                idx, score, item = search_results[j]
-                print(idx, score)
+                internal_id, score, item = search_results[j]
+                print(internal_id, score)
                 print(item, end="\n\n")
+
         if output_format == 'TREC':
-            hits = [{
-                "_": idx,
-                "docid": item[0],
-                "score": score
-            } for idx, score, item in search_results]
+            hits = []
+            for internal_id, score, item in search_results:
+                # item can be (docid, doc) or ((formulaID, postID), doc)
+                docid = item[0]
+                docid = docid[0] if isinstance(docid, tuple) else docid
+                hits.append({
+                    "_": internal_id,
+                    "docid": docid,
+                    "score": score
+                })
 
             TREC_output(hits, qid, append=True,
                 output_file=output_path, name=section)
