@@ -711,8 +711,9 @@ class Trainer(BaseTrainer):
                     f'test_loss/{epoch}', test_loss, iteration
                 )
 
-    def colbert(self, ckpoint, tok_ckpoint, max_ql=128, max_dl=512):
+    def colbert(self, ckpoint, tok_ckpoint, max_ql=512, max_dl=512):
         #self.start_point = self.infer_start_point(ckpoint)
+        print(f'max_ql={max_ql}, max_dl={max_dl}')
         self.dataset_cls = ContrastiveQAShard
         self.test_data_cls = ContrastiveQAShard
         with open(self.test_file, 'r') as fh:
