@@ -116,7 +116,7 @@ def auto_invoke(prefix, value, extra_args=[]):
         return None
 
 
-def psg_encoder__dpr_default(tok_ckpoint, model_ckpoint, mold, gpu_dev):
+def psg_encoder__dpr_default(tok_ckpoint, model_ckpoint, config, mold, gpu_dev):
     from transformers import BertTokenizer
     from transformer import DprEncoder
     from preprocess import preprocess_for_transformer
@@ -141,13 +141,16 @@ def psg_encoder__dpr_default(tok_ckpoint, model_ckpoint, mold, gpu_dev):
     return encoder, (tokenizer, model, dim)
 
 
-def psg_encoder__colbert_default(tok_ckpoint, model_ckpoint, mold, gpu_dev):
+def psg_encoder__colbert_default(tok_ckpoint, model_ckpoint, config, mold, gpu_dev):
     from pyserini.encode import ColBertEncoder
     from preprocess import preprocess_for_transformer
 
+    max_ql = int(config.get('max_ql', '128'))
+    max_dl = int(config.get('max_dl', '512'))
+
     colbert_encoder = ColBertEncoder(model_ckpoint,
         '[D]' if mold == 'D' else '[Q]',
-        max_ql=128, max_dl=512,
+        max_ql=max_ql, max_dl=max_dl,
         tokenizer=tok_ckpoint, device=gpu_dev,
         query_augment=True, use_puct_mask=True
     )
@@ -238,7 +241,7 @@ def index(config_file, section):
     # prepare tokenizer, model and encoder
     passage_encoder = config[section]['passage_encoder']
     encoder, (tokenizer, model, dim) = auto_invoke(
-        'psg_encoder', passage_encoder, ['D', gpu_dev]
+        'psg_encoder', passage_encoder, [config[section], 'D', gpu_dev]
     )
 
     # prepare indexer
@@ -371,7 +374,7 @@ def search(config_file, section, adhoc_query=None, max_print_res=3):
     # prepare tokenizer, model and encoder
     passage_encoder = config[section]['passage_encoder']
     encoder, enc_utils = auto_invoke('psg_encoder', passage_encoder,
-        ['Q', 'cpu']
+        [config[section], 'Q', 'cpu']
     )
 
     # prepare searcher
