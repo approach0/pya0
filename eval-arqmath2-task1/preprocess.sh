@@ -2,6 +2,12 @@ DIR=$(dirname $0)
 INPUTS=$@
 mkdir -p $DIR/input
 
+if [ $INPUTS == "cleanup" ]; then
+    set -x
+    rm -f $DIR/input/*
+    exit 0
+fi
+
 for INPUT in $INPUTS; do
     echo $INPUT
     n_fields=$(awk '{print NF; exit}' $INPUT)
