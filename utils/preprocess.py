@@ -174,8 +174,11 @@ def tokenize_query(query):
         if type_ == 'term':
             toks = tokenize_text(kw, no_punctuation=True)
             tokens += toks
-        else:
+        elif type_ == 'tex':
             tokens.append(f'[imath]{kw}[/imath]')
+        else:
+            raise NotImplementedError
+
     return tokens
 
 
