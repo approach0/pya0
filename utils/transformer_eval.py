@@ -113,7 +113,9 @@ def auto_invoke(prefix, value, extra_args=[]):
         ))
         print('args:')
         for arg in func_args:
-            print('\t', arg)
+            str_arg = str(arg)
+            m = 512 # limit the arg output
+            print('\t', str_arg[:m], '...' if len(str_arg) > m else '')
         return global_ids[func_name](*func_args)
     else:
         return None
