@@ -107,10 +107,13 @@ def auto_invoke(prefix, value, extra_args=[]):
     global_ids = globals()
     if func_name in global_ids:
         print('invoke:', func_name)
-        func_args = map(
+        func_args = list(map(
             lambda x: os.path.expanduser(x) if isinstance(x, str) else x,
             func_args
-        )
+        ))
+        print('args:')
+        for arg in func_args:
+            print('\t', arg)
         return global_ids[func_name](*func_args)
     else:
         return None
