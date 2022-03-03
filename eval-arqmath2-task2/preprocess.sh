@@ -2,7 +2,7 @@ DIR=$(dirname $0)
 INPUTS=$@
 mkdir -p $DIR/input
 
-if [ $INPUTS == "cleanup" ]; then
+if [ "$INPUTS" == "cleanup" ]; then
     set -x
     rm -f $DIR/input/*
     exit 0
