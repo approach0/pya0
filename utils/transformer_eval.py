@@ -366,7 +366,7 @@ def gen_flat_topics(collection, kw_sep):
         yield qid, query
 
 
-def search(config_file, section, adhoc_query=None, max_print_res=3):
+def search(config_file, section, adhoc_query=None, max_print_res=3, verbose=False):
     config = configparser.ConfigParser()
     config.read(config_file)
 
@@ -384,7 +384,8 @@ def search(config_file, section, adhoc_query=None, max_print_res=3):
 
     # prepare searcher
     topk = config.getint(section, 'topk')
-    verbose = (config.getboolean(section, 'verbose') or adhoc_query is not None)
+    verbose = (config.getboolean(section, 'verbose') or
+        adhoc_query is not None or verbose)
     searcher = config[section]['searcher']
     searcher, seacher_finalize = auto_invoke('searcher', searcher,
         [config[section], enc_utils]
