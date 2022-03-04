@@ -30,7 +30,7 @@ for INPUT in $INPUTS; do
 
     csv=$DIR/Task1_ARQMath2_Topic_Information.csv
     if [[ " $INPUTS " =~ " filter " ]]; then
-        python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Dependency Text
+        python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Dependency Both
         python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Dependency Formula
         python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Dependency Text
         python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Difficulty High
