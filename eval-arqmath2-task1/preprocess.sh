@@ -9,6 +9,10 @@ if [ "$INPUTS" == "cleanup" ]; then
 fi
 
 for INPUT in $INPUTS; do
+    if [[ "$INPUT" == "filter" ]]; then
+        continue
+    fi
+
     echo $INPUT
     n_fields=$(awk '{print NF; exit}' $INPUT)
     dest_name=$(basename $INPUT)
@@ -22,5 +26,18 @@ for INPUT in $INPUTS; do
     else
         echo "Unknown format, abort."
         exit 1
+    fi
+
+    csv=$DIR/Task1_ARQMath2_Topic_Information.csv
+    if [[ " $INPUTS " =~ " filter " ]]; then
+        python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Dependency Text
+        python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Dependency Formula
+        python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Dependency Text
+        python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Difficulty High
+        python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Difficulty Medium
+        python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Difficulty Low
+        python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Category Proof
+        python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Category Concept
+        python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Category Calculation
     fi
 done
