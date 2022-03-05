@@ -166,7 +166,7 @@ class ColBERT(BertPreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
         self.dim = 128
-        self.bert = BertModel(config, add_pooling_layer=True)
+        self.bert = BertModel(config, add_pooling_layer=False)
         self.linear = nn.Linear(config.hidden_size, self.dim, bias=False)
         self.skiplist = dict()
         self.init_weights()
