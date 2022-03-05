@@ -133,8 +133,8 @@ def psg_encoder__dpr_default(tok_ckpoint, model_ckpoint, config, mold, gpu_dev):
 
     def encoder(batch_psg, debug=False):
         batch_psg = [preprocess_for_transformer(p) for p in batch_psg]
-        inputs = tokenizer(batch_psg, truncation=True,
-                           return_tensors="pt", padding=True)
+        inputs = tokenizer(batch_psg, truncation=True, return_tensors="pt",
+            padding='max_length', max_length=512)
         inputs = inputs.to(gpu_dev)
         if debug:
             print(tokenizer.decode(inputs['input_ids'][0]))
@@ -453,9 +453,9 @@ def psg_scorer__dpr_default(tok_ckpoint, model_ckpoint, gpu_dev):
         batch_q = [preprocess_for_transformer(q) for q in batch_query]
         batch_d = [preprocess_for_transformer(d) for d in batch_doc]
         enc_q = tokenizer(batch_q, truncation=True, return_tensors="pt",
-                          padding=True)
+            padding='max_length', max_length=512)
         enc_d = tokenizer(batch_d, truncation=True, return_tensors="pt",
-                          padding=True)
+            padding='max_length', max_length=512)
         enc_q = enc_q.to(gpu_dev)
         enc_d = enc_d.to(gpu_dev)
         with torch.no_grad():
