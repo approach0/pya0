@@ -356,13 +356,16 @@ def gen_flat_topics(collection, kw_sep):
         if qid is None or query is None or len(query) == 0:
             continue
         # query example: [{'type': 'tex', 'str': '-0.026838601\\ldots'}]
-        query = tokenize_query(query)
-        if kw_sep == 'comma':
-            query = ', '.join(query)
-        elif kw_sep == 'space':
-            query = ' '.join(query)
+        if len(query) == 1 and query[0]['type'] == 'term':
+            query = query[0]['str']
         else:
-            raise NotImplementedError
+            query = tokenize_query(query)
+            if kw_sep == 'comma':
+                query = ', '.join(query)
+            elif kw_sep == 'space':
+                query = ' '.join(query)
+            else:
+                raise NotImplementedError
         yield qid, query
 
 

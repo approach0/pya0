@@ -181,20 +181,10 @@ def _topic_process__arqmath_2020_task1_origin(xmlfile):
         s = BeautifulSoup(post_xml, "html.parser")
         post = replace_post_tex.replace_dollar_tex(s.text)
         post = replace_post_tex.replace_alignS_tex(post)
-        list_keywords = tokenize_content(post)
-        def map_func(x):
-            if x.startswith('[imath]'):
-                x = x.replace('[imath]', '').replace('[/imath]', '')
-                return {
-                    'type': 'tex',
-                    'str': x
-                }
-            else:
-                return {
-                    'type': 'term',
-                    'str': x
-                }
-        query = list(map(map_func, list_keywords))
+        query = [{
+            'type': 'term',
+            'str': post
+        }]
         yield qid, query, None
 
 
