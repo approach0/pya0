@@ -19,6 +19,7 @@ from transformers import AdamW
 from transformers import BertTokenizer
 from transformers import BertForPreTraining
 from transformers import BertConfig
+from transformers import BertForNextSentencePrediction
 from transformers import BertModel, BertPreTrainedModel
 
 from nltk import LancasterStemmer
@@ -1189,17 +1190,14 @@ class Trainer(BaseTrainer):
 
         # encode triples
         enc_queries = self.tokenizer(queries,
-            padding='max_length', max_length=512,
-            truncation=True, return_tensors="pt")
+            padding=True, truncation=True, return_tensors="pt")
         enc_queries.to(device)
+        vec_queries = self.model(enc_queries)[1]
 
         passages = positives + negatives
         enc_passages = self.tokenizer(passages,
-            padding='max_length', max_length=512,
-            truncation=True, return_tensors="pt")
+            padding=True, truncation=True, return_tensors="pt")
         enc_passages.to(device)
-
-        vec_queries = self.model(enc_queries)[1]
         vec_passages = self.model(enc_passages)[1]
 
         if random.random() < 0.05:
