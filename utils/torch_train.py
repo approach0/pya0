@@ -228,7 +228,7 @@ def _train_thread(local_rank, trainer, train_loop):
         )
         print('Enter Torch DDP.')
         dist.barrier(device_ids=[int(trainer.device_ordinal)])
-        trainer.model = DDP(trainer.model)
+        trainer.model = DDP(trainer.model, broadcast_buffers=False)
         dist.barrier(device_ids=[int(trainer.device_ordinal)])
     elif trainer.xla_cores:
         import torch_xla.core.xla_model as xm
