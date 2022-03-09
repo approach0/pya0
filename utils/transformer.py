@@ -1171,7 +1171,9 @@ class Trainer(BaseTrainer):
         self.model = DprEncoder.from_pretrained(ckpoint,
             tie_word_embeddings=True
         )
-        self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
+        self.tokenizer = BertTokenizer.from_pretrained(
+            tok_ckpoint, model_max_length=512 # for SciBERT
+        )
         self.criterion = nn.CrossEntropyLoss()
 
         print('Invoke training ...')
@@ -1192,12 +1194,13 @@ class Trainer(BaseTrainer):
         enc_queries = self.tokenizer(queries,
             padding=True, truncation=True, return_tensors="pt")
         enc_queries.to(device)
-        vec_queries = self.model(enc_queries)[1]
 
         passages = positives + negatives
         enc_passages = self.tokenizer(passages,
             padding=True, truncation=True, return_tensors="pt")
         enc_passages.to(device)
+
+        vec_queries = self.model(enc_queries)[1]
         vec_passages = self.model(enc_passages)[1]
 
         if random.random() < 0.05:
