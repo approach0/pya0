@@ -55,15 +55,35 @@ def calculated_bpref(res_directory, trec_eval_tool, qre_file_path):
     return result
 
 
+def calculated_judge_rate(res_directory, trec_eval_tool, qre_file_path):
+    result = {}
+    for file in os.listdir(res_directory):
+        submission = file.split(".")[0].split("prime_")[1]
+        if not os.path.exists('pya0/judge_rate.py'):
+            result[submission] = '-'
+            continue
+        trec_run = res_directory + file
+        trec_run = trec_run.replace('prime_', '')
+        trec_run = trec_run.replace('prime-', 'trec-')
+        cmd = ['python', '-m', 'pya0.judge_rate', qre_file_path, trec_run]
+        print(' '.join(cmd))
+        output = check_output(cmd)
+        output = output.decode('utf-8')
+        rate = output.rstrip()
+        result[submission] = rate
+    return result
+
+
 def get_result(trec_eval_tool, qre_file_path, prim_result_dir, evaluation_result_file):
     file_res = open(evaluation_result_file, "w")
     res_ndcg = calculated_ndcg(prim_result_dir, trec_eval_tool, qre_file_path)
     res_map = calculated_map(prim_result_dir, trec_eval_tool, qre_file_path)
     res_p10 = calculated_p_at_10(prim_result_dir, trec_eval_tool, qre_file_path)
     res_bpref = calculated_bpref(prim_result_dir, trec_eval_tool, qre_file_path)
-    file_res.write("System\tnDCG'\tmAP'\tp@10\tBPref\n")
+    res_judge = calculated_judge_rate(prim_result_dir, trec_eval_tool, qre_file_path)
+    file_res.write("System\tnDCG'\tmAP'\tp@10\tBPref\tJudge\n")
     for sub in res_ndcg:
-        file_res.write(str(sub)+"\t"+str(res_ndcg[sub])+"\t"+str(res_map[sub])+"\t"+str(res_p10[sub])+"\t"+str(res_bpref[sub])+"\n")
+        file_res.write(str(sub)+"\t"+str(res_ndcg[sub])+"\t"+str(res_map[sub])+"\t"+str(res_p10[sub])+"\t"+str(res_bpref[sub])+"\t"+str(res_judge[sub])+"\n")
     file_res.close()
 
 

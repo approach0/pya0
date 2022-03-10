@@ -1,4 +1,5 @@
-EVAL="trec_eval ./topics-and-qrels/qrels.ntcir12-math-browsing.txt"
+QREL=./topics-and-qrels/qrels.ntcir12-math-browsing.txt
+EVAL="trec_eval $QREL"
 RUN="${1-tmp.run}"
 
 set -e
@@ -15,3 +16,8 @@ $EVAL $RUN -l1 -m P.10
 $EVAL $RUN -l1 -m P.15
 $EVAL $RUN -l1 -m P.20
 $EVAL $RUN -l1 -m bpref
+
+if [ -e pya0/judge_rate.py ]; then
+    echo -n "Judge Rate: "
+    python -m pya0.judge_rate $QREL $RUN --show_detail True
+fi
