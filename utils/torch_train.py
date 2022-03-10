@@ -140,17 +140,17 @@ class BaseTrainer:
         else:
             self.optimizer.step()
 
-    def start_training(self, train_loop):
+    def start_training(self, loop):
         self.model.train()
         self.caller = inspect.stack()[1].function
         print('[caller]', self.caller)
         if self.xla_cores:
             import torch_xla.distributed.xla_multiprocessing as xmp
-            xmp.spawn(_train_thread, nprocs=xla_cores, args=(self, train_loop))
+            xmp.spawn(_train_thread, nprocs=xla_cores, args=(self, loop))
         else:
             import torch.multiprocessing as mp
             n_cores = self.num_local_dev()
-            mp.spawn(_train_thread, nprocs=n_cores, args=(self, train_loop))
+            mp.spawn(_train_thread, nprocs=n_cores, args=(self, loop))
 
     def _prepare_testing(self, mini_batch):
         if self.test_file and self.test_data_cls:
@@ -183,7 +183,7 @@ class BaseTrainer:
         return done
 
 
-def _train_thread(local_rank, trainer, train_loop):
+def _train_thread(local_rank, trainer, loop):
     # hook print function to show node/rank
     import builtins as __builtin__
     def print(*args):
@@ -212,7 +212,22 @@ def _train_thread(local_rank, trainer, train_loop):
         trainer.device_ordinal, _ = trainer.map_device(local_rank)
         device = torch.device(f'cuda:{trainer.device_ordinal}'
             if torch.cuda.is_available() else 'cpu')
-    print('Training on device', device)
+
+    # https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html#torch.nn.parallel.DistributedDataParallel
+    # To use DistributedDataParallel on a host with N GPUs, you should
+    # spawn up N processes, ensuring that each process exclusively works
+    # on a single GPU from 0 to N-1. This can be done by either setting
+    # CUDA_VISIBLE_DEVICES for every process or by calling:
+    torch.cuda.set_device(trainer.device_ordinal)
+
+    print('Current CUDA device:',  torch.cuda.current_device())
+    CUDA_VISIBLE_DEVICES = (
+        os.environ['CUDA_VISIBLE_DEVICES' ]
+        if 'CUDA_VISIBLE_DEVICES' in os.environ else []
+    )
+    print('CUDA_VISIBLE_DEVICES:', CUDA_VISIBLE_DEVICES)
+
+    print('Training on device:', device)
     print(trainer.local_device_info())
     trainer.model.to(device)
 
@@ -228,12 +243,18 @@ def _train_thread(local_rank, trainer, train_loop):
         )
         print('Enter Torch DDP.')
         dist.barrier(device_ids=[int(trainer.device_ordinal)])
-        trainer.model = DDP(trainer.model, broadcast_buffers=False)
+        trainer.model = DDP(trainer.model, broadcast_buffers=False,
+            device_ids=[torch.cuda.current_device()]
+        )
         dist.barrier(device_ids=[int(trainer.device_ordinal)])
+
     elif trainer.xla_cores:
         import torch_xla.core.xla_model as xm
         print('Enter XLA barrier.')
         xm.rendezvous('init')
+
+    else:
+        assert glob_rank == 0, "Multi-GPUs need to specify --cluster option."
 
     # prehook: setup optimizer etc., after DDP initialization.
     trainer.prehook(device, job_id, glob_rank)
@@ -287,16 +308,16 @@ def _train_thread(local_rank, trainer, train_loop):
                         continue # last (incomplete) batch?
                     # invoke train loop
                     args = locals()
-                    arg_names = inspect.getargspec(train_loop)[0]
+                    arg_names = inspect.getargspec(loop)[0]
                     arg_vals = tuple(args[k] if k in args else None
                         for k in arg_names if k != 'self')
                     with scaler_ctx:
                         if trainer.test_only:
                             trainer.model.eval()
                             with torch.no_grad():
-                                train_loop(*arg_vals)
+                                loop(*arg_vals)
                         else:
-                            train_loop(*arg_vals)
+                            loop(*arg_vals)
                         iteration += 1
                     # save on cycle
                     if save_cycle > 0 and batch % save_cycle == 0:
