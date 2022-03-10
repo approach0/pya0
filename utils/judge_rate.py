@@ -20,12 +20,12 @@ def main(qrel_file, run_file, docid_field='docid', show='permille', fixfrac=0):
             qid_rels += 1 if key in qrels else 0
         judge_permille = round(base * qid_rels / n_hits, 1)
         if show == 'detail':
-            print(qid, n_hits, qid_rels, str(judge_permille)+'%')
+            print(qid, n_hits, qid_rels, str(judge_permille)+'‰')
         total_hits += n_hits
         total_rels += qid_rels
     judge_permille = round(base * total_rels / total_hits, 1)
     if show == 'detail':
-        print('total', total_hits, total_rels, str(judge_permille)+'%')
+        print('total', total_hits, total_rels, str(judge_permille)+'‰')
     elif show == 'count':
         print(total_rels)
     elif show == 'permille':

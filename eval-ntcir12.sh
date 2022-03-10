@@ -19,5 +19,5 @@ $EVAL $RUN -l1 -m bpref
 
 if [ -e pya0/judge_rate.py ]; then
     echo -n "Judge Rate: "
-    python -m pya0.judge_rate $QREL $RUN --show_detail True
+    python -m pya0.judge_rate $QREL $RUN # --show detail
 fi
