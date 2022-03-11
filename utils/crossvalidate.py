@@ -13,13 +13,15 @@ def each_run_file(all_run_files):
         yield run_file
 
 
-def split_run_files(*all_run_files, kfold=5):
+def split_run_files(*all_run_files, kfold=5, seed=123):
     all_topic_ids = set()
     print('Reading all topics...')
     for run_file in each_run_file(all_run_files):
         run_per_topic, _ = parse_trec_file(run_file)
         all_topic_ids.update(run_per_topic.keys())
     all_topic_ids = np.array(list(all_topic_ids))
+    print('Shuffle file using seed:', seed)
+    np.random.seed(seed)
     np.random.shuffle(all_topic_ids) # random shuffle!!!
     folds = np.array_split(all_topic_ids, kfold)
     print(folds)
