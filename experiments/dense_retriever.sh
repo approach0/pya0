@@ -2,34 +2,34 @@ set -x
 
 INDEX='python -m pya0.transformer_eval index ./utils/transformer_eval.ini'
 
-#$INDEX index_ntcir12_dpr__3ep_pretrain_1ep
-#$INDEX index_ntcir12_dpr__7ep_pretrain_1ep
-#$INDEX index_ntcir12_dpr__scibert_1ep
-#$INDEX index_ntcir12_dpr__vanilla_1ep
-#$INDEX index_ntcir12_dpr__azbert_1ep
+$INDEX index_ntcir12_dpr__3ep_pretrain_1ep
+$INDEX index_ntcir12_dpr__7ep_pretrain_1ep
+$INDEX index_ntcir12_dpr__scibert_1ep
+$INDEX index_ntcir12_dpr__vanilla_1ep
+$INDEX index_ntcir12_dpr__azbert_1ep
 
-#$INDEX index_arqmath2_dpr__3ep_pretrain_1ep
-#$INDEX index_arqmath2_dpr__7ep_pretrain_1ep
-#$INDEX index_arqmath2_dpr__scibert_1ep
-#$INDEX index_arqmath2_dpr__vanilla_1ep
-#$INDEX index_arqmath2_dpr__azbert_1ep
+$INDEX index_arqmath2_dpr__3ep_pretrain_1ep
+$INDEX index_arqmath2_dpr__7ep_pretrain_1ep
+$INDEX index_arqmath2_dpr__scibert_1ep
+$INDEX index_arqmath2_dpr__vanilla_1ep
+$INDEX index_arqmath2_dpr__azbert_1ep
 
 SEARCH='python -m pya0.transformer_eval search ./utils/transformer_eval.ini'
 
-#$SEARCH search_ntcir12_dpr__3ep_pretrain_1ep
-#$SEARCH search_ntcir12_dpr__7ep_pretrain_1ep
-#$SEARCH search_ntcir12_dpr__scibert_1ep
-#$SEARCH search_ntcir12_dpr__vanilla_1ep
-#$SEARCH search_ntcir12_dpr__azbert_1ep
+$SEARCH search_ntcir12_dpr__3ep_pretrain_1ep
+$SEARCH search_ntcir12_dpr__7ep_pretrain_1ep
+$SEARCH search_ntcir12_dpr__scibert_1ep
+$SEARCH search_ntcir12_dpr__vanilla_1ep
+$SEARCH search_ntcir12_dpr__azbert_1ep
 
-#$SEARCH search_arqmath2_dpr__3ep_pretrain_1ep
-#$SEARCH search_arqmath2_dpr__7ep_pretrain_1ep
-#$SEARCH search_arqmath2_dpr__scibert_1ep
-#$SEARCH search_arqmath2_dpr__vanilla_1ep
-#$SEARCH search_arqmath2_dpr__azbert_1ep
+$SEARCH search_arqmath2_dpr__3ep_pretrain_1ep
+$SEARCH search_arqmath2_dpr__7ep_pretrain_1ep
+$SEARCH search_arqmath2_dpr__scibert_1ep
+$SEARCH search_arqmath2_dpr__vanilla_1ep
+$SEARCH search_arqmath2_dpr__azbert_1ep
 
-#$SEARCH search_ntcir12_dpr
-#$SEARCH search_arqmath2_dpr
+$SEARCH search_ntcir12_dpr
+$SEARCH search_arqmath2_dpr
 
 kfold=5
 kfold_dir=runs.kfold
@@ -38,6 +38,7 @@ fusion_list=(
     ./runs/search_arqmath2_colbert_512.run
     ./runs/search_arqmath2_dpr.run
 )
+
 > kfold.result
 for eval_run in "${fusion_list[@]}"; do
     echo $eval_run
@@ -48,7 +49,7 @@ for eval_run in "${fusion_list[@]}"; do
         python utils/mergerun.py $eval_run $baseline_run 0.$i 1000 --out_prefix ${kfold_dir}/
     done
 
-    python utils/crossvalidate.py split_run_files --kfold $kfold $kfold_dir/* --seed 8921
+    python utils/crossvalidate.py split_run_files --kfold $kfold $kfold_dir/* --seed 1234
     ./eval-arqmath2-task1/preprocess.sh cleanup
     ./eval-arqmath2-task1/preprocess.sh $kfold_dir/*holdout
     ./eval-arqmath2-task1/preprocess.sh $kfold_dir/*foldtest
@@ -63,3 +64,6 @@ for eval_run in "${fusion_list[@]}"; do
     echo $eval_run $ndcg $map $p10 $bpref >> kfold.result
 done
 cat kfold.result
+
+RERANK='python -m pya0.transformer_eval maprun ./utils/transformer_eval.ini'
+$RERANK maprun_arqmath2_to_dpr $baseline_run
