@@ -133,13 +133,14 @@ def interpolate_generator(runs1, w1, runs2, w2, whichtokeep="both", verbose=Fals
         yield qid, combined
 
 
-def merge_run_files(f1, f2, alpha, topk, verbose=False, option="both", merge_null_field=True):
+def merge_run_files(f1, f2, alpha, topk, verbose=False, option="both", merge_null_field=True, out_prefix=''):
     available_options = ["overlap", "run1", "run2", "both"]
     assert option in available_options
     runs1, run_name1 = parse_trec_file(f1)
     runs2, run_name2 = parse_trec_file(f2)
     f_out = f"mergerun-merged-{run_name1}-{run_name2}-alpha{alpha}-top{topk}-{option}.run"
     f_out = f_out.replace('.', '_')
+    f_out = out_prefix + f_out
     with open(f_out, "w") as f:
         for qid, combined in interpolate_generator(
             runs1, alpha, runs2, 1 - alpha, whichtokeep=option
