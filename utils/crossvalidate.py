@@ -1,7 +1,9 @@
 import os
+import re
 import fire
 from mergerun import parse_trec_file
 import numpy as np
+from collections import defaultdict
 
 
 def each_run_file(all_run_files):
@@ -11,14 +13,14 @@ def each_run_file(all_run_files):
         yield run_file
 
 
-def main(*all_run_files, kfold=5):
+def split_run_files(*all_run_files, kfold=5):
     all_topic_ids = set()
     print('Reading all topics...')
     for run_file in each_run_file(all_run_files):
         run_per_topic, _ = parse_trec_file(run_file)
         all_topic_ids.update(run_per_topic.keys())
     all_topic_ids = np.array(list(all_topic_ids))
-    np.random.shuffle(all_topic_ids)
+    np.random.shuffle(all_topic_ids) # random shuffle!!!
     folds = np.array_split(all_topic_ids, kfold)
     print(folds)
     for k in range(len(folds)):
@@ -38,6 +40,55 @@ def main(*all_run_files, kfold=5):
                         print(line, file=holdout_fh)
 
 
+def cross_validate_tsv(tsv_file, name_field=0, score_field=1, verbose=True):
+    scores = defaultdict(dict)
+    with open(tsv_file, 'r') as fh:
+        for line in fh:
+            line = line.rstrip()
+            fields = line.split()
+            name = fields[name_field]
+            if name == '':
+                continue
+            try:
+                score = float(fields[score_field])
+            except ValueError:
+                if verbose:
+                    print('skip this line:', line)
+                continue
+            m = re.match(r'(.*)fold([0-9]+)(foldtest|holdout)$', name)
+            params, k, kind = m.group(1), m.group(2), m.group(3)
+            if kind == 'foldtest': # test score
+                scores[k]['__test__' + params] = score
+            elif kind == 'holdout': # validation score
+                scores[k][params] = score
+            else:
+                assert 0, f"unexpected: {kind}"
+
+    test_scores = []
+    best_params_set = defaultdict(int)
+    for k, score_dict in scores.items():
+        tune_scores = list(filter(
+            lambda x: not x[0].startswith('__test__'),
+            score_dict.items()
+        ))
+        best_params_idx = max(range(len(tune_scores)), key=lambda i: tune_scores[i][1])
+        best_params = tune_scores[best_params_idx][0]
+        test_score = score_dict['__test__' + best_params]
+        if verbose:
+            print(f'train and test fold#{k}: test_score={test_score}')
+        test_scores.append(test_score)
+        best_params_set[best_params] += 1
+    mean_test_score = np.array(test_scores).mean()
+    mean_test_score = round(mean_test_score, 4)
+    if verbose:
+        print('best params and frqs:', best_params_set.items())
+        print('mean test score:', mean_test_score)
+    else:
+        print(mean_test_score)
+
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
-    fire.Fire(main)
+    fire.Fire({
+        'split_run_files': split_run_files,
+        'cross_validate_tsv': cross_validate_tsv,
+    })
