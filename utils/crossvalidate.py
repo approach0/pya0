@@ -1,8 +1,9 @@
 import os
 import re
 import fire
-from mergerun import parse_trec_file
+import random
 import numpy as np
+from mergerun import parse_trec_file
 from collections import defaultdict
 
 
@@ -14,11 +15,11 @@ def each_run_file(all_run_files):
 
 
 def split_run_files(*all_run_files, kfold=5, seed=123):
-    all_topic_ids = set()
+    all_topic_ids = dict() # do not use set(), we need order here!
     print('Reading all topics...')
     for run_file in each_run_file(all_run_files):
         run_per_topic, _ = parse_trec_file(run_file)
-        all_topic_ids.update(run_per_topic.keys())
+        all_topic_ids.update(dict(run_per_topic.items()))
     all_topic_ids = np.array(list(all_topic_ids))
     print('Shuffle file using seed:', seed)
     np.random.seed(seed)
@@ -87,6 +88,7 @@ def cross_validate_tsv(tsv_file, name_field=0, score_field=1, verbose=True):
         print('mean test score:', mean_test_score)
     else:
         print(mean_test_score)
+
 
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
