@@ -160,11 +160,10 @@ def psg_encoder__colbert_default(tok_ckpoint, model_ckpoint, config, mold, gpu_d
         query_augment=True, use_puct_mask=True
     )
 
-    def encoder(batch_psg, debug=False):
+    def encoder(batch_psg, debug=False, return_enc=False):
         batch_psg = [preprocess_for_transformer(p) for p in batch_psg]
-        embs, lengths = colbert_encoder.encode(batch_psg,
-            fp16=True, debug=debug)
-        return embs, lengths
+        return colbert_encoder.encode(batch_psg,
+            fp16=True, debug=debug, return_enc=return_enc)
 
     return encoder, (None, colbert_encoder, colbert_encoder.dim)
 
@@ -442,7 +441,7 @@ def search(config_file, section, adhoc_query=None, max_print_res=3, verbose=Fals
     seacher_finalize()
 
 
-def psg_scorer__dpr_default(tok_ckpoint, model_ckpoint, gpu_dev):
+def psg_scorer__dpr_default(tok_ckpoint, model_ckpoint, config, gpu_dev):
     from transformers import BertTokenizer
     from transformer import DprEncoder
     from preprocess import preprocess_for_transformer
@@ -475,10 +474,42 @@ def psg_scorer__dpr_default(tok_ckpoint, model_ckpoint, gpu_dev):
     return scorer, (tokenizer, model)
 
 
+def psg_scorer__colbert_default(tok_ckpoint, model_ckpoint, config, gpu_dev):
+    from pyserini.encode import ColBertEncoder
+    from preprocess import preprocess_for_transformer
+
+    q_encoder, _ = psg_encoder__colbert_default(
+        tok_ckpoint, model_ckpoint, config, 'Q', gpu_dev
+    )
+    d_encoder, _ = psg_encoder__colbert_default(
+        tok_ckpoint, model_ckpoint, config, 'D', gpu_dev
+    )
+
+    def scorer(batch_query, batch_doc, verbose=False):
+        q_embs, q_lengths = q_encoder(batch_query)
+        d_embs, d_lengths, d_enc = d_encoder(batch_doc, return_enc=True)
+        d_mask = d_enc['attention_mask'].unsqueeze(-1) # (B, Ld, 1)
+        # (B, Ld, dim) x (B, dim, Lq) -> (B, Ld, Lq)
+        cmp_matrix = d_embs @ q_embs.permute(0, 2, 1)
+        cmp_matrix = cmp_matrix * d_mask # [B, Ld, Lq]
+        best_match = cmp_matrix.max(1).values # best match per query
+        scores = best_match.sum(-1) # sum score over each query
+        scores = scores.cpu().numpy()
+        return scores
+
+    return scorer, (None, None)
+
+
 def maprun(config_file, section, input_trecfile):
     import collection_driver
     config = configparser.ConfigParser()
     config.read(config_file)
+
+    # pyserini path
+    if 'pyserini_path' in config[section]:
+        pyserini_path = config[section]['pyserini_path']
+        print('Add sys path:', pyserini_path)
+        sys.path.insert(0, pyserini_path)
 
     # calculate batch size
     gpu_dev = config['DEFAULT']['gpu_dev']
@@ -492,7 +523,9 @@ def maprun(config_file, section, input_trecfile):
     # prepare scorer
     verbose = config.getboolean(section, 'verbose')
     scorer = config[section]['passage_scorer']
-    scorer, _ = auto_invoke('psg_scorer', scorer, [gpu_dev])
+    scorer, _ = auto_invoke('psg_scorer', scorer, [
+        config[section], gpu_dev
+    ])
 
     # prepare lookup index
     lookup_index = config[section]['lookup_index']
