@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import math
 import fire
 import torch
 import configparser
@@ -121,6 +122,36 @@ def auto_invoke(prefix, value, extra_args=[]):
         return None
 
 
+def alloc_dev(device_specifier, config, section):
+    devices = config['DEFAULT']['devices']
+    devices = json.loads(devices)
+
+    if ':' in device_specifier:
+        device, gpu_mem = device_specifier.split(':')
+        gpu_dev, _ = devices[device]
+    else:
+        gpu_dev, gpu_mem = devices[device_specifier]
+    print('GPU memory:', gpu_mem)
+
+    batch_map = config[section]['batch_map']
+    batch_map = json.loads(batch_map)
+
+    if gpu_mem in batch_map:
+        batch_sz = batch_map[gpu_mem]
+    else:
+        keys = list(map(int, batch_map.keys()))
+        gpu_mem = int(gpu_mem)
+        min_dist_idx = min(range(len(keys)), key=lambda x: abs(gpu_mem - x))
+        closest_key = keys[min_dist_idx]
+        closest_batch_sz = batch_map[str(closest_key)]
+        batch_sz = math.floor(gpu_mem * closest_batch_sz / closest_key)
+    print('batch size:', batch_sz)
+
+    name = 'cpu' if gpu_dev == 'cpu' else torch.cuda.get_device_name(gpu_dev)
+    print('Device name:', gpu_dev, name)
+    return gpu_dev, batch_sz
+
+
 def psg_encoder__dpr_default(tok_ckpoint, model_ckpoint, config, mold, gpu_dev):
     from transformers import BertTokenizer
     from transformer import DprEncoder
@@ -217,7 +248,7 @@ def indexer__docid_vecs_colbert(output_path, dim, sample_frq):
     return indexer, finalize
 
 
-def index(config_file, section):
+def index(config_file, section, device='cpu'):
     config = configparser.ConfigParser()
     config.read(config_file)
 
@@ -234,13 +265,7 @@ def index(config_file, section):
         sys.path.insert(0, pyserini_path)
 
     # calculate batch size
-    gpu_dev = config['DEFAULT']['gpu_dev']
-    gpu_mem = config['DEFAULT']['gpu_mem']
-    dev_name = 'cpu' if gpu_dev == 'cpu' else torch.cuda.get_device_name(gpu_dev)
-    batch_map = json.loads(config[section]['batch_map'])
-    batch_sz = batch_map[gpu_mem]
-    print('batch size:', batch_sz)
-    print('device:', gpu_dev, dev_name)
+    gpu_dev, batch_sz = alloc_dev(device, config, section)
 
     # prepare tokenizer, model and encoder
     passage_encoder = config[section]['passage_encoder']
@@ -283,7 +308,7 @@ def index(config_file, section):
     indexer_finalize()
 
 
-def searcher__docid_vec_flat_faiss(idx_dir, config, enc_utils):
+def searcher__docid_vec_flat_faiss(idx_dir, config, enc_utils, gpu_dev):
     import faiss
     import pickle
     # read index
@@ -312,7 +337,7 @@ def searcher__docid_vec_flat_faiss(idx_dir, config, enc_utils):
     return searcher, finalize
 
 
-def searcher__docid_vecs_colbert(idx_dir, config, enc_utils):
+def searcher__docid_vecs_colbert(idx_dir, config, enc_utils, gpu_dev):
     import pickle
     from pyserini.dsearch import ColBertSearcher
 
@@ -325,11 +350,10 @@ def searcher__docid_vecs_colbert(idx_dir, config, enc_utils):
         docdict = pickle.load(fh)
 
     # initialize searcher
-    dev = config['search_device']
     rng = json.loads(config['search_range'])
-    print(f'Colbert Searcher: device={dev}, range={rng}')
+    print(f'Colbert Searcher: range={rng}')
     colbert_searcher = ColBertSearcher(idx_dir, colbert_encoder,
-        device=dev, search_range=rng)
+        device=gpu_dev, search_range=rng)
 
     def searcher(query, colbert_encoder, topk=1000, debug=False):
         qcode, lengths = colbert_encoder([query], debug=debug)
@@ -368,7 +392,7 @@ def gen_flat_topics(collection, kw_sep):
         yield qid, query
 
 
-def search(config_file, section, adhoc_query=None, max_print_res=3, verbose=False):
+def search(config_file, section, adhoc_query=None, max_print_res=3, verbose=False, device='cpu'):
     config = configparser.ConfigParser()
     config.read(config_file)
 
@@ -381,7 +405,7 @@ def search(config_file, section, adhoc_query=None, max_print_res=3, verbose=Fals
     # prepare tokenizer, model and encoder
     passage_encoder = config[section]['passage_encoder']
     encoder, enc_utils = auto_invoke('psg_encoder', passage_encoder,
-        [config[section], 'Q', 'cpu']
+        [config[section], 'Q', device]
     )
 
     # prepare searcher
@@ -390,7 +414,7 @@ def search(config_file, section, adhoc_query=None, max_print_res=3, verbose=Fals
         adhoc_query is not None or verbose)
     searcher = config[section]['searcher']
     searcher, seacher_finalize = auto_invoke('searcher', searcher,
-        [config[section], enc_utils]
+        [config[section], enc_utils, device]
     )
 
     # output config
@@ -500,7 +524,7 @@ def psg_scorer__colbert_default(tok_ckpoint, model_ckpoint, config, gpu_dev):
     return scorer, (None, None)
 
 
-def maprun(config_file, section, input_trecfile):
+def maprun(config_file, section, input_trecfile, device='cpu'):
     import collection_driver
     config = configparser.ConfigParser()
     config.read(config_file)
@@ -512,13 +536,7 @@ def maprun(config_file, section, input_trecfile):
         sys.path.insert(0, pyserini_path)
 
     # calculate batch size
-    gpu_dev = config['DEFAULT']['gpu_dev']
-    gpu_mem = config['DEFAULT']['gpu_mem']
-    dev_name = 'cpu' if gpu_dev == 'cpu' else torch.cuda.get_device_name(gpu_dev)
-    batch_map = json.loads(config[section]['batch_map'])
-    batch_sz = batch_map[gpu_mem]
-    print('batch size:', batch_sz)
-    print('device:', gpu_dev, dev_name)
+    gpu_dev, batch_sz = alloc_dev(device, config, section)
 
     # prepare scorer
     verbose = config.getboolean(section, 'verbose')

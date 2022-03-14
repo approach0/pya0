@@ -2,40 +2,46 @@ set -x
 
 INDEX='python -m pya0.transformer_eval index ./utils/transformer_eval.ini'
 
-$INDEX index_ntcir12_dpr__3ep_pretrain_1ep
-$INDEX index_ntcir12_dpr__7ep_pretrain_1ep
-$INDEX index_ntcir12_dpr__scibert_1ep
-$INDEX index_ntcir12_dpr__vanilla_1ep
-$INDEX index_ntcir12_dpr__azbert_1ep
+$INDEX index_ntcir12_dpr --device titan_rtx
+$INDEX index_ntcir12_dpr__3ep_pretrain_1ep --device titan_rtx
+$INDEX index_ntcir12_dpr__7ep_pretrain_1ep --device titan_rtx
+$INDEX index_ntcir12_dpr__scibert_1ep --device titan_rtx
+$INDEX index_ntcir12_dpr__vanilla_1ep --device titan_rtx
+$INDEX index_ntcir12_colbert --device titan_rtx
 
-$INDEX index_arqmath2_dpr__3ep_pretrain_1ep
-$INDEX index_arqmath2_dpr__7ep_pretrain_1ep
-$INDEX index_arqmath2_dpr__scibert_1ep
-$INDEX index_arqmath2_dpr__vanilla_1ep
-$INDEX index_arqmath2_dpr__azbert_1ep
+$INDEX index_arqmath2_dpr --deivce a6000
+$INDEX index_arqmath2_dpr__3ep_pretrain_1ep --deivce a6000
+$INDEX index_arqmath2_dpr__7ep_pretrain_1ep --deivce a6000
+$INDEX index_arqmath2_dpr__scibert_1ep --deivce a6000
+$INDEX index_arqmath2_dpr__vanilla_1ep --deivce a6000
+$INDEX index_arqmath2_colbert --deivce a6000
 
 SEARCH='python -m pya0.transformer_eval search ./utils/transformer_eval.ini'
 
-$SEARCH search_ntcir12_dpr__3ep_pretrain_1ep
-$SEARCH search_ntcir12_dpr__7ep_pretrain_1ep
-$SEARCH search_ntcir12_dpr__scibert_1ep
-$SEARCH search_ntcir12_dpr__vanilla_1ep
-$SEARCH search_ntcir12_dpr__azbert_1ep
+$SEARCH search_ntcir12_dpr --device cpu
+$SEARCH search_ntcir12_dpr__3ep_pretrain_1ep --device cpu
+$SEARCH search_ntcir12_dpr__7ep_pretrain_1ep --device cpu
+$SEARCH search_ntcir12_dpr__scibert_1ep --device cpu
+$SEARCH search_ntcir12_dpr__vanilla_1ep --device cpu
+$SEARCH search_ntcir12_colbert --device a6000
 
-$SEARCH search_arqmath2_dpr__3ep_pretrain_1ep
-$SEARCH search_arqmath2_dpr__7ep_pretrain_1ep
-$SEARCH search_arqmath2_dpr__scibert_1ep
-$SEARCH search_arqmath2_dpr__vanilla_1ep
-$SEARCH search_arqmath2_dpr__azbert_1ep
+$SEARCH search_arqmath2_dpr --deivce cpu
+$SEARCH search_arqmath2_dpr__3ep_pretrain_1ep --deivce cpu
+$SEARCH search_arqmath2_dpr__7ep_pretrain_1ep --deivce cpu
+$SEARCH search_arqmath2_dpr__scibert_1ep --deivce cpu
+$SEARCH search_arqmath2_dpr__vanilla_1ep --deivce cpu
+$SEARCH search_arqmath2_colbert --device a6000
 
-$SEARCH search_ntcir12_dpr
-$SEARCH search_arqmath2_dpr
+RERANK='python -m pya0.transformer_eval maprun ./utils/transformer_eval.ini'
+
+$RERANK maprun_arqmath2_to_dpr $baseline_run --deivce a6000
+$RERANK maprun_arqmath2_to_colbert $baseline_run --deivce a6000
 
 kfold=5
 kfold_dir=runs.kfold
 baseline_run=./runs/arqmath2-a0-task1.run
 fusion_list=(
-    ./runs/search_arqmath2_colbert_512.run
+    ./runs/search_arqmath2_colbert.run
     ./runs/search_arqmath2_dpr.run
 )
 
@@ -64,6 +70,3 @@ for eval_run in "${fusion_list[@]}"; do
     echo $eval_run $ndcg $map $p10 $bpref >> kfold.result
 done
 cat kfold.result
-
-RERANK='python -m pya0.transformer_eval maprun ./utils/transformer_eval.ini'
-$RERANK maprun_arqmath2_to_dpr $baseline_run
