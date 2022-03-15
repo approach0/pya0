@@ -1171,9 +1171,7 @@ class Trainer(BaseTrainer):
         self.model = DprEncoder.from_pretrained(ckpoint,
             tie_word_embeddings=True
         )
-        self.tokenizer = BertTokenizer.from_pretrained(
-            tok_ckpoint, model_max_length=512 # for SciBERT
-        )
+        self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
         self.criterion = nn.CrossEntropyLoss()
 
         print('Invoke training ...')
