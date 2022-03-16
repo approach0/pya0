@@ -144,7 +144,10 @@ def alloc_dev(device_specifier, config, section):
         min_dist_idx = min(range(len(keys)), key=lambda x: abs(gpu_mem - x))
         closest_key = keys[min_dist_idx]
         closest_batch_sz = batch_map[str(closest_key)]
-        batch_sz = math.floor(gpu_mem * closest_batch_sz / closest_key)
+        if closest_key == 0:
+            batch_sz = closest_batch_sz
+        else:
+            batch_sz = math.floor(gpu_mem * closest_batch_sz / closest_key)
     print('batch size:', batch_sz)
 
     name = 'cpu' if gpu_dev == 'cpu' else torch.cuda.get_device_name(gpu_dev)
@@ -402,10 +405,13 @@ def search(config_file, section, adhoc_query=None, max_print_res=3, verbose=Fals
         print('Add sys path:', pyserini_path)
         sys.path.insert(0, pyserini_path)
 
+    # map device name
+    gpu_dev, _ = alloc_dev(device, config, section)
+
     # prepare tokenizer, model and encoder
     passage_encoder = config[section]['passage_encoder']
     encoder, enc_utils = auto_invoke('psg_encoder', passage_encoder,
-        [config[section], 'Q', device]
+        [config[section], 'Q', gpu_dev]
     )
 
     # prepare searcher
@@ -414,7 +420,7 @@ def search(config_file, section, adhoc_query=None, max_print_res=3, verbose=Fals
         adhoc_query is not None or verbose)
     searcher = config[section]['searcher']
     searcher, seacher_finalize = auto_invoke('searcher', searcher,
-        [config[section], enc_utils, device]
+        [config[section], enc_utils, gpu_dev]
     )
 
     # output config
