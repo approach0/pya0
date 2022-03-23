@@ -118,11 +118,11 @@ def indexer__docid_vec_flat_faiss(output_path, dim, sample_frq):
     doclist = []
 
     def indexer(i, docs, encoder):
+        # docs is of [((docid, *doc_props), doc_content), ...]
         passages = [psg for docid, psg in docs]
         embs = encoder(passages, debug=(i % sample_frq == 0))
         faiss_index.add(embs)
-        for docid, psg in docs:
-            doclist.append((docid, psg))
+        doclist += docs
         return docid
 
     def finalize():
@@ -142,12 +142,14 @@ def indexer__docid_vecs_colbert(output_path, dim, sample_frq):
     docdict = dict()
 
     def indexer(i, docs, encoder):
-        doc_ids = [docid for docid, psg in docs]
+        # docs is of [((docid, *doc_props), doc_content), ...]
+        doc_ids = [docid for (docid, _), psg in docs]
         passages = [psg for docid, psg in docs]
         embs, lengths = encoder(passages, debug=(i % sample_frq == 0))
         colbert_index.write(embs, doc_ids, lengths)
-        for docid, psg in docs:
-            docdict[docid] = psg
+        for doc in docs:
+            docid = doc[0][0]
+            docdict[docid] = doc
         return docid
 
     def finalize():
@@ -200,7 +202,8 @@ def index(config_file, section, device='cpu'):
     batch = []
     batch_cnt = 0
     for row_idx, doc in enumerate(progress):
-        if doc is None: continue
+        # doc is of ((docid, *doc_props), doc_content)
+        if doc[1] is None: continue
         if row_idx < corpus_reader_begin:
             continue
         elif corpus_reader_end > 0 and row_idx >= corpus_reader_end:
@@ -271,7 +274,7 @@ def searcher__docid_vecs_colbert(idx_dir, config, enc_utils, gpu_dev):
         hits = colbert_searcher.search_code(qcode, k=topk)
         # results is a list of (internal_ID, score, doc)
         results = [
-            (h.docid, h.score, [h.docid, docdict[h.docid]])
+            (h.docid, h.score, docdict[h.docid])
             for h in hits
         ]
         return results
@@ -354,16 +357,15 @@ def search(config_file, section, adhoc_query=None, max_print_res=3, verbose=Fals
         search_results = searcher(query, encoder, topk=topk, debug=verbose)
         if verbose:
             for j in range(max_print_res):
-                internal_id, score, item = search_results[j]
+                internal_id, score, doc = search_results[j]
                 print(internal_id, score)
-                print(item, end="\n\n")
+                print(doc, end="\n\n")
 
         if output_format == 'TREC':
             hits = []
-            for internal_id, score, item in search_results:
-                # item can be (docid, doc) or ((formulaID, postID), doc)
-                docid = item[0]
-                docid = docid[0] if isinstance(docid, tuple) else docid
+            for internal_id, score, doc in search_results:
+                # doc is of ((docid, *doc_props), doc_content)
+                docid = doc[0][0]
                 hits.append({
                     "_": internal_id,
                     "docid": docid,
@@ -504,6 +506,7 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
                 return doc['content']
             def flush_batch(batch, scores):
                 for j, item in enumerate(batch):
+                    # rewrite score for each trecfile item/line ...
                     hit = [{
                         "_": item['_'],
                         "docid": item['docid'],

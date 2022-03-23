@@ -35,9 +35,9 @@ def docid_to_doc(index, docid):
         elif idx_type == 'docdict':
             try:
                 if docid in idx_load:
-                    content = idx_load[docid]
+                    content = idx_load[docid][1]
                 else:
-                    content = idx_load[int(docid)]
+                    content = idx_load[int(docid)][1]
             except KeyError:
                 content = f'KeyError: docid={docid}'
                 print(content)
