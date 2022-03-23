@@ -117,6 +117,7 @@ def corpus_reader__arqmath_answer(corpus_dir):
         yield (A_id, Q_id), content # docid, contents
 
 
+# this function only **estimate** number of items by line numbers
 def corpus_length__arqmath_task2_tsv(corpus_dir, max_items):
     print('counting tsv file lengths:', corpus_dir)
     cnt = 0
