@@ -100,23 +100,6 @@ def corpus_reader__arqmath3_rawxml(xml_file):
         raise NotImplemented
 
 
-def corpus_length__arqmath_answer(corpus_dir, max_items):
-    print('counting answer files:', corpus_dir)
-    return sum(1 for _ in
-        file_iterator(corpus_dir, max_items, 'answer')
-    )
-
-
-def corpus_reader__arqmath_answer(corpus_dir):
-    for cnt, dirname, fname in file_iterator(corpus_dir, -1, 'answer'):
-        path = dirname + '/' + fname
-        content = file_read(path)
-        fields = os.path.basename(path).split('.')
-        A_id, Q_id = int(fields[0]), int(fields[1])
-        # YIELD (docid, doc_props), contents
-        yield (A_id, Q_id), content # docid, contents
-
-
 # this function only **estimate** number of items by line numbers
 def corpus_length__arqmath_task2_tsv(corpus_dir, max_items):
     print('counting tsv file lengths:', corpus_dir)

@@ -118,12 +118,13 @@ def indexer__docid_vec_flat_faiss(output_path, dim, sample_frq):
     doclist = []
 
     def indexer(i, docs, encoder):
+        nonlocal doclist
         # docs is of [((docid, *doc_props), doc_content), ...]
         passages = [psg for docid, psg in docs]
         embs = encoder(passages, debug=(i % sample_frq == 0))
         faiss_index.add(embs)
         doclist += docs
-        return docid
+        return docs[-1][0][0]
 
     def finalize():
         with open(os.path.join(output_path, 'doclist.pkl'), 'wb') as fh:
@@ -143,7 +144,7 @@ def indexer__docid_vecs_colbert(output_path, dim, sample_frq):
 
     def indexer(i, docs, encoder):
         # docs is of [((docid, *doc_props), doc_content), ...]
-        doc_ids = [docid for (docid, _), psg in docs]
+        doc_ids = [doc[0][0] for doc in docs]
         passages = [psg for docid, psg in docs]
         embs, lengths = encoder(passages, debug=(i % sample_frq == 0))
         colbert_index.write(embs, doc_ids, lengths)
