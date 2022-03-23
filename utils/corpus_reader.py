@@ -19,10 +19,10 @@ def file_read(path):
         return fh.read()
 
 
-def corpus_length__ntcir12_txt(latex_list_file, max_length):
+def corpus_length__ntcir12_txt(latex_list_file, max_items):
     with open(latex_list_file) as f:
         n_lines = sum(1 for _ in f)
-    return n_lines if max_length == 0 else min(n_lines, max_length)
+    return n_lines if max_items == 0 else min(n_lines, max_items)
 
 
 def corpus_reader__ntcir12_txt(latex_list_file):
@@ -34,15 +34,16 @@ def corpus_reader__ntcir12_txt(latex_list_file):
             latex = ' '.join(fields[1:])
             latex = latex.replace('% ', '')
             latex = f'[imath]{latex}[/imath]'
-            yield docid_and_pos, latex # docid, contents
+            # YIELD (docid, doc_props), contents
+            yield (docid_and_pos,), latex
 
 
-def corpus_length__arqmath3_rawxml(xml_file, max_length):
+def corpus_length__arqmath3_rawxml(xml_file, max_items):
     from xmlr import xmliter
     cnt = 0
     for attrs in xmliter(xml_file, 'row'):
-        if cnt + 1 > max_length:
-            return max_length
+        if cnt + 1 > max_items:
+            return max_items
         cnt += 1
     return cnt
 
@@ -77,11 +78,13 @@ def corpus_reader__arqmath3_rawxml(xml_file):
                     accept = attrs['@AcceptedAnswerId']
                 else:
                     accept = None
-                yield 'Q', ID, title, body, vote, tags, accept
+                # YIELD (docid, doc_props), contents
+                yield (ID, 'Q', title, body, vote, tags, accept), None
             else:
                 assert postType == "2" # Answer
                 parentID = attrs['@ParentId']
-                yield 'A', ID, parentID, body, vote
+                # YIELD (docid, doc_props), contents
+                yield (ID, 'A', parentID, vote), body
 
     elif 'Comments' in os.path.basename(xml_file):
         for attrs in xmliter(xml_file, 'row'):
@@ -91,15 +94,16 @@ def corpus_reader__arqmath3_rawxml(xml_file):
                 comment = comment2text(attrs['@Text'])
             ID = attrs['@Id']
             answerID = attrs['@PostId']
-            yield 'C', ID, answerID, comment
+            # YIELD (docid, doc_props), contents
+            yield (answerID, 'C', ID, comment), None
     else:
         raise NotImplemented
 
 
-def corpus_length__arqmath_answer(corpus_dir, max_length):
+def corpus_length__arqmath_answer(corpus_dir, max_items):
     print('counting answer files:', corpus_dir)
     return sum(1 for _ in
-        file_iterator(corpus_dir, max_length, 'answer')
+        file_iterator(corpus_dir, max_items, 'answer')
     )
 
 
@@ -109,17 +113,21 @@ def corpus_reader__arqmath_answer(corpus_dir):
         content = file_read(path)
         fields = os.path.basename(path).split('.')
         A_id, Q_id = int(fields[0]), int(fields[1])
-        yield A_id, content # docid, contents
+        # YIELD (docid, doc_props), contents
+        yield (A_id, Q_id), content # docid, contents
 
 
-def corpus_length__arqmath_task2_tsv(corpus_dir, max_length):
+def corpus_length__arqmath_task2_tsv(corpus_dir, max_items):
     print('counting tsv file lengths:', corpus_dir)
     cnt = 0
-    for _, dirname, fname in file_iterator(corpus_dir, max_length, 'tsv'):
+    for _, dirname, fname in file_iterator(corpus_dir, 0, 'tsv'):
         path = dirname + '/' + fname
         with open(path, 'r') as fh:
             n_lines = sum(1 for _ in fh)
         cnt += n_lines
+        if cnt >= max_items:
+            cnt = max_items
+            break
         print(fname, n_lines)
     return cnt
 
@@ -130,28 +138,45 @@ def corpus_reader__arqmath_task2_tsv(corpus_dir):
     from collections import defaultdict
 
     visual_id_cnt = defaultdict(lambda: 0)
+    guess_version = None
     for cnt, dirname, fname in file_iterator(corpus_dir, -1, 'tsv'):
         path = dirname + '/' + fname
         with open(path) as tsvfile:
             tsvreader = csv.reader(tsvfile, delimiter="\t")
-            for i, line in enumerate(tsvreader):
+            for i, fields in enumerate(tsvreader):
                 if i == 0:
-                    yield None
+                    header = ' '.join(fields)
+                    if 'old_visual_id' in header:
+                        guess_version = 'v3'
+                    else:
+                        guess_version = 'v2'
+                    # YIELD (docid, doc_props), contents
+                    yield None, None
                     continue
-                formulaID = line[0]
-                post_id = line[1]
-                thread_id = line[2]
-                type_ = line[3] # 'question,' 'comment,' 'answer,' or 'title.'
+                # determine type in {question, comment, answer, title}
+                type_ = fields[3]
                 if type_ == 'comment':
-                    yield None
+                    # YIELD (docid, doc_props), contents
+                    yield None, None
                     continue
-                visual_id = line[4]
-                latex = html.unescape(line[5])
+                if guess_version == 'v2':
+                    #id, post_id, thread_id, type, visual_id, formula.
+                    visual_id = fields[4]
+                elif guess_version == 'v3':
+                    # id, post_id, thread_id, type, comment_id,
+                    # old_visual_id, visual_id, issue, formula.
+                    visual_id = fields[6]
+                else:
+                    assert 0, 'guess_version not handled.'
                 if visual_id_cnt[visual_id] >= 5:
-                    yield None
+                    # YIELD (docid, doc_props), contents
+                    yield None, None
                     continue
                 else:
                     visual_id_cnt[visual_id] += 1
+                formulaID = fields[0]
+                doc_props = fields[1:-1]
+                latex = html.unescape(fields[-1])
                 latex = f'[imath]{latex}[/imath]'
-                yield (formulaID, post_id), latex # docid, contents
-
+                # YIELD (docid, doc_props), contents
+                yield (formulaID, *doc_props), latex
