@@ -6,6 +6,25 @@ from corpus_reader import *
 from collections import defaultdict
 
 
+def convert_ntcir12_wfb_to_jsonl(corpus_file,
+    output_file='ntcir12_wfb.jsonl',
+    max_items=float('inf')):
+    n = corpus_length__ntcir12_txt(corpus_file, max_items)
+    print(f'{n} formulas in total.')
+    reader = corpus_reader__ntcir12_txt(corpus_file)
+    progress = tqdm(reader, total=n)
+    with open(output_file, 'w') as fh:
+        for idx, row in enumerate(progress):
+            if idx >= n:
+                break
+            (formulaID, ), latex = row
+            fh.write(json.dumps({
+                'formulaID': formulaID,
+                'latex': latex
+            }, sort_keys=True))
+            fh.write('\n')
+
+
 def add_arqmath_task1_row(questions, answers, row):
     if row[0][1] == 'Q':
         (thread_id, _, title, question, vote, tags, accept), __ = row
@@ -115,6 +134,7 @@ def convert_arqmath_task2_to_jsonl(corpus_dir,
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
     fire.Fire({
+        'ntcir12_wfb': convert_ntcir12_wfb_to_jsonl,
         'arqmath_task1': convert_arqmath_task1_to_jsonl,
         'arqmath_task2': convert_arqmath_task2_to_jsonl
     })
