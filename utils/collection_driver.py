@@ -4,6 +4,8 @@ import json
 import pickle
 from preprocess import tokenize_text, tokenize_content
 
+DOCID_FIELD = 'title'
+
 
 def open_index(index_url):
     idx_type, idx_path = index_url.split(':')
@@ -45,7 +47,7 @@ def docid_to_doc(index, docid):
             raise NotImplementedError
         return {
             'docid': docid,
-            'url': docid,
+            DOCID_FIELD: docid,
             'content': content
         }
     else:
@@ -69,19 +71,19 @@ def TREC_preprocess(collection, index, hits):
         for hit in hits:
             doc = docid_to_doc(index, hit['docid'])
             hit['_'] = hit['docid'] # save internal docid
-            hit['docid'] = int(doc['url']) # output trec docid
+            hit['docid'] = int(doc[DOCID_FIELD]) # output trec docid
 
     elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined', 'arqmath-2020-task2-origin', 'arqmath-2021-task2-origin']:
         for hit in hits:
             doc = docid_to_doc(index, hit['docid'])
-            formulaID, postID, threadID, type_, visualID = doc['url'].split(',')
+            formulaID, postID, threadID, type_, visualID = doc[DOCID_FIELD].split(',')
             hit['_'] = formulaID # output formula id
             hit['docid'] = int(postID) # output trec docid
     elif collection in ['ntcir12-math-browsing', 'ntcir12-math-browsing-concrete', 'ntcir12-math-browsing-wildcards']:
         for hit in hits:
             doc = docid_to_doc(index, hit['docid'])
             hit['_'] = hit['docid'] # save internal docid
-            hit['docid'] = doc['url'] # output trec docid (doc:pos string)
+            hit['docid'] = doc[DOCID_FIELD] # output trec docid (doc:pos string)
     else:
         raise NotImplementedError
 
