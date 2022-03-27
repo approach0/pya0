@@ -1,5 +1,5 @@
 import re
-from nltk.stem import LancasterStemmer
+from nltk.stem import LancasterStemmer, PorterStemmer
 from nltk.tokenize import word_tokenize
 from nltk.tokenize import RegexpTokenizer
 from nltk.tokenize.treebank import TreebankWordDetokenizer
@@ -17,6 +17,8 @@ def use_stemmer(name='lancaster'):
         stemmer_func = lambda x: x
     elif name == 'lancaster':
         stemmer_func = LancasterStemmer().stem
+    elif name == 'porter':
+        stemmer_func = PorterStemmer().stem
     else:
         raise NotImplementedError
 
