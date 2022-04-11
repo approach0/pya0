@@ -1,4 +1,5 @@
 import os
+import re
 import pya0
 import json
 import pickle
@@ -76,9 +77,11 @@ def TREC_preprocess(collection, index, hits):
     elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined', 'arqmath-2020-task2-origin', 'arqmath-2021-task2-origin']:
         for hit in hits:
             doc = docid_to_doc(index, hit['docid'])
-            formulaID, postID, threadID, type_, visualID = doc[DOCID_FIELD].split(',')
-            hit['_'] = formulaID # output formula id
-            hit['docid'] = int(postID) # output trec docid
+            postID = re.search('#([0-9]+)', doc['url']).group(1)
+            formulaID = doc[DOCID_FIELD]
+            hit['_'] = formulaID # output formula id in the second field
+            hit['docid'] = postID # output MSE post ID as required by official eval
+
     elif collection in ['ntcir12-math-browsing', 'ntcir12-math-browsing-concrete', 'ntcir12-math-browsing-wildcards']:
         for hit in hits:
             doc = docid_to_doc(index, hit['docid'])
