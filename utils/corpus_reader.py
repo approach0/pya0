@@ -4,7 +4,7 @@ import os
 def file_iterator(corpus, endat, ext):
     cnt = 0
     for dirname, dirs, files in os.walk(corpus):
-        for f in files:
+        for f in sorted(files):
             if cnt >= endat and endat > 0:
                 return
             elif f.split('.')[-1] == ext:
