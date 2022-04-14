@@ -184,35 +184,52 @@ def tokenize_query(query):
     return tokens
 
 
-def preprocess_for_transformer(text, math_vocab=None):
+def preprocess_for_transformer(text, math_vocab=None, num_tokenizer_ver=1):
     output = ''
+
+    def num_tokenizer_v1(piece, tok_type, sym, span):
+        if '`' in sym:
+            sym = sym.split('`')[-1].strip('\'')
+        if tok_type == 'NUM' and len(str(sym)) >= 2:
+            sym = 'somenum'
+        return [sym]
+    def num_tokenizer_v2(piece, tok_type, sym, span):
+        number_str = piece[slice(*span)]
+        return list(number_str)
+    num_tokenizer = locals()['num_tokenizer_v' + str(num_tokenizer_ver)]
+
     for type_, piece, *_ in iter_imath_splits(text):
         piece = piece.strip('\n')
         if type_ == 'math':
             tex_toks = []
             try:
-                tex_toks = tex_tokenize(piece,
+                tex_toks = tex_tokenize(piece, include_spans=True,
                     include_syntatic_literal=True)
             except Exception as err:
                 print(err)
                 print('Occurred when parsing:', piece)
                 continue
             tex_syms = []
-            for _, tok_type, sym in tex_toks:
+            for _, tok_type, sym, span in tex_toks:
                 if tok_type in ('VAR', 'NUM', 'FLOAT', 'ONE', 'ZERO'):
-                    if '`' in sym:
-                        sym = sym.split('`')[-1].strip('\'')
-                    if tok_type == 'NUM' and len(str(sym)) >= 2:
-                        sym = 'somenum'
+                    split_syms = num_tokenizer(piece, tok_type, sym, span)
                 elif sym == '\n':
                     break
                 else:
-                    assert '`' not in sym
-                dollar_prefix_sym = '$' + sym + '$'
-                tex_syms.append(dollar_prefix_sym)
-                if math_vocab is not None:
-                    math_vocab[dollar_prefix_sym] += 1
+                    split_syms = [sym]
+                for sym in split_syms:
+                    dollar_prefix_sym = '$' + sym + '$'
+                    tex_syms.append(dollar_prefix_sym)
+                    if math_vocab is not None:
+                        math_vocab[dollar_prefix_sym] += 1
             output += ' '.join(tex_syms)
         else:
             output += piece
     return output
+
+
+if __name__ == '__main__':
+    math = r'4.077 = 1+\frac{1+2}{2!}+\frac{1+2+3}{3!}+\cdots+\frac{1+2+3+...+20}{20!}'
+    output = preprocess_for_transformer('[imath]' + math + '[/imath]',
+        num_tokenizer_ver=2)
+    print(output)
