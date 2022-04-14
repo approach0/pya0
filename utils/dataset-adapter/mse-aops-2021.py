@@ -33,7 +33,7 @@ def mse_aops_json_file_iterator(corpus, endat):
                 break
 
 
-def mse_aops_dataloader(corpus, endat=0):
+def mse_aops_dataloader(corpus, endat=0, num_tokenizer_ver=1):
     dataset = []
     vocab = defaultdict(int)
     word_tokenizer = RegexpTokenizer(r'\w+')
@@ -43,18 +43,20 @@ def mse_aops_dataloader(corpus, endat=0):
         text = j['text']
         tags = j['tags'] if 'tags' in j else ''
         url = j['url']
-        document = preprocess.preprocess_for_transformer(text, vocab)
+        document = preprocess.preprocess_for_transformer(text, vocab,
+            num_tokenizer_ver=num_tokenizer_ver)
         sentences = sent_tokenize(document)
         dataset.append((sentences, tags, url))
     return vocab, dataset
 
 
-def main(corpus, endat=-1):
-    vocab, dataset = mse_aops_dataloader(corpus, endat=endat)
+def main(corpus, num_tokenizer_ver=1, endat=-1):
+    vocab, dataset = mse_aops_dataloader(corpus,
+        endat=endat, num_tokenizer_ver=num_tokenizer_ver)
     print('New vocabulary size:', len(vocab))
-    with open('mse-aops-2021-data.pkl', 'wb') as fh:
+    with open(f'mse-aops-2021-data-v{num_tokenizer_ver}.pkl', 'wb') as fh:
         pickle.dump(dataset, fh)
-    with open('mse-aops-2021-vocab.pkl', 'wb') as fh:
+    with open(f'mse-aops-2021-vocab-v{num_tokenizer_ver}.pkl', 'wb') as fh:
         pickle.dump(vocab, fh)
 
 
