@@ -1,0 +1,100 @@
+B.301	\|A\|_2=\sqrt{\rho(A^TA)}
+B.302	z=\sqrt[n]{s}e^{\frac{i\varphi}{n}}
+B.303	[x,y] = x
+B.304	[T_X^{0,1}, T_X^{0,1}] \subset T_X^{0,1}
+B.305	\lim\limits_{N\to\infty}\left\lfloor\sum\limits_{r=1}^N\frac{1}{2^r}\right\rfloor
+B.306	B = \gamma + \sum_p \left\{ \log\left( 1 - \frac 1p\right) + \frac 1p\right\}
+B.307	\operatorname{ord}_n(x)=\lambda(n)
+B.308	\zeta(s)=\sum_{n=1}^\infty\frac{1}{n^s}=\frac{1}{\Gamma(s)}\int_0^\infty \frac{x^{s-1}}{e^x-1}dx
+B.309	a\in \mathbb{F}_p
+B.310	\frac{4}{x}+\frac{10}{y}=1
+B.311	f(x)=\frac{9^{x}}{9^x+3}
+B.312	\left\lfloor \frac{\left\lfloor a/b \right\rfloor}{c} \right\rfloor=\left\lfloor\frac{a}{bc}\right\rfloor
+B.313	|ab|=rs
+B.314	\sum \|e_n-x_n\| < 1
+B.315	P(m\text{++})\implies P(m)
+B.316	(\mathbb{Z}/2^m \mathbb{Z})^* = C_2 \times C_{2^{m-2}}
+B.317	\int \frac{1}{\left(x^2+1\right)^n}dx
+B.318	e^{x} \geq \left(1+\frac{x}{n}\right)^{n}
+B.319	A_1 \subseteq A_2 \subseteq \ldots \subseteq A_n \subseteq A_{n+1} \subseteq \ldots
+B.320	\int_{0}^{1}\frac{\sin^{-1}(x)}{x}
+B.321	ax+by=d
+B.322	a_n=\frac{n(n+1)}{2}
+B.323	(\mathbb{R} [x]/(x^4 + 1))^*
+B.324	\sum_{n=1}^{\infty} \sum_{m=1}^\infty \frac{1}{{n^2 +m^2}}.
+B.325	n!+2, n! +3, ..., n! + n
+B.326	F=P \oplus T
+B.327	\begin{vmatrix} 1 & 1 &1 \\ x & y & z \\ x^2 & y^2 &z^2 \\ \end{vmatrix}
+B.328	\sum_{k=1}^{n}\cos\frac{2\pi k}{n}=0
+B.329	A \subseteq V \subseteq \overline{V} \subseteq U
+B.330	\Delta=[x+a(n-1)](x-a)^{n-1}
+B.331	4^x+6^x=9^x
+B.332	g(n) = 1 = \frac{p}{p} = \frac{n}{{L(n)}}
+B.333	\frac{\sqrt{1-p^2}}{2\pi(1-2p\sin(\varphi)\cos(\varphi))}
+B.334	a^{log_a(b)}=b
+B.335	\lim_{N \rightarrow \infty} \left\Vert \sum_{k=0}^{N} \frac{A^k}{k!} -X \right\Vert  =0
+B.336	M:=\left\{A \in \mathbb{R}^{2 \times 2}: A B=B A \quad \forall B \in \mathbb{R}^{2 \times 2}\right\}
+B.337	\gamma'(t) = \lambda(t)\gamma(t)
+B.338	y = \frac{a+bx}{b-x}
+B.339	ar + bs = 1
+B.340	|x_{n+1} - x_n| < 1/3^n
+B.341	\{a, a+b, a+2b, \cdots\}
+B.342	f(x_4) =\frac{2}{5}e^{\frac{-x}{10}}\left(1-e^{\frac{-x}{10}}\right)^3.
+B.343	P(E) = 1/6
+B.344	\mathcal{A}=\{\{a\}\}
+B.345	r\equiv \begin{cases} x=1 \\ y=1 \\z=\lambda -2 \end{cases}
+B.346	\{ r \in \mathbb Q \mid r^2 >2, r>0 \}
+B.347	(a+b, a-b) = 1
+B.348	\begin{pmatrix} A & -B\\ B & A \end{pmatrix}
+B.349	x! = \sqrt{2\pi x} * (\frac{x}{e})^x
+B.350	x^3 - x, x \in \mathbb{N}
+B.351	\lim_{n\to\infty}\inf \mu (A_n) \geq \mu(A)
+B.352	\int_0^\infty f(x) dx
+B.353	Cov(x,y) = 0
+B.354	p_1p_2\mid a
+B.355	f(f(x)^2+f(y))=xf(x)+y
+B.356	\sum_{n=0}^{\infty}{\frac{x^{kn}}{(kn)!}}
+B.357	f(n)=n^2-n+2
+B.358	ds = \sqrt{1 + \frac{dy}{dx}^2}
+B.359	\tan\theta=\frac{x}{2}
+B.360	1/ \vert x \vert
+B.361	F(x)=\int_a^xf(t)dt
+B.362	x R y \lor y R x
+B.363	P[X^* \geq x | \mathcal{F}_0]= 1 \wedge X_0 / x
+B.364	d(x,A)\leqslant d(x,y)+d(y,A)
+B.365	\alpha^+
+B.366	S=\{ e_1,e_2,e_3,....,e_n\}
+B.367	d(x,M)=\frac{|\langle f,x \rangle|}{||f||}
+B.368	\sum_{n\geq1}\frac{1}{n^2}=\sum_{n\leq x}\frac1{n^2}+\mathcal O(1/x).
+B.369	J_n=\int_{-\pi}^\pi \frac{\sin{(nx)}}{(1+2^n) \sin{x}}\,\mathrm{d}x\:?
+B.370	s(x) = \sum\limits_{j=1}^n c_j\chi_{A_j}(x)
+B.371	|f(x)g(x)|=||fg||
+B.372	x^2 - dy^2 = 1
+B.373	\sqrt n = {a\over b}
+B.374	P(x)|P(x^2)
+B.375	x^2 + 7 = 2^n
+B.376	\lim\limits_{n\to\infty}\dfrac{\sqrt1+\sqrt2+\sqrt3+\ldots+\sqrt n}{n\sqrt n}
+B.377	\mathbb{R}^{n+1}-\mathbb{R}^n
+B.378	\sqrt{\left(-3\right)^2}
+B.379	f_1, f_2 \in S \longrightarrow f_1 \circ f_2 \in S.
+B.380	\int_0^\pi f(t) \sin(t)dt =\int_0^\pi f(t) \cos(t)dt = 0
+B.381	A_1 \times ... \times A_n
+B.382	SS = \{ A_{1}, A_{2}, A_{3},...\}
+B.383	f_a(z):=\frac{z-a}{1-\overline{a}z}
+B.384	f_3(n) = \binom n2
+B.385	\sigma(ab)=\sigma(a)+\sigma(b)
+B.386	\sum _{n=-\infty }^{\infty } e^{-n^2 \pi x}=\frac{1}{\sqrt{x}}\sum _{n=-\infty }^{\infty } e^{-\frac{n^2 \pi }{x}}
+B.387	n=5k + i, i\in\{0,1,2,3,4\}
+B.388	\left[\begin{array}{ccc|c}1&10&-6&1\\1&k&-1&2\\2&-1&k&5\end{array}\right]
+B.389	\frac{(1+r)^{N+1}-(1+r)-rN}{r^2(1+r)^N}
+B.390	t_n:=\frac {x_1+x_2+...+x_n}{n}
+B.391	\mathbb{E} |X+Y|^r \leq c_r (\mathbb{E} |X|^r + \mathbb{E} |Y|^r),
+B.392	f * f_p \equiv 1 \bmod p
+B.393	|f(z^{2})| \leq  2|f(z)|
+B.394	\forall \epsilon > 0, \exists \delta > 0, |x-a|<\delta \implies |f(x) - f(a)| < \epsilon
+B.395	f(a+b) = f(a) + f(b)
+B.396	f_X(x)=\frac{2x}{\theta^2} \quad
+B.397	1 + 2 + 3 + 4 + \cdots = -\frac{1}{12}
+B.398	\lim_{x \rightarrow c} f'(x) = L = \lim_{x \rightarrow c^+} f'(x) =\lim_{x \rightarrow c^-} f'(x)
+B.399	M = {\{\langle x,y \rangle \in \mathbb{R^2} | a \leq x \leq b , c \leq y \leq d}\}
+B.400	\left(\frac{1}{2^{n-2}}\right)^2
