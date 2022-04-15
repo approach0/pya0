@@ -17,8 +17,8 @@ def load_pickle_file(file):
         return pickle.load(fh)
 
 
-def dump_split(aggregate, aggregate_cnt, output_dir='./data'):
-    output_file = f'{output_dir}/qa.pairs.{aggregate_cnt}'
+def dump_split(aggregate, aggregate_cnt, ver):
+    output_file = f'./qa-v{ver}.pairs.{aggregate_cnt}'
     with open(output_file, 'wb') as fh:
         L = len(aggregate)
         print(f'writing split {output_file} of length {L} ...')
@@ -55,7 +55,7 @@ def generate_contrastive_pairs(
     tag_bank_file='arqmath-tag-bank.pkl',
     answer_bank_file='arqmath-answer-bank.pkl',
     postlink_file='PostLinks.V1.2.xml',
-    n_splits=10, limit=-1, debug=False, min_votes=7,
+    num_tokenizer_ver=1, n_splits=10, limit=-1, debug=False, min_votes=7,
     random_seed=123, allow_vote_postive=True):
 
     print(f'Reading {postlink_file} ...')
@@ -80,7 +80,9 @@ def generate_contrastive_pairs(
         for qid, (ac, tags, Q) in progress:
             reminder = aggregate_cnt % n_per_split
             progress.set_description(f'{reminder} % {n_per_split}')
-            Q = preprocess_for_transformer(Q)
+            Q = preprocess_for_transformer(Q,
+                num_tokenizer_ver=num_tokenizer_ver
+            )
 
             # retrieve thread AC as postive
             if ac not in a_dict:
@@ -119,15 +121,23 @@ def generate_contrastive_pairs(
                     print(negative_A, end='\n\n')
                     quit(0)
 
-                positive_A = preprocess_for_transformer(positive_A)
-                negative_A = preprocess_for_transformer(negative_A)
+                positive_A = preprocess_for_transformer(positive_A,
+                    num_tokenizer_ver=num_tokenizer_ver
+                )
+                negative_A = preprocess_for_transformer(negative_A,
+                    num_tokenizer_ver=num_tokenizer_ver
+                )
 
                 aggregate.append((Q, all_tags, positive_A, negative_A))
                 aggregate_cnt += 1
                 if aggregate_cnt % n_per_split == 0:
-                    aggregate = dump_split(aggregate, aggregate_cnt)
+                    aggregate = dump_split(
+                        aggregate, aggregate_cnt, num_tokenizer_ver
+                    )
 
-        dump_split(aggregate, aggregate_cnt)
+        dump_split(
+            aggregate, aggregate_cnt, num_tokenizer_ver
+        )
 
 
 if __name__ == '__main__':
