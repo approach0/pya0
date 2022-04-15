@@ -75,9 +75,9 @@ class SentencePairGennerator():
 
 
 def generate_sentpairs(
-    docs_file='mse-aops-2021-data.pkl',
-    maxlen=512, n_splits=20, limit=-1, show_sample_cycle=10_000,
-    tok_ckpoint='bert-base-uncased', random_seed=123):
+    docs_file='mse-aops-2021-data.pkl', show_sample_cycle=10_000,
+    tok_ckpoint='bert-base-uncased', random_seed=123,
+    maxlen=512, n_per_split=382_000, limit=-1):
 
     tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
     tokenize = tokenizer.tokenize
@@ -87,7 +87,6 @@ def generate_sentpairs(
         if limit >= 0: docs = docs[:limit]
         ridx = [(i, j) for i, d in enumerate(docs) for j in range(len(d[0]))]
 
-        n_per_split = len(ridx) // n_splits
         aggregate = []
         def do_aggregate(pairs_cnt, flush=False):
             nonlocal aggregate
