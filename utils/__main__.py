@@ -62,7 +62,7 @@ if __name__ == '__main__':
     parser.add_argument('--eval-args', type=str, required=False,
         help="Passing extra command line arguments to trec_eval. E.g., '-q -m map -m P.30'")
     parser.add_argument('--visualize-run', type=str, required=False,
-        help="Visualize ARQMath Task1 run files")
+        help="Visualize run files")
     parser.add_argument('--visualize-compare-scores', type=str, required=False,
         help="Visualize scores comparison")
     parser.add_argument('--concate-runs', type=str, required=False,
