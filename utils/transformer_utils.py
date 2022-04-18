@@ -123,7 +123,8 @@ def unmasking_visualize(ckpt_bert, ckpt_tokenizer, num_tokenizer_ver=1,
             )
             tokens = sentence.split()
             for pos in filter(lambda x: x!=0, maskpos):
-                tokens[pos-1] = '[MASK]'
+                if pos - 1 < len(tokens):
+                    tokens[pos - 1] = '[MASK]'
             sentence = ' '.join(tokens)
             tokens = tokenizer(sentence,
                 padding=True, truncation=True, return_tensors="pt")
