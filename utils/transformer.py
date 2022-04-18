@@ -12,7 +12,10 @@ import torch
 import torch.nn as nn
 from torch_train import BaseTrainer
 from torch.utils.data import Dataset
-from torch.utils.tensorboard import SummaryWriter as TensorBoardWriter
+try:
+    from torch.utils.tensorboard import SummaryWriter as TensorBoardWriter
+except ImportError:
+    pass
 
 import transformers
 from transformers import AdamW
