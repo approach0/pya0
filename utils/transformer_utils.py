@@ -91,7 +91,7 @@ def attention_visualize(ckpoint, tok_ckpoint, passage_file, debug=False):
 
 
 def unmasking_visualize(ckpt_bert, ckpt_tokenizer, num_tokenizer_ver=1,
-    test_file='./tests/transformer_unmask.txt'):
+    test_file='./tests/transformer_unmask.txt', vocab_file=None):
     def highlight_masked(txt):
         return re.sub(r"(\[MASK\])", '\033[92m' + r"\1" + '\033[0m', txt)
 
@@ -108,6 +108,15 @@ def unmasking_visualize(ckpt_bert, ckpt_tokenizer, num_tokenizer_ver=1,
                 str(tokenizer.convert_ids_to_tokens(top_cands)))
 
     tokenizer = BertTokenizer.from_pretrained(ckpt_tokenizer)
+    if vocab_file is not None:
+        assert os.path.isfile(vocab_file)
+        print('Before loading new vocabulary:', len(tokenizer))
+        with open(vocab_file, 'rb') as fh:
+            vocab = pickle.load(fh)
+            for w in vocab.keys():
+                tokenizer.add_tokens(w)
+        print('After loading new vocabulary:', len(tokenizer))
+
     model = BertForPreTraining.from_pretrained(ckpt_bert,
         tie_word_embeddings=True
     )
