@@ -219,12 +219,6 @@ if __name__ == '__main__':
         pya0.index_close(index)
         exit(0)
 
-    # output HTML file
-    elif args.visualize_run and not args.query:
-        from .visualize import visualize
-        visualize(index, args.visualize_run, collection=args.collection)
-        exit(0)
-
     # generate l2r training data
     elif args.training_data_from_run:
         abort_on_non_a0_index(index)
@@ -348,6 +342,11 @@ if __name__ == '__main__':
             kfold=args.kfold,
             select_topic=args.select_topic
         )
+
+        # output HTML file
+        if args.visualize_run:
+            from .visualize import visualize
+            visualize(index, args.visualize_run, collection=args.collection)
     else:
         print('No --docid, --query --collection specifed, abort.')
         exit(1)

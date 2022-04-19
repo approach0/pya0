@@ -142,7 +142,8 @@ def parse_qrel_file(file_path):
 def run_fold_topics(index, collection, k, fold, cascades, output, topk, purpose,
                     math_expansion=False, verbose=False, log=None, fork_search=False):
     #tracemalloc.start()
-    for i, topic_query_ in enumerate(fold):
+    j = 0
+    for topic_query_ in fold:
         topic_query = copy.deepcopy(topic_query_)
         qid, query, args = topic_query
 
@@ -158,19 +159,20 @@ def run_fold_topics(index, collection, k, fold, cascades, output, topk, purpose,
         # actually run query
         print('[cascade_run]', qid, f' ==> {output}')
         hits = cascade_run(index, cascades, topic_query, collection=collection,
-            purpose=purpose, run_num=i, verbose=verbose, topk=topk, fold=k,
+            purpose=purpose, run_num=j, verbose=verbose, topk=topk, fold=k,
             log=log, fork_search=fork_search, output=output)
         print()
 
         # output TREC-format run file
         collection_driver.TREC_preprocess(collection, index, hits)
-        TREC_output(hits, qid, append=(i!=0), output_file=output)
+        TREC_output(hits, qid, append=(j!=0), output_file=output)
 
         #snapshot2 = tracemalloc.take_snapshot()
         #top_stats = snapshot2.compare_to(snapshot1, 'lineno')
         #for stat in top_stats[:10]:
         #    print(stat)
         #input()
+        j += 1
 
 
 def run_topics(index, collection, output, topk=1000, verbose=False, log=None,
