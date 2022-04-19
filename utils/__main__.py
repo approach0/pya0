@@ -62,7 +62,9 @@ if __name__ == '__main__':
     parser.add_argument('--eval-args', type=str, required=False,
         help="Passing extra command line arguments to trec_eval. E.g., '-q -m map -m P.30'")
     parser.add_argument('--visualize-run', type=str, required=False,
-        help="Visualize run files")
+        help="Visualize existing run file")
+    parser.add_argument('--visualize', action='store_true', required=False,
+        help="Visualize after generating a run file")
     parser.add_argument('--visualize-compare-scores', type=str, required=False,
         help="Visualize scores comparison")
     parser.add_argument('--concate-runs', type=str, required=False,
@@ -158,33 +160,28 @@ if __name__ == '__main__':
             print('#' + '\t'.join(header), file=fh)
             for row in rows:
                 print('\t'.join(row), file=fh)
-        exit(0)
 
     # visualize score comparison?
     elif args.visualize_compare_scores:
         from .visualize import visualize_compare_scores
         files = args.visualize_compare_scores.split(':')
         visualize_compare_scores(files)
-        exit(0)
 
     # concatenate run files?
     elif args.concate_runs:
         A, B, n = args.concate_runs.split(',')
         concatenate_run_files(A, B, int(n), topk, verbose=verbose)
-        exit(0)
 
     # merge run files?
     elif args.merge_runs:
         A, B, alpha = args.merge_runs.split(',')
         merge_run_files(A, B, float(alpha), topk, verbose=verbose)
-        exit(0)
 
     # learning to rank?
     elif args.learning2rank_train:
         fields = args.learning2rank_train.split(',')
         method, params = fields[0], fields[1:] if len(fields) > 1 else []
         L2R_train(method, params, output_file=args.trec_output)
-        exit(0)
 
     # open index from specified index path or prebuilt index
     if args.index is None:
@@ -217,21 +214,23 @@ if __name__ == '__main__':
             res = msearch(index, query, topk=topk, log=log)
             print(json.dumps(res, indent=4))
         pya0.index_close(index)
-        exit(0)
+
+    # visualize existing runfile?
+    elif args.visualize_run and args.collection:
+        from .visualize import visualize
+        visualize(index, args.visualize_run, collection=args.collection)
 
     # generate l2r training data
     elif args.training_data_from_run:
         abort_on_non_a0_index(index)
         abort_on_empty_collection(args.collection)
         L2R_gen_train_data(args.collection, index, args.training_data_from_run)
-        exit(0)
 
     # print index stats
     elif args.print_index_stats:
         abort_on_non_a0_index(index)
         print(f' --- index stats ({args.index}) ---')
         pya0.index_print_summary(index)
-        exit(0)
 
     # auto evaluation?
     elif args.auto_eval:
@@ -266,7 +265,6 @@ if __name__ == '__main__':
             with open(f'tmp/{run_name}.done', 'w') as fh:
                 pass
         auto_eval.tsv_eval_do(header, rows, wrap_eval, prefix=name+'-')
-        exit(0)
 
     # actually run query
     if args.query:
@@ -314,9 +312,9 @@ if __name__ == '__main__':
             TREC_output(hits, 'TEST.0', append=False, output_file=trec_output)
 
         # output HTML file
-        if args.visualize_run:
+        if args.visualize:
             from .visualize import visualize
-            visualize(index, args.visualize_run,
+            visualize(index, trec_output,
                 adhoc_query=origin_query, collection=collection)
 
     elif args.docid:
@@ -344,9 +342,9 @@ if __name__ == '__main__':
         )
 
         # output HTML file
-        if args.visualize_run:
+        if args.visualize:
             from .visualize import visualize
-            visualize(index, args.visualize_run, collection=args.collection)
+            visualize(index, trec_output, collection=args.collection)
     else:
-        print('No --docid, --query --collection specifed, abort.')
+        print('No --docid, --query or --collection specifed, abort.')
         exit(1)
