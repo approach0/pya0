@@ -88,7 +88,8 @@ def cascade_run(index, cascades, topic_query,
     for cascade, args in cascades:
         if cascade == 'filter':
             filter_name = args[0]
-            if filter_name == purpose:
+            if filter_name == qid:
+            #if filter_name == purpose:
                 continue
             else:
                 break

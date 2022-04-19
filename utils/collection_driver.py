@@ -68,7 +68,7 @@ def trec_docid_to_docid(index, trec_docid):
 
 
 def TREC_preprocess(collection, index, hits):
-    if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1', 'arqmath-2021-task1-refined', 'arqmath-2020-task1-origin', 'arqmath-2021-task1-origin', 'topics.arqmath-2022-task1-manual']:
+    if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1', 'arqmath-2021-task1-refined', 'arqmath-2020-task1-origin', 'arqmath-2021-task1-origin', 'arqmath-2022-task1-manual']:
         for hit in hits:
             doc = docid_to_doc(index, hit['docid'])
             hit['_'] = hit['docid'] # save internal docid
