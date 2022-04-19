@@ -98,7 +98,7 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
             actual_query = preprocess_query(copy.deepcopy(query), expansion=False)
             for q, aq in zip(query, actual_query):
                 if q['type'] == 'term':
-                    kw_str = f'{q["str"]} &nbsp;&nbsp; (stemmed: {aq["str"]})'
+                    kw_str = f'{q["str"]} &nbsp;&nbsp; (<b>stemmed</b>: {aq["str"]})'
                 else:
                     kw_str = f'[imath]{q["str"]}[/imath]'
                 fh.write(f'<li>{kw_str}</li>\n')
