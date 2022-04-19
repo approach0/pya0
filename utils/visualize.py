@@ -80,7 +80,7 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
         page_hits = hits[start : start + RESULTS_PER_PAGE]
         # start output page
         with open(f'{parent_dir}/{qid}__p{page + 1:03}.html', 'w') as fh:
-            mathjax_cdn = "https://cdn.jsdelivr.net/npm/mathjax@3.1.2/es5/tex-chtml.js"
+            mathjax_cdn = "https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-chtml-full.js"
             fh.write('<html>\n')
             # head
             fh.write('<head>\n')
@@ -116,13 +116,14 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
                 rank = hit['rank']
                 score = hit['score']
                 relev = hit['relev']
+                content = hit['content'].replace(r'\require', '')
                 fh.write('<li>\n')
                 fh.write(f'<b id="{rank}">rank <a href="#{rank}">#{rank}</a>, ' +
                          f'doc #{docID}, score: {score}, relevance: {relev}, </b>\n')
                 colors = [f'<b style="background: {degree_color(i)}">{i}</b>' for i in range(4)]
                 color = degree_color(relev)
                 fh.write('<b>relevance levels: ' + ' '.join(colors) + ':</b>')
-                fh.write(f'<p style="background: {color};">{hit["content"]}</p>\n')
+                fh.write(f'<p style="background: {color};">{content}</p>\n')
                 fh.write('</li>\n')
             fh.write(f'</ol>\n')
             output_html_pagination(fh, qid, page, tot_pages)
