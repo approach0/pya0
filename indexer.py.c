@@ -144,6 +144,33 @@ PyObject *index_lookup_doc(PyObject *self, PyObject *args)
 	return result;
 }
 
+PyObject *index_lookup_df(PyObject *self, PyObject *args)
+{
+    const char *term = NULL;
+	PyObject *pyindices;
+	if (!PyArg_ParseTuple(args, "Os", &pyindices, &term)) {
+		PyErr_Format(PyExc_RuntimeError,
+			"PyArg_ParseTuple error");
+		return NULL;
+	}
+
+    const char prefix[] = "content:";
+    size_t prefix_len = strlen(prefix), term_len = strlen(term);
+    char prefix_term[prefix_len + term_len + 1];
+    sprintf(prefix_term, "%s%s", prefix, term);
+    printf("%s\n", prefix_term);
+
+	struct indices *indices = PyLong_AsVoidPtr(pyindices);
+    term_id_t term_id = term_lookup(indices->ti, prefix_term);
+
+    if (term_id > 0) {
+	    uint32_t df = term_index_get_df(indices->ti, term_id);
+		return PyLong_FromUnsignedLong(df);
+    } else {
+	    Py_RETURN_NONE;
+    }
+}
+
 static int
 parser_exception(struct indexer *indexer, const char *tex, char *msg)
 {

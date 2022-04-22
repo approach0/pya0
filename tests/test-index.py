@@ -43,7 +43,8 @@ else:
     ix = pya0.index_open(index_path,
         option="r", segment_dict=f"{HOME}/cppjieba/dict")
 
-    pya0.index_memcache(ix, term_cache = 3, math_cache = 5) # in MB
+    #pya0.index_memcache(ix, term_cache = 3, math_cache = 5) # in MB
+    print(pya0.index_lookup_df(ix, 'theorem')) # test doc frequency lookup
     print(pya0.index_lookup_doc(ix, 2)) # test doc raw content lookup
     print(pya0.index_lookup_doc(ix, 402)) # test inverted ID lookup
     pya0.index_print_summary(ix)

@@ -10,6 +10,7 @@ static PyMethodDef module_funcs[] = {
 	{"index_memcache", (PyCFunction)index_memcache, METH_VARARGS | METH_KEYWORDS, "cache specified index volume into memory"},
 	{"index_print_summary", index_print_summary, METH_VARARGS, "print index summary"},
 	{"index_lookup_doc", index_lookup_doc, METH_VARARGS, "lookup document content"},
+	{"index_lookup_df", index_lookup_df, METH_VARARGS, "lookup document frequency"},
 	{"index_writer", indexer_new, METH_VARARGS, "create an indexer"},
 
 	{"writer_close", indexer_del, METH_VARARGS, "delete an indexer"},
