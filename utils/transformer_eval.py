@@ -7,6 +7,7 @@ import torch
 import configparser
 from tqdm import tqdm
 from corpus_reader import *
+from collections import defaultdict
 
 
 def auto_invoke(prefix, value, extra_args=[]):
@@ -441,8 +442,58 @@ def psg_scorer__colbert_default(tok_ckpoint, model_ckpoint, config, gpu_dev):
     return scorer, (None, None)
 
 
-def maprun(config_file, section, input_trecfile, device='cpu'):
+def select_sentences(lookup_index, batch, fields, qid2query, max_select_sent):
     import collection_driver
+    qid, _, docid, rank, score, runname = fields
+    doc = collection_driver.docid_to_doc(lookup_index, docid)
+    doc = doc['content']
+    def gen_sent(doc, n):
+        if n == 0:
+            yield 0, 0, doc
+        else:
+            from nltk.tokenize import sent_tokenize
+            from nltk.tokenize.treebank import TreebankWordDetokenizer
+            sentences = sent_tokenize(doc)
+            N = len(sentences)
+            for i in range(N):
+                for wind in range(1, n):
+                    if i + wind > N:
+                        break
+                    sel_sents = sentences[i:i+wind]
+                    sel_sents = TreebankWordDetokenizer().detokenize(sel_sents)
+                    yield i, wind, sel_sents
+    # add sentences to batch
+    for i, n_sent, doc_sent in gen_sent(doc, max_select_sent):
+        batch.append({
+            "qid"   : qid,
+            "psg_qry": qid2query[qid],
+            "_"     : _,
+            "docid" : docid,
+            "psg_doc": doc_sent,
+            "i_sent": i,
+            "n_sent": n_sent,
+            "rank"  : rank,
+            "score" : score,
+            "run"   : runname
+        })
+
+
+def task3_output(item, output_file, append=True):
+    # Qid Rank Score Run_Id Sources Answer
+    with open(output_file, 'a' if append else 'w') as fh:
+        Sources = (item['docid'], item['i_sent'], item['n_sent'])
+        Answer = item['psg_doc'].replace('[imath]', '$').replace('[/imath]', '$')
+        print("%s\t%d\t%f\t%s\t%s\t%s" % (
+            str(item['qid']),
+            int(item['rank']), # let us keep the old rank?
+            item['score'],
+            str(item['run']),
+            Sources.__str__(),
+            '"' + Answer + '"'
+        ), file=fh)
+
+
+def maprun(config_file, section, input_trecfile, device='cpu'):
     config = configparser.ConfigParser()
     config.read(config_file)
 
@@ -463,6 +514,7 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
     ])
 
     # prepare lookup index
+    import collection_driver
     lookup_index = config[section]['lookup_index']
     print('Lookup index:', lookup_index)
     lookup_index = collection_driver.open_index(lookup_index)
@@ -482,8 +534,13 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
         gen_flat_topics(collection, kw_sep)
     }
 
+    # return sentence-level selection?
+    max_select_sent = config.getint(section, 'max_select_sentence')
+    topk = config.getint(section, 'topk')
+
     # map TREC input to output
-    batch = []
+    batch, scores = [], None
+    query_cnt = defaultdict(int)
     open(output_path, 'w').close() # clear output file
     with open(input_trecfile, 'r') as fh:
         n_lines = sum(1 for line in fh)
@@ -493,37 +550,33 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
             line = line.rstrip()
             sp = '\t' if line.find('\t') != -1 else None
             fields = line.split(sp)
-            # add to batch
-            batch.append({
-                "qid"   : fields[0],
-                "_"     : fields[1],
-                "docid" : fields[2],
-                "rank"  : fields[3],
-                "score" : fields[4],
-                "run"   : fields[5]
-            })
-            def convert(docid):
-                doc = collection_driver.docid_to_doc(lookup_index, docid)
-                return doc['content']
-            def flush_batch(batch, scores):
-                for j, item in enumerate(batch):
-                    # rewrite score for each trecfile item/line ...
-                    hit = [{
-                        "_": item['_'],
-                        "docid": item['docid'],
-                        "score": scores[j]
-                    }]
-                    TREC_output(hit, item['qid'], append=True,
-                        output_file=output_path, name=section)
-            if len(batch) == batch_sz:
-                # lookup query and document and score them
-                qrys = [qid2query[item["qid"]] for item in batch]
-                docs = [convert(item['docid']) for item in batch]
-                scores = scorer(qrys, docs, verbose=verbose)
-                flush_batch(batch, scores)
-                batch = []
-        # flush the last batch
-        flush_batch(batch, scores)
+            qid = fields[0]
+            query_cnt[qid] += 1
+            if query_cnt[qid] > topk:
+                continue
+            select_sentences(lookup_index,
+                batch, fields, qid2query, max_select_sent)
+            def flush_batches(batch, scores, final=False):
+                while (len(batch) >= batch_sz or final) and len(batch) != 0:
+                    # pop batch
+                    pop_batch = batch[:batch_sz]
+                    batch = batch[batch_sz:]
+                    # infer scores
+                    qrys = [item["psg_qry"] for item in pop_batch]
+                    docs = [item["psg_doc"] for item in pop_batch]
+                    scores = scorer(qrys, docs, verbose=verbose)
+                    for j, item in enumerate(pop_batch):
+                        item["score"] = scores[j] # overwrite score
+                        item["run"] = section # overwrite run name
+                        if max_select_sent == 0:
+                            TREC_output([item], item['qid'], append=True,
+                                output_file=output_path, name=item["run"])
+                        else:
+                            task3_output(item, output_path)
+            # flush batches
+            flush_batches(batch, scores)
+        # flush the last batches
+        flush_batches(batch, scores, final=True)
 
 
 if __name__ == '__main__':
