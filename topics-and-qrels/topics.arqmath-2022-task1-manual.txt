@@ -1,2 +1,43 @@
 qid	text keywords	TeX keywords	More TeX keywords follow ...
-A.361	Riemann, integrability	F(x)=\int_a^xf(t)dt
+A.301	matrix	\|A\|_2\leq \sqrt{\|A\|_1 \|A\|_{\infty}}
+A.302	root, solutions	z^n=w	w=se^{i{\phi}}
+A.303	Lie algebras, noncommutative, non-commutative, dimension	[x,y] = x
+A.304	proof, non-orientable, admit, quasi-complex structure
+A.305		\left\lfloor\sum\limits_{r=1}^N\frac{1}{2^r}\right\rfloor
+A.306	prove irrationality Euler Mascheroni constant, Mertens theorem
+A.307	Carmichael, largest maximum max, residue, prime, coprime	\max \{ord(g): g \in G\} = \lambda(n)
+A.308	why integral over Hankel contour path, independent choice, depend, radius, Cauchy's, Riemann, zeta
+exactly one solution, prime, prove	p \equiv 2 \pmod 3	x^3=a
+A.309		x^3=a \mod p
+A.310	solve, solution	\frac{4}{x}+\frac{10}{y}=1
+A.311		\frac{9^{x}}{9^x+3}	f(\frac{1}{27})+ f(\frac{2}{27}) + f(\frac{3}{27})+ ...+ f(\frac{26}{27})
+A.312		\lfloor \frac{ \lfloor a/b \rfloor}{c} \rfloor=\lfloor\frac{a}{bc} \rfloor
+A.313		\gcd(r,s)=1	|ab|=rs
+A.314	Closed span of a sequence in Hilbert spaces, proof, prove	\sum \|e_n-x_n\| < 1
+A.315	the principle of backwards induction, natural numbers, true	P(m++)\implies P(m)
+A.316	Multiplicative of group of odd numbers modulo power of two, order, 2	(\mathbb{Z}/2^m \mathbb{Z})^* = C_2 \times C_{2^{m-2}}
+A.317		\int \frac{1}{\left(x^2+1\right)^n}dx
+A.318	real number	e^{x} \geq \left(1+\frac{x}{n}\right)^{n}
+A.319	proof, zorn, countable, partially ordered set	\mathbb{R}
+A.320		\int_{0}^{1}\frac{\sin^{-1}(x)}{x} dx	\int_0^1 \frac{\arcsin(x)}{x}
+A.321	Bézout	ax+by=d
+A.322	sum of sum, triangular numbers, summation
+A.323	inverse, Euclidean Algorithm	x^4 + 1	x^2 -x
+A.324	Double Basel Problem	\frac{1}{2n}\left[\pi \coth(\pi n) - \frac{1}{n} \right]
+A.325	consecutive composite numbers	n!+2, n! +3, ..., n! + n
+A.326	every module is a homomorphic image of a free module, every projective module is a direct summand of free module
+A.327	determinant, volume, third-degree homogeneous polynomial	\begin{bmatrix}1&1&1\\ x&y&z\\ x^2&y^2&z^2 \end{bmatrix}	(x-y)(y-z)(z-x)
+A.328		\sum_{k=1}^{n} \cos\left(\frac{2 \pi k}{n} \right) =0
+A.329	compact, open set, subset, such that, regular	A \subseteq V \subseteq \overline{V} \subseteq U
+A.330	order determinant	[x+a(n-1)](x-a)^{n-1}
+A.331	root, solution	4^x+6^x=9^x
+A.332	prime factor, largest divisible, order-reversing, proper divisor, least, smallest, cofactor reflection
+A.333	bivariate normal density, uniformly distributed	\frac{\sqrt{1-p^2}}{2\pi(1-2p\sin(\varphi)\cos(\varphi))}	E(Y^2) = 1
+A.334	proof, logarithm, property	a^{log_a b}=b
+A.335	square matrix, exponential converges	\lim_{N \rightarrow \infty} \sum_{k=0}^{N}\frac{A^k}{k!}
+A.336	specify matrices, matrix	A B \neq B A	AB \neq 0
+A.337	tangent lines of plane curve pass through fixed point, trace straight line
+A.338	integer solutions	y = \frac{a+bx}{b-x}
+A.339	extended Euclid's lemma, prime, ufd	gcd(a,b)=1
+A.340		|x_{n+1} - x_n| < 1/3^n	|x_m - x_n|< \epsilon
+A.361	Riemann, integrability, converging	F(x)=\int_a^xf(t)dt
