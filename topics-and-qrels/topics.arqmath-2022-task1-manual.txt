@@ -40,4 +40,17 @@ A.337	tangent lines of plane curve pass through fixed point, trace straight line
 A.338	integer solutions	y = \frac{a+bx}{b-x}
 A.339	extended Euclid's lemma, prime, ufd	gcd(a,b)=1
 A.340		|x_{n+1} - x_n| < 1/3^n	|x_m - x_n|< \epsilon
+A.341	dirichlet's, coprime, coefficients, co-prime, sequences	c_i = a + i \cdot b
+A.342	exponential distribution, expected maximum, max	\int_0^\infty\frac{2x}{5}e^\frac{-x}{10}\left(1-e^\frac{-x}{10}\right)^3 \,dx
+A.343	unordered, double count, different outcomes
+A.344	collection of subsets of a set is a subbasis for unique topology, counterexample
+A.345	perpendicular, distance, closest, two skew straight lines
+A.346	bound, infimum, supremum, lowerbound, upperbound	\{ r \in \mathbb Q \mid r^2 >2, r>0 \}
+A.347	coprime, why add and subtract, relatively prime	\gcd(a+b, a - b) \in \{1, 2\}
+A.348	determinant of block matrix, subgroup	\det \left( \begin{smallmatrix} A & -B \\ B & A \end{smallmatrix} \right)
+A.349	Inverse function to Stirling's Approximation
+A.350	Induction proof, Inductive, 2, 3, divide, divisible	6 \mid (k^3 - k)
+A.351	Fatou's Lemma, measure, set	\lim_{n\to\infty}\inf \mu (A_n) \geq \mu(A)
+A.352	find example of finite integral, but limit doesn't not exist, goes to infinity	\int_0^\infty f(x) dx
+A.353	why, explain, random variables, uncorrelated, independent, give example
 A.361	Riemann, integrability, converging	F(x)=\int_a^xf(t)dt
