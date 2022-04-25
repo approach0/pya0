@@ -65,3 +65,10 @@ A.362	Axiom of Choice, every partial order maximal chain, disjoint nonempty sets
 A.363	non negative martingale	P[X^*  \geq x]= 1 \wedge X_0 / x
 A.364	metric space prove	d(x,A)\leq d(x,y)+d(y,A)
 A.365	infinite ordinal, cardinal, equinumerous to its successors, bijection, injection
+A.366	normed space, inearly independent number elements, dual space
+A.367		d(x,M)=\frac{|\langle f,x \rangle|}{|| f ||}	d(x,M)=\frac{|\langle f,x \rangle|}{\| f \|}
+A.368	Basel Problem, error, Euler-Maclaurin Sum, constant	\sum_{k=n+1}^\infty\frac1{k^2}=\frac1n-\frac1{2n^2}+\frac1{6n^3}+O\left(\frac1{n^5}\right)
+A.369	recurrent integral	\int_{-\pi}^\pi \frac{\sin{(nx)}}{(1+2^n) \sin{x}}\,\mathrm{d}x
+A.370	Lebesgue integral, step staircase indicator functions
+A.371	supremum norm	||fg|| = \max_{x_0 \in [0,1]} fg(x_0) \le ||f||\cdot||g||
+A.372	Gaussian integers, Pell's equation, ring	\mathcal{O}_{\mathbb{Q}\left[\sqrt{5}\right]} = \mathbb{Z}\left[\frac{1 + \sqrt{5}}{2}\right]
