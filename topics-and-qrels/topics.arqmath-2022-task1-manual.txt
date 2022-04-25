@@ -53,4 +53,15 @@ A.350	Induction proof, Inductive, 2, 3, divide, divisible	6 \mid (k^3 - k)
 A.351	Fatou's Lemma, measure, set	\lim_{n\to\infty}\inf \mu (A_n) \geq \mu(A)
 A.352	find example of finite integral, but limit doesn't not exist, goes to infinity	\int_0^\infty f(x) dx
 A.353	why, explain, random variables, uncorrelated, independent, give example
-A.361	Riemann, integrability, converging	F(x)=\int_a^xf(t)dt
+A.354	distinct primes, Euclid's Lemma	pq \mid a	p \mid a
+A.355	find	f(f^2(x)+f(y))=xf(x)+y
+A.356	evaluate	\sum_{n=0}^{\infty}{\frac{x^{kn}}{(kn)!}}
+A.357	How many functions can be used to interpolate a finite series
+A.358	area of surface of revolution	\int 2\pi y d \sqrt{1 + \frac{dy}{dx}^2}
+A.359	integral, substitutions	\sin\theta=\frac{x}{\sqrt{4+x^2}}	\tan\theta=\frac{x}{2}
+A.360	Fourier transform	1/ \vert x \vert	\frac 1 {\vert x \vert}	\frac 1 {\left| x \right|}
+A.361	Riemann integrable function always differentiable	F(x)=\int_a^xf(t)dt
+A.362	Axiom of Choice, every partial order maximal chain, disjoint nonempty sets singleton, Hausdorff's Maximality Principle, Zorn–Kuratowski lemma
+A.363	non negative martingale	P[X^*  \geq x]= 1 \wedge X_0 / x
+A.364	metric space prove	d(x,A)\leq d(x,y)+d(y,A)
+A.365	infinite ordinal, cardinal, equinumerous to its successors, bijection, injection
