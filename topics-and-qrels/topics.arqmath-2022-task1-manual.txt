@@ -72,3 +72,11 @@ A.369	recurrent integral	\int_{-\pi}^\pi \frac{\sin{(nx)}}{(1+2^n) \sin{x}}\,\ma
 A.370	Lebesgue integral, step staircase indicator functions
 A.371	supremum norm	||fg|| = \max_{x_0 \in [0,1]} fg(x_0) \le ||f||\cdot||g||
 A.372	Gaussian integers, Pell's equation, ring	\mathcal{O}_{\mathbb{Q}\left[\sqrt{5}\right]} = \mathbb{Z}\left[\frac{1 + \sqrt{5}}{2}\right]
+A.373	not perfect square, irrational, infinite descent, root, prove, proof	\sqrt n
+A.374	Finding all monic complex polynomials, degree	P(x) | P(x^2)
+A.375	solve diophantine, solutions	x^2 + 7 = 2^n
+A.376	Riemann Sums	\lim\limits_{n\to\infty}\dfrac{\sqrt1+\sqrt2+\sqrt3+\ldots+\sqrt n}{n\sqrt n}
+A.377	subset, subspace, same, space, dimension	{\exact \mathbb{R}}^2	{\exact \mathbb{R}}^3
+A.378	property, law, rule, exponent, radicals, root	a^{\frac{b}{2}}=\sqrt{a^b}
+A.379	group is a still group under composition 	f_1, f_2 \in S \longrightarrow f_1 \circ f_2 \in S.
+A.380	two roots, solutions	\int_0^\pi f(x) \sin x dx = \int_0^\pi f(x) \cos x dx =0.
