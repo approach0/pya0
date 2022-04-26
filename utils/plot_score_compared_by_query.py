@@ -1,3 +1,4 @@
+import os
 import fire
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -15,6 +16,8 @@ def read_trec_output_by_query(file_path):
 
 
 def compare_by_query(file1, file2):
+    name1 = os.path.basename(file1)
+    name2 = os.path.basename(file2)
     labels, y1 = read_trec_output_by_query(file1)
     _, y2 = read_trec_output_by_query(file2)
     if False:
@@ -22,12 +25,13 @@ def compare_by_query(file1, file2):
         b = set(labels)
         print(a.difference(b))
         print(b.difference(a))
-    df = pd.DataFrame(y1, columns=['y1'], index=labels)
-    df['y2'] = pd.DataFrame(y2, index=_)
+    df = pd.DataFrame(y1, columns=[name1], index=labels)
+    df[name2] = pd.DataFrame(y2, index=_)
     print(df)
     df.plot(kind='bar')
     plt.gca().xaxis.set_tick_params(rotation=90)
     plt.ylabel('NDCG')
+    plt.show()
 
 
 if __name__ == '__main__':
