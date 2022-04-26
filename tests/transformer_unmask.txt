@@ -1,7 +1,8 @@
 0	The goal of life is [MASK].
 0	She needs to [MASK] that [MASK] gets only ten minutes.
-10,11	We [MASK] that the [MASK] [imath]\pi \approx 3.14[/imath].
+10,11	We [MASK] that the [MASK] [imath]\pi \approx 3.14[/imath] .
 0	[imath]3.14[/imath] is a [MASK].
+0	[imath]\pi[/imath] is a [MASK].
 8	Determine the [MASK] of [imath]f(x) = x + \sqrt{ 4 - x^2}[/imath] without [MASK].
 4,12	Solve [imath]y''-4y'+4y=xe^x[/imath].
 4	[imath]f(x, y)[/imath]

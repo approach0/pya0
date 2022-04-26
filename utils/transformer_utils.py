@@ -117,6 +117,8 @@ def unmasking_visualize(ckpt_bert, ckpt_tokenizer, num_tokenizer_ver=1,
                 tokenizer.add_tokens(w)
         print('After loading new vocabulary:', len(tokenizer))
 
+    tokenizer.save_pretrained("unmasking-tokenizer")
+
     model = BertForPreTraining.from_pretrained(ckpt_bert,
         tie_word_embeddings=True
     )
