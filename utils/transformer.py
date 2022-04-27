@@ -715,7 +715,7 @@ class Trainer(BaseTrainer):
                 )
 
     def colbert(self, ckpoint, tok_ckpoint, max_ql=512, max_dl=512):
-        #self.start_point = self.infer_start_point(ckpoint)
+        self.start_point = self.infer_start_point(ckpoint)
         print(f'max_ql={max_ql}, max_dl={max_dl}')
         self.dataset_cls = ContrastiveQAShard
         self.test_data_cls = ContrastiveQAShard
