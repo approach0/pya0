@@ -12,7 +12,7 @@ B.311	f(x)=\frac{9^{x}}{9^x+3}
 B.312	\left\lfloor \frac{\left\lfloor a/b \right\rfloor}{c} \right\rfloor=\left\lfloor\frac{a}{bc}\right\rfloor
 B.313	|ab|=rs
 B.314	\sum \|e_n-x_n\| < 1
-B.315	P(m\text{++})\implies P(m)
+B.315	P(m+1)\implies P(m)
 B.316	(\mathbb{Z}/2^m \mathbb{Z})^* = C_2 \times C_{2^{m-2}}
 B.317	\int \frac{1}{\left(x^2+1\right)^n}dx
 B.318	e^{x} \geq \left(1+\frac{x}{n}\right)^{n}
@@ -32,8 +32,8 @@ B.331	4^x+6^x=9^x
 B.332	g(n) = 1 = \frac{p}{p} = \frac{n}{{L(n)}}
 B.333	\frac{\sqrt{1-p^2}}{2\pi(1-2p\sin(\varphi)\cos(\varphi))}
 B.334	a^{log_a(b)}=b
-B.335	\lim_{N \rightarrow \infty} \left\Vert \sum_{k=0}^{N} \frac{A^k}{k!} -X \right\Vert  =0
-B.336	M:=\left\{A \in \mathbb{R}^{2 \times 2}: A B=B A \quad \forall B \in \mathbb{R}^{2 \times 2}\right\}
+B.335	\lim_{N \rightarrow \infty} \left| \sum_{k=0}^{N} \frac{A^k}{k!} -X \right| = 0
+B.336	M:=\left\{A \in \mathbb{R}^{2 \times 2}: A B=B A, \forall B \in \mathbb{R}^{2 \times 2}\right\}
 B.337	\gamma'(t) = \lambda(t)\gamma(t)
 B.338	y = \frac{a+bx}{b-x}
 B.339	ar + bs = 1
@@ -41,13 +41,13 @@ B.340	|x_{n+1} - x_n| < 1/3^n
 B.341	\{a, a+b, a+2b, \cdots\}
 B.342	f(x_4) =\frac{2}{5}e^{\frac{-x}{10}}\left(1-e^{\frac{-x}{10}}\right)^3.
 B.343	P(E) = 1/6
-B.344	\mathcal{A}=\{\{a\}\}
+B.344	\mathcal{A}=\{\{a\},\}
 B.345	r\equiv \begin{cases} x=1 \\ y=1 \\z=\lambda -2 \end{cases}
 B.346	\{ r \in \mathbb Q \mid r^2 >2, r>0 \}
 B.347	(a+b, a-b) = 1
 B.348	\begin{pmatrix} A & -B\\ B & A \end{pmatrix}
-B.349	x! = \sqrt{2\pi x} * (\frac{x}{e})^x
-B.350	x^3 - x, x \in \mathbb{N}
+B.349	x! = \sqrt{2\pi x} (\frac{x}{e})^x
+B.350	3 \mid x^3 - x
 B.351	\lim_{n\to\infty}\inf \mu (A_n) \geq \mu(A)
 B.352	\int_0^\infty f(x) dx
 B.353	Cov(x,y) = 0
