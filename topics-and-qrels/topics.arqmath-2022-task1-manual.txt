@@ -7,7 +7,6 @@ A.305		\left\lfloor\sum\limits_{r=1}^N\frac{1}{2^r}\right\rfloor
 A.306	prove irrationality Euler Mascheroni constant, Mertens theorem
 A.307	Carmichael, largest maximum max, residue, prime, coprime	\max \{ord(g): g \in G\} = \lambda(n)
 A.308	why integral over Hankel contour path, independent choice, depend, radius, Cauchy's, Riemann, zeta
-exactly one solution, prime, prove	p \equiv 2 \pmod 3	x^3=a
 A.309		x^3=a \mod p
 A.310	solve, solution	\frac{4}{x}+\frac{10}{y}=1
 A.311		\frac{9^{x}}{9^x+3}	f(\frac{1}{27})+ f(\frac{2}{27}) + f(\frac{3}{27})+ ...+ f(\frac{26}{27})
@@ -84,3 +83,19 @@ A.381	prove finite amount of countable sets, cartesian product
 A.382	Cantor's theorem, binary, uncountable, diagonal argument
 A.383	elementary proof, maps unit into itself	\left|\cfrac{\alpha - \beta}{1-\bar{\alpha}\beta}\right| < 1
 A.384	notation of binomial coefficient
+A.385	larger size degree divide smaller degree, Euclidean domain, division, ring	a = qb +r
+A.386		\sum _{n=-\infty }^{\infty } e^{-n^2 \pi x} = \frac{1}{\sqrt{x}}\sum _{n=-\infty }^{\infty } e^{-\frac{n^2 \pi }{x}}
+A.387	integer, natural numbers, non-negative, linear combination, coprime, co-prime, every, any
+A.388	solve linear algebra, No solutions, unique solution, infinitely many solutions, echelon
+A.389	series	\sum_{n=1}^{m}nr^{n}
+A.390	average each converge Cesaro Cesàro	\lim_{n\rightarrow\infty} \frac {x_1+x_2+...+x_n}{n}
+A.391	Hölder inequality	\mathbb{E} [X+Y]^r \leq 2^{r-1}  (\mathbb{E}[ X^r] + \mathbb{E} [Y^r])
+A.392	inverse polynomial modulom, Euclidean algorithm, Euclid
+A.393	entire function is constant	|f(z^{2})| \leq  2|f(z)|
+A.394	discontinuous continuous, irrational	f(x) = \begin{cases} 1/n,&x=m/n\in\mathbb Q \\ 0,&x\notin\mathbb Q \end{cases}	\delta>0
+A.395	additivity, homogenity, linearity, linear
+A.396	likelihood, CDF, expectation	f_X(x)=\frac{2x}{\theta^2}
+A.397		\sum_{n=1}^\infty n=1+2+3+\cdots = -\frac{1}{12}
+A.398	differentiable, continuous	f'(a)=\lim_{x\rightarrow a}f'(x)
+A.399	countable set, rational, disjoint, plane
+A.400	semi-final players probability, two meet, tournament
