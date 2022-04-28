@@ -55,18 +55,18 @@ B.354	p_1p_2\mid a
 B.355	f(f(x)^2+f(y))=xf(x)+y
 B.356	\sum_{n=0}^{\infty}{\frac{x^{kn}}{(kn)!}}
 B.357	f(n)=n^2-n+2
-B.358	ds = \sqrt{1 + \frac{dy}{dx}^2}
+B.358	ds = \sqrt{1 + (\frac{dy}{dx})^2}
 B.359	\tan\theta=\frac{x}{2}
-B.360	1/ \vert x \vert
+B.360	x(t)=1/|t|^{-n}
 B.361	F(x)=\int_a^xf(t)dt
 B.362	x R y \lor y R x
 B.363	P[X^* \geq x | \mathcal{F}_0]= 1 \wedge X_0 / x
 B.364	d(x,A)\leqslant d(x,y)+d(y,A)
 B.365	\alpha^+
 B.366	S=\{ e_1,e_2,e_3,....,e_n\}
-B.367	d(x,M)=\frac{|\langle f,x \rangle|}{||f||}
+B.367	d(x,M)=\frac{|\langle f,x \rangle|}{\| f \|}
 B.368	\sum_{n\geq1}\frac{1}{n^2}=\sum_{n\leq x}\frac1{n^2}+\mathcal O(1/x).
-B.369	J_n=\int_{-\pi}^\pi \frac{\sin{(nx)}}{(1+2^n) \sin{x}}\,\mathrm{d}x\:?
+B.369	J_n=\int_{-\pi}^\pi \frac{\sin{(nx)}}{(1+2^n) \sin{x}}\,\mathrm{d}x
 B.370	s(x) = \sum\limits_{j=1}^n c_j\chi_{A_j}(x)
 B.371	|f(x)g(x)|=||fg||
 B.372	x^2 - dy^2 = 1

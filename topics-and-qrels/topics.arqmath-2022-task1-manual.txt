@@ -58,7 +58,7 @@ A.356	evaluate	\sum_{n=0}^{\infty}{\frac{x^{kn}}{(kn)!}}
 A.357	How many functions can be used to interpolate a finite series
 A.358	area of surface of revolution	\int 2\pi y d \sqrt{1 + \frac{dy}{dx}^2}
 A.359	integral, substitutions	\sin\theta=\frac{x}{\sqrt{4+x^2}}	\tan\theta=\frac{x}{2}
-A.360	Fourier transform	1/ \vert x \vert	\frac 1 {\vert x \vert}	\frac 1 {\left| x \right|}
+A.360	Fourier transform	x(t)=1/|t|^{-n}
 A.361	Riemann integrable function always differentiable	F(x)=\int_a^xf(t)dt
 A.362	Axiom of Choice, every partial order maximal chain, disjoint nonempty sets singleton, Hausdorff's Maximality Principle, Zorn–Kuratowski lemma
 A.363	non negative martingale	P[X^*  \geq x]= 1 \wedge X_0 / x
