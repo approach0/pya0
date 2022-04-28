@@ -42,7 +42,7 @@ def corpus_length__arqmath3_rawxml(xml_file, max_items):
     from xmlr import xmliter
     cnt = 0
     for attrs in xmliter(xml_file, 'row'):
-        if cnt + 1 > max_items:
+        if cnt + 1 > max_items and max_items > 0:
             return max_items
         cnt += 1
     return cnt
@@ -109,7 +109,7 @@ def corpus_length__arqmath_task2_tsv(corpus_dir, max_items):
         with open(path, 'r') as fh:
             n_lines = sum(1 for _ in fh)
         cnt += n_lines
-        if cnt >= max_items:
+        if cnt >= max_items and max_items == 0:
             cnt = max_items
             break
         print(fname, n_lines)
