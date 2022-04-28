@@ -68,7 +68,7 @@ B.367	d(x,M)=\frac{|\langle f,x \rangle|}{\| f \|}
 B.368	\sum_{n\geq1}\frac{1}{n^2}=\sum_{n\leq x}\frac1{n^2}+\mathcal O(1/x).
 B.369	J_n=\int_{-\pi}^\pi \frac{\sin{(nx)}}{(1+2^n) \sin{x}}\,\mathrm{d}x
 B.370	s(x) = \sum\limits_{j=1}^n c_j\chi_{A_j}(x)
-B.371	|f(x)g(x)|=||fg||
+B.371	||fg|| = \max_{x_0 \in [0,1]} fg(x_0) \le ||f||\cdot||g||
 B.372	x^2 - dy^2 = 1
 B.373	\sqrt n = {a\over b}
 B.374	P(x)|P(x^2)
@@ -77,24 +77,24 @@ B.376	\lim\limits_{n\to\infty}\dfrac{\sqrt1+\sqrt2+\sqrt3+\ldots+\sqrt n}{n\sqrt
 B.377	\mathbb{R}^{n+1}-\mathbb{R}^n
 B.378	\sqrt{\left(-3\right)^2}
 B.379	f_1, f_2 \in S \longrightarrow f_1 \circ f_2 \in S.
-B.380	\int_0^\pi f(t) \sin(t)dt =\int_0^\pi f(t) \cos(t)dt = 0
+B.380	\int_0^\pi f(x) \sin x dx = \int_0^\pi f(x) \cos x dx =0.
 B.381	A_1 \times ... \times A_n
-B.382	SS = \{ A_{1}, A_{2}, A_{3},...\}
-B.383	f_a(z):=\frac{z-a}{1-\overline{a}z}
+B.382	S = \{ A_{1}, A_{2}, A_{3},...\}
+B.383	f_a(z) = \frac{z-a}{1-\overline{a}z}
 B.384	f_3(n) = \binom n2
 B.385	\sigma(ab)=\sigma(a)+\sigma(b)
 B.386	\sum _{n=-\infty }^{\infty } e^{-n^2 \pi x}=\frac{1}{\sqrt{x}}\sum _{n=-\infty }^{\infty } e^{-\frac{n^2 \pi }{x}}
 B.387	n=5k + i, i\in\{0,1,2,3,4\}
 B.388	\left[\begin{array}{ccc|c}1&10&-6&1\\1&k&-1&2\\2&-1&k&5\end{array}\right]
 B.389	\frac{(1+r)^{N+1}-(1+r)-rN}{r^2(1+r)^N}
-B.390	t_n:=\frac {x_1+x_2+...+x_n}{n}
-B.391	\mathbb{E} |X+Y|^r \leq c_r (\mathbb{E} |X|^r + \mathbb{E} |Y|^r),
+B.390	t_n = \frac {x_1+x_2+...+x_n}{n}
+B.391	\mathbb{E} [X+Y]^r \leq 2^{r-1}  (\mathbb{E}[ X^r] + \mathbb{E} [Y^r])
 B.392	f * f_p \equiv 1 \bmod p
 B.393	|f(z^{2})| \leq  2|f(z)|
 B.394	\forall \epsilon > 0, \exists \delta > 0, |x-a|<\delta \implies |f(x) - f(a)| < \epsilon
 B.395	f(a+b) = f(a) + f(b)
-B.396	f_X(x)=\frac{2x}{\theta^2} \quad
+B.396	f_X(x)=\frac{2x}{\theta^2}
 B.397	1 + 2 + 3 + 4 + \cdots = -\frac{1}{12}
-B.398	\lim_{x \rightarrow c} f'(x) = L = \lim_{x \rightarrow c^+} f'(x) =\lim_{x \rightarrow c^-} f'(x)
-B.399	M = {\{\langle x,y \rangle \in \mathbb{R^2} | a \leq x \leq b , c \leq y \leq d}\}
+B.398	\lim_{x \rightarrow c} f'(x) = L = \lim_{x \rightarrow c^+} f'(x) =\lim_{x \rightarrow c^-} f'(x)	f'(a)=\lim_{x\rightarrow a}f'(x)
+B.399	\langle x,y \rangle \in \mathbb{R^2} , a \leq x \leq b , c \leq y \leq d
 B.400	\left(\frac{1}{2^{n-2}}\right)^2
