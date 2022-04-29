@@ -68,7 +68,7 @@ def trec_docid_to_docid(index, trec_docid):
 
 
 def TREC_preprocess(collection, index, hits):
-    if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1', 'arqmath-2021-task1-refined', 'arqmath-2020-task1-origin', 'arqmath-2021-task1-origin', 'arqmath-2022-task1-manual']:
+    if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1', 'arqmath-2021-task1-refined', 'arqmath-2020-task1-origin', 'arqmath-2021-task1-origin', 'arqmath-2022-task1-manual', 'arqmath-2022-task1-or-task3-origin']:
         for hit in hits:
             doc = docid_to_doc(index, hit['docid'])
             hit['_'] = hit['docid'] # save internal docid
@@ -245,6 +245,10 @@ def _topic_process__arqmath_2021_task2_official(idx, line):
 def _topic_process__arqmath_2021_task2_refined(idx, line):
     return _topic_process__arqmath_2021_task2(idx, line)
 
+
+def _topic_process__arqmath_2022_task1_or_task3_origin(xmlfile):
+    for qid, query, _ in _topic_process__arqmath_2020_task1_origin(xmlfile):
+        yield qid, query, None
 
 def _topic_process__arqmath_2022_task1_manual(idx, line):
     return _topic_process__arqmath_2021_task1(idx, line)
