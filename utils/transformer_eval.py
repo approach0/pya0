@@ -417,7 +417,6 @@ def psg_scorer__dpr_default(tok_ckpoint, model_ckpoint, config, gpu_dev):
 
 
 def psg_scorer__colbert_default(tok_ckpoint, model_ckpoint, config, gpu_dev):
-    from pyserini.encode import ColBertEncoder
     from preprocess import preprocess_for_transformer
 
     q_encoder, _ = psg_encoder__colbert_default(

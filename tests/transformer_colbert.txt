@@ -1,0 +1,11 @@
+Let $\{z_n\}$ be a sequence of complex numbers and $$\sigma_n=\frac{\sum_{i=0}^nz_n}{n+1}$$ I need to prove that
+1) if $\lim\limits_{n\to \infty}z_n$=1 then $\lim\limits_{n\to \infty}\sigma_n$=1 and<br>
+2) I need to find out if $\lim\limits_{n\to \infty}\sigma_n$=0 implies $\lim\limits_{n\to\infty}z_n=0$.
+
+If $z_n\to 1$, then $\sigma_n\to 1$ as well.
+Indeed, suppose that $b_n:=z_n-1$. Then $b_n\to 0$ and it suffices to show that $\lim \limits_{n\to \infty}\dfrac{b_1+\dots+b_n}{n}=0$. Since $b_n\to 0$ then there is $c>0$ ushc that for all $n$ we have $|b_n|<c$. Moreover, for each $\epsilon>0$ there exists $n_0=n_0(\epsilon)$ such that for all $n>n_0$ we have $|b_n|<\epsilon$.
+Hence $$\left|\dfrac{b_1+\dots+b_{n_0}+b_{n_0+1}+\dots+b_n}{n}\right|\leq \dfrac{cn_0}{n}+\dfrac{(n-n_0)\epsilon}{n}<2\epsilon,$$ if $n>\max \{n_0,cn_0/\epsilon\}$. It proves 1).
+For 2) If $z_n=(-1)^n,$ then $\sigma_n\to 0$ but $z_n$ diverges.
+
+This question is usually posed as the length of the diagonal of a unit square.  You start going from one corner to the opposite one following the perimeter and observe the length is $2$, then take shorter and shorter stair-steps and the length is $2$ but your path approaches the diagonal. So $\sqrt{2}=2$.
+In both cases, you are approaching the area but not the path length. You can make this more rigorous by breaking into increments and following the proof of the Riemann sum. The difference in area between the two curves goes nicely to zero, but the difference in arc length stays constant.

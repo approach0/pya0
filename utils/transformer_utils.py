@@ -151,6 +151,94 @@ def unmasking_visualize(ckpt_bert, ckpt_tokenizer, num_tokenizer_ver=1,
                 hook.remove()
 
 
+def colbert_visualize(tokenizer_path, model_path, qid, did, q_augment=True,
+    test_file='tests/transformer_colbert.txt', parse_dollars=True,
+    max_ql=512, max_dl=512, use_puct_mask=True, num_tokenizer_ver=1):
+    # read testcases
+    from replace_post_tex import replace_dollar_tex
+    from replace_post_tex import replace_display_tex
+    from replace_post_tex import replace_inline_tex
+    with open(test_file) as fh:
+        test_cases = fh.read()
+    test_cases = test_cases.split('\n\n')
+    Q, D = test_cases[int(qid)], test_cases[int(did)]
+    if parse_dollars:
+        Q, D = replace_dollar_tex(Q), replace_dollar_tex(D)
+        Q, D = replace_display_tex(Q), replace_display_tex(D)
+        Q, D = replace_inline_tex(Q), replace_inline_tex(D)
+    Q = preprocess_for_transformer(Q,
+        num_tokenizer_ver=num_tokenizer_ver
+    )
+    D = preprocess_for_transformer(D,
+        num_tokenizer_ver=num_tokenizer_ver
+    )
+    print(Q, end="\n\n")
+    print(D, end="\n\n")
+
+    # loading tokenizer and model
+    from transformer import ColBERT
+    print('Loading', tokenizer_path)
+    tokenizer = BertTokenizer.from_pretrained(tokenizer_path)
+    print('Loading', model_path)
+    model = ColBERT.from_pretrained(model_path)
+    # config tokenizer and model
+    special_tokens_dict = {
+        'additional_special_tokens': ['[unused0]', '[unused1]']
+    }
+    tokenizer.add_special_tokens(special_tokens_dict)
+    Q_prepend = '[unused0]'
+    D_prepend = '[unused1]'
+    Q_mark_id = tokenizer.convert_tokens_to_ids(Q_prepend)
+    D_mark_id = tokenizer.convert_tokens_to_ids(D_prepend)
+    assert Q_mark_id == 1
+    assert D_mark_id == 2
+    if use_puct_mask:
+        model.use_puct_mask(tokenizer)
+
+    # encoding
+    enc_Q = tokenizer([Q_prepend + Q], truncation=True,
+        padding='max_length', max_length=max_ql, return_tensors="pt")
+    enc_D = tokenizer([D_prepend + D], truncation=True,
+        padding='max_length', max_length=max_ql, return_tensors="pt")
+    if q_augment:
+        ids, mask = enc_Q['input_ids'], enc_Q['attention_mask']
+        enc_Q['input_ids'][ids == 0] = 103
+    print(tokenizer.decode(enc_Q['input_ids'][0]), end="\n\n")
+    print(tokenizer.decode(enc_D['input_ids'][0]), end="\n\n")
+    # scoring
+    score, cmp_matrix = model(enc_Q, enc_D)
+    cmp_matrix = cmp_matrix.squeeze(0).T.cpu().detach().numpy()
+    print('score:', score)
+    print('matrix:\n', cmp_matrix)
+
+    # visualizing
+    import matplotlib.pyplot as plt
+    h, w = cmp_matrix.shape
+    qry_tokens = [tokenizer.decode(x) for x in enc_Q['input_ids'][0]]
+    doc_tokens = [tokenizer.decode(x) for x in enc_D['input_ids'][0]]
+    print(qry_tokens)
+    print(doc_tokens)
+    fig, ax = plt.subplots()
+    plt.imshow(cmp_matrix, cmap='viridis', interpolation='nearest')
+    plt.yticks(
+        list([i for i in range(h)]),
+        list([tok.replace('$', '') for tok in qry_tokens])
+    )
+    plt.xticks(
+        list([i for i in range(w)]),
+        list([tok.replace('$', '') for tok in doc_tokens]),
+        rotation=90
+    )
+    wi, hi = fig.get_size_inches()
+    plt.gcf().set_size_inches(wi * 2, hi * 2)
+    #plt.colorbar()
+    plt.grid(True)
+    plt.tight_layout()
+    #plt.show()
+    print('generating visualization image...')
+    plt.savefig('scores.png')
+
+
 def pft_print(passage_file):
     with open(passage_file, 'r') as fh:
         for line in fh:
@@ -184,6 +272,7 @@ if __name__ == '__main__':
     fire.Fire({
         "attention": attention_visualize,
         "unmasking": unmasking_visualize,
+        "colbert_visualize": colbert_visualize,
         "pft_print": pft_print,
         "pickle_print": pickle_print,
         "test_determinisity": test_determinisity,
