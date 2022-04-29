@@ -553,9 +553,17 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
             query_cnt[qid] += 1
             if query_cnt[qid] > topk:
                 continue
+            print(qid, 'TREC file line:', i)
             select_sentences(lookup_index,
                 batch, fields, qid2query, max_select_sent)
-            def flush_batches(batch, scores, final=False):
+            def print_batches(batch):
+                print([
+                    (b['qid'], b['rank'], b['i_sent'], b['n_sent'])
+                    for b in batch
+                ])
+            # print_batches(batch) ### debug
+            def flush_batches(scores, final=False):
+                nonlocal batch
                 while (len(batch) >= batch_sz or final) and len(batch) != 0:
                     # pop batch
                     pop_batch = batch[:batch_sz]
@@ -573,9 +581,9 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
                         else:
                             task3_output(item, output_path)
             # flush batches
-            flush_batches(batch, scores)
+            flush_batches(scores)
         # flush the last batches
-        flush_batches(batch, scores, final=True)
+        flush_batches(scores, final=True)
 
 
 if __name__ == '__main__':
