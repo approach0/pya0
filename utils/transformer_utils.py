@@ -228,11 +228,11 @@ def colbert_visualize(tokenizer_path, model_path, qid, did, q_augment=True,
     plt.imshow(cmp_matrix, cmap='viridis', interpolation='nearest')
     plt.yticks(
         list([i for i in range(h)]),
-        list([tok.replace('$', 'Do') for tok in qry_tokens])
+        list([tok.replace('$', '_') for tok in qry_tokens])
     )
     plt.xticks(
         list([i for i in range(w)]),
-        list([tok.replace('$', 'Do') for tok in doc_tokens]),
+        list([tok.replace('$', '_') for tok in doc_tokens]),
         rotation=90
     )
     wi, hi = fig.get_size_inches()
