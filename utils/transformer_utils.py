@@ -196,13 +196,15 @@ def colbert_visualize(tokenizer_path, model_path, qid, did, q_augment=True,
         model.use_puct_mask(tokenizer)
 
     # encoding
-    enc_Q = tokenizer([Q_prepend + Q], truncation=True,
-        padding='max_length', max_length=max_ql, return_tensors="pt")
-    enc_D = tokenizer([D_prepend + D], truncation=True,
-        padding='max_length', max_length=max_ql, return_tensors="pt")
+    enc_Q = tokenizer([Q_prepend + ' ' + Q],
+        padding='longest', truncation=True, return_tensors="pt")
+    enc_D = tokenizer([D_prepend + ' ' + D],
+        padding='longest', truncation=True, return_tensors="pt")
     if q_augment:
         ids, mask = enc_Q['input_ids'], enc_Q['attention_mask']
         enc_Q['input_ids'][ids == 0] = 103
+
+    #print(tokenizer.get_vocab())
     print(tokenizer.decode(enc_Q['input_ids'][0]), end="\n\n")
     print(tokenizer.decode(enc_D['input_ids'][0]), end="\n\n")
     # scoring
@@ -214,29 +216,33 @@ def colbert_visualize(tokenizer_path, model_path, qid, did, q_augment=True,
     # visualizing
     import matplotlib.pyplot as plt
     h, w = cmp_matrix.shape
-    qry_tokens = [tokenizer.decode(x) for x in enc_Q['input_ids'][0]]
-    doc_tokens = [tokenizer.decode(x) for x in enc_D['input_ids'][0]]
+    qry_tokens = [
+        tokenizer.decode(x).replace(' ', '') for x in enc_Q['input_ids'][0]
+    ]
+    doc_tokens = [
+        tokenizer.decode(x).replace(' ', '') for x in enc_D['input_ids'][0]
+    ]
     print(qry_tokens)
     print(doc_tokens)
     fig, ax = plt.subplots()
     plt.imshow(cmp_matrix, cmap='viridis', interpolation='nearest')
     plt.yticks(
         list([i for i in range(h)]),
-        list([tok.replace('$', '') for tok in qry_tokens])
+        list([tok.replace('$', 'Do') for tok in qry_tokens])
     )
     plt.xticks(
         list([i for i in range(w)]),
-        list([tok.replace('$', '') for tok in doc_tokens]),
+        list([tok.replace('$', 'Do') for tok in doc_tokens]),
         rotation=90
     )
     wi, hi = fig.get_size_inches()
     plt.gcf().set_size_inches(wi * 2, hi * 2)
     #plt.colorbar()
     plt.grid(True)
-    plt.tight_layout()
-    #plt.show()
+    #plt.tight_layout()
     print('generating visualization image...')
     plt.savefig('scores.png')
+    plt.show()
 
 
 def pft_print(passage_file):
