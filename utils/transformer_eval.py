@@ -441,13 +441,14 @@ def psg_scorer__colbert_default(tok_ckpoint, model_ckpoint, config, gpu_dev):
     return scorer, (None, None)
 
 
-def select_sentences(lookup_index, batch, fields, qid2query, max_select_sent):
+def select_sentences(lookup_index, batch, fields, qid2query,
+                     min_select_sent, max_select_sent):
     import collection_driver
     qid, _, docid, rank, score, runname = fields
     doc = collection_driver.docid_to_doc(lookup_index, docid)
     doc = doc['content']
-    def gen_sent(doc, n):
-        if n == 0:
+    def gen_sent(doc):
+        if max_select_sent == 0:
             yield 0, 0, doc
         else:
             from nltk.tokenize import sent_tokenize
@@ -455,14 +456,15 @@ def select_sentences(lookup_index, batch, fields, qid2query, max_select_sent):
             sentences = sent_tokenize(doc)
             N = len(sentences)
             for i in range(N):
-                for wind in range(1, n):
+                for wind in range(min_select_sent, max_select_sent):
                     if i + wind > N:
+                        yield 0, 0, doc # in case no sentence been produced.
                         break
                     sel_sents = sentences[i:i+wind]
                     sel_sents = TreebankWordDetokenizer().detokenize(sel_sents)
                     yield i, wind, sel_sents
     # add sentences to batch
-    for i, n_sent, doc_sent in gen_sent(doc, max_select_sent):
+    for i, n_sent, doc_sent in gen_sent(doc):
         batch.append({
             "qid"   : qid,
             "psg_qry": qid2query[qid],
@@ -535,6 +537,7 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
 
     # return sentence-level selection?
     max_select_sent = config.getint(section, 'max_select_sentence')
+    min_select_sent = config.getint(section, 'min_select_sentence')
     topk = config.getint(section, 'topk')
 
     # map TREC input to output
@@ -554,8 +557,8 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
             if query_cnt[qid] > topk:
                 continue
             print(qid, 'TREC file line:', i)
-            select_sentences(lookup_index,
-                batch, fields, qid2query, max_select_sent)
+            select_sentences(lookup_index, batch, fields, qid2query,
+                min_select_sent, max_select_sent)
             def print_batches(batch):
                 print([
                     (b['qid'], b['rank'], b['i_sent'], b['n_sent'])
