@@ -109,7 +109,7 @@ def corpus_length__arqmath_task2_tsv(corpus_dir, max_items):
         with open(path, 'r') as fh:
             n_lines = sum(1 for _ in fh)
         cnt += n_lines
-        if cnt >= max_items and max_items == 0:
+        if cnt >= max_items and max_items > 0:
             cnt = max_items
             break
         print(fname, n_lines)
