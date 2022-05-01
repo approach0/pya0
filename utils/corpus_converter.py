@@ -1,4 +1,5 @@
 import os
+import re
 import fire
 import json
 from tqdm import tqdm
@@ -131,10 +132,54 @@ def convert_arqmath_task2_to_jsonl(corpus_dir,
             fh.write('\n')
 
 
+def convert_arqmath_contextual_task2_to_jsonl(corpus_dir,
+    post_file='Posts.V1.3.xml',
+    output_file='arqmath_contextual_task2.jsonl',
+    max_items=float('inf')):
+    post_file = os.path.join(corpus_dir, post_file)
+
+    with open(output_file, 'w') as fh:
+        print('Reading', post_file)
+        total_n = corpus_length__arqmath3_rawxml(post_file, max_items)
+        reader = corpus_reader__arqmath3_rawxml(post_file,
+            preserve_formula_ids=True)
+        progress = tqdm(reader, total=total_n)
+        for idx, row in enumerate(progress):
+            if idx >= total_n:
+                break
+            elif row[0][1] != 'A':
+                continue
+            (postID, type_, parentID, vote), body = row
+            if '[/imath]' in body:
+                matches = re.finditer(
+                    r'\[imath id="(\d+)"\](.*?)\[/imath\]', body
+                )
+                matches = list(reversed([m for m in matches]))
+                for i, n in enumerate(matches):
+                    formula_len = len(n.group(2).strip())
+                    if formula_len <= 2:
+                        continue
+                    ctx = body[:]
+                    for j, m in enumerate(matches):
+                        span, formulaID, tex = m.span(), m.group(1), m.group(2)
+                        if i == j:
+                            wrap = f'[imath]{tex}[/imath]'
+                            ctx = ctx[:span[0]] + wrap + ctx[span[1]:]
+                        else:
+                            ctx = ctx[:span[0]] + '[MASK]' + ctx[span[1]:]
+                    fh.write(json.dumps({
+                        'formulaID': formulaID,
+                        'doc_props': (postID, str(i)),
+                        'latex': ctx
+                    }, sort_keys=True))
+                    fh.write('\n')
+
+
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
     fire.Fire({
         'ntcir12_wfb': convert_ntcir12_wfb_to_jsonl,
         'arqmath_task1': convert_arqmath_task1_to_jsonl,
-        'arqmath_task2': convert_arqmath_task2_to_jsonl
+        'arqmath_task2': convert_arqmath_task2_to_jsonl,
+        'arqmath_contextual_task2': convert_arqmath_contextual_task2_to_jsonl
     })
