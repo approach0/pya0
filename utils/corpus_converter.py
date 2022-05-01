@@ -134,9 +134,19 @@ def convert_arqmath_task2_to_jsonl(corpus_dir,
 
 def convert_arqmath_contextual_task2_to_jsonl(corpus_dir,
     post_file='Posts.V1.3.xml',
+    task2_jsonl='arqmath3_task2.jsonl', # to ensure cnt(visual_id) <= 5
     output_file='arqmath_contextual_task2.jsonl',
     max_items=float('inf')):
     post_file = os.path.join(corpus_dir, post_file)
+    task2_jsonl = os.path.join(corpus_dir, task2_jsonl)
+
+    total_n = corpus_length__jsonl(task2_jsonl, None, 0)
+    reader = corpus_reader__jsonl(task2_jsonl, "['formulaID']")
+    progress = tqdm(reader, total=total_n)
+    print('Collecting visually distinct formula IDs...')
+    allow_formulaIDs = set()
+    for _, formulaID in progress:
+        allow_formulaIDs.add(formulaID)
 
     with open(output_file, 'w') as fh:
         print('Reading', post_file)
@@ -156,12 +166,13 @@ def convert_arqmath_contextual_task2_to_jsonl(corpus_dir,
                 )
                 matches = list(reversed([m for m in matches]))
                 for i, n in enumerate(matches):
-                    formula_len = len(n.group(2).strip())
-                    if formula_len <= 2:
+                    formulaID, tex = n.group(1), n.group(2)
+                    formula_len = len(tex.strip())
+                    if formulaID not in allow_formulaIDs or formula_len <= 2:
                         continue
                     ctx = body[:]
                     for j, m in enumerate(matches):
-                        span, formulaID, tex = m.span(), m.group(1), m.group(2)
+                        span, _, tex = m.span(), m.group(1), m.group(2)
                         if i == j:
                             wrap = f'[imath]{tex}[/imath]'
                             ctx = ctx[:span[0]] + wrap + ctx[span[1]:]
