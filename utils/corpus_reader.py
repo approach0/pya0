@@ -173,3 +173,20 @@ def corpus_reader__arqmath_task2_tsv(corpus_dir):
                 latex = f'[imath]{latex}[/imath]'
                 # YIELD (docid, doc_props), contents
                 yield (formulaID, *doc_props), latex
+
+
+def corpus_length__jsonl(jsonl_path, fields, max_items):
+    return corpus_length__ntcir12_txt(jsonl_path, max_items)
+
+
+def corpus_reader__jsonl(jsonl_path, fields):
+    import json
+    import pdb
+    fields = eval(fields)
+    with open(jsonl_path, 'r') as fh:
+        for line in fh:
+            line = line.rstrip()
+            j = json.loads(line)
+            values = [j[f] for f in fields]
+            # YIELD (docid, doc_props), contents
+            yield tuple(values[:-1]), values[-1]
