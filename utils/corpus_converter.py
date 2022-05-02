@@ -155,7 +155,7 @@ def convert_arqmath_contextual_task2_to_jsonl(corpus_dir,
             preserve_formula_ids=True)
         progress = tqdm(reader, total=total_n)
         for idx, row in enumerate(progress):
-            (postID, *_), body = row # task2 allow searching for both Q or A.
+            (postID, _type, *_), body = row # task2 allow searching for both Q or A.
             if idx >= total_n:
                 break
             elif body is None:
@@ -180,7 +180,7 @@ def convert_arqmath_contextual_task2_to_jsonl(corpus_dir,
                             ctx = ctx[:span[0]] + '[MASK]' + ctx[span[1]:]
                     fh.write(json.dumps({
                         'formulaID': formulaID,
-                        'doc_props': (postID, str(i)),
+                        'doc_props': (postID, _type, str(i)),
                         'latex': ctx
                     }, sort_keys=True))
                     fh.write('\n')
