@@ -155,11 +155,11 @@ def convert_arqmath_contextual_task2_to_jsonl(corpus_dir,
             preserve_formula_ids=True)
         progress = tqdm(reader, total=total_n)
         for idx, row in enumerate(progress):
+            (postID, *_), body = row # task2 allow searching for both Q or A.
             if idx >= total_n:
                 break
-            elif row[0][1] != 'A':
+            elif body is None:
                 continue
-            (postID, type_, parentID, vote), body = row
             if '[/imath]' in body:
                 matches = re.finditer(
                     r'\[imath id="(\d+)"\](.*?)\[/imath\]', body
