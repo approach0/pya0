@@ -158,7 +158,14 @@ def convert_arqmath_contextual_task2_to_jsonl(corpus_dir,
             (postID, _type, *_), body = row # task2 allow searching for both Q or A.
             if idx >= total_n:
                 break
-            elif body is None:
+            elif _type == 'A':
+                pass
+            elif _type == 'Q':
+                title = row[0][2]
+                qbody = row[0][3]
+                body = title + '\n' + qbody
+                pass
+            else:
                 continue
             if '[/imath]' in body:
                 matches = re.finditer(

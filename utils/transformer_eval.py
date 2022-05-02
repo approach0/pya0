@@ -205,7 +205,7 @@ def index(config_file, section, device='cpu'):
     batch_cnt = 0
     for row_idx, doc in enumerate(progress):
         # doc is of ((docid, *doc_props), doc_content)
-        if doc[1] is None: continue
+        if doc[1] is None: continue # Task1 Question is skipped
         if row_idx < corpus_reader_begin:
             continue
         elif corpus_reader_end > 0 and row_idx >= corpus_reader_end:
