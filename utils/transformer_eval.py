@@ -339,6 +339,7 @@ def search(config_file, section, adhoc_query=None, max_print_res=3, verbose=Fals
     # output config
     from .eval import TREC_output
     output_format = config[section]['output_format']
+    output_id_fields = json.loads(config[section]['output_id_fields'])
     output_dir = config['DEFAULT']['run_outdir']
     output_filename = f'{section}.run' if adhoc_query is None else 'adhoc.run'
     output_path = os.path.join(output_dir, output_filename)
@@ -367,9 +368,10 @@ def search(config_file, section, adhoc_query=None, max_print_res=3, verbose=Fals
             hits = []
             for internal_id, score, doc in search_results:
                 # doc is of ((docid, *doc_props), doc_content)
-                docid = doc[0][0]
+                blank = doc[0][output_id_fields[0]]
+                docid = doc[0][output_id_fields[1]]
                 hits.append({
-                    "_": internal_id,
+                    "_": blank,
                     "docid": docid,
                     "score": score
                 })
