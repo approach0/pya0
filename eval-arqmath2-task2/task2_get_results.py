@@ -73,13 +73,17 @@ def calculated_judge_rate(res_directory, trec_eval_tool, qre_file_path):
     return result
 
 
-def get_result(trec_eval_tool, qre_file_path, prim_result_dir, evaluation_result_file):
+def get_result(trec_eval_tool, qre_file_path, prim_result_dir, evaluation_result_file, nojudge=False):
     file_res = open(evaluation_result_file, "w")
     res_ndcg = calculated_ndcg(prim_result_dir, trec_eval_tool, qre_file_path)
     res_map = calculated_map(prim_result_dir, trec_eval_tool, qre_file_path)
     res_p10 = calculated_p_at_10(prim_result_dir, trec_eval_tool, qre_file_path)
     res_bpref = calculated_bpref(prim_result_dir, trec_eval_tool, qre_file_path)
-    res_judge = calculated_judge_rate(prim_result_dir, trec_eval_tool, qre_file_path)
+    if not nojudge:
+        res_judge = calculated_judge_rate(prim_result_dir, trec_eval_tool, qre_file_path)
+    else:
+        from collections import defaultdict
+        res_judge = defaultdict(float)
     file_res.write("System\tnDCG'\tmAP'\tp@10\tBPref\tJudge\n")
     for sub in res_ndcg:
         file_res.write(str(sub)+"\t"+str(res_ndcg[sub])+"\t"+str(res_map[sub])+"\t"+str(res_p10[sub])+"\t"+str(res_bpref[sub])+"\t"+str(res_judge[sub])+"\n")
@@ -98,13 +102,14 @@ def main():
     parser.add_argument('-qre', help='qrel file path', required=True)
     parser.add_argument('-pri', help='prime results directory', required=True)
     parser.add_argument('-res', help='evaluation result file', required=True)
+    parser.add_argument('-nojudge', help='no judge rate calc', required=False, action='store_true')
     args = vars(parser.parse_args())
     trec_eval_tool = args['eva']
     qre_file_path = args['qre']
     prim_result_dir = args['pri']
     evaluation_result_file = args['res']
 
-    get_result(trec_eval_tool, qre_file_path, prim_result_dir, evaluation_result_file)
+    get_result(trec_eval_tool, qre_file_path, prim_result_dir, evaluation_result_file, nojudge=args['nojudge'])
 
 
 if __name__ == "__main__":
