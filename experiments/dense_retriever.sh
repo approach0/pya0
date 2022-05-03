@@ -40,37 +40,3 @@ baseline_run=./runs/arqmath2-a0-task1.run
 
 $RERANK maprun_arqmath2_to_dpr $baseline_run --device a6000_1
 $RERANK maprun_arqmath2_to_colbert $baseline_run --device a6000_1
-
-# fuse baseline with DPR or ColBERT and do kfold cross evaluation
-kfold=5
-kfold_dir=runs.kfold
-fusion_list=(
-    ./runs/search_arqmath2_colbert.run
-    ./runs/search_arqmath2_dpr.run
-)
-
-> kfold.result
-for eval_run in "${fusion_list[@]}"; do
-    echo $eval_run
-    rm -rf $kfold_dir
-    mkdir -p $kfold_dir
-
-    for i in {1..9}; do
-        python utils/mergerun.py $eval_run $baseline_run 0.$i 1000 --out_prefix ${kfold_dir}/
-    done
-
-    python utils/crossvalidate.py split_run_files --kfold $kfold $kfold_dir/* --seed 1234
-    ./eval-arqmath2-task1/preprocess.sh cleanup
-    ./eval-arqmath2-task1/preprocess.sh $kfold_dir/*holdout
-    ./eval-arqmath2-task1/preprocess.sh $kfold_dir/*foldtest
-    ./eval-arqmath2-task1/eval.sh --nojudge
-    cat ./eval-arqmath2-task1/result.tsv | sort | sed -e 's/[[:blank:]]/ /g' > kfold.tsv
-
-    CROSS_VALID='python utils/crossvalidate.py cross_validate_tsv kfold.tsv --verbose False'
-    ndcg=$($CROSS_VALID --score_field 1)
-    map=$($CROSS_VALID --score_field 2)
-    p10=$($CROSS_VALID --score_field 3)
-    bpref=$($CROSS_VALID --score_field 4)
-    echo $eval_run $ndcg $map $p10 $bpref >> kfold.result
-done
-cat kfold.result
