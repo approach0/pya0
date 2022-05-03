@@ -365,11 +365,18 @@ def search(config_file, section, adhoc_query=None, max_print_res=3, verbose=Fals
                 print(doc, end="\n\n")
 
         if output_format == 'TREC':
+            def locate_field(nested, xpath):
+                if isinstance(xpath, int):
+                    return nested[xpath]
+                elif len(xpath) == 1:
+                    return locate_field(nested, xpath[0])
+                elif isinstance(xpath, list):
+                    return locate_field(nested[xpath[0]], xpath[1:])
             hits = []
             for internal_id, score, doc in search_results:
                 # doc is of ((docid, *doc_props), doc_content)
-                blank = doc[0][output_id_fields[0]]
-                docid = doc[0][output_id_fields[1]]
+                blank = locate_field(doc[0], output_id_fields[0])
+                docid = locate_field(doc[0], output_id_fields[1])
                 hits.append({
                     "_": blank,
                     "docid": docid,

@@ -74,7 +74,7 @@ def TREC_preprocess(collection, index, hits):
             hit['_'] = hit['docid'] # save internal docid
             hit['docid'] = int(doc[DOCID_FIELD]) # output trec docid
 
-    elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined', 'arqmath-2020-task2-origin', 'arqmath-2021-task2-origin', 'arqmath-2022-task2-origin', 'arqmath-2022-task2-official', 'arqmath-2022-task2-refined']:
+    elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined', 'arqmath-2020-task2-origin', 'arqmath-2021-task2-origin', 'arqmath-2022-task2-origin', 'arqmath-2022-task2-official', 'arqmath-2022-task2-refined', 'arqmath-2022-task2-context']:
         for hit in hits:
             doc = docid_to_doc(index, hit['docid'])
             postID = re.search('#([0-9]+)', doc['url']).group(1)
@@ -101,7 +101,7 @@ def TREC_reverse(collection, index, hits):
                 hit['docid'] = trec_docid_to_docid(index, trec_docid)
             except NotImplementedError:
                 hit['docid'] = hit['_']
-    elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined', 'arqmath-2021-task2-official', 'arqmath-2022-task2-official', 'arqmath-2022-task2-refined']:
+    elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined', 'arqmath-2021-task2-official', 'arqmath-2022-task2-official', 'arqmath-2022-task2-refined', 'arqmath-2022-task2-context']:
         for hit in hits:
             # Query_Id Formula_Id Post_Id Rank Score Run
             formula_id = int(hit['_']) # formula ID
@@ -260,6 +260,15 @@ def _topic_process__arqmath_2022_task2_official(idx, line):
 
 def _topic_process__arqmath_2022_task2_refined(idx, line):
     return _topic_process__arqmath_2021_task2(idx, line)
+
+
+def _topic_process__arqmath_2022_task2_context(idx, json_item):
+    qid = json_item['qid']
+    query = [{
+        'type': 'term',
+        'str': json_item['context']
+    }]
+    return qid, query, None
 
 
 def _featslookup__arqmath_2020_task1(topic_query, index, docid):
