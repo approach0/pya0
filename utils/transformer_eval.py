@@ -308,7 +308,7 @@ def gen_flat_topics(collection, kw_sep):
         yield qid, query
 
 
-def search(config_file, section, adhoc_query=None, max_print_res=3, verbose=False, device='cpu'):
+def search(config_file, section, adhoc_query=None, max_print_res=3, verbose=False, device='cpu', query_filter=None):
     config = configparser.ConfigParser()
     config.read(config_file)
 
@@ -356,6 +356,8 @@ def search(config_file, section, adhoc_query=None, max_print_res=3, verbose=Fals
     # search
     open(output_path, 'w').close() # clear output file
     for qid, query in topics:
+        if query_filter is not None and query_filter != qid:
+            continue
         print(qid, query)
         search_results = searcher(query, encoder, topk=topk, debug=verbose)
         if verbose:
