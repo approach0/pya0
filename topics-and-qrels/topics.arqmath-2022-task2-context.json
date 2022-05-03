@@ -1,0 +1,502 @@
+[
+    {
+        "context": "Inequality between norm 1,norm 2 and norm [MASK] of Matrices\n\nSuppose [MASK] is a [MASK] matrix. Then Prove that, [MASK] I have proved the following relations: [MASK] Also I feel that somehow Holder's inequality for the special case when [MASK] and [MASK] might be useful.But I couldn't prove that. Edit: I would like to have a prove that do not use the information that [imath]\\|A\\|_2=\\sqrt{\\rho(A^TA)}[/imath] Usage of inequalities like Cauchy Schwartz or Holder is fine.",
+        "formulaID": "q_6",
+        "qid": "B.301"
+    },
+    {
+        "context": "[MASK]-th root of a complex number\n\nI am confused about the following problem. With [MASK], where [MASK] and [MASK], solve the equation [MASK] in [MASK] where [MASK] is a natural number. How many solutions are there? Now my approach is simply taking the [MASK]-th root which gives [MASK] However, it seems that this problem is asking us to show the existance of the [MASK]-th root. Can I assume that the [imath]n[/imath]-th root of a complex number already exists? Moreoover, would I be correct to say that there is only one solution which is given above?",
+        "formulaID": "q_19",
+        "qid": "B.302"
+    },
+    {
+        "context": "Number of non-commutative Lie algebras of dimension 2\n\nTheorem- Up to isomorphism, the only noncommutative Lie algebra of dimension 2 is that with basis [MASK] and bracket determined by [MASK]. I understand that all vector spaces of dimension 2 over the field [MASK] are isomorphic to each other. So the number of lie algebras of dimension 2 in a field [MASK] is determined by the number of possible bilinear operations [ ][MASK] satisfying the conditions [MASK] [MASK] for all [MASK] [MASK] [MASK] for all [MASK] The bilinear operations on the other hand is determined by the elements to which the pair of base elements are mapped to in the bilinear operation. And since in a lie algebra [MASK] and [MASK] we ony need to determine [MASK]. Now how do we prove that [MASK] and [imath][y,x]=-x[/imath] always and why can't it be [y,x]=y or any other vector ?",
+        "formulaID": "q_35",
+        "qid": "B.303"
+    },
+    {
+        "context": "Elementary proof that a non-orientable manifold of real dimension [MASK] does not admit a quasi-complex structure.\n\nIs there an easy proof that a non-orientable real surface [MASK] does not admit a quasi-complex structure? The proof I know is to observe that any quasi-complex structure on a real surface [MASK] necessarily satisfies the integrability condition [MASK] of the Newlander-Nirenberg theorem, because [MASK] is a [MASK]-dimensional complex vector bundle, and the bracket [MASK] is alternating, i.e. it vanishes on [MASK]. So by the Newlander-Nirenberg theorem, [imath]X[/imath] admits a complex structure, and complex manifolds have to be orientable. However, the Newlander-Nirenberg theorem is a deep theorem and feels a bit overkill. Also I don't really see why there cannot be a quasi-complex structure. Is there a more elementary proof to convince myself?",
+        "formulaID": "q_44",
+        "qid": "B.304"
+    },
+    {
+        "context": "What will be the value of floor function of [MASK]\nWhat would be the value of floor function of [MASK] would it be [MASK] or would it be [MASK] ? The formula I use for this is that of infinite summation series that is [MASK] but I have no clue how to find out what the floor value of the above expression would be. P.s I am a high school student so please explain in simple terms, and yes I do know basic calculus. EDIT: I'm sorry it was given [imath]\\lim_{N \\to \\infty}[/imath] in the problem",
+        "formulaID": "q_50",
+        "qid": "B.305"
+    },
+    {
+        "context": "On the irrationality of Euler Mascheroni constant\n\nI saw one of the expansions of Euler Mascheroni constant in terms of Meissel Mertens constant as a consequence of Mertens theorem. [imath] B = \\gamma + \\sum_p \\left\\{ \\log\\left( 1 - \\frac 1p\\right) + \\frac 1p\\right\\}[/imath] This is that expansion. Now I don't understand why is it difficult to prove the irrationality of Euler Mascheroni constant. Since we have infinitely many prime numbers, the sum over all those primes in the above equation, if converges must be a irrational, then why is it not considered as a proof of irrationality?",
+        "formulaID": "q_51",
+        "qid": "B.306"
+    },
+    {
+        "context": "Carmichael function and the largest multiplicative order modulo n\n\nBy definition, the Carmichael function maps[MASK]positive integer [MASK] to the smallest positive integer [MASK] such that [MASK] for all integers   with [MASK]. It is denoted as [MASK]. The Wikipedia page on Carmichael function states that [MASK]. My question is: why is this true? In other words, why is it the case that there always exists an integer [MASK] coprime to [MASK] with [imath]\\operatorname{ord}_n(x)=\\lambda(n)[/imath]?",
+        "formulaID": "q_61",
+        "qid": "B.307"
+    },
+    {
+        "context": "Riemann's definition of the zeta function\n\nI am having trouble understanding Riemann's definition of the zeta function, and I will need to give a brief summary here before I can get to my question. In his 1859 paper, Riemann derived the integral representation [MASK] that is valid for [MASK], and then modified the integral in order to define a function that is defined for all complex values of [MASK], except [MASK], where it has a simple pole. The extension is given by [MASK] where [MASK] is a \"Hankel contour\", that is, a path that travels from [MASK] at a small distance [MASK] above the positive [MASK]-axis, circles around the origin once in counterclockwise direction with a small radius [MASK], and returns to [MASK] traveling at distance [MASK] below the positive real axis. Taking the limit as [MASK] and [MASK] one can see that the integral [MASK] becomes [MASK] and then the rest follows easily from known identities satisfied by the Gamma function.  While the original real integral over [MASK] is clearly divergent if [MASK], the contour integral over [MASK] is defined for all complex [MASK], because the path stays away from the singularity at [MASK] and from the branch cut along the positive [MASK]-axis. My problem is understanding why the integral over [MASK] does not depend on [MASK] and [MASK], so that we can keep them at a safe positive distance from the singularities for the definition, but we can take the limit for the purpose of evaluating the integral. I know that by Cauchy's theorem we can modify a path of integration (without changing the value of the integral) starting and ending at the same point as long as we do not cross any singularity, but this path starts and ends at infinity, so I am not sure how to rigorously proceed using Cauchy's theorem. Even if I start the path at [MASK] and end it at [MASK] for some large [MASK], the path starting and ending points change as [imath]\\epsilon[/imath] changes.",
+        "formulaID": "q_90",
+        "qid": "B.308"
+    },
+    {
+        "context": "Number of solutions of equation over a finite field\n\nI have a question regarding the number of solutions of a equation over a finite field [MASK]. First of all, consider the equation [MASK] over [MASK], where [MASK] is a prime such that [MASK]. The book that I'm currently reading says that this equation has exactly one solution in [MASK] for every [MASK], because [imath]\\gcd(3,p-1)=1[/imath], but the book does not prove this. Unfortunately, this doesn't convince me enough. Is there is a convincing elementary straightforward proof justifying why is this true?",
+        "formulaID": "q_98",
+        "qid": "B.309"
+    },
+    {
+        "context": "Finding positive integer solutions to [MASK]\n Find the positive integer solutions for: [imath]\\frac{4}{x} + \\frac{10}{y} = 1[/imath]  I had calculated the solutions manually but it was a very tedious process. Is there any better way to do this?",
+        "formulaID": "q_100",
+        "qid": "B.310"
+    },
+    {
+        "context": "Given a function [MASK], what is [MASK]?\n\nWhile I was going through past Olympiad math papers, I found this question without any explanation. Here is the question:  Given a function [MASK], what is [MASK]?  The answer was 13. I took a really bad approach and converted [MASK] to [MASK], which I then noticed was wrong. I also accidentally multiplied [MASK] with [MASK], [MASK] with [MASK], and so on, before realizing that the functions were added and not multiplied. I suspect that there is something to the power of [imath]\\frac{n}{27}[/imath], because 9 is a multiple of 27. However, I am not completely sure. Is there a law that tells me how I can solve this question? Since this is a Math Olympiad question, there is probably a maximum time limit of five minutes to do this question. This means that I probably won\u2019t have time for tedious mathematical calculations with a calculator and online tools, or something like that. Please give me a quick, fast solution that is probably suitable for an 8th grader, at most a solution at a 10th grader level.",
+        "formulaID": "q_111",
+        "qid": "B.311"
+    },
+    {
+        "context": "Proving [MASK] for positive integer [MASK], [MASK], [MASK]\n How can we prove the following? [MASK] for [imath]a,b,c \\in \\mathbb{Z}^+[/imath]  I don\u2019t know if I\u2019m doing something wrong, but I can\u2019t prove it even though I\u2019m pretty sure it\u2019s true. Obviously, because the concept of algebra isn\u2019t aware of the fact that we are restricting the variables to positive integers, and given my assumption that the equality doesn\u2019t necessarily hold for non-integers, an element of non-algebraic problem solving is needed, i.e. making a change to the expression given our knowledge of that condition, which then allows for algebraic maneuvers that show that the equality holds. I think that\u2019s what I\u2019m missing. Thanks.",
+        "formulaID": "q_117",
+        "qid": "B.312"
+    },
+    {
+        "context": "Let [MASK], a finite abelian group and [MASK] with [MASK]. Prove that [MASK].\n\n Let [MASK], a finite abelian group and [MASK] with [MASK]. Prove that [MASK].  My attempt: Let [MASK]. Since [MASK] is ableian, [MASK]. Thus [MASK] and [MASK]. Together with [MASK], it follows that [MASK]. This is where I'm stuck; need to show that [MASK]. Any hints on how to proceed? Edit: I've come up with a solution that is a somewhat different approach to what has been provided in the hints. Here it goes: Since [MASK] is abelian, [MASK]. But since [MASK], [MASK] by an elementary result in number theory. Thus [MASK]. Together with [MASK], we have that [imath]n=rs[/imath], which is what we want to prove.",
+        "formulaID": "q_140",
+        "qid": "B.313"
+    },
+    {
+        "context": "Closed span of a sequence in Hilbert spaces.\n\nSuppose that you have an orthonormal basis [MASK] in a Hilbert space such that [MASK]. Is this condition enough to prove that the closed span of [MASK] is [MASK]? My efforts to prove this have not led anywhere promising. I have tried showing that the only vector perpendicular to all of the [MASK] would be [imath]0[/imath]. Not sure which way I can proceed. Does anyone have an idea how to approach this? Thank you.",
+        "formulaID": "q_146",
+        "qid": "B.314"
+    },
+    {
+        "context": "Backwards Induction (Exercise 2.2.6) Analysis 1 by Terence Tao\n\nI am new to the study of analysis and I decided to start with Terence's book in my endeavor. I want to show my \"proof\" of backwards induction since I have some difficulty in understanding this. I want to now if my proof is correct or have some error, because if have,[MASK]can't infer that. Any feedback is appreciated.   Let [MASK] be a natural number, and let [MASK] be a property pertaining to the natural numbers such that whenever [MASK] is true, then [MASK] is true. Suppose that [MASK] is also true. Prove that [MASK] is true for all natural numbers [MASK]; this is known as the principle of backwards induction. (Hint: apply induction to the variable [MASK].)  First i want to show [MASK] is true [MASK] [MASK]. H1: [MASK] [MASK] H2: [MASK] C: [MASK] is true [MASK] [MASK]. [MASK] means [MASK] for some natural number  , then [MASK] for corollary 2.2.9. But [MASK] is true for H2, then the case [MASK] is proved. Suppose now that works for [MASK] and prove [MASK]. then: H1: [MASK] [MASK] H2: [MASK] [MASK] [MASK] H3: [MASK]. In H1, for [MASK] we have [MASK] and for H2 we now [MASK] (specifically for [MASK]), then [MASK] for [MASK]. We need to prove that works for [MASK] but for that [MASK] is true for H3. We conclude that [MASK] [MASK] [imath]n\\text{++}\\geq m[/imath].",
+        "formulaID": "q_188",
+        "qid": "B.315"
+    },
+    {
+        "context": "Multiplicative of group of odd numbers modulo power of two\n\nI want to understand the group structure of the group of units in the ring [MASK] for positive integers [MASK]. I expect this has been answered before here on MSE, but so far the automatic suggestions didn't turn it up. Here is what I understand: it is an abelian group, hence a product of cyclic ones. Also the order of this group is [MASK] so that the orders of the factors in the product are all powers of two by Lagrange's theorem. Now these conditions are restrictive enough to compute the first few cases by hand. We have [MASK], [MASK], [MASK], [MASK], [MASK]. I'm starting to believe that for [MASK] we have that [imath](\\mathbb{Z}/2^m \\mathbb{Z})^* = C_2 \\times C_{2^{m-2}}[/imath] but is there a simple conceptual explanation for that (if true)?",
+        "formulaID": "q_198",
+        "qid": "B.316"
+    },
+    {
+        "context": "[MASK]\nLet be [MASK]. Compute the following integral: [MASK] I obtained that for [MASK] the value of the integral is [MASK] and for [MASK] [imath]x\\left(\\frac{1}{2\\left(x^2+1\\right)}+\\frac{\\tan \\:^{-1}}{2x}\\right)+C[/imath] How to do the rest of the cases?",
+        "formulaID": "q_204",
+        "qid": "B.317"
+    },
+    {
+        "context": "How do you prove [MASK] for [MASK]\nHow do you prove [MASK] for [MASK]? I can prove this for natural numbers only via induction, but how do you prove this for any real [MASK]? We start with the base case [MASK]. We have [MASK] by a variety of methods. For the induction step, assume [MASK]. Notice that taking the derivative of [MASK] gives us [MASK] and thus [imath](1+\\frac{x}{n+1})^{n} < \\left(1+\\frac{x}{n}\\right)^{n} \\leq e^x = \\frac{d}{dx} e^x[/imath]. I'm not sure how to extend this to the non-integer case. Any help would be appreciated.",
+        "formulaID": "q_216",
+        "qid": "B.318"
+    },
+    {
+        "context": "A wrong argument for [MASK] being countable\n\nWe assume [MASK] is the set of all countable subsets of the set of real numbers. We know [MASK] is a partially ordered set [MASK]. Suppose [MASK] is a chain in [MASK]. We can prove [MASK] is a countable set. For each natural number [MASK], we have [MASK]. So [MASK] is an upper bound for [MASK]. This shows each chain in [MASK] has an upper bound according to Zorn's lemma. [MASK] has a maximal element [MASK], and we know [MASK] is a countable set. Now we prove [MASK]. If [MASK], then there is an [MASK] such that [MASK]. Let [MASK]. It's obvious that [MASK] is a countable subset of the real numbers and [MASK]. This contradicts [MASK] being a maximal element. Thus, [MASK] and [imath]\\Bbb{R}[/imath] is a countable set. What is wrong with this argument?",
+        "formulaID": "q_241",
+        "qid": "B.319"
+    },
+    {
+        "context": "An inverse trigonometric integral\n\nSo my integral is [MASK] To avoid confusion let me re-write the integral as [MASK] I started off with a trig-substitution that is let [MASK] and [MASK] which means that [MASK] So our integrand becomes [MASK] [MASK] Then using Integration by Parts,[MASK] [MASK] and [MASK] [MASK] So our integrand thus becomes, [MASK] from [MASK] to [MASK] [imath]-\\int_0^{\\frac{\\pi}{2}} \\ln(sin(t))dt\\tag{t*ln(sin(t)) = 0}[/imath] From here, I don't know how to proceed further. Any help/hint is appreciated :) Thanks in advance",
+        "formulaID": "q_246",
+        "qid": "B.320"
+    },
+    {
+        "context": "Solve Equation [MASK] where [MASK] using B\u00e9zout\n\nI want to solve this equation: [MASK] I present you what I have so far: [MASK] which is not [MASK]. I notice that: [MASK] So using B\u00e9zout : [MASK], where [MASK] integer. So we have [MASK] and [MASK]. So [MASK]. By replacing [MASK] in equation [MASK] we get: [MASK], which indeed solves the equation. However, I dont get my previous solution [MASK] which is also correct. Am I applying B\u00e9zout wrong? Or am I not supposed to find the solution that I used to find the new ones, if they exist? Do I have [imath]2[/imath] solutions and that's it or am I missing something? Thank you.",
+        "formulaID": "q_272",
+        "qid": "B.321"
+    },
+    {
+        "context": "How do I calculate the sum of sum of triangular numbers?\n\nAs we know, triangular numbers are a sequence defined by [MASK]. And it's first few terms are [MASK]. Now I want to calculate the sum of the sum of triangular numbers. Let's define [MASK] [MASK] [MASK] And I want an explicit formula for [MASK]. After some research, I found the explicit formula for [MASK]. Seeing the patterns from [MASK] and [MASK], I figured the explicit formula for [MASK] would be [MASK] or [MASK]. Then I tried to plug in those two potential equations, If [MASK], [MASK], [MASK], [MASK]. Thus we can know for sure that the second equation is wrong. If [MASK], [MASK], [MASK]. Seems correct so far. If [MASK], [MASK], [imath]\\frac{n(n+1)(n+2)(n+3)}{24}=\\frac{360}{24}=15[/imath]. Overall, from the terms that I tried, the formula above seems to have worked. However, I cannot prove, or explain, why that is. Can someone prove (or disprove) my result above?",
+        "formulaID": "q_294",
+        "qid": "B.322"
+    },
+    {
+        "context": "How to use the Euclidean Algorithm to find the inverse of [MASK] in [MASK]?\n\nI've tried a lot with the Euclidean Algorithm, but I still can't figure it out. Do you know how I can use the Euclidean Algorithm to find the inverse of [MASK] in [imath](\\mathbb{R} [x]/(x^4 + 1))^*[/imath]? Thanks in advance!",
+        "formulaID": "q_298",
+        "qid": "B.323"
+    },
+    {
+        "context": "The Double Basel Problem\n\nI have been playing with the series which I had been calling the 'Double Basel problem' for the past couple of hours [MASK] After wrestling with this for awhile, I managed to generalize a result demonstrated here. This identity is: [MASK] Hence the original series becomes: [imath] \\sum_{n=1}^{\\infty} \\frac{1}{2n}\\left[\\pi \\coth{\\pi n} - \\frac{1}{n} \\right]. [/imath] I have no idea where to go next with this problem.  I seriously doubt that this series is convergent; however, I have been unable to prove it.  Can you prove that this series is divergent? If it converges what is its value?  Thanks so much!",
+        "formulaID": "q_301",
+        "qid": "B.324"
+    },
+    {
+        "context": "Find consecutive composite numbers\n\nHow to find 100 consecutive composite numbers? After many attempts I arrived at the conclusion that to find [MASK] consecutive composite numbers we can use this [MASK] where [MASK] is divisible by [MASK], [MASK] is divisible by [MASK] and so on... and where [MASK] = [MASK] Thus [MASK] tells that there are [MASK] consecutive numbers. However, there seems to be some gaps or incompetence. For example: [MASK] [MASK] [MASK]. Although it's right there are for sure smaller numbers such as [MASK] and [imath]14, 15 ,16.[/imath] Is there another method for solving such a problem mathematically? Is it a correct method or have I misunderstood it?",
+        "formulaID": "q_316",
+        "qid": "B.325"
+    },
+    {
+        "context": "Every projective module is a direct summand of free module.\n\nI was reading \"Serial Rings\" by Gennadi Puninski. There it is written that , \"Since every module is a homomorphic image of a free module, every projective module is a direct summand of free module\".(ie. if [MASK] is a  projective module, there exists a free module F such that, [MASK] for some module [imath]T[/imath].) But I can't understand how \"Every module is a homomorphic image of a free module\" implies that \"Every projective module is a direct summand of free module\". (I have found a proof for \"Every projective module is a direct summand of free module\" but the first part of the above mentioned sentence wasn't used there.)",
+        "formulaID": "q_319",
+        "qid": "B.326"
+    },
+    {
+        "context": "Determinant not equal to volume error (closed)\n\nThe determinant of a [MASK] matrix [MASK] is the volume of a parallelopiped with its three sides as the vectors whose tails rest on origin and heads at the coordinates [MASK] and [MASK] [MASK]. The determinant of this matrix can be simplified to [MASK].  Proof: Subtracting column[MASK]from column 2, and putting that in column  2, [MASK] [MASK] rearranging the terms, [MASK] taking out the common terms [MASK] and [MASK], [MASK] expanding the terms [MASK] and [MASK] [MASK] [MASK] taking out the common term [MASK] [MASK] [MASK] [MASK]  As the [MASK] coordinate of the heads of these three vectors is [MASK], the head of these vectors lies in a plane perpendicular to the [MASK]-axis and a distance of [MASK] unit away from the origin. (If we connect these three points, we get a triangle.) This plane will cut the parallelopiped into two equal triangular pyramids whose base lies in the plane. The perpendicular distance from the base of the pyramid to the tip is [MASK] unit. The volume of the required parallelogram is the sum of the volume of the two triangular pyramids. [MASK]. The height is   units. The area of a triangle is, by Shoelace formula, [MASK] where the vertices of the triangle are [MASK] [MASK] The vertices of the required traingle has the coordinates [MASK] and [MASK]. So the area of the triangle, [MASK] which, as shown above, can be simplified to [MASK] So, the volume is [MASK] [MASK] But, shouldn't the volume be equal to the determinant which is [imath](x-y)(y-z)(z-x)[/imath] ?  References [1]Youtube video by 3Blue1brown: https://youtu.be/Ip3X9LOh2dk?t=345 [2]Wikipedia article:https://en.wikipedia.org/wiki/Shoelace_formula",
+        "formulaID": "q_355",
+        "qid": "B.327"
+    },
+    {
+        "context": "Proving [MASK]\nI want to prove that the below equation can be held.  [MASK]  Firstly I tried to check the equation with small values of [MASK] [MASK] [MASK] [MASK] [MASK] But [MASK] [MASK] [MASK] [imath] = \\cos\\left(\\frac{  2 \\pi  }{  3  } \\right) + \\cos\\left(\\frac{  4 \\pi  }{  3  } \\right) + 1  =?[/imath] What formula(s) or property(s) can be used to prove the equation?",
+        "formulaID": "q_366",
+        "qid": "B.328"
+    },
+    {
+        "context": "How do I show that if [MASK] is compact and [MASK] is open, then there is an open [MASK] with [MASK]?\n\nThis question is from Wayne Patty's Topology Section 5.2.  Consider [MASK] be a compact subset of a regular space and let [MASK] be an open set such that [MASK]. Prove that there is an open set [MASK] such that [MASK].  Let [MASK] which implies [MASK]. Then a result is given in   the book (Theorem 5.11): A [MASK]-space [MASK] is regular if and only if for each member [MASK] of [MASK] and each neighbourhood [MASK] of [MASK], there is a neighbourhood [MASK] of [MASK] such that [MASK]. So, I got [MASK]. But I am unable to prove that [MASK]. I thought that I should let [imath]V\\subseteq \\overline{V} \\subseteq A[/imath] but I am not able to find a contradiction. Can you please help with that?",
+        "formulaID": "q_390",
+        "qid": "B.329"
+    },
+    {
+        "context": "Shilov's Linear Algebra - Chapter 1, Problem 9\n\nCalculate the [MASK]-th order determinant: [MASK] The answer is [MASK]. If we add all the other columns to the first column, we get the first multiplicative factor of the answer, and are left with the following determinant: [imath]\\begin{vmatrix} 1&a&a&\\ldots&a\\\\ 1&x&a&\\ldots&a\\\\ 1&a&x&\\ldots&a\\\\ \\cdot&\\cdot&\\cdot&\\ldots&\\cdot\\\\ 1&a&a&\\ldots&x \\end{vmatrix}[/imath] How can we calculate this determinant to obtain the answer?",
+        "formulaID": "q_392",
+        "qid": "B.330"
+    },
+    {
+        "context": "Finding roots of [MASK] by hand\n\nThe function [MASK] is such that [MASK] and next [MASK] for all real values of [MASK]. So [MASK] being monotonic the equation [imath]4^x+6^x=9^x[/imath] has exactly one real solution. The question is whether this real root can be found analytically by hand.",
+        "formulaID": "q_396",
+        "qid": "B.331"
+    },
+    {
+        "context": "Every number can be expressed as a product of (least prime factor)*(largest integer dividing n less than n) [EDITED]\n\nLet [MASK] such that [MASK]. Let [MASK] such that [MASK]. Show that:[MASK] My proof: Since [MASK], [MASK] is either composite or prime. If [MASK] is prime(i.e [MASK] where [MASK] is prime), then [MASK] This is because [MASK] is defined as least prime factor of n. If[MASK]is composite, by the Fundamental Theorem of Arithmetic: \"Any positive integer bigger than 1 can be expressed as a product of primes.\" Let [MASK] be the smallest prime of the product [MASK] That is, pick [MASK]. Notice that [MASK] is necessarily [MASK] because since [MASK] implies that [MASK] and is the smallest prime that divides n. Therefore, [MASK] Then, if [MASK], then [MASK] and [MASK] (by definition). This implies that [MASK] But [MASK] such that [MASK]. Implies that [MASK] is the greatest integer less than[MASK]such that [MASK]. Now let [MASK]. Since [MASK] then [MASK] is prime and [MASK]. BWOC, If [MASK] and [MASK] where [MASK]. Since [MASK]. But we found another factor of   ([MASK]) that divides  ! This contradicts the definition of [MASK]. Also, since [MASK] is the biggest factor of n, implies that [MASK] is the smallest prime factor of n. So [MASK]. Hence, we have that [MASK] or just [imath]g(n) = \\frac{n}{L(n)}[/imath] Q.E.D.",
+        "formulaID": "q_409",
+        "qid": "B.332"
+    },
+    {
+        "context": "Bivariate normal density\n\n[MASK] have a bivariate normal density centered at the origin with [MASK] = [MASK], and [MASK] . In polar coordinates [MASK] becomes [MASK] where [MASK]. Prove that [MASK] has a density given by [MASK] And is uniformly distributed iff [MASK]. (To this point everything is clear) what i do not understand is how to conclude that [MASK] and [imath]P\\{XY < 0\\}= \\pi^{-1} \\arccos (p)[/imath].",
+        "formulaID": "q_458",
+        "qid": "B.333"
+    },
+    {
+        "context": "logarithm proof for [MASK]\nI have tried proving for [MASK] , but I feel is incorrect, so how can I prove this? I have proved it as follows: [MASK] [MASK] [imath]log_a(b)= log_ab[/imath]",
+        "formulaID": "q_463",
+        "qid": "B.334"
+    },
+    {
+        "context": "Matrix exponential converges to a matrix\n\nLet [MASK] be a square matrix. To show: Matrix exponential converges to some matrix [MASK]. [MASK] In some proofs that I have seen it is stated that because (for a sub-multiplicative norm) [MASK] then the series [MASK] has to be convergent. That however isn't clear to me. To me more intuitive way to show convergence would be to show that [MASK] and use some intuitive matrix norm for which it is clear that all elements of [imath]\\frac{A^k}{k!} -X[/imath] converge to zero. Any hints?",
+        "formulaID": "q_470",
+        "qid": "B.335"
+    },
+    {
+        "context": "For each [MASK], specify matrices [MASK] for which [MASK] is true.\n\nI have got the following task: (1) For each [MASK], specify matrices [MASK] for which [MASK] is true. (2) Determine [MASK] thus the matrices [MASK], which commute with all matrices [imath]B \\in \\mathbb{R}^{2 \\times 2}[/imath]. Could someone please help me with this or give me an approach? That would be very helpful. Thanks.",
+        "formulaID": "q_479",
+        "qid": "B.336"
+    },
+    {
+        "context": "Suppose that all the tangent lines of a regular plane curve pass through some fixed point. Prove that the curve is part of a straight line.\n\nQuestion. Suppose that all the tangent lines of a regular plane curve pass through some fixed point. Prove that the curve is part of a straight line. Prove the same result if all the normal lines are parallel. I am working on differential geometry from the book by Pressley and I have a doubt in the solution of the above question whose (brief) solution is given by: Solution: We can assume that the curve [MASK] is unit-speed and that the tangent lines all pass through the origin (by applying a translation to [MASK]). Then, there is a scalar [MASK] such that [MASK] for all [MASK]. Then, [MASK]. Can anyone please explain me how does this line follow : \" Then, there is a scalar [MASK] such that [MASK] for all [imath]t[/imath].\" Thanks in advance.",
+        "formulaID": "q_488",
+        "qid": "B.337"
+    },
+    {
+        "context": "Find all integer solutions of equation [MASK]\nHow to find all integer solutions for the equation [imath]y = \\frac{a+bx}{b-x}[/imath], where a and b are known integer values? P.S. x and y must be integer at the same time",
+        "formulaID": "q_490",
+        "qid": "B.338"
+    },
+    {
+        "context": "Extension of Euclid's lemma\n\nThis is[MASK]somewhat obvious fact that is intuitively obvious to me, but I haven't been able to construct a proof of it. Euclid's lemma states for for [MASK] a prime and [MASK] a product of integers (let's take everything to be positive for simplicity), if [MASK], then [MASK] or [MASK]. This is clear, and I know how to prove it. Let's extend it somewhat. Suppose that   and [MASK] are two relatively prime integers, and we have [MASK] for some other integer [MASK]. Then [MASK], so it must divide [MASK]. This fact is obvious to me, but I can't figure out how to prove it. Does anyone have any hints or advice? Do I need the assumption of positivity? (For my purposes at the moment, I only need them to be positive, but there is value in having the most general result possible). EDIT: Updated attempt: We have that [MASK] are relatively prime, so there exist [MASK] such that [MASK] by B\u00e9zout's lemma. Multiply through by [MASK] to get [MASK]. Then [MASK] and [MASK], so [imath]a \\mid c[/imath]. How is that?",
+        "formulaID": "q_509",
+        "qid": "B.339"
+    },
+    {
+        "context": "I have the following problem: Let [MASK]. Show that [MASK] is a Cauchy sequence.\n\nWe have that [MASK] is a sequence of real numbers. And the relation on the title: [MASK] We must prove that this is a Cauchy sequence. I know that an Cauchy sequence follows the definition: given [MASK], exists [MASK], such that [imath]m,n > n_o \\Rightarrow |x_m - x_n|< \\epsilon[/imath] But I don't know how to use both informations to prove the exercise. If someone please may help me, I'd be very thankful.",
+        "formulaID": "q_516",
+        "qid": "B.340"
+    },
+    {
+        "context": "Do all arithmetic sequences with coprime coefficients contain a prime?\n\nGiven [MASK], where [MASK], we can define an arithmetic sequence [MASK]. The sequence is thus [MASK]. Do all such sequences contain a prime? Do they contain an infinite number of primes? Example: [MASK]. Then, [MASK], which is prime. Meanwhile, [MASK] does not have primes, but [imath]\\gcd(a, b) = 2 \\neq 1[/imath], so this isn't a counterexample.",
+        "formulaID": "q_524",
+        "qid": "B.341"
+    },
+    {
+        "context": "Four students are giving presentations\n\nIn four sections of a course, running (independently) in parallel, there are four students giving presentations that are each Exponential in length, with expected value of[MASK]minutes each. How much time do we expect to be needed until all four of the presentations are completed? I'm a little thrown off by this question since it's in the chapter of order statistics in my book. But I believe that this is just gamma distribution. If each student has expected value of   minutes each. Shouldn't the time needed till all four of the presentations are completed be [MASK] minutes? [MASK] Or is it the following. Calculate the density of the fourth order statistics [MASK] Then [MASK] So is the answer [MASK] minutes or [imath]125/6[/imath] minutes? Any help is greatly appreciated.",
+        "formulaID": "q_531",
+        "qid": "B.342"
+    },
+    {
+        "context": "When two dice are identical, why are ordered pairs considered for determining probability of getting sum x?\n\nProblem statement : +++++++++++++++ Given two identical unbiased dice, determine the probability of getting sum as 7. Event  = Sum of dots on the top face of both dice is 7. [MASK] [MASK] = [MASK]. Hence, [MASK] I have a doubt here. As the two dice are given identical, why do we have to consider ordered pairs? Shouldn't it be unordered consisting of only 3 possible pairs [MASK]? Hence, [MASK] and [imath]P(E) = 3/21[/imath].",
+        "formulaID": "q_538",
+        "qid": "B.343"
+    },
+    {
+        "context": "Any collection of subsets of a set is a subbasis for a topology\n\nTheorem Any collection of subsets [MASK] of a nonempty set [MASK] forms the subbasis for a unique topology [MASK] on [MASK]. This theorem is absolutely amazing to me. I really enjoy the idea of it as a powerful tool, but I have come up with a counterexample that I just can't get over. So the theorem states that any collection of subsets of a nonempty [MASK] form a subbasis for a unique topology on [MASK]. The emphasis there is any. So, consider the following counterexample: Let [MASK] and let [MASK]. Clearly, this is a collection of subsets of [MASK]. Assume that, by our theorem, then [MASK] is a subbasis for some topology on [MASK]. Okay, so since [MASK] is a subbasis of some topology on [MASK], let's try taking intersections of members of [MASK]. Well, [MASK]. Then our basis for our topology is [MASK] This is problematic because this means that our basis [MASK] is just [MASK], but note that [MASK] and [MASK] Therefore, [MASK] How do we get [MASK] in [imath]\\tau[/imath]? Is my counterexample logically consistent?",
+        "formulaID": "q_561",
+        "qid": "B.344"
+    },
+    {
+        "context": "Elementary geometry question: How to calculate distance between two skew lines?\n\nI am helping someone with highschool maths but I got stacked in a elementary geometry problem. I am given the equation of two straigh lines in the space [MASK] and [imath]s\\equiv\\begin{cases} x=\\mu \\\\ y=\\mu -1 \\\\ z=-1\\end{cases}[/imath] and asked for some calculations. First I am asked the relative position of them so I get they are skew lines. After that I am asked for the distance between the two lines. In order to get the distance I have to calculate the line that is perpendicular to both of them in the \"skewing\" point, check the points where it touches the other two lines (sorry, not sure about the word in English) and calculate the module of this vector. Im having trouble calculating the perpendicular line. I know I can get the director vector using vectorial product, but  I'm not sure how to find a point so that I can build the line.",
+        "formulaID": "q_563",
+        "qid": "B.345"
+    },
+    {
+        "context": "Greatest lower bound in Q\n\nI have a set [MASK] I was wondering why it does not have the greatest lower bound. Isn't [imath]0 \\in \\mathbb Q[/imath] a greatest lower bound for this set in rational numbers?",
+        "formulaID": "q_565",
+        "qid": "B.346"
+    },
+    {
+        "context": "GCD (a,b) =1 prove GCD ( (a+b), (a-b) ) = 1 or 2\n\nif GCD of [MASK], prove that GCD [MASK] or [MASK] The proof goes like: Let GCD [MASK] and let there exist integers m and n such that [MASK]  and [MASK] By adding and subtracting these two equations we get: [MASK] and [MASK] , because [MASK] are coprime then [MASK] GCD [MASK] = GCD [imath](2a, 2b),[/imath] and so on. My question is, why do we have to add and subtract above equations? I need to understand the concept of this prove in some more details. Thanks!",
+        "formulaID": "q_577",
+        "qid": "B.347"
+    },
+    {
+        "context": "Question about determinant of a block matrix\n\nI was studying block matrices and suddenly this question came to my mind. Let [MASK]. From this Wikipedia page, [MASK] even if [MASK] and [MASK] do not commute. Does a similar condition hold for the following block matrix? [imath]\\begin{pmatrix} A & -B\\\\  B & A \\end{pmatrix}[/imath]",
+        "formulaID": "q_579",
+        "qid": "B.348"
+    },
+    {
+        "context": "Inverse to Stirling's Approximation\n\nThe equation for Stirling's Approximation is the following: [MASK] Writing as a function for y gives us the following: [imath]y = \\sqrt{2\\pi x} * (\\frac{x}{e})^x[/imath] Is there a way to solve this equation for x, effectively finding an inverse to this function?",
+        "formulaID": "q_584",
+        "qid": "B.349"
+    },
+    {
+        "context": "Induction proof for natural numbers in a division operation\n\nI want to proove that 2 and 3 divide [MASK] and I'm stuck at the inductive step, here's where I'm at: For all [MASK], let [MASK] be the  proposition: 2 and 3 divide [MASK] Basic step: the first term in [MASK] is [MASK], then: [MASK] et [MASK], thus [MASK] is true. Inductive step: For the inductive hypothesis, we assume that [MASK] is true for an arbitrary nonnegative integer k bigger than 0. That is, we assume that 2 and 3 divide [MASK] To carry out the inductive step using this assumption, we must show that when we assume that [MASK] is true, then [MASK] is also true. That is, we must show that 2 and 3 divide [MASK] Is the next step here is that we need to prove that [MASK] and [MASK] are integers? thus 2 and 3 divide [imath](k+1)^3 - (k+1)[/imath]?",
+        "formulaID": "q_601",
+        "qid": "B.350"
+    },
+    {
+        "context": "Application of Fatou's Lemma but something simpler is better?\n\nThe question Let [MASK] be a measure space. Let [MASK] be a sequence of sets in [MASK]. Define [MASK] such that  for all but finitely many [MASK] it holds that [MASK] [MASK] Show that [MASK] My attempt [MASK] and so by Fatou's lemma: [MASK] Now all I need to show is that [MASK] a.e Consider [MASK] then eventually [MASK] eventually and so [MASK] and so [MASK] Now consider [MASK] then [MASK] such that [MASK] and so [MASK] and hence [imath]\\lim_{n\\to\\infty}\\inf \\chi_{A_n}(x)  = \\lim_{n\\to\\infty} 0 = 0= \\chi_A(x)[/imath] Ando so the required follows. However this feels awfully complicated and I was wondering if anyone has any tips for something simpler",
+        "formulaID": "q_621",
+        "qid": "B.351"
+    },
+    {
+        "context": "find a positive continuous function with a finite area : [MASK] , but the [MASK] doesn't exist.\n\nfind a positive continuous function with a finite area : [MASK] , but the limit of [MASK] as [imath]x[/imath] goes to infinity doesn't exist. I tried finding such a function but I failed .",
+        "formulaID": "q_626",
+        "qid": "B.352"
+    },
+    {
+        "context": "Can someone explain why if two random variables, X and Y, are uncorrelated, it does not necessarily mean they are independent?\n\nI understand that two independent random variables are by definition uncorrelated as their covariance is equivalent to 0: [MASK] [MASK], when x and y are two random independent variables. Therefore, [imath]Cov(x,y) = 0[/imath]. However, I am having trouble understanding if two random variables, X and Y, are uncorrelated, it does not necessarily mean they are independent. Could someone also give me a real world example of when two random variables are neither independent nor casually connected? I believe it will help me understand this concept better.",
+        "formulaID": "q_629",
+        "qid": "B.353"
+    },
+    {
+        "context": "Prove that if [MASK] and [MASK] then [MASK]\nSo I am supposed to be proving that if [MASK] and [MASK] are distinct primes and [MASK] and [MASK] then [imath]p_1p_2\\mid a[/imath], and I need to use Euclid's Lemma except as far as I understand Euclid's lemma is the converse of this statement and I have tried for the last few hours to work with Euclid's and GCDs to figure this one out and I just don't know where to start since I can't wrap my head around this one. Can anyone help me out?",
+        "formulaID": "q_637",
+        "qid": "B.354"
+    },
+    {
+        "context": "[MASK]\n Find all functions [MASK] such that [MASK] for all [MASK].  Here is my approach to the problem:  We see that [imath]f(x)=x[/imath] is an obvious solution (Just trying easy linear equations). I think this would be the only solution to the problem.  Am I right? And how to prove that there is no other solution? (Note: I am a beginner at functional equations)",
+        "formulaID": "q_642",
+        "qid": "B.355"
+    },
+    {
+        "context": "How can I evaluate [MASK] where [MASK] is a natural number?\n\nI suddenly interested in the differential equation [MASK] So I tried to calculate for some [MASK]. When [MASK], we know the solution [MASK] Also, for [MASK], [MASK] where [MASK] and [MASK]. Inductively, I could guess that the solution of the differential equation would be in the form [MASK] But I could neither prove that it is the only solution nor get the explicit formula. How should I evaluate [MASK], cause if we know the answer for it, we can evaluate the original expression by differentiating it. Thanks to WolframAlpha, I know the answer for [MASK], [MASK] I think the answer might related to [MASK] and [MASK] of [imath] \\frac {2\\pi}{k} [/imath].",
+        "formulaID": "q_659",
+        "qid": "B.356"
+    },
+    {
+        "context": "How many functions can be used to describe to a finite series?\n\nI was learning more about series today and would like to know if there are existing proofs I could look at about this problem. Basically, if you are given an infinite series representing a function f : [MASK] but only shown the first n numbers, how many functions f, written in terms of n, could you write to represent that series. I'm not including piecewise functions, because I assume that would always be infinite. Take the series [MASK] with 2 numbers given. [MASK] , [MASK] , and [MASK] would all be functions that could fit this series, although they differ after the first two numbers. I believe there are more polynomials that fit this description but I'm not sure how many. My question is, essentially, are there an infinite number of functions for which [MASK] and [MASK], and if this is the case, does this also apply to any finite number of outputs? (e.g. the first n digits of pi written as [imath](3, 1, 4, 1, 5, 9...)[/imath]) If not, could you find out how many possible functions there are?",
+        "formulaID": "q_667",
+        "qid": "B.357"
+    },
+    {
+        "context": "Confusion about the formula of the area of a surface of revolution\n\nBefore I read the formula of the area of revolution which is [MASK], where [MASK], I thought of deriving it myself. I tried to apply the same logic used for calculating the volume of revolution (e.g., [MASK]). My idea is to use many tiny hollow cylinders (inspired from the shell method), each has a surface area of [MASK]:  [MASK] is the circumference of the cylinder, and [MASK] is the height of the cylinder  Their product is the surface area of the hollow (e.g., empty from the inside) cylinder. With this logic, the area is [imath]\\int 2\\pi y dx[/imath]. Where is my mistake? Also it's confusing why for the volume it was enough to partition the object using cylinders and for areas not.",
+        "formulaID": "q_674",
+        "qid": "B.358"
+    },
+    {
+        "context": "Apparent inconsistencies in integration\n\nIn a problem, the substitution [MASK] was made. In the end, the answer was in terms of sines, and to convert back, [MASK] was defined as [MASK] This is a typical example of some stuff about integration I'm struggling to understand; (1) Why are the absolute values of square roots never taken? This is something I keep seeing in every situation involving an integral. (Here, if [imath]\\theta[/imath] is in the third quadrant, sines would be negative and tans would be positive. So this definitely doesn't work for the third quadrant.) (2) Expanding upon the stuff in the parantheses up there, a possible explanation is that while doing trig substitutions, the angle is always a principal angle of the inverse trigonometric operation on whatever you're making the substitution. Is there such a rule?",
+        "formulaID": "q_678",
+        "qid": "B.359"
+    },
+    {
+        "context": "Fourier transform of function [MASK]\nWhat is the Fourier transform of function [imath]f(x) = \\frac{1}{\\vert x \\vert}?[/imath] This is not a homework. I would also appreciate help for calculating it myself.",
+        "formulaID": "q_680",
+        "qid": "B.360"
+    },
+    {
+        "context": "Is a Riemann-integrable function always differentiable?\n\nLet [MASK] be Riemann-integrable and [MASK]. Is this function [MASK] always differentiable? Because the antiderivative is defined as [imath]F'=f[/imath] right, so you would think that it always holds.",
+        "formulaID": "q_684",
+        "qid": "B.361"
+    },
+    {
+        "context": "Kuratowski's Theorem using Axiom of Choice\n\nI can't seem to be able to prove Kuratowski's Theorem using the Axiom of Choice, although they are equivalent assertions. Kuratowski's Lemma: Every partial order has a maximal chain. Axiom of Choice: For every set X of disjoint nonempty sets there exists a set[MASK]such that for every set [MASK] is a singleton. My attempt: Consider any chain [MASK] of the partial order. If [MASK] which is comparable with some element of [MASK], let [MASK]. Iterate this process . If at some point we cannot find such an x, then we have found a maximal chain. Suppose we can find such an [MASK] infinitely, then the sets [MASK] are disjoint singletons. Hence by axiom of choice there exists   for which [MASK]. Inorder to finish the proof, I need to prove something of the form \"If a is comparable with some element of [MASK], then [MASK] s.t. [MASK]\". I can't seem to prove this. P.S: x is comparable with y iff [imath]x R y \\lor y R x[/imath].",
+        "formulaID": "q_697",
+        "qid": "B.362"
+    },
+    {
+        "context": "Non-negative martingale [MASK] a.s. prove that [MASK]\nI need to prove the following statement. Let [MASK] be a non negative martingale such that [MASK] a.s. when [MASK]. Define [MASK]. Prove that for all [MASK] [MASK] I think I've got the easy case  if  [MASK]  Then necessarily [MASK] for the sup property. Then it follows that for [MASK] we have that [imath]P[X^*  \\geq x | \\mathcal{F}_0]= 1[/imath]. But I can't figure out the other case.",
+        "formulaID": "q_709",
+        "qid": "B.363"
+    },
+    {
+        "context": "Inequality in metric space\n\nFor a point [MASK] and a non-empty subset [MASK] of a metric space [MASK], define [MASK] Prove that if [MASK] is another point in [MASK] then [imath]d(x,A)\\leqslant d(x,y)+d(y,A)[/imath]",
+        "formulaID": "q_710",
+        "qid": "B.364"
+    },
+    {
+        "context": "Are Infinite ordinals and their successor equinumerous?\n\nOrdinals in set theory are well-ordered by [MASK] or equivalently [MASK]. If we define all ordinals greater or equal to [MASK] as infinite ordinals. Is it true that every infinite ordinal is equinumerous to its successors. Basically my question is the proof or refutation of the following statement: Given infinite ordinal [MASK]. Does there exist an injection from [MASK] to [imath]\\alpha[/imath].",
+        "formulaID": "q_722",
+        "qid": "B.365"
+    },
+    {
+        "context": "Show that if a normed space [MASK] has a linearly independent subset of [MASK] elements, so does the dual space [MASK]\nShow that if a normed space [MASK] has a linearly independent subset of [MASK] elements, so does the dual space [MASK] My attempt : [MASK] let the subset be  [MASK] Define [MASK] by [MASK] where [MASK] and [MASK] From [MASK] we have  [imath]c_1e_1+...+c_ne_n=0\\implies c_1f(e_1)+...+c_nf(e_n)=0[/imath] After  that im not able to proceed further",
+        "formulaID": "q_736",
+        "qid": "B.366"
+    },
+    {
+        "context": "Prove that [MASK]\nI want to show that for [MASK] a normed space, [MASK] and [MASK]:  Write [MASK] Show that [MASK].  This is my attempt: For the second part: We have that [MASK] and for [MASK] and [MASK] [MASK] Therefore, [MASK] The second inequalyty is that I can't prove, I think that any corollary of Hanh-Banach could help me to prove that  [imath]d(x,M)\\leq \\frac{|\\langle f,x\\rangle|}{||f||} [/imath] Does anyone have any idea and could check my proof? Update I found the same question in this link Orthogonality Relations Exercise, Brezis' Book Functional Analysis",
+        "formulaID": "q_740",
+        "qid": "B.367"
+    },
+    {
+        "context": "Basel Problem approximation error bounded by [MASK]?\n\nIn this answer it is stated that [MASK] Is this statement true as [MASK]? What I've done: If [MASK] is fixed, then I think the answer is almost trivial, because we may set [MASK], so [MASK] therefore [MASK] But is there a constant independent of [imath]x[/imath] that makes this true?",
+        "formulaID": "q_756",
+        "qid": "B.368"
+    },
+    {
+        "context": "Recurrent integral\n\nHow to calculate integral [MASK] I tried partial integration but did not succeed in finding a recurrent relation? Also, tried Moivre formula for [MASK], where [imath]I_n=\\int_{-\\pi}^\\pi \\frac{\\cos{(nx)}}{(1+2^n) \\sin{x}} dx[/imath], but also without success. Any help is welcome. Thanks in advance.",
+        "formulaID": "q_759",
+        "qid": "B.369"
+    },
+    {
+        "context": "What if we take step functions instead of simple functions in the Lebesgue integral\n\nWhen we define the Lebesgue integral, we first define it for simple functions [MASK] (where [MASK] are measurable) as [MASK] and then for [MASK] as [MASK] : s simple and [MASK]. But I was wondering what could go wrong if instead of taking simple functions in the supremum, we would take step functions, i.e. [MASK] where [MASK] are intervals (any type, like [imath](a,b), (a,b], [a,b), [a,b])[/imath]).",
+        "formulaID": "q_768",
+        "qid": "B.370"
+    },
+    {
+        "context": "Can I say [MASK]\nLet [MASK] be continuous functions. Show that [MASK] What I have got so far : [MASK] norm of [MASK], [MASK].[MASK]. (Note: I have replaced supremum with maximum.) [MASK] [MASK] As I have to show that [MASK] : Can I say [MASK]? I'm not sure about that  Because [MASK] I feel I am missing concept to prove [MASK], through which I think I finally can prove [imath]||fg||\\le||f||\\space||g||[/imath] please If you guys could clarify.",
+        "formulaID": "q_782",
+        "qid": "B.371"
+    },
+    {
+        "context": "When did we move from [MASK] to the ring of integers [MASK] and why?\n\nGauss made great progress in number theory in [MASK] by working in [MASK] (or equivalently [MASK]), so much so that we call [MASK] the Gaussian integers now. And it was even known to the old mathematicians that solutions to Pell's equation [MASK] could be better analysed by working in [MASK]. But now in modern number theory we study much more the ring of integers [MASK]. I find this confusing, as if we want to study Pell's equation with [MASK], we have that [MASK] instead of [MASK], which is not what we need. I was under the assumption that modern number theory usually tries to generalise its techniques but I don't see how this is a sensible generalisation and I don't see why the ring of integers is any more useful than just plain old [imath]\\mathbb{Z}\\left[\\sqrt{d}\\right][/imath]. So my question is: Why is the ring of integers defined the way it is?",
+        "formulaID": "q_795",
+        "qid": "B.372"
+    },
+    {
+        "context": "Show that [MASK] is irrational if [MASK] is not a perfect square, using the method of infinite descent.\n\nShow that [MASK] is irrational if [MASK] is not[MASK]perfect square, using the method of infinite descent. I know how to prove this by doing a contradiction proof and using The Fundamental Theorem of Arithmetic, but now I'm asked to use infinite descent to prove it. Then the very next problem says \"Why does the method of the text fail to show that [MASK] is irrational if [MASK] is a perfect square?\" I'm confused by this. Any hints or solutions are greatly appreciated. I was thinking of the standard argument, let [MASK] where [MASK] and then through some algebra arrive at a common factor for both   and [MASK] which contradicts the fact that [imath]gcd(a,b)=1[/imath] and so we can apply this over and over again, but then I don't understand how the next problem says to explain why this method fails.",
+        "formulaID": "q_806",
+        "qid": "B.373"
+    },
+    {
+        "context": "Finding all monic complex polynomials [MASK] such that [MASK]\n Find all monic complex polynomials [MASK] such that [MASK].  My progress so far is that I have find that for degree 1, [MASK] are the only ones. For degree 2, they are [imath]P(x)=x^2+x+1, x^2, x^2-1, x^2-x, x^2-2x+1[/imath]. I also prove that these are only solutions for degree 1 and 2. However I do not see how this generalizes. Any help please?",
+        "formulaID": "q_812",
+        "qid": "B.374"
+    },
+    {
+        "context": "Can anyone help me solve this diophantine equation?\n\nFind all integer solutions to [imath]x^2 + 7 = 2^n[/imath]. I've done the case where n is an even integer but now I'm a little lost. Could anyone walk me through the solution?",
+        "formulaID": "q_813",
+        "qid": "B.375"
+    },
+    {
+        "context": "Evaluating the limit of a sqrt function using Riemann Sums\n\n[imath]\\lim\\limits_{n\\to\\infty}\\dfrac{\\sqrt1+\\sqrt2+\\sqrt3+\\ldots+\\sqrt n}{n\\sqrt n}[/imath] I am having trouble doing this problem. I have attempted to take the Riemann Sum but cannot get past the square root. I also tried to upper-bound and lower-bound it, but I got stuck doing this.",
+        "formulaID": "q_814",
+        "qid": "B.376"
+    },
+    {
+        "context": "What is [MASK]?\n\nIn C.H. Edwards's Advanced Calculus of Several Variables he defines the ordinate set [MASK] of a function [MASK] as the set of points between [MASK] and the graph of [MASK] including the points of evaluation, [MASK] and the points in the graph [MASK].  Later on he defines a set [MASK] where [MASK] is the boundary of [MASK]  The intent seems clear.  First [MASK] where [MASK] means Cartesian product.  Then [MASK] But long ago I learned that [MASK] is the set of all real number n-tuples, and [MASK] is the set of all (n+1)-tuples, so elements of [MASK] are not elements of [MASK] and [MASK] is not a subset of [MASK] So am I correct in concluding that [imath]\\mathbb{R}^{n+1}-\\mathbb{R}^n[/imath] is not really the relative complement of the two sets?",
+        "formulaID": "q_834",
+        "qid": "B.377"
+    },
+    {
+        "context": "Do exponent rules follow different rules from radicals\n\nDoes [MASK] not equal [imath]\\sqrt{\\left(-3\\right)^2}[/imath]?",
+        "formulaID": "q_836",
+        "qid": "B.378"
+    },
+    {
+        "context": "Properties of a set of all isomorphisms [MASK]\nI'm kinda stuck with this task. Let [MASK] be a group and [MASK] the set of all isomorphisms [MASK]. I first want to show that [MASK] is also a group. I believe I've shown that all the properties of a group is fulfilled with [MASK]: i) Assume that [MASK] and [MASK]. Then [MASK], since [MASK] is an ismorphism. [MASK] since [MASK] is an ismorphism. Then [MASK] hence [MASK] ii) [MASK] is an isomorphism [MASK]. iii) [MASK] is an isomorphism [MASK], one can show that [MASK] is also an isomorphism, [MASK]. Now, assume that [MASK], then I want to show that [MASK] is abelian and each element has an order of 1 or 2. Im kinda lost with that [MASK]. If [MASK] then [MASK] due to previous result, should not [MASK] imply that [imath] f = f^{-1} = id[/imath]? And how do I move forward from this? Any hints is muy appreciated!",
+        "formulaID": "q_863",
+        "qid": "B.379"
+    },
+    {
+        "context": "If [MASK], then [MASK] admits two solutions\n\n Let [MASK] be a continuous function.  If [MASK], then [MASK] admits two solutions in [MASK]  I try to show if [imath]f(x)>0[/imath] and then get the contradiction but I failed to prove that, so maybe can someone help me with that? thanks in advance.",
+        "formulaID": "q_870",
+        "qid": "B.380"
+    },
+    {
+        "context": "[MASK] is countable if [MASK] are countable\n\nSuppose that [MASK] are countable sets. Show that the cartesian product [MASK] is countable. My attempt: Sets are said to be countable if they are finite or if they have the same cardinality as some subset of [MASK] (i.e. we can find some bijection [MASK] or [MASK] where [MASK]). Assume that [MASK] are countable sets. Then, there exists bijections [MASK] for [MASK]. Define [imath]g: \\mathbb{N} \\rightarrow A[/imath] as follows My issue arises here in finding such a bijective function without it being too complicated. How would I go about finding one? I am also open to any suggestions. Any assistance is welcomed.",
+        "formulaID": "q_882",
+        "qid": "B.381"
+    },
+    {
+        "context": "Set of functions from [MASK] to [MASK] is countable?\n\nLet [MASK], and let [MASK] .Is the set  V countable?  Justify your answer. My instinct is to say that [MASK] is uncountable, and to prove this using a diagonalization argument, i.e. create a table of values of the functions [MASK] for natural numbers [MASK] and define a function [MASK] where it takes all values in the diagonals of the table [MASK] and flips them, and then show that [imath]v_{m}[/imath] cannot appear anywhere in the list. Is my guess correct, and if so would this be a reasonable approach to the problem?",
+        "formulaID": "q_892",
+        "qid": "B.382"
+    },
+    {
+        "context": "Automorphisms of the disk without the maximum principle\n\nFor pedagogical purposes, I am looking for an elementary proof (i.e. without resorting to the maximum principle) that [MASK] maps the unit disk into itself when [MASK]. The usual argument (at least usual for me) is to look at [MASK] and check that [MASK]. Then we are done by the maximum principle and the fact that [imath]f_a(a)=0[/imath]. However, I cannot help but think that there should be an elementary way to do this, using only basic facts about complex numbers such as the triangle inequality. Unfortunately I am running into circles.",
+        "formulaID": "q_897",
+        "qid": "B.383"
+    },
+    {
+        "context": "What does this bracket notation mean?\n\nI am currently taking MIT6.006 and I came across this problem on the problem set. Despite the fact I have learned Discrete Mathematics before, I have never seen such notation before, and I would like to know what it means and how it works, Thank you: [imath] f_3(n) = \\binom n2[/imath] (Transcribed from screenshot)",
+        "formulaID": "q_898",
+        "qid": "B.384"
+    },
+    {
+        "context": "Properties of size function in a general Euclidean domain\n\nIn ring theory a given ring [MASK] is called a Euclidean domain if there exists a function [MASK] which satisfies the division algorithm i.e. [MASK] if [MASK] then there exists [MASK] such that  [MASK] and either [MASK] or [MASK] Now I want to ask if we can prove, using just this definition that an element of larger degree won't divide an element of smaller degree. In specific rings such as (i) the integers we can say[MASK] [MASK] ii) polynomials where[MASK][imath]\\sigma(ab)=\\sigma(a)+\\sigma(b)[/imath] So in both the above cases the size of product of two elements will always be greater than or equal to the size of individual elements and hence the larger element can never divide the smaller element. But is this true in general for all Euclidean domains ? And how will we prove that",
+        "formulaID": "q_902",
+        "qid": "B.385"
+    },
+    {
+        "context": "Prove that [MASK]\nIn Wikipedia's proof of Riemann's functional equation for the zeta function (here, and click \"Show Proof\"), I find the assertion that [MASK] I can't work out how this works. Is it to do with Jacobi theta functions? Mathematica (which seems to use Jacobi's original notation) simplifies the expression on the left hand side above to the Jacobi elliptic theta function (Wikipedia here, plus the 'Auxiliary Functions' section that follows) [MASK] Wikipedia defines [MASK] But setting [MASK] and [MASK] then gives [imath]\\vartheta(0,e^{-\\pi  x}) = \\sum _{n=-\\infty }^{\\infty } e^{\\pi i n^2 e^{-\\pi  x}}[/imath] which is clearly not equivalent to the original expression. I suspect that this may have something to do with nomes, which Wikipedia mentions but I cannot get my head around. So, my two questions are:  How do I prove the original equivalence? What am I doing wrong in relation to the Jacobi theta function? ",
+        "formulaID": "q_915",
+        "qid": "B.386"
+    },
+    {
+        "context": "Any positive integer greater than [MASK] is a nonnegative linear combination of [MASK] and [MASK]. My solution\n\nLet [MASK], then there exists [MASK], such that [MASK]. Now analyzing by cases we have:  If [MASK], then [MASK] If [MASK], then [MASK] If [MASK], then [MASK] If [MASK], then [MASK] If [MASK], then [MASK]  Thus, every positive number can be expressed as a linear combination of [MASK] and [MASK]. Now using that [MASK], so we have: [MASK] So by increasing over the values \u200b\u200bthat [MASK] takes, we have: [MASK] But [MASK]. Thus we have that every positive integer greater than or equal to [MASK] is a non-negative linear combination of [MASK] and [MASK]. Finally, let's look at the cases that are still unverified, which are [MASK], [MASK] and [MASK]. [MASK] Therefore, any positive integer greater than [MASK] is a nonnegative linear combination of [MASK] and [imath]4[/imath]. I think this is the correct solution, I await your comments. If anyone has a different solution or correction of my work I will be grateful.",
+        "formulaID": "q_942",
+        "qid": "B.387"
+    },
+    {
+        "context": "Linear algebra find [MASK]\nGiven the linear system: [MASK] for which values of [MASK] has the system (2): (a) No solutions (b) A unique solution. (c) Infinitely many solutions. I've been trying echelon form where i switched [MASK] with [MASK] and then i switched [MASK] with [MASK] So I have [imath]\\left[\\begin{array}{ccc|c}1&10&-6&1\\\\1&k&-1&2\\\\2&-1&k&5\\end{array}\\right][/imath] but then I'm stuck and don't know how to get any further.",
+        "formulaID": "q_958",
+        "qid": "B.388"
+    },
+    {
+        "context": "Convergence of a Special Series as N is large\n\nI'm trying to find a general formula for the series and x is a constant: [MASK] I have deduced the general formula for the sum. [imath]\\frac{(1+r)^{N+1}-(1+r)-rN}{r^2(1+r)^N}[/imath] Will this sum converge to some value when N is very large? Could someone explain how to deal with it?",
+        "formulaID": "q_960",
+        "qid": "B.389"
+    },
+    {
+        "context": "Prove that if [MASK] converges to [MASK], [MASK] converges to [MASK] too\n\nBy the sequence [MASK], define a new sequence [MASK] such that [MASK]. If [MASK], how can I show that [MASK]? Original post had ``If [imath]\\lim_{n\\rightarrow\\infty}x_n=\\omega[/imath], ...\"",
+        "formulaID": "q_970",
+        "qid": "B.390"
+    },
+    {
+        "context": "[MASK] inequality\n\nShow that for each [MASK] [MASK] where [MASK] is a constant given by [MASK] I've tried to use other inequalities for the proof of this one but I still get stuck for the case of [imath]2^{r-1}[/imath].",
+        "formulaID": "q_975",
+        "qid": "B.391"
+    },
+    {
+        "context": "How to compute inverse polynomials modulo an integer\n\nI am working with polynomials in the ring [MASK], so only polynomials with degree at most [MASK] are allowed, and multiplications must be reduced modulo [MASK]. The thing is that I have a polynomial [MASK] and I want to compute its inverse modulo an integer [MASK], [MASK], such that [MASK] How could I do that? Any known algorithm? I have heard about the extended Euclidean algorithm, but I'm not quite sure how to use it, for example, given [imath]f(X) = -1+X+X^2-X^4+X^6+X^9-X^{10}[/imath].",
+        "formulaID": "q_984",
+        "qid": "B.392"
+    },
+    {
+        "context": "Prove an entire function is a constant under an inequality\n\nf is an entire function, suppose [imath]|f(z^{2})| \\leq  2|f(z)|[/imath] for all C, then f is a constant. I 'm trying to use Liouville's theorem, but it seems that it isn't helpful.",
+        "formulaID": "q_985",
+        "qid": "B.393"
+    },
+    {
+        "context": "Trying to find the [MASK] in epsilon-delta continuity proof.\n\nI am trying to prove the following function is continuous for all irrationals: [MASK] The question assumes [MASK] is in lowest terms. I have shown that it is discontinuous for all rationals, and now I believe I have to either use the [MASK] definition of continuity or sequential continuity to show the function is continuous for when [MASK] is irrational. I split my attempt into two cases: Our value of [MASK] is irrational, then I want: [MASK] [MASK] is irrational here. Using that [MASK] is irrational I get that [MASK] as does [MASK] so no matter the [MASK] we have our condition for continuity  satisfied as [MASK] for all [MASK] Our value of [MASK] is rational i.e. [MASK] subbing in we want: [MASK] I am struggling to find the [MASK] necessary. I am able to bound [MASK] by [MASK] if I say that [MASK]. However I do not know how to find a [imath]\\delta[/imath] to yield the second inequality. Should I change my approach to sequential continuity?",
+        "formulaID": "q_1007",
+        "qid": "B.394"
+    },
+    {
+        "context": "Why we have to check both additivity and homogenity for linearity?\n\n[MASK] over [MASK] with [MASK] and [MASK]. Additivity: [MASK] Homogenity: [MASK] I have a visual understanding that a function is linear if the structure is kept while projecting it with [imath]f[/imath] but why it is not enough to check if the function is additive? I would be glad to have some easy examples and an intuition why we would have to check both conditions.",
+        "formulaID": "q_1014",
+        "qid": "B.395"
+    },
+    {
+        "context": "What is the MLE [MASK] of [MASK]?\n\nI have that [MASK] are from a rv [MASK] that has the density function [MASK] for [MASK] and [MASK] otherwise. Ihave to determine the MLE of [MASK] of [MASK]  Here is how I have done it:  [MASK]  [MASK]  Is this correct? and also how do I calculate the CDF [MASK], the pdf [MASK] and the expectation [MASK] of the maximum likelihood estimator [imath]\\theta^*[/imath]?",
+        "formulaID": "q_1029",
+        "qid": "B.396"
+    },
+    {
+        "context": "If the limit does not converge, can the sum? Or, how could the sum converge?\n\nAlright, I thought I had seen everything but last night I saw this identity (`twas attributed to Ramanujan), [MASK] Then I saw a proof that was seemingly correct. So alright, I believe it, hey it is no crazier than having infinities of different sizes and I finally have some closure with that fact. But then, I recalled the benchmark induction proof everyone learns, [MASK] Then kicks in the remains of all those calculus courses I once took, making me thing that, hey wait! We have this, [MASK] I think in this case we said the limit does not exist or the function diverges (correct me if I am wrong!) But... but... according to the identity above, [MASK] But then shouldn't, [imath] \\lim_{n\\rightarrow\\infty} \\frac{n(n+1)}{2} \\stackrel{?}{=} -\\frac{1}{12} [/imath] So what I am seeing here is that even if the limit does not converge, the sum does. Also, a long time ago I remember being told that the sum of two positive integers is always positive. Furthermore, addition is suppose to be closed under integers right? Here we not only have a negative number as a result of the sum of positive integers but a negative non-integer at that.",
+        "formulaID": "q_1034",
+        "qid": "B.397"
+    },
+    {
+        "context": "A question on differentiability at a point\n\nIs a continuous function differentiable at [MASK] if the limit of its derivative has a value at that point? That is, if [MASK] Intuitively, the slopes of the tangents approach the same value and since the function is continuous a jump-discontinuity isn't possible so it appears the slope at the point should be [imath]L[/imath] too. However, I cannot seem to locate such a theorem, so I suspect my intuition is wrong. Is it?",
+        "formulaID": "q_1037",
+        "qid": "B.398"
+    },
+    {
+        "context": "Disjoint axis-aligned rectangles in the plane\n\nLet [MASK] be some set of axis-aligned rectangles in the plane, each pair of which has empty intersection. Prove that [MASK] is a countable set. (An axis-aligned rectangle is a set of the form [MASK] for [MASK] such that [MASK] and [MASK].) Attempt: I tried using the density of the [MASK] in [imath](\\mathbb{R},\\leq)[/imath], but without any success.",
+        "formulaID": "q_1045",
+        "qid": "B.399"
+    },
+    {
+        "context": "What is the probability hat two particular players verse in Wimbledon if it begins with [MASK] players?\n\nSixteen people play in the quarter-finals at Wimbledon. The winner of the quarter-finals play again in the semi-final to decide who enters the finals. What is the probability that two particular people will play each other if the tournament begins with 16 players? So I have so far (case 1 + case 2) = verse player in quarter OR verse player in semi = [MASK] I'm not sure what else to include in the second case Also the third part of the question asks What is the probability when [MASK] players begin? The worked solutions show [MASK] which I cannot get. Even symbolab doesn't show the same simplification. As with the previous question, I do not understand the [imath]\\left(\\frac{1}{2^{n-2}}\\right)^2[/imath]",
+        "formulaID": "q_1050",
+        "qid": "B.400"
+    }
+]
