@@ -567,7 +567,7 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
             query_cnt[qid] += 1
             if query_cnt[qid] > topk:
                 continue
-            print(qid, 'TREC file line:', i)
+            #print(qid, 'TREC file line:', i)
             select_sentences(lookup_index, batch, fields, qid2query,
                 min_select_sent, max_select_sent)
             def print_batches(batch):
