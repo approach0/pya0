@@ -89,9 +89,11 @@ def concatenate_run_files(A, B, n, topK, verbose=False):
     print('Output:', output_file)
 
 
-def normalized_scores(docs):
+def normalized_scores(docs, dryrun=False):
     if len(docs) == 0:
-        return docs
+        return {}
+    elif dryrun:
+        return {doc['docid']: (doc['score'], doc['_']) for doc in docs}
     doc_scores = [d['score'] for d in docs]
     min_score = min(doc_scores)
     max_score = max(doc_scores)
@@ -103,13 +105,21 @@ def normalized_scores(docs):
     return docs
 
 
-def interpolate_generator(runs1, w1, runs2, w2, whichtokeep="both", verbose=False):
+def interpolate_generator(runs1, w1, runs2, w2, whichtokeep="both", verbose=False, topk=1_000, normalize=True):
     for qid in runs1.keys():
-        docs1 = normalized_scores(runs1[qid]) if qid in runs1 else {} # docID -> (score, _)
-        docs2 = normalized_scores(runs2[qid]) if qid in runs2 else {} # docID -> (score, _)
-        overlap = set(docs1.keys()) & set(docs2.keys()) # unique docID
+        dryrun = not normalize
+        docs1 = normalized_scores(runs1[qid], dryrun=dryrun) if qid in runs1 else {} # docID -> (score, _)
+        docs2 = normalized_scores(runs2[qid], dryrun=dryrun) if qid in runs2 else {} # docID -> (score, _)
 
+        # first, merge the scores for the overlapping set
+        overlap = set(docs1.keys()) & set(docs2.keys()) # unique docID
         combined = [(d, w1 * docs1[d][0] + w2 * docs2[d][0], docs1[d][1], docs2[d][1]) for d in overlap]
+        if len(combined) > 0:
+            print(f'WARN: overlap for query "{qid}":', len(combined))
+        elif len(docs1) < topk or len(docs2) < topk:
+            print(f'WARN: unique docIDs for query "{qid}" is less than {topk}:',
+                len(docs1), len(docs2))
+
         # for those docs cannot be found on the otherside, treat the score from the otherside as 0
         docs_only_in_docs1 = [
             (d, w1 * docs[0], docs[1], None) for d, docs in docs1.items() if d not in overlap
@@ -129,21 +139,22 @@ def interpolate_generator(runs1, w1, runs2, w2, whichtokeep="both", verbose=Fals
             # extend nothing
             assert whichtokeep == "overlap"
 
-        combined = sorted(combined, key=lambda kv: (kv[1], kv[0]), reverse=True)[:1000]
+        combined = sorted(combined, key=lambda kv: (kv[1], kv[0]), reverse=True)[:topk]
         yield qid, combined
 
 
-def merge_run_files(f1, f2, alpha, topk, verbose=False, option="both", merge_null_field=True, out_prefix=''):
+def merge_run_files(runfile1, runfile2, alpha,
+    topk=1_000, verbose=False, option="both", merge_null_field=True, out_prefix='', normalize=True):
     available_options = ["overlap", "run1", "run2", "both"]
     assert option in available_options
-    runs1, run_name1 = parse_trec_file(f1)
-    runs2, run_name2 = parse_trec_file(f2)
-    f_out = f"mergerun-merged-{run_name1}-{run_name2}-alpha{alpha}-top{topk}-{option}.run"
+    runs1, run_name1 = parse_trec_file(runfile1)
+    runs2, run_name2 = parse_trec_file(runfile2)
+    f_out = f"mergerun-{run_name1}-{run_name2}-alpha{alpha}.run"
     f_out = f_out.replace('.', '_')
     f_out = out_prefix + f_out
     with open(f_out, "w") as f:
         for qid, combined in interpolate_generator(
-            runs1, alpha, runs2, 1 - alpha, whichtokeep=option
+            runs1, alpha, runs2, 1 - alpha, whichtokeep=option, topk=topk, normalize=normalize
         ):
             for rank, (doc, score, _1, _2) in enumerate(combined):
                 if merge_null_field:

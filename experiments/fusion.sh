@@ -25,7 +25,7 @@ for eval_run in "${fusion_list[@]}"; do
     fi
 
     for i in {1..9}; do
-        python utils/mergerun.py $run1 $run2 0.$i 1000 --out_prefix ${kfold_dir}/
+        python utils/mergerun.py $run1 $run2 0.$i --out_prefix ${kfold_dir}/
     done
 
     python utils/crossvalidate.py split_run_files --kfold $kfold $kfold_dir/* --seed 1234
