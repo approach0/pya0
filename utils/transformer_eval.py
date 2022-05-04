@@ -534,7 +534,8 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
     # output config
     from .eval import TREC_output
     output_dir = config['DEFAULT']['run_outdir']
-    output_filename = f'{section}.run'
+    trecfile_basename = os.path.basename(input_trecfile)
+    output_filename = f'{section}--{trecfile_basename}'
     output_path = os.path.join(output_dir, output_filename)
     os.makedirs(output_dir, exist_ok=True)
 
