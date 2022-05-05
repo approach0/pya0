@@ -453,7 +453,7 @@ def psg_scorer__colbert_default(tok_ckpoint, model_ckpoint, config, gpu_dev):
 
 
 def select_sentences(lookup_index, batch, fields, qid2query,
-                     min_select_sent, max_select_sent):
+                     min_select_sent, max_select_sent, always_start_0):
     import collection_driver
     qid, _, docid, rank, score, runname = fields
     doc = collection_driver.docid_to_doc(lookup_index, docid)
@@ -465,10 +465,11 @@ def select_sentences(lookup_index, batch, fields, qid2query,
             from nltk.tokenize import sent_tokenize
             from nltk.tokenize.treebank import TreebankWordDetokenizer
             sentences = sent_tokenize(doc)
-            N = len(sentences)
-            for i in range(N):
-                for wind in range(min_select_sent, max_select_sent):
-                    if i + wind > N:
+            i_range = 1 if always_start_0 else len(sentences)
+            wind_max = len(sentences) if always_start_0 else max_select_sent
+            for i in range(i_range):
+                for wind in range(min_select_sent, wind_max):
+                    if i + wind > len(sentences):
                         yield 0, 0, doc # in case no sentence been produced.
                         break
                     sel_sents = sentences[i:i+wind]
@@ -550,6 +551,7 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
     # return sentence-level selection?
     max_select_sent = config.getint(section, 'max_select_sentence')
     min_select_sent = config.getint(section, 'min_select_sentence')
+    always_start_0 = config.getboolean(section, 'always_start_0', fallback=True)
     topk = config.getint(section, 'topk')
 
     # map TREC input to output
@@ -570,7 +572,7 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
                 continue
             #print(qid, 'TREC file line:', i)
             select_sentences(lookup_index, batch, fields, qid2query,
-                min_select_sent, max_select_sent)
+                min_select_sent, max_select_sent, always_start_0)
             def print_batches(batch):
                 print([
                     (b['qid'], b['rank'], b['i_sent'], b['n_sent'])
