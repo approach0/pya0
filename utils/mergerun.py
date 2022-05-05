@@ -115,9 +115,9 @@ def interpolate_generator(runs1, w1, runs2, w2, whichtokeep="both", verbose=Fals
         overlap = set(docs1.keys()) & set(docs2.keys()) # unique docID
         combined = [(d, w1 * docs1[d][0] + w2 * docs2[d][0], docs1[d][1], docs2[d][1]) for d in overlap]
         if len(combined) > 0:
-            print(f'WARN: overlap for query "{qid}":', len(combined))
+            print(f'INFO: overlap for query "{qid}":', len(combined))
         elif len(docs1) < topk or len(docs2) < topk:
-            print(f'WARN: unique docIDs for query "{qid}" is less than {topk}:',
+            print(f'WARNING: unique docIDs for query "{qid}" is less than {topk}:',
                 len(docs1), len(docs2))
 
         # for those docs cannot be found on the otherside, treat the score from the otherside as 0
