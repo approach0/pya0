@@ -37,17 +37,21 @@ def parse_task3_file(file_path):
     run_per_topic = dict()
     run_name = None
     with open(file_path, 'r') as fh:
-        for line in fh.readlines():
+        for l, line in enumerate(fh.readlines()):
             line = line.rstrip()
             sp = '\t' if line.find('\t') != -1 else None
             fields = line.split(sp)
-            qryID = fields[0]
-            _     = fields[4]
-            docid = eval(fields[4])[0]
-            rank  = fields[1]
-            score = fields[2]
-            run   = fields[3]
-            content = fields[5]
+            try:
+                qryID = fields[0]
+                _     = fields[4]
+                docid = eval(fields[4])[0]
+                rank  = fields[1]
+                score = fields[2]
+                run   = fields[3]
+                content = fields[5]
+            except IndexError as e:
+                print(str(e), f'@ line{l}:', fields)
+                quit(1)
             if run_name is None:
                 run_name = run
             elif run_name != run:
