@@ -4,7 +4,7 @@ import os
 import re
 from eval import gen_topics_queries
 from eval import get_qrels_filepath, parse_qrel_file
-from mergerun import parse_trec_file
+from mergerun import parse_trec_file, parse_task3_file
 from preprocess import preprocess_query
 import collection_driver
 
@@ -137,12 +137,15 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
             fh.write('</body></html>\n')
 
 
-def visualize_hits(index, run_name, qid, query, hits, qrels=None, scores=None):
+def visualize_hits(index, run_name, qid, query, hits, qrels=None, scores=None, ver=None):
     # lookup document content
     for hit in hits:
-        docid = hit['docid'] # must be internal docid
-        doc = collection_driver.docid_to_doc(index, docid)
-        hit['content'] = doc['content']
+        if ver != 'task3':
+            docid = hit['docid'] # must be internal docid
+            doc = collection_driver.docid_to_doc(index, docid)
+            hit['content'] = doc['content']
+        else:
+            hit["trec_docid"] = hit['docid']
     # output HTML preview
     if qrels:
         output_html_topic_run(run_name, qid, query, hits, qrels=qrels, judged_only=True, scores=scores)
@@ -150,8 +153,12 @@ def visualize_hits(index, run_name, qid, query, hits, qrels=None, scores=None):
         output_html_topic_run(run_name, qid, query, hits, qrels=qrels, judged_only=False, scores=scores)
 
 
-def visualize_collection_runs(index, collection, tsv_file_path):
-    run_per_topic, _ = parse_trec_file(tsv_file_path)
+def visualize_collection_runs(index, collection, tsv_file_path, ver):
+    if ver == 'task3':
+        print(tsv_file_path)
+        run_per_topic, _ = parse_task3_file(tsv_file_path)
+    else:
+        run_per_topic, _ = parse_trec_file(tsv_file_path)
     scores_file_path = '.'.join(tsv_file_path.split('.')[0:-1]) + '.scores'
     scores = parse_scores_file(scores_file_path)
     run_name = os.path.basename(tsv_file_path)
@@ -161,14 +168,15 @@ def visualize_collection_runs(index, collection, tsv_file_path):
     for i, (qid, query, _) in enumerate(gen_topics_queries(collection)):
         print(qid, query)
         topic_hits = run_per_topic[qid] if qid in run_per_topic else []
-        collection_driver.TREC_reverse(collection, index, topic_hits)
-        visualize_hits(index, run_name, qid, query, topic_hits, qrels=qrels, scores=scores)
+        if ver != 'task3':
+            collection_driver.TREC_reverse(collection, index, topic_hits)
+        visualize_hits(index, run_name, qid, query, topic_hits, qrels=qrels, scores=scores, ver=ver)
 
 
-def visualize(index, tsv_file_path, collection=None, adhoc_query=None):
+def visualize(index, tsv_file_path, collection=None, adhoc_query=None, ver=None):
     print(f'\n\t Visualize runfile: {tsv_file_path} ...\n')
     if collection and not adhoc_query:
-        visualize_collection_runs(index, collection, tsv_file_path)
+        visualize_collection_runs(index, collection, tsv_file_path, ver)
     elif collection and adhoc_query:
         run_name = os.path.basename(tsv_file_path)
         run_per_topic, _ = parse_trec_file(tsv_file_path)

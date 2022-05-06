@@ -33,6 +33,38 @@ def parse_trec_file(file_path):
     return run_per_topic, run_name
 
 
+def parse_task3_file(file_path):
+    run_per_topic = dict()
+    run_name = None
+    with open(file_path, 'r') as fh:
+        for line in fh.readlines():
+            line = line.rstrip()
+            sp = '\t' if line.find('\t') != -1 else None
+            fields = line.split(sp)
+            qryID = fields[0]
+            _     = fields[4]
+            docid = eval(fields[4])[0]
+            rank  = fields[1]
+            score = fields[2]
+            run   = fields[3]
+            content = fields[5]
+            if run_name is None:
+                run_name = run
+            elif run_name != run:
+                print(f'ERR: Run name not the same in TREC file: {run_name} and {run}.')
+                exit(1)
+            if qryID not in run_per_topic:
+                run_per_topic[qryID] = []
+            run_per_topic[qryID].append({
+                'docid': docid,
+                '_': _,
+                'content': content,
+                'rank': int(rank),
+                'score': float(score)
+            })
+    return run_per_topic, run_name
+
+
 def parse_qrel_file_to_run(file_path):
     run_per_topic = defaultdict(list)
     with open(file_path, 'r') as fh:

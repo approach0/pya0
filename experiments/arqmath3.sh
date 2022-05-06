@@ -62,14 +62,18 @@ rm -f mergerun-*
 #swap_back mergerun-contextual_colbert-pya0-*
 
 ### Task 3
-MAPRUN='python -m pya0.transformer_eval maprun ./utils/transformer_eval.ini'
+#MAPRUN='python -m pya0.transformer_eval maprun ./utils/transformer_eval.ini'
+#
+#$MAPRUN maprun_arqmath3_to_colbert__select_sentence ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_nostemmer-alpha0_5-task1.run --device a6000_7
+#$MAPRUN maprun_arqmath3_to_colbert__select_sentence ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task1.run --device a6000_7
+#$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_nostemmer-alpha0_5-task1.run --device a6000_7
+#$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task1.run --device a6000_7
+#
+#$MAPRUN maprun_arqmath3_to_colbert__select_sentence ./runs/rerank/maprun_arqmath3_to_colbert--pya0-nostemmer-task1.run --device a6000_7
+#$MAPRUN maprun_arqmath3_to_colbert__select_sentence ./runs/rerank/maprun_arqmath3_to_colbert--pya0-porterstemmer-task1.run --device a6000_7
+#$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/rerank/maprun_arqmath3_to_colbert--pya0-nostemmer-task1.run --device a6000_7
+#$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/rerank/maprun_arqmath3_to_colbert--pya0-porterstemmer-task1.run --device a6000_7
 
-$MAPRUN maprun_arqmath3_to_colbert__select_sentence ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_nostemmer-alpha0_5-task1.run --device a6000_7
-$MAPRUN maprun_arqmath3_to_colbert__select_sentence ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task1.run --device a6000_7
-$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_nostemmer-alpha0_5-task1.run --device a6000_7
-$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task1.run --device a6000_7
-
-$MAPRUN maprun_arqmath3_to_colbert__select_sentence ./runs/rerank/maprun_arqmath3_to_colbert--pya0-nostemmer-task1.run --device a6000_7
-$MAPRUN maprun_arqmath3_to_colbert__select_sentence ./runs/rerank/maprun_arqmath3_to_colbert--pya0-porterstemmer-task1.run --device a6000_7
-$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/rerank/maprun_arqmath3_to_colbert--pya0-nostemmer-task1.run --device a6000_7
-$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/rerank/maprun_arqmath3_to_colbert--pya0-porterstemmer-task1.run --device a6000_7
+### Visualize submission runs
+LOOKUP_INDEX=/store2/scratch/w32zhong/arqmath3/math-dense-retrievers/indexes/index-ColBERT-arqmath3/
+python -m pya0 --index docdict:$LOOKUP_INDEX --collection arqmath-2022-task1-or-task3-origin --visualize-task3 ./runs/maprun_arqmath3_to_colbert__select_sentence--colbert-pya0nostemmer-alpha0_5-task1.run
