@@ -2,6 +2,7 @@ import re
 from nltk.stem import LancasterStemmer, PorterStemmer
 from nltk.tokenize import word_tokenize
 from nltk.tokenize import RegexpTokenizer
+from nltk.tokenize import sent_tokenize
 from nltk.tokenize.treebank import TreebankWordDetokenizer
 from nltk.corpus import stopwords
 from _pya0 import tokenize as tex_tokenize
@@ -166,6 +167,16 @@ def tokenize_content(content, whitelist=[]):
             tok = last + piece + next_
             tokens.append(tok)
     return tokens
+
+
+def tokenize_content_by_sentence(content):
+    sentences = []
+    for type_, piece, last, next_ in iter_imath_splits(content):
+        if type_ == 'text':
+            sentences += sent_tokenize(piece)
+        else:
+            sentences.append(last + piece + next_)
+    return sentences
 
 
 def tokenize_query(query):

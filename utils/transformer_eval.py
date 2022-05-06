@@ -462,9 +462,9 @@ def select_sentences(lookup_index, batch, fields, qid2query,
         if max_select_sent == 0:
             yield 0, 0, doc
         else:
-            from nltk.tokenize import sent_tokenize
+            from preprocess import tokenize_content_by_sentence
             from nltk.tokenize.treebank import TreebankWordDetokenizer
-            sentences = sent_tokenize(doc)
+            sentences = tokenize_content_by_sentence(doc)
             i_range = 1 if always_start_0 else len(sentences)
             wind_max = len(sentences) if always_start_0 else max_select_sent
             for i in range(i_range):
