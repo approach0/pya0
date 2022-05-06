@@ -140,12 +140,19 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
 def visualize_hits(index, run_name, qid, query, hits, qrels=None, scores=None, ver=None):
     # lookup document content
     for hit in hits:
-        if ver != 'task3':
+        if ver is None:
             docid = hit['docid'] # must be internal docid
             doc = collection_driver.docid_to_doc(index, docid)
             hit['content'] = doc['content']
-        else:
+        elif ver == 'contextual_task2':
+            formulaID = hit['docid']
+            postID = hit['_'] # postID
+            doc = collection_driver.docid_to_doc(index, postID)
+            hit['content'] = doc['content']
+        elif ver == 'task3':
             hit["trec_docid"] = hit['docid']
+        else:
+            raise NotImplementedError
     # output HTML preview
     if qrels:
         output_html_topic_run(run_name, qid, query, hits, qrels=qrels, judged_only=True, scores=scores)
@@ -154,11 +161,14 @@ def visualize_hits(index, run_name, qid, query, hits, qrels=None, scores=None, v
 
 
 def visualize_collection_runs(index, collection, tsv_file_path, ver):
-    if ver == 'task3':
-        print(tsv_file_path)
+    if ver is None:
+        run_per_topic, _ = parse_trec_file(tsv_file_path)
+    elif ver == 'contextual_task2':
+        run_per_topic, _ = parse_trec_file(tsv_file_path)
+    elif ver == 'task3':
         run_per_topic, _ = parse_task3_file(tsv_file_path)
     else:
-        run_per_topic, _ = parse_trec_file(tsv_file_path)
+        raise NotImplementedError
     scores_file_path = '.'.join(tsv_file_path.split('.')[0:-1]) + '.scores'
     scores = parse_scores_file(scores_file_path)
     run_name = os.path.basename(tsv_file_path)

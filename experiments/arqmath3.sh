@@ -76,11 +76,14 @@ rm -f mergerun-*
 
 ### Visualize submission runs
 
-LOOKUP_INDEX=/tuna1/scratch/w32zhong/mnt-index-arqmath3_task2_v3.img
-python -m pya0 --index $LOOKUP_INDEX --collection arqmath-2022-task2-official --visualize-run ./runs/search_arqmath3_task2_colbert_context_merged.run
+LOOKUP_INDEX=docdict:/tuna1/scratch/w32zhong/arqmath3/indexes/index-ColBERT-arqmath3
+python -m pya0 --index $LOOKUP_INDEX --collection arqmath-2022-task2-origin --visualize-contextual-task2 ./runs/search_arqmath3_task2_colbert_context_merged.run
+
+#LOOKUP_INDEX=/tuna1/scratch/w32zhong/mnt-index-arqmath3_task2_v3.img
+#python -m pya0 --index $LOOKUP_INDEX --collection arqmath-2022-task2-official --visualize-run ./runs/search_arqmath3_task2_colbert_context_merged.run
 
 #LOOKUP_INDEX=/tuna1/scratch/w32zhong/mnt-index-arqmath3_task2_v3.img
 #python -m pya0 --index $LOOKUP_INDEX --collection arqmath-2022-task2-official --visualize-run ./runs/pya0-task2.run
 
-#LOOKUP_INDEX=docdict:/store2/scratch/w32zhong/arqmath3/math-dense-retrievers/indexes/index-ColBERT-arqmath3/
+#LOOKUP_INDEX=docdict:/tuna1/scratch/w32zhong/arqmath3/indexes/index-ColBERT-arqmath3-task2
 #python -m pya0 --index $LOOKUP_INDEX --collection arqmath-2022-task1-or-task3-origin --visualize-task3 ./runs/maprun_arqmath3_to_colbert__select_sentence--colbert-pya0nostemmer-alpha0_5-task1.run

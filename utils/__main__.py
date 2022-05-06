@@ -63,6 +63,8 @@ if __name__ == '__main__':
         help="Passing extra command line arguments to trec_eval. E.g., '-q -m map -m P.30'")
     parser.add_argument('--visualize-run', type=str, required=False,
         help="Visualize existing run file")
+    parser.add_argument('--visualize-contextual-task2', type=str, required=False,
+        help="Visualize existing task2 file with contextual doc preview")
     parser.add_argument('--visualize-task3', type=str, required=False,
         help="Visualize existing task3 file")
     parser.add_argument('--visualize', action='store_true', required=False,
@@ -231,6 +233,12 @@ if __name__ == '__main__':
     elif args.visualize_run and args.collection:
         from .visualize import visualize
         visualize(index, args.visualize_run, collection=args.collection)
+        quit(0)
+
+    elif args.visualize_contextual_task2 and args.collection:
+        from .visualize import visualize
+        visualize(index, args.visualize_contextual_task2,
+            collection=args.collection, ver='contextual_task2')
         quit(0)
 
     elif args.visualize_task3 and args.collection:
