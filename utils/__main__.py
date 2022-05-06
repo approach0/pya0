@@ -162,28 +162,35 @@ if __name__ == '__main__':
             print('#' + '\t'.join(header), file=fh)
             for row in rows:
                 print('\t'.join(row), file=fh)
+        quit(0)
 
     # visualize score comparison?
     elif args.visualize_compare_scores:
         from .visualize import visualize_compare_scores
         files = args.visualize_compare_scores.split(':')
         visualize_compare_scores(files)
+        quit(0)
 
     # concatenate run files?
     elif args.concate_runs:
         A, B, n = args.concate_runs.split(',')
         concatenate_run_files(A, B, int(n), topk, verbose=verbose)
+        quit(0)
 
     # merge run files?
     elif args.merge_runs:
         A, B, alpha = args.merge_runs.split(',')
         merge_run_files(A, B, float(alpha), topk, verbose=verbose)
+        quit(0)
 
     # learning to rank?
     elif args.learning2rank_train:
         fields = args.learning2rank_train.split(',')
         method, params = fields[0], fields[1:] if len(fields) > 1 else []
         L2R_train(method, params, output_file=args.trec_output)
+        quit(0)
+
+
 
     # open index from specified index path or prebuilt index
     if args.index is None:
@@ -207,6 +214,8 @@ if __name__ == '__main__':
         print(f'index open failed: {index_path}')
         exit(1)
 
+
+
     # direct search
     if args.direct_search:
         with open(args.direct_search, 'rb') as fh:
@@ -216,28 +225,33 @@ if __name__ == '__main__':
             res = msearch(index, query, topk=topk, log=log)
             print(json.dumps(res, indent=4))
         pya0.index_close(index)
+        quit(0)
 
     # visualize existing runfile?
     elif args.visualize_run and args.collection:
         from .visualize import visualize
         visualize(index, args.visualize_run, collection=args.collection)
+        quit(0)
 
     elif args.visualize_task3 and args.collection:
         from .visualize import visualize
         visualize(index, args.visualize_task3, collection=args.collection,
             ver='task3')
+        quit(0)
 
     # generate l2r training data
     elif args.training_data_from_run:
         abort_on_non_a0_index(index)
         abort_on_empty_collection(args.collection)
         L2R_gen_train_data(args.collection, index, args.training_data_from_run)
+        quit(0)
 
     # print index stats
     elif args.print_index_stats:
         abort_on_non_a0_index(index)
         print(f' --- index stats ({args.index}) ---')
         pya0.index_print_summary(index)
+        quit(0)
 
     # auto evaluation?
     elif args.auto_eval:
@@ -272,6 +286,9 @@ if __name__ == '__main__':
             with open(f'tmp/{run_name}.done', 'w') as fh:
                 pass
         auto_eval.tsv_eval_do(header, rows, wrap_eval, prefix=name+'-')
+        quit(0)
+
+
 
     # actually run query
     if args.query:

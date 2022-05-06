@@ -113,7 +113,7 @@ PyObject *index_lookup_doc(PyObject *self, PyObject *args)
 		PyErr_Format(PyExc_RuntimeError,
 			"key#0 never exists");
 		return NULL;
-    }
+	}
 
 	struct indices *indices = PyLong_AsVoidPtr(pyindices);
 	int n_field = indices->n_field;
