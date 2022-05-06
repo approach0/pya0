@@ -170,12 +170,23 @@ def tokenize_content(content, whitelist=[]):
 
 
 def tokenize_content_by_sentence(content):
-    sentences = []
+    sentences = ['.']
     for type_, piece, last, next_ in iter_imath_splits(content):
         if type_ == 'text':
-            sentences += sent_tokenize(piece)
+            for sent in sent_tokenize(piece):
+                last_sent = sentences[-1].strip()
+                if last_sent[-1] in [';', '.']:
+                    sentences.append(sent)
+                else:
+                    sentences[-1] += ' ' + sent
         else:
-            sentences.append(last + piece + next_)
+            math_piece = last + piece + next_
+            last_sent = sentences[-1].strip()
+            if last_sent[-1] in [';', '.']:
+                sentences.append(math_piece)
+            else:
+                sentences[-1] += ' ' + math_piece
+    sentences.pop(0)
     return sentences
 
 
