@@ -130,7 +130,7 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
             # mathJax
             fh.write('<script> window.MathJax ={' +
                 "loader: { source: {'[tex]/AMScd': '[tex]/amscd'} }," +
-                'tex: { inlineMath: [["[imath]", "[/imath]"]] }' +
+                'tex: { inlineMath: [ ["$","$"], ["[imath]", "[/imath]"] ] }' +
             '}; </script>')
             fh.write(f'<script type="text/javascript" src="{mathjax_cdn}"></script>')
             # end document
@@ -150,7 +150,12 @@ def visualize_hits(index, run_name, qid, query, hits, qrels=None, scores=None, v
             doc = collection_driver.docid_to_doc(index, postID)
             hit['content'] = doc['content']
         elif ver == 'task3':
-            hit["trec_docid"] = hit['docid']
+            #docid = hit['docid'] # must be internal docid
+            #doc = collection_driver.docid_to_doc(index, docid)
+            #hit['content'] = (hit['content'] +
+            #    '<br/>' + ('-'*15) + '<br/>' +
+            #    doc['content'])
+            pass
         else:
             raise NotImplementedError
     # output HTML preview
@@ -178,8 +183,7 @@ def visualize_collection_runs(index, collection, tsv_file_path, ver):
     for i, (qid, query, _) in enumerate(gen_topics_queries(collection)):
         print(qid, query)
         topic_hits = run_per_topic[qid] if qid in run_per_topic else []
-        if ver != 'task3':
-            collection_driver.TREC_reverse(collection, index, topic_hits)
+        collection_driver.TREC_reverse(collection, index, topic_hits)
         visualize_hits(index, run_name, qid, query, topic_hits, qrels=qrels, scores=scores, ver=ver)
 
 

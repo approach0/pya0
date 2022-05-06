@@ -36,6 +36,7 @@ def docid_to_doc(index, docid):
             docid = int(docid)
             content = idx_load[docid][1]
         elif idx_type == 'docdict':
+            docid = str(docid)
             try:
                 if docid in idx_load:
                     content = idx_load[docid][1]
@@ -93,14 +94,15 @@ def TREC_preprocess(collection, index, hits):
 
 
 def TREC_reverse(collection, index, hits):
-    if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1', 'arqmath-2021-task1-refined', 'arqmath-2021-task1-official', 'arqmath-2022-task1-manual']:
+    if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1', 'arqmath-2021-task1-refined', 'arqmath-2021-task1-official', 'arqmath-2022-task1-manual', 'arqmath-2022-task1-or-task3-origin']:
         for hit in hits:
             trec_docid = hit['docid']
             hit['trec_docid'] = trec_docid
             try:
                 hit['docid'] = trec_docid_to_docid(index, trec_docid)
             except NotImplementedError:
-                hit['docid'] = hit['_']
+                # hit['docid'] = hit['_']
+                pass
     elif collection in ['arqmath-2020-task2', 'arqmath-2021-task2', 'arqmath-2021-task2-refined', 'arqmath-2021-task2-official', 'arqmath-2022-task2-official', 'arqmath-2022-task2-refined', 'arqmath-2022-task2-context', 'arqmath-2022-task2-origin']:
         for hit in hits:
             # Query_Id Formula_Id Post_Id Rank Score Run
