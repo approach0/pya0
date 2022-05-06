@@ -102,23 +102,42 @@ rm -f mergerun-*
 #$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/rerank/maprun_arqmath3_to_colbert--pya0-nostemmer-task1.run --device a6000_7
 #$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/rerank/maprun_arqmath3_to_colbert--pya0-porterstemmer-task1.run --device a6000_7
 
-### Visualize submission runs
+### Visualize runs
 
-# base runs
-visualize_task1 runs/search_arqmath3_colbert.run
-visualize_task1 runs/pya0-nostemmer-task1.run
-visualize_task1 runs/pya0-porterstemmer-task1.run
-visualize_task2 runs/pya0-task2.run
-visualize_contextual_task runs/search_arqmath3_task2_colbert_context_merged.run
-#visualize_contextual_task2 runs/search_arqmath3_task2_colbert_context_merged.run
-visualize_task2 runs/search_arqmath3_task2_colbert.run
+## base runs
+#visualize_task1 runs/search_arqmath3_colbert.run
+#visualize_task1 runs/pya0-nostemmer-task1.run
+#visualize_task1 runs/pya0-porterstemmer-task1.run
+#visualize_task2 runs/pya0-task2.run
+#visualize_contextual_task runs/search_arqmath3_task2_colbert_context_merged.run
+##visualize_contextual_task2 runs/search_arqmath3_task2_colbert_context_merged.run
+#visualize_task2 runs/search_arqmath3_task2_colbert.run
+#
+## fusion runs
+#visualize_task1 runs/fusion/mergerun-*-task1.run
+#visualize_task2 runs/fusion/mergerun-*-task2.run
+#
+## rerank runs
+#visualize_task1 runs/rerank/maprun_*
+#
+## task3 files
+#visualize_task3 runs/task3/maprun_arqmath3_to_colbert__select_sentence*
 
-# fusion runs
-visualize_task1 runs/fusion/mergerun-*-task1.run
-visualize_task2 runs/fusion/mergerun-*-task2.run
+### Select final runs
 
-# rerank runs
-visualize_task1 runs/rerank/maprun_*
+rm -rf runs/submission
+mkdir -p runs/submission/{task1,task2,task3}
 
-# task3 files
-visualize_task3 runs/task3/maprun_arqmath3_to_colbert__select_sentence*
+mv $(eval-arqmath2-task1/drop-col-1.sh ./runs/pya0-porterstemmer-task1.run) runs/submission/task1/approach0-task1-a0porter-manual-both-A.tsv
+mv $(eval-arqmath2-task1/drop-col-1.sh ./runs/rerank/maprun_arqmath3_to_colbert--pya0-nostemmer-task1.run) runs/submission/task1/approach0-task1-rerank_nostemmer-manual-both-A.tsv
+mv $(eval-arqmath2-task1/drop-col-1.sh ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_2-task1.run) runs/submission/task1/approach0-task1-fusion_alpha02-manual-both-A.tsv
+mv $(eval-arqmath2-task1/drop-col-1.sh ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_3-task1.run) runs/submission/task1/approach0-task1-fusion_alpha03-manual-both-A.tsv
+mv $(eval-arqmath2-task1/drop-col-1.sh ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task1.run) runs/submission/task1/approach0-task1-fusion_alpha05-manual-both-P.tsv
+
+mv $(eval-arqmath2-task2/ensure-tsv.sh ./runs/pya0-task2.run) runs/submission/task2/approach0-task2-a0-manual-math-A.tsv
+mv $(eval-arqmath2-task2/ensure-tsv.sh ./runs/search_arqmath3_task2_colbert_context_merged.run) runs/submission/task2/approach0-task2-colbert_ctx-auto-both-A.tsv
+mv $(eval-arqmath2-task2/ensure-tsv.sh ./runs/fusion/mergerun-contextual_colbert-pya0-alpha0_3-task2.run) runs/submission/task2/approach0-task2-fusion_colbert_ctx-manual-both-A.tsv
+mv $(eval-arqmath2-task2/ensure-tsv.sh ./runs/fusion/mergerun-search_arqmath3_task2_colbert-pya0-alpha0_3-task2.run) runs/submission/task2/approach0-task2-fusion_alpha03-manual-both-A.tsv
+mv $(eval-arqmath2-task2/ensure-tsv.sh ./runs/fusion/mergerun-search_arqmath3_task2_colbert-pya0-alpha0_5-task2.run) runs/submission/task2/approach0-task2-fusion_alpha05-manual-both-P.tsv
+
+mv runs/task3/maprun_arqmath3_to_colbert__select_sentence_from_beginning--colbert-pya0nostemmer-alpha0_5-task1.run runs/submission/task3/approach0-task3-manual-both-extract-A.tsv
