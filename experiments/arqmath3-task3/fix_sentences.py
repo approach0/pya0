@@ -27,20 +27,28 @@ for index, row in df.iterrows():
             fields = list(row_target)
             fields = list(map(str, fields))
             curr = int(list(row_target)[0].split('.')[1].strip())
+            insert = False
+            #print('A.' + str(last + 1), qid)
             if 'A.' + str(last + 1) == qid:
                 if curr == last + 1:
                     print(qid, '-->', content[:32], '...')
                     fields[-1] = content
-                    last = curr
                 else:
                     copy_fields = fields[:]
                     copy_fields[-1] = content
                     print(qid, '==NEW==>', content[:32], '...')
+                    copy_fields[0] = qid
                     copy_fields[-1] = '"' + copy_fields[-1] + '"'
+                    insert = True
                     fh.write('\t'.join(copy_fields))
                     fh.write('\n')
+                    #print('\t'.join(copy_fields))
                     last = last + 1
+            last = last + 1
             fields[-1] = '"' + fields[-1] + '"'
             fh.write('\t'.join(fields))
             fh.write('\n')
+            #if insert:
+            #    print('\t'.join(fields))
+            #    print(last)
     os.replace('tmp.tsv', target_file)
