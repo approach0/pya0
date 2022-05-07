@@ -78,9 +78,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     results, rid = parse_run(args.run_path)
-    if len(results) < 100:
-        print(len(results))
-        input()
+    #if len(results) < 100:
+    #    print(len(results))
+    #    input()
 
     if args.mode == "highest_score":
         results = select_highest_score(results, rid)
