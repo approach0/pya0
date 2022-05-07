@@ -121,7 +121,15 @@ rm -f mergerun-*
 #
 ## task3 files
 #visualize_task3 runs/task3_runs/select_sentence_*
-visualize_task3 runs/task3_runs_top1/*
+#visualize_task3 runs/task3_runs_top1/*
+
+## visualize all-in-one table
+python experiments/arqmath3-task3/all_in_one_html.py \
+    runs/task3_runs/select_sentence_maprun_arqmath3_to_colbert--pya0-porterstemmer-task3-highest_score.run \
+    runs/task3_runs/select_sentence_mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task3-highest_post_longest_begining.run \
+    runs/task3_runs/select_sentence_mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task3-highest_score.run \
+    runs/task3_runs_top1/rerank-nostemmer-task1-highest_post_longest-task1-top1.run \
+    runs/task3_runs_top1/search_arqmath3_colbert-highest_post_longest-task1-top1.run \
 
 ## Select final runs
 
