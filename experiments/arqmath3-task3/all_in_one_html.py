@@ -20,20 +20,35 @@ def visualize(*files):
                 content = run_dict[qid][0]['content']
             else:
                 content = 'KeyError: ' + qid
-            table[row].append(content)
+            table[row].append(content + '<br/><br/>' + qid)
 
     with open(f'visualization/all_in_one.html', 'w') as fh:
         fh.write('<html>\n')
         # head
         fh.write('<head>\n')
         fh.write('<style>\n')
-        fh.write('table, th, td { border: 1px solid black; }\n')
+        fh.write('table, td { border: 1px solid black; }\n')
+        fh.write('td { max-width: 500px; min-width: 500px; }\n')
+        fh.write('#topbar { position: sticky; top: 0; z-index: 999; ' +
+                 ' background: white; border-bottom: grey solid 1px; } \n')
         fh.write('</style>\n')
         fh.write('</head>\n')
-        # table
+
+        # table head
+        fh.write('<table id="topbar">\n')
+        fh.write('<tr>\n')
+        row = 0
+        for cell in table[row]:
+            fh.write('<td>\n')
+            fh.write(cell)
+            fh.write('</td>\n')
+        fh.write('</tr>\n')
+        fh.write('</table>\n')
+
+        # table body
         fh.write('<table>\n')
         #for row in range(0, 2): ### DEBUG
-        for row in range(0, 101):
+        for row in range(1, 101):
             print(row)
             fh.write('<tr>\n')
             for cell in table[row]:
