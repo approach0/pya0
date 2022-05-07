@@ -123,7 +123,7 @@ rm -f mergerun-*
 #visualize_task3 runs/task3_runs/select_sentence_*
 #visualize_task3 runs/task3_runs_top1/*
 
-## visualize all-in-one table
+# visualize all-in-one table
 python experiments/arqmath3-task3/all_in_one_html.py \
     runs/task3_runs/select_sentence_maprun_arqmath3_to_colbert--pya0-porterstemmer-task3-highest_score.run \
     runs/task3_runs/select_sentence_mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task3-highest_post_longest_begining.run \
@@ -133,37 +133,36 @@ python experiments/arqmath3-task3/all_in_one_html.py \
 
 ## Select final runs
 
-#rm -rf runs/submission
-#mkdir -p runs/submission/{task1,task2,task3}
-#
-#mv $(eval-arqmath2-task1/drop-col-1.sh ./runs/pya0-porterstemmer-task1.run) runs/submission/task1/approach0-task1-a0porter-manual-both-A.tsv
-#mv $(eval-arqmath2-task1/drop-col-1.sh ./runs/rerank/maprun_arqmath3_to_colbert--pya0-nostemmer-task1.run) runs/submission/task1/approach0-task1-rerank_nostemmer-manual-both-A.tsv
-#mv $(eval-arqmath2-task1/drop-col-1.sh ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_2-task1.run) runs/submission/task1/approach0-task1-fusion_alpha02-manual-both-A.tsv
-#mv $(eval-arqmath2-task1/drop-col-1.sh ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_3-task1.run) runs/submission/task1/approach0-task1-fusion_alpha03-manual-both-A.tsv
-#mv $(eval-arqmath2-task1/drop-col-1.sh ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task1.run) runs/submission/task1/approach0-task1-fusion_alpha05-manual-both-P.tsv
-#
-#mv $(eval-arqmath2-task2/ensure-tsv.sh ./runs/pya0-task2.run) runs/submission/task2/approach0-task2-a0-manual-math-A.tsv
-#mv $(eval-arqmath2-task2/ensure-tsv.sh ./runs/search_arqmath3_task2_colbert_context_merged.run) runs/submission/task2/approach0-task2-colbert_ctx-auto-both-A.tsv
-#mv $(eval-arqmath2-task2/ensure-tsv.sh ./runs/fusion/mergerun-contextual_colbert-pya0-alpha0_3-task2.run) runs/submission/task2/approach0-task2-fusion_colbert_ctx-manual-both-A.tsv
-#mv $(eval-arqmath2-task2/ensure-tsv.sh ./runs/fusion/mergerun-search_arqmath3_task2_colbert-pya0-alpha0_3-task2.run) runs/submission/task2/approach0-task2-fusion_alpha03-manual-both-A.tsv
-#mv $(eval-arqmath2-task2/ensure-tsv.sh ./runs/fusion/mergerun-search_arqmath3_task2_colbert-pya0-alpha0_5-task2.run) runs/submission/task2/approach0-task2-fusion_alpha05-manual-both-P.tsv
-#
-#
-#cnt=1
-#while read line; do
-#	wc -l $line
-#	eval_type=A
-#	if [ $cnt == 5 ]; then
-#		eval_type=P
-#	fi
-#	cp $line runs/submission/task3/approach0-task3-run${cnt}-manual-both-extract-${eval_type}.tsv
-#	let 'cnt=cnt+1'
-#done <<-EOF
-#runs/task3_runs/select_sentence_mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task3-highest_post_longest.run
-#runs/task3_runs/select_sentence_mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task3-highest_score.run
-#runs/task3_runs/select_sentence_maprun_arqmath3_to_colbert--pya0-nostemmer-task3-highest_score.run
-#runs/task3_runs/select_sentence_maprun_arqmath3_to_colbert--pya0-porterstemmer-task3-highest_score.run
-#runs/task3_runs/select_sentence_maprun_arqmath3_to_colbert--pya0-porterstemmer-task3-highest_post_longest.run
-#EOF
-#
-#(cd runs/ && tar czf submission.tar.gz submission/)
+rm -rf runs/submission
+mkdir -p runs/submission/{task1,task2,task3}
+
+mv $(eval-arqmath2-task1/drop-col-1.sh ./runs/pya0-porterstemmer-task1.run) runs/submission/task1/approach0-task1-a0porter-manual-both-A.tsv #
+mv $(eval-arqmath2-task1/drop-col-1.sh ./runs/rerank/maprun_arqmath3_to_colbert--pya0-nostemmer-task1.run) runs/submission/task1/approach0-task1-rerank_nostemmer-manual-both-A.tsv #
+mv $(eval-arqmath2-task1/drop-col-1.sh ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_2-task1.run) runs/submission/task1/approach0-task1-fusion_alpha02-manual-both-A.tsv #
+mv $(eval-arqmath2-task1/drop-col-1.sh ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_3-task1.run) runs/submission/task1/approach0-task1-fusion_alpha03-manual-both-A.tsv #
+mv $(eval-arqmath2-task1/drop-col-1.sh ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task1.run) runs/submission/task1/approach0-task1-fusion_alpha05-manual-both-P.tsv #
+
+mv $(eval-arqmath2-task2/ensure-tsv.sh ./runs/pya0-task2.run) runs/submission/task2/approach0-task2-a0-manual-math-A.tsv
+mv $(eval-arqmath2-task2/ensure-tsv.sh ./runs/fusion/mergerun-contextual_colbert-pya0-alpha0_2-task2.run) runs/submission/task2/approach0-task2-fusion02_ctx-auto-both-A.tsv
+mv $(eval-arqmath2-task2/ensure-tsv.sh ./runs/fusion/mergerun-search_arqmath3_task2_colbert-pya0-alpha0_2-task2.run) runs/submission/task2/approach0-task2-fusion_alpha02-manual-both-A.tsv
+mv $(eval-arqmath2-task2/ensure-tsv.sh ./runs/fusion/mergerun-search_arqmath3_task2_colbert-pya0-alpha0_3-task2.run) runs/submission/task2/approach0-task2-fusion_alpha03-manual-both-A.tsv
+mv $(eval-arqmath2-task2/ensure-tsv.sh ./runs/fusion/mergerun-search_arqmath3_task2_colbert-pya0-alpha0_5-task2.run) runs/submission/task2/approach0-task2-fusion_alpha05-manual-both-P.tsv
+
+cnt=1
+while read line; do
+	wc -l $line
+	eval_type=A
+	if [ $cnt == 5 ]; then
+		eval_type=P
+	fi
+	cp $line runs/submission/task3/approach0-task3-run${cnt}-manual-both-extract-${eval_type}.tsv
+	let 'cnt=cnt+1'
+done <<-EOF
+runs/task3_runs/select_sentence_maprun_arqmath3_to_colbert--pya0-porterstemmer-task3-highest_score.run
+runs/task3_runs/select_sentence_mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task3-highest_post_longest_begining.run
+runs/task3_runs/select_sentence_mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task3-highest_score.run
+runs/task3_runs_top1/rerank-nostemmer-task1-highest_post_longest-task1-top1.run
+runs/task3_runs_top1/search_arqmath3_colbert-highest_post_longest-task1-top1.run
+EOF
+
+(cd runs/ && tar czf submission.tar.gz submission/)
