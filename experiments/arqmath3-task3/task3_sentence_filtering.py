@@ -12,6 +12,8 @@ def parse_run(filename):
         answer = '"{}"'.format(answer[1:-1])
         if len(answer) > leng_threshold or len(answer) == 0:
             continue
+        if answer.count('$') % 2 == 1:
+            continue
         if qid not in query2sentences:
             query2sentences[qid] = [["1", score, rid, sources, answer]]
         else:
@@ -76,6 +78,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     results, rid = parse_run(args.run_path)
+    if len(results) < 100:
+        print(len(results))
+        input()
 
     if args.mode == "highest_score":
         results = select_highest_score(results, rid)

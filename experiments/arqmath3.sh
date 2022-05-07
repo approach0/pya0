@@ -102,28 +102,27 @@ rm -f mergerun-*
 #$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/rerank/maprun_arqmath3_to_colbert--pya0-nostemmer-task1.run --device a6000_4
 #$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/rerank/maprun_arqmath3_to_colbert--pya0-porterstemmer-task1.run --device a6000_4
 
-### Visualize runs
+## Visualize runs
 
-## base runs
-#visualize_task1 runs/search_arqmath3_colbert.run
-#visualize_task1 runs/pya0-nostemmer-task1.run
-#visualize_task1 runs/pya0-porterstemmer-task1.run
-#visualize_task2 runs/pya0-task2.run
-#visualize_contextual_task runs/search_arqmath3_task2_colbert_context_merged.run
-##visualize_contextual_task2 runs/search_arqmath3_task2_colbert_context_merged.run
-#visualize_task2 runs/search_arqmath3_task2_colbert.run
-#
-## fusion runs
-#visualize_task1 runs/fusion/mergerun-*-task1.run
-#visualize_task2 runs/fusion/mergerun-*-task2.run
-#
-## rerank runs
-#visualize_task1 runs/rerank/maprun_*
-#
-## task3 files
-#visualize_task3 runs/task3_runs/select_sentence_*
+# base runs
+visualize_task1 runs/search_arqmath3_colbert.run
+visualize_task1 runs/pya0-nostemmer-task1.run
+visualize_task1 runs/pya0-porterstemmer-task1.run
+visualize_task2 runs/pya0-task2.run
+#visualize_contextual_task2 runs/search_arqmath3_task2_colbert_context_merged.run
+visualize_task2 runs/search_arqmath3_task2_colbert.run
 
-### Select final runs
+# fusion runs
+visualize_task1 runs/fusion/mergerun-*-task1.run
+visualize_task2 runs/fusion/mergerun-*-task2.run
+
+# rerank runs
+visualize_task1 runs/rerank/maprun_*
+
+# task3 files
+visualize_task3 runs/task3_runs/select_sentence_*
+
+## Select final runs
 
 rm -rf runs/submission
 mkdir -p runs/submission/{task1,task2,task3}
@@ -157,3 +156,5 @@ runs/task3_runs/select_sentence_maprun_arqmath3_to_colbert--pya0-nostemmer-task3
 runs/task3_runs/select_sentence_maprun_arqmath3_to_colbert--pya0-porterstemmer-task3-highest_score.run
 runs/task3_runs/select_sentence_maprun_arqmath3_to_colbert--pya0-porterstemmer-task3-highest_post_longest.run
 EOF
+
+(cd runs/ && tar czf submission.tar.gz submission/)
