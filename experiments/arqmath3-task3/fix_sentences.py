@@ -26,12 +26,20 @@ for index, row in df.iterrows():
         for _, row_target in df_target.iterrows():
             fields = list(row_target)
             fields = list(map(str, fields))
+            curr = int(list(row_target)[0].split('.')[1].strip())
             if 'A.' + str(last + 1) == qid:
-                print(qid, '-->', content[:32], '...')
-                fields[-1] = content
-                last = last + 1
-            else:
-                last = int(list(row_target)[0].split('.')[1].strip())
+                if curr == last + 1:
+                    print(qid, '-->', content[:32], '...')
+                    fields[-1] = content
+                    last = curr
+                else:
+                    copy_fields = fields[:]
+                    copy_fields[-1] = content
+                    print(qid, '==NEW==>', content[:32], '...')
+                    copy_fields[-1] = '"' + copy_fields[-1] + '"'
+                    fh.write('\t'.join(copy_fields))
+                    fh.write('\n')
+                    last = last + 1
             fields[-1] = '"' + fields[-1] + '"'
             fh.write('\t'.join(fields))
             fh.write('\n')
