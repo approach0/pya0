@@ -90,17 +90,17 @@ rm -f mergerun-*
 #swap_back mergerun-contextual_colbert-pya0-*
 
 ### Task 3
-MAPRUN='python -m pya0.transformer_eval maprun ./utils/transformer_eval.ini'
-
-$MAPRUN maprun_arqmath3_to_colbert__select_sentence ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_nostemmer-alpha0_5-task1.run --device a6000_4
-$MAPRUN maprun_arqmath3_to_colbert__select_sentence ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task1.run --device a6000_4
-$MAPRUN maprun_arqmath3_to_colbert__select_sentence ./runs/rerank/maprun_arqmath3_to_colbert--pya0-nostemmer-task1.run --device a6000_4
-$MAPRUN maprun_arqmath3_to_colbert__select_sentence ./runs/rerank/maprun_arqmath3_to_colbert--pya0-porterstemmer-task1.run --device a6000_4
-
-$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_nostemmer-alpha0_5-task1.run --device a6000_4
-$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task1.run --device a6000_4
-$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/rerank/maprun_arqmath3_to_colbert--pya0-nostemmer-task1.run --device a6000_4
-$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/rerank/maprun_arqmath3_to_colbert--pya0-porterstemmer-task1.run --device a6000_4
+#MAPRUN='python -m pya0.transformer_eval maprun ./utils/transformer_eval.ini'
+#
+#$MAPRUN maprun_arqmath3_to_colbert__select_sentence ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_nostemmer-alpha0_5-task1.run --device a6000_4
+#$MAPRUN maprun_arqmath3_to_colbert__select_sentence ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task1.run --device a6000_4
+#$MAPRUN maprun_arqmath3_to_colbert__select_sentence ./runs/rerank/maprun_arqmath3_to_colbert--pya0-nostemmer-task1.run --device a6000_4
+#$MAPRUN maprun_arqmath3_to_colbert__select_sentence ./runs/rerank/maprun_arqmath3_to_colbert--pya0-porterstemmer-task1.run --device a6000_4
+#
+#$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_nostemmer-alpha0_5-task1.run --device a6000_4
+#$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/fusion/mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task1.run --device a6000_4
+#$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/rerank/maprun_arqmath3_to_colbert--pya0-nostemmer-task1.run --device a6000_4
+#$MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/rerank/maprun_arqmath3_to_colbert--pya0-porterstemmer-task1.run --device a6000_4
 
 ### Visualize runs
 
@@ -121,7 +121,7 @@ $MAPRUN maprun_arqmath3_to_colbert__select_sentence_from_beginning ./runs/rerank
 #visualize_task1 runs/rerank/maprun_*
 #
 ## task3 files
-#visualize_task3 runs/task3/maprun_arqmath3_to_colbert__select_sentence*
+#visualize_task3 runs/task3_runs/select_sentence_*
 
 ### Select final runs
 
@@ -140,4 +140,20 @@ mv $(eval-arqmath2-task2/ensure-tsv.sh ./runs/fusion/mergerun-contextual_colbert
 mv $(eval-arqmath2-task2/ensure-tsv.sh ./runs/fusion/mergerun-search_arqmath3_task2_colbert-pya0-alpha0_3-task2.run) runs/submission/task2/approach0-task2-fusion_alpha03-manual-both-A.tsv
 mv $(eval-arqmath2-task2/ensure-tsv.sh ./runs/fusion/mergerun-search_arqmath3_task2_colbert-pya0-alpha0_5-task2.run) runs/submission/task2/approach0-task2-fusion_alpha05-manual-both-P.tsv
 
-mv runs/task3/maprun_arqmath3_to_colbert__select_sentence_from_beginning--colbert-pya0nostemmer-alpha0_5-task1.run runs/submission/task3/approach0-task3-manual-both-extract-A.tsv
+
+cnt=1
+while read line; do
+	wc -l $line
+	eval_type=A
+	if [ $cnt == 5 ]; then
+		eval_type=P
+	fi
+	cp $line runs/submission/task3/approach0-task3-run${cnt}-manual-both-extract-${eval_type}.tsv
+	let 'cnt=cnt+1'
+done <<-EOF
+runs/task3_runs/select_sentence_mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task3-highest_post_longest.run
+runs/task3_runs/select_sentence_mergerun-search_arqmath3_colbert-pya0_porterstemmer-alpha0_5-task3-highest_score.run
+runs/task3_runs/select_sentence_maprun_arqmath3_to_colbert--pya0-nostemmer-task3-highest_score.run
+runs/task3_runs/select_sentence_maprun_arqmath3_to_colbert--pya0-porterstemmer-task3-highest_score.run
+runs/task3_runs/select_sentence_maprun_arqmath3_to_colbert--pya0-porterstemmer-task3-highest_post_longest.run
+EOF
