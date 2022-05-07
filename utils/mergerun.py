@@ -44,7 +44,8 @@ def parse_task3_file(file_path):
             try:
                 qryID = fields[0]
                 _     = fields[4]
-                docid = eval(fields[4])[0]
+                field4 = eval(fields[4])
+                docid = field4[0] if isinstance(field4, tuple) else field4
                 rank  = fields[1]
                 score = fields[2]
                 run   = fields[3]
