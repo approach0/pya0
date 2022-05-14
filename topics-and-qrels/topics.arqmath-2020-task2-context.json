@@ -1,0 +1,427 @@
+[
+    {
+        "context": "Finding value of [MASK] such that the range of the rational function [MASK] does not contain [MASK]\nI am comfortable when I am asked to calculate the range of a rational function, but how do we do the reverse? I came across this problem. If [MASK] then find the value of [MASK] for which the range of [MASK] does not contain [imath][-1, -\\frac{1}{3}][/imath].",
+        "formulaID": "q_7",
+        "qid": "B.1"
+    },
+    {
+        "context": "Solving differential equations of the form [MASK]\nHow to solve differential equations of the following form:  [imath]\\frac{df}{dx} = f(x+1)[/imath]",
+        "formulaID": "q_9",
+        "qid": "B.2"
+    },
+    {
+        "context": "Approximation to [MASK] correct to an exactitude of [MASK]\nI am attempting to resolve the following problem:  Find an approximation to [MASK] correct to an exactitude of [MASK] using the bisection algorithm.  From what I understand, [MASK] has to be placed in function of [MASK] but I am not sure where to go from there. Also, a function in Mathematica are given to do the calculations in which the function [MASK], [MASK] and [MASK] (from the interval [MASK] where [MASK] and [imath]f(b)[/imath] have opposite signs), the tolerance and the number of iterations.",
+        "formulaID": "q_21",
+        "qid": "B.3"
+    },
+    {
+        "context": "How to compute this combinatoric sum?\n\nI have the sum [MASK] I know the result is [imath]n 2^{n-1}[/imath] but I don't know how you get there. How does one even begin to simplify a sum like this that has binomial coefficients.",
+        "formulaID": "q_23",
+        "qid": "B.4"
+    },
+    {
+        "context": "How to calculate mod of number with big exponent\n\nI want to find [MASK] I have noticed that [MASK] when [MASK] is uneven and 1 otherwise, which would lead me to say that [imath]5^{133} \\mod 8 = 5[/imath] But I don't know how to prove this. How can I prove that this is the case (or find another solution if it is not)?",
+        "formulaID": "q_28",
+        "qid": "B.6"
+    },
+    {
+        "context": "finding value of [MASK]\nFinding value of [MASK] what i try [MASK] [imath]\\displaystyle \\ln(l)=\\lim_{n\\rightarrow \\infty}\\frac{1}{n}\\bigg[n\\ln(27)+3\\ln(n!)-\\ln((3n)!)\\bigg][/imath] How do i solve it help me please ",
+        "formulaID": "q_51",
+        "qid": "B.8"
+    },
+    {
+        "context": "Simplifying this series\n\nI need to write the series  [MASK]  in a form that does not involve the summation notation, for example [imath]\\sum_{i=0}^n i^2 = \\frac{(n^2+n)(2n+1)}{6}[/imath]. Does anyone have any idea how to do this? I've attempted multiple ways including using generating functions however no luck",
+        "formulaID": "q_53",
+        "qid": "B.9"
+    },
+    {
+        "context": "Find the values of a>0 for which the improper integral [MASK] converges .\n\nFind the values of a>0 for which the improper integral [imath]\\int_{0}^{\\infty}\\frac{\\sin x}{x^{a}} [/imath] converges .  Do  I have to expand integrand using series expansion??",
+        "formulaID": "q_55",
+        "qid": "B.10"
+    },
+    {
+        "context": "What's the cross product in 2 dimensions?\n\nThe math book i'm using states that the cross product for two vectors is defined over [MASK]: [MASK] [MASK] is: [MASK] and the direction of the resultant is determined by curling fingers from vector v to u with thumb pointing in direction of the cross product of u x v.  Out of curiosity, what's the cross product if u and v are defined over [MASK] instead of [MASK] instead: [MASK] [MASK] Is there a \"degenerate\" case for the cross product of [MASK] instead [MASK]?  like this is some type of 2x2 determinant instead? for instance if had a parameterization: [MASK] and needed to calculate in [MASK]: [MASK] There are plenty of examples in the book for calculating the determinate D in [MASK] but none at all for [MASK] case. As in: [MASK] [imath] \\Phi(u,v)=(2u \\cos v,\\ \\ u \\sin v) [/imath]",
+        "formulaID": "q_72",
+        "qid": "B.11"
+    },
+    {
+        "context": "Finding the roots of a complex number\n\nI was solving practice problems for my upcoming midterm and however I got stuck with this question type. It is asking me to find all roots and then sketch it. [imath](1+i\\sqrt{3})^{1/2}[/imath] How do we proceed? ",
+        "formulaID": "q_73",
+        "qid": "B.12"
+    },
+    {
+        "context": "How to simplify expression [MASK]\nHow to simplify expression [MASK] The answer is [imath]bf(b)-af(a)[/imath]  but I am wondering how to get the answer.",
+        "formulaID": "q_76",
+        "qid": "B.13"
+    },
+    {
+        "context": "Help solving first-order differential equation\n\nI have first-order differential equation [MASK] Maybe, with this someone will find way to solve it [MASK] I thought I can use [MASK] for subtitution and when I derivate, I have [imath]t'=2x+y'\\\\(t'-2x)t'=2t-2x^2[/imath] which is acctualy the same as previous. I don't have idea how to start.. ",
+        "formulaID": "q_80",
+        "qid": "B.14"
+    },
+    {
+        "context": "Derive the sum of [MASK]\nFor the series   [MASK]   and [MASK]. I need to find partial sums and finally, the sum [MASK] of series. Here is what I've tried:   We can take a series [MASK] so that [MASK] (source series). For the [MASK] the sum of [MASK] (here is geometric progression): [MASK] [imath]S_1 = \\frac{d(S_2)}{dx} = \\frac{d(\\frac{1}{1-x})}{dx} = \\frac{1}{(1-x)^2}[/imath]  But this answer is incorrect. Where is my mistake? Thank you.",
+        "formulaID": "q_90",
+        "qid": "B.15"
+    },
+    {
+        "context": "Finding [MASK]\n Calculate   [MASK]  My try :  Let : [MASK] Then compute [imath]\\frac{d^2 I(a,b)}{dadb}[/imath]. I'm happy to see ideas in order to kill this integral.",
+        "formulaID": "q_94",
+        "qid": "B.16"
+    },
+    {
+        "context": "Calculate [MASK] with the function [MASK]\nI want to calculate [MASK] with the function [MASK]. I thought about using the closed path [MASK], when: [MASK] [MASK] [MASK] [MASK] I use the fact that [MASK] is an even function and has an anti derivative, so the integral on a closed path is zero. I managed to show that [MASK] when [MASK]. However I am struggling to show that [MASK] when [imath]R \\to \\infty[/imath] Help would be appreciated",
+        "formulaID": "q_108",
+        "qid": "B.17"
+    },
+    {
+        "context": "Evaluate [MASK]\nEvaluate [MASK] using Ces\u00e1ro-Stolz theorem. I know there are many question like this, but i want to solve it using Ces\u00e1ro-Stolz method and no others. I took log and applied Ces\u00e1ro-Stolz, I get [MASK] Which gives me answer as [MASK] . But answer is [MASK]. Could someone help?. Edit:  On taking log,  [MASK] Which gives [imath]2/e[/imath]",
+        "formulaID": "q_115",
+        "qid": "B.18"
+    },
+    {
+        "context": "Calculate all [MASK] such that [MASK]?\n\n I'm looking for an [MASK] for which [MASK] where [MASK] is a Euler-Totient Function   I already found one, namely, [MASK] How the calculate the [imath]n's[/imath]?",
+        "formulaID": "q_133",
+        "qid": "B.20"
+    },
+    {
+        "context": "Finding the last two digits of [MASK] (nine 9s)\n\nI'm continuing on my journey learning about modular arithmetic and got confused with this question: Find the last two digits of [MASK] (nine 9s). The phi function is supposed to be used in this problem and so far this is what I've got: [MASK] Where [MASK] [MASK] In order to know [MASK], we need to know [MASK] As [MASK], we get [MASK] [MASK] In order to know [MASK], we need to know [MASK] As [MASK], we get [MASK] [MASK] In order to know [MASK], we need to know [MASK] as [MASK] we need to find [MASK] As [MASK] [imath]c = 1 (\\text{mod } 8)[/imath] I feel like I might have made a mistake somewhere along the way because I'm having a lot of trouble stitching it all back together in order to get a value for the last two digits. Could anyone please help me with this? Thank you!",
+        "formulaID": "q_154",
+        "qid": "B.21"
+    },
+    {
+        "context": "Is this the only way to evaluate [MASK]\nwork out the [MASK] [MASK] [MASK] [MASK] [MASK]  [MASK] [MASK] [MASK] [MASK] [MASK] Can we solve [imath]\\sqrt{2i-1}[/imath] in another way?",
+        "formulaID": "q_182",
+        "qid": "B.24"
+    },
+    {
+        "context": "What can be P(0), when [MASK] and P(x) is polynomial?\n\nWhat can be [MASK], when [MASK] and [MASK] is polynomial? Let [MASK], then [MASK], [MASK], [MASK], [MASK], [MASK] ... and so on. Then [MASK], because all the points on [MASK] are [MASK]. If [MASK], then [MASK] for the same reason. But when [MASK], we have that [MASK] does not converge into an integer. So I think [MASK] cannot be a polynomial. Then what are the values of [MASK] that makes [imath]P(x)[/imath] polynomial?",
+        "formulaID": "q_202",
+        "qid": "B.25"
+    },
+    {
+        "context": "How to solve an indefinite integral using the Taylor series?\n\nI am trying to show that the following integral is convergent but not absolutely.  [MASK]  My attempt:  I first obtained the taylor series of [MASK] which is as follows:   [MASK]  Now [imath]\\int_0^\\infty\\frac{\\sin x}{x}dx=\\lim_{x\\to \\infty} \\sum_{n=0}^\\infty (-1)^n\\frac{x^{(2n+1)}}{(2n+1) \\times (2n+1)!}[/imath] and I got stuck here! What is the next step?",
+        "formulaID": "q_206",
+        "qid": "B.26"
+    },
+    {
+        "context": "What is the value of [MASK]?\n\nWhen solving for the value, we know that [MASK] . I am confused as to what is the right answer when you evaluate this.I am getting two possible answers: [MASK] = [MASK] so this could be [MASK] or it could be [imath]\\sqrt{(-1)^3}=\\sqrt{-1}=i[/imath]. Which one is the correct answer, and where am I going wrong? Thanks.",
+        "formulaID": "q_212",
+        "qid": "B.27"
+    },
+    {
+        "context": "If [MASK], then what is [MASK]?\n\nIf [MASK] in the simplest form, then what is [MASK]? [MASK] Attempt: [MASK] in a right triangle with sides [MASK] (in front of corner with angle [MASK] degrees), [MASK], and hypotenuse [MASK], is actually just [MASK], then [MASK]. We can find [MASK] as [MASK] so we have  [MASK] I also found out that [MASK] I got no clue after this.  The solution says that [MASK] I gotta intuition that we must find [MASK] such that [MASK]  then [MASK] is a root iof [MASK], and [MASK].  Totally different. This question is not asking to prove that [imath]sin(18)=(-1+\\sqrt{5})/4[/imath], that is just part of the solution.",
+        "formulaID": "q_235",
+        "qid": "B.28"
+    },
+    {
+        "context": "Dividing Complex Numbers by Infinity\n\nMy PreCalculus teacher recently reviewed the properties of limits with us before our test and stated that any real number divided by infinity equals zero. This got me thinking and I asked them whether a complex number (i.e. [MASK] or [MASK]) divided by infinity would equal zero.  This completely stumped them and I was unable to get an answer. After doing some theoretical calculation, knowing that [MASK], I calculated that a complex number such as [MASK] since  [MASK]  using properties utilized with real numbers that would state that [MASK] since [imath]\\frac{5}{\\infty}\\cdot \\frac{x}{\\infty} = 0\\cdot 0 = 0.[/imath] Is this theoretical calculation correct or is there more to the concept than this?",
+        "formulaID": "q_242",
+        "qid": "B.29"
+    },
+    {
+        "context": "Find [MASK] (binomial theorem)\n\n [MASK]Find [MASK]: [MASK] [MASK] [MASK] [MASK]  Please help me solve this question. I added [MASK] and [MASK]. It gives me the expansion of [imath]e^x[/imath]. But i dont know how to use it.",
+        "formulaID": "q_252",
+        "qid": "B.30"
+    },
+    {
+        "context": "Are definitions axioms?\n\nI just want to ask a very elementary question. When we introduce a \"definition\" in a first order logical system. For example when we say  Define: [MASK]  Isn't that definition itself an \"axiom\", call it a definitional axiom. I'm asking this because the one place predicate symbol Empty() is actually new, it is not among the listed primitives of say Zermelo, which has only identity and membership as primitive symbols.  So when we are stating definitions are we in effect stating axioms? but instead of being about characterizing a primitive, they are definitional axioms giving a complete reference to a specified set of symbols in the system. Is that correct? Now if that is the case, then why we don't call it axiom when we state it, I mean why we don't say for example: Definitional axiom 1) [imath]Empty(x) \\iff \\not \\exists y (y \\in x)[/imath] Zuhair",
+        "formulaID": "q_263",
+        "qid": "B.32"
+    },
+    {
+        "context": "Physical meaning and significance of third derivative of a function\n\nGiven a physical quantity represented by a function [MASK] what is (if there is any) the actual meaning of the third derivative of [MASK], [MASK] or [imath]\\frac{\\partial^3 f}{\\partial x^3}[/imath]",
+        "formulaID": "q_267",
+        "qid": "B.33"
+    },
+    {
+        "context": "Extending Knuth up-arrow/hyperoperations to non-positive values\n\nSo... I had the silly idea to extend Knuth's up-arrow notation so that it included zero and negative arrows. It is normally defined as [MASK] so, basically the hyperoperation sequence starting from exponentiation. For now, I will only consider [MASK]. If we try to go backwards from [MASK], the \"trivial\" extension (letting down arrows represent negative up arrows, because why the heck not) is: [MASK] But I had trouble coming up with an expression for [MASK]. Maybe it doesn't exist. Alternatively, maybe there is a way of defining [MASK] (zero arrows) such that it does exist. So my question is: Is there an extension of Knuth's up-arrow notation such that [MASK] exists for all [MASK]?  Edit: Welp, I messed this question up. I initially thought [MASK] was correct, but it is actually [MASK]. So I thought I had an example of an extension when I did not. I have modified the question accordingly. An extension would define [MASK] for each [MASK] which satisfies the recursive definition of the notation.  Edit 2: Okay, turns out [MASK] isn't correct either, as this would imply [MASK]. For example, [MASK]. But it is really close; perhaps we need an exception, such as [MASK] The case [MASK] does not show up when evaluating [MASK], but it will be need to be defined if we try to extend further to [MASK]. For instance, we could abuse the fact that the case [MASK] is allowed to be anything, and let [MASK] but finding [imath]a \\downarrow \\downarrow \\downarrow b[/imath] may be intractable as a result.",
+        "formulaID": "q_289",
+        "qid": "B.34"
+    },
+    {
+        "context": "When does a function NOT have an antiderivative?\n\nI know this question may sound na\u00efve but why can't we write [MASK] as [imath]\\int e^{2x} dx[/imath]? The former does not have an antiderivative, while the latter has. In light of this question, what are sufficient conditions for a function NOT to have an antiderivative. That is, do we need careful examination of a function to say it does not have an antiderivative or is there any way that once you see the function, you can right away say it does not have an antiderivative?",
+        "formulaID": "q_291",
+        "qid": "B.35"
+    },
+    {
+        "context": "Proof by contradiction, status of initial assumption after the proof is complete.\n\nFirst of all I'd like to say that I have looked for the answers to my specific question and have not found it in the existing topics. The question is fairly simple. Say, we need to  prove statement P by the method of contradiction. Assuming that [MASK] holds, using the list of statements proven earlier to hold or derived by us during the proof, we arrive to P being [MASK]. [MASK] [MASK] We can therefore add P to the list of our proven statements, because it was derived. Most of the proofs contain something in the lines of \"the obtained contradiction proves that our initial assumption ([MASK]) was wrong and so [MASK] holds\". What I don't understand is, if the initial assumption ([MASK]) is thus proven to be false, then why can we be sure that anything derived from it holds (in particular, that P holds)? On the other hand, if it cannot be derived then the assumption ([imath]\\lnot P[/imath]) can in fact be true.  Can someone explain why this type of argument cannot be used?",
+        "formulaID": "q_299",
+        "qid": "B.36"
+    },
+    {
+        "context": "Non trivial examples of [MASK] but [MASK] and [MASK].\n\nAre there real-valued functions [MASK] and [MASK] which are neither each other's inverses, the identity, nor linear, yet exhibit the behaviour [MASK] Examples such as [MASK] and [MASK] are \"trivial\" in this sense.  Moreover, given a function [MASK], can one go about obtaining an example of a function [MASK] which commutes with [MASK]?  I suppose this would be similar to fixed point iteration? E.g. if [MASK] is defined by [MASK], I would need a function [MASK] such that  [MASK] so maybe choosing an appropriate \"starting function\" [MASK] and finding a fixed point of [MASK] would be a possible strategy, but I can't seem to find a suitable [imath]g_0[/imath].",
+        "formulaID": "q_317",
+        "qid": "B.37"
+    },
+    {
+        "context": "Uses of Axiom of Choice\n\nI am a first-year maths student but I occasionally drift away from our taught material. Some years ago I saw the ZFC axioms for the first time, but now that I am in college, and although the stuff I've been taught so far is nowhere near ZFC (in terms of difficulty), it happened to me that we use the axiom of choice all the time in every module, even if we don't know it by name yet. For example, in the proof that, for every non-negative integers [MASK], there exist integers [MASK] (with the known restrictions on r), and the proof starts like this: [MASK] the largest integer [imath]q : qb <= a[/imath]... blah blah blah. Is it the axiom of choice that allows us to execute this simple yet so important step?  And a couple more questions: Can you name some other simple proofs, theorems, results etc for which the axiom of choice is essential? Also, I've read that AOC has long been a topic of dispute for mathematicians, and that even today, some people do not accept it. Are there any alternative axiomatic systems that work equally well without needing AOC? Thanks!",
+        "formulaID": "q_321",
+        "qid": "B.38"
+    },
+    {
+        "context": "What is the meaning of the term \"linear\"\n\n[MASK] is called a linear equation because it represents the equation of a line in an n dimensional space. So \"linear\" comes from the word \"line\".Basically there should not be any higher power of x failing which the graph of the function will not be a straight line. simillarly [MASK] is also called linear differential equation because all the derivatives have power equal to 1 which is similar to the above definition of a linear equation. A function f is called linear if: [MASK] and [MASK]. Here c is a constant. In this definition of linearity of function \"[imath]f[/imath]\" what does the word linear means? How does it relate to a straight line? Finally what does the term linear means in case of linear vector spaces? Where is the reference to a straight line? So, whether linear is just a word used in different contexts? Does it have different meaning in different situation? Or linearity refers to some relation to a straight line? At Least please explain how the linearity of function f and linear vector space relate to the equation of a line.",
+        "formulaID": "q_332",
+        "qid": "B.40"
+    },
+    {
+        "context": "Confusion in how to find number of onto functions if two sets are given\n\nIn the book it is given if A and B are two finite sets containing [MASK] and [MASK] elements, respectively, then the number of onto functions from A to B will be if  [MASK]  [imath]\\sum_{r=1}^n (-1)^{(n-r)} {n \\choose r}(r)^m [/imath] well I can't understand it and I am aware with combinations.",
+        "formulaID": "q_336",
+        "qid": "B.41"
+    },
+    {
+        "context": "Prove [MASK]\nI am trying to prove  [MASK] Letting [MASK] we recall the Fourier series for the exponential function [MASK] Plugging in [MASK] [MASK] [MASK] [MASK] [imath]S=\\frac{\\pi e^\\pi}{2\\sinh\\pi}-\\frac12[/imath] But that is nowhere near to correct. What did I do wrong, and how do can I prove the identity? Thanks.",
+        "formulaID": "q_347",
+        "qid": "B.43"
+    },
+    {
+        "context": "For [MASK] of finite order, show that [MASK] has infinite order\n\nLet [MASK] be the group [MASK] of nonsingular matrices. Let [MASK], the order of [MASK] is [MASK]; Let [MASK], the order of [MASK] is [MASK]. Show that [MASK] has infinite order.  The only reasoning possible here is by contradiction as [imath]G[/imath] is not abelian. And so I tried, but I got stuck before any concrete development. Any hints are welcome, Thanks.",
+        "formulaID": "q_359",
+        "qid": "B.44"
+    },
+    {
+        "context": "How to prove that {[MASK]} is independent in [MASK]?\n\n Prove that {[MASK]} is independent in [MASK]  my trial : we know that the Wronsekian shouldn't be [MASK] to get the trivial solution and thus they are independent. its not trivial to show that [MASK] W =  [MASK] and so on. it looks like Vandermonde matrix but i cant prove that and so we conclude that its [imath]W\\not =0[/imath]",
+        "formulaID": "q_367",
+        "qid": "B.45"
+    },
+    {
+        "context": "Suppose [MASK] is a Lebesgue integrable function on[MASK] which satisfies [MASK] , prove [MASK]\nSuppose [MASK] is an indefinitely differentiable real valued function on[MASK] which satisfies [MASK] for [MASK], prove [MASK] . My attempt : To prove this assertion , it suffice to prove [MASK]  Then by approximation theorem , we can find a polynomial such that for every [MASK] [MASK] where [MASK] . It seems that we do not need the condition that [MASK] is indefinitely differentiable , if [MASK] is continuous then the conclution may hold . My question : a) Suppose [MASK] is a Lebesgue integrable real valued function on[MASK] which satisfies [MASK] for [MASK], can we prove [MASK] except on a set of measure [MASK] ?      b) If a) is not true , suppose [MASK] is a Riemann integrable real valued function on[MASK] which satisfies [MASK] for [MASK], can we prove [MASK] except on a set of measure [MASK] ?   EDIT: To prove [MASK] , it suffice to prove all the fourier coefficient of [MASK] equal to [MASK] , then  [imath]\\int_0^1 f(x) \\cos(2 \\pi nx) \\,dx \\le \\int_0^1 |f(x)||\\cos(2 \\pi nx)-\\sum_{n=0}^{N}a_n x^n| \\le \\epsilon||f||_{L^1}[/imath] and the proof is complete.",
+        "formulaID": "q_398",
+        "qid": "B.46"
+    },
+    {
+        "context": "Prove that for a given prime [MASK] and each [MASK], there exists a [MASK] such that [MASK]\nProve that for a given prime [MASK] and each [MASK], there exists a [MASK] such that  [MASK] I've only taken one intro number theory course (years ago), and this just popped up in a computer science class (homework). I was assuming that this proof would be elementary since my current class in an algorithm cours, but after the few basic attempts I've tried it didn't look promising. Here's a couple approaches I thought of:  (reverse engineer) To arrive at the conclusion we would need [MASK] for some [MASK]. A little manipulation: [MASK] That looks familiar, but I can't see anything from it.  (sum on [MASK]) [MASK] which looks good but I don't know how to incorporate [MASK] int0 the final equality.    (Wilson's Theorem\u2014proved by Lagrange)   I vaguely recall this theorem, but I was looking at it in an old book and it wasn't easy to see how we arrived there. Anyways, [MASK] is prime iff [MASK] Here the [MASK] multiplier is built in to the factorial expression so I was thinking of adding [MASK] to either side [MASK] which is a dead end (pretty sure). But then I was thinking, maybe multiplying Wilson't Thm by [MASK]? Then getting [MASK] which I think results in [MASK] of which [MASK] is a multiple and [imath]q[/imath] is obvious. But I'm not sure if that's valid.",
+        "formulaID": "q_422",
+        "qid": "B.47"
+    },
+    {
+        "context": "Hints for showing that if [MASK], then [MASK] for all [MASK]\nI'm trying to show the following:   If [MASK], then [MASK] for all [MASK]   So, far I've tried a few things, but nothing seems to stick. Clearly [MASK] and since both sides of the inequality are positive, the inequality [MASK] will hold for [MASK]. Similarly, [MASK]. Adding both inequalities together, we obtain: [MASK]. While this is close, of course, it is not what we want to show. Alternatively, I was thinking that if we fix [MASK], let [MASK], and let [MASK], we can show using the binomial theorem that [MASK] for all [MASK]. Then, if we can show both [MASK] and [MASK] intersect only when [MASK], we might have better luck proving the statement since then we would have [MASK] for all positive integers [MASK]. A real number [MASK] with the property that [MASK] could not then exist since then that would violate the fact that [MASK] is the only intersection. We could then invoke the continuity of [MASK] and [MASK] together with the fact that [MASK] for all positive integers [MASK] to obtain our result. Of course, all of this is dependent on rigorously showing that [MASK] and [MASK] intersect only when [imath]k=1[/imath]. Otherwise, I'm running low on ideas. Any hints would be greatly appreciated.",
+        "formulaID": "q_453",
+        "qid": "B.48"
+    },
+    {
+        "context": "Divergent series [MASK]\nBonjour.  Show that  [MASK] is a divergent serie. [MASK] My main problem is: If [MASK] is \u201cinfinitely small positive real number\u201d define [MASK] as the set of all [MASK] [MASK]. The divergence should come from the sum over [MASK] but I have no idea to how to handle this. [imath]\\\\[/imath]",
+        "formulaID": "q_467",
+        "qid": "B.50"
+    },
+    {
+        "context": "Sum of series having binomial coefficients\n\nProve that [MASK] what i try [MASK] [MASK] coefficient of [MASK] in  [imath](1+x)^n+(1+x)^{n+1}\\frac{1}{2}+(1+x)^{n+2}\\frac{1}{2^2}+\\cdots\\cdots +(1+x)^{2n}\\frac{1}{2^n}.[/imath] How do i solve ithelp me plesse",
+        "formulaID": "q_472",
+        "qid": "B.51"
+    },
+    {
+        "context": "Prove [MASK], [MASK] s.t. [MASK] and [MASK] is prime\n\nThere are two parts I am having trouble getting started. A. Prove that [MASK] are each at least [MASK] then [MASK] is not divisible by any numbers [MASK].  B. Prove that the truth of the negation leads to a contradiction. (Use theorem: For all [MASK] there exist a unique quotient [MASK] and remainder [MASK] in [MASK] such that we have both [MASK] and [MASK].) For part A, I started with, given [MASK] and [MASK], I'll show that [MASK], [MASK] to set it up, but I'm not sure how to actually go about starting it. For part B, I know that the negation is [MASK] s.t. [MASK] either [MASK] or [imath]m[/imath] is not prime, but again I'm not sure what I should do to start the proof or exactly how to incorporate that theorem.",
+        "formulaID": "q_494",
+        "qid": "B.52"
+    },
+    {
+        "context": "Show that one-sided inverse of a square matrix is a true inverse\n\nWe know that for a group element [MASK], [MASK] does not necessarily mean that [MASK]. In the case for matrices (linear maps between vector spaces), it is also true that [MASK]. This happens when the [MASK] and [MASK] are not square matrices (in which case they do not even form a group under multiplication). However if we restrict the square matrices, [imath]AB = 1 \\Rightarrow BA = 1[/imath]. What is simple proof of this that avoids chasing the entries, and makes use simply the vector space structure of linear transformations? (In fact if we could prove this, I think this might imply that for a group to have one-sided(but not two-sided) inverses, it has to be infinite, since every finite group admits a finite dimensional representation.",
+        "formulaID": "q_501",
+        "qid": "B.53"
+    },
+    {
+        "context": "By using a diagonal argument, show that the powerset [MASK] is uncountable.\n\nAny tips or solutions for this one? By using a diagonal argument, show that the powerset [imath]P(N) = (S|S \u2286 N)[/imath] is uncountable.",
+        "formulaID": "q_503",
+        "qid": "B.54"
+    },
+    {
+        "context": "[MASK]?\n\nI have trouble to comprehend what my mistake is in the following calculation: If we set [MASK] to be the new number with the property that [MASK] then I can write [MASK] But we also have (and I know this is the correct result) [imath] \\frac{1}{\\sqrt{-1}}\\cdot\\frac{\\sqrt{-1}}{\\sqrt{-1}}=\\frac{\\sqrt{-1}}{-1}=-\\sqrt{-1}[/imath] What am I missing? Thanks.",
+        "formulaID": "q_508",
+        "qid": "B.55"
+    },
+    {
+        "context": "A curious logical formula involving prime numbers\n\nLet [MASK] be a nonempty set of natural numbers. Is the following formula [MASK] true or false on [imath]S[/imath]? I know the answer to this question, but what would be the shortest way to arrive to the conclusion using some deduction system?",
+        "formulaID": "q_511",
+        "qid": "B.56"
+    },
+    {
+        "context": "Preimage of continuous one-to-one function on connected domain is not continuous.\n\nI know that given [MASK], a compact subset of [MASK], and [MASK], a continuous injective (one-to-one) function, [MASK] is continuous on [MASK]. (This true). I also know that image [MASK] of a connected subset [MASK] is connected under a continuous function. Now let [MASK] be a connected (non-compact) subset of [MASK], and [MASK] be a continuous injective (one-to-one) function. I am trying (and struggling) to provide a counterexample in which mapping [MASK] is not continuous on [imath]f(X)[/imath]. (A rigorous, parametrized example). Thank you in advance!",
+        "formulaID": "q_523",
+        "qid": "B.57"
+    },
+    {
+        "context": "Prove that [MASK]\nCan someone help me with this exercise? I honestly don't know where to start and how to prove it. You don't have to answer it fully, just give me a hint or something. Thank you in advance.  Exercise 1. Prove that  [imath]3\\arcsin \\frac{1}{4} + \\arccos \\frac {11}{16} = \\frac {\\pi}{2}[/imath]  Thanks.",
+        "formulaID": "q_525",
+        "qid": "B.58"
+    },
+    {
+        "context": "Multiple proofs of [MASK]\nI am looking for multiple proofs of that statement: here [MASK] denotes the Euler\u2019s totient  [MASK]  Here\u2019s one:  By unique factorisation theorem: [MASK] and [MASK] where [MASK] so:  [imath]\\begin{align} \\sum_{d|n}{\\phi(d)}&=\\sum_{0\\leq \\beta_k\\leq \\alpha_k}{\\phi\\left(\\prod_{k=1}^{m}{p_k^{\\beta_k}}\\right)}\\\\ &= \\sum_{0\\leq \\beta_k\\leq \\alpha_k}{\\prod_{k=1}^{m}\\phi({p_k^{\\beta_k})}}\\\\ &=\\sum_{0\\leq \\beta_k\\leq \\alpha_k}{\\prod_{k=1}^{m}{(p_k^{\\beta_k}-p_k^{\\beta_k-1}})}\\\\ &=\\prod_{k=1}^{m}{\\sum_{0\\leq \\beta_k\\leq \\alpha_k}{(p_k^{\\beta_k}-p_k^{\\beta_k-1}}})\\\\ &= \\prod_{k=1}^{m}{p_k^{\\alpha_k}}\\\\ &=n. \\end{align}[/imath]",
+        "formulaID": "q_532",
+        "qid": "B.59"
+    },
+    {
+        "context": "Limiting value of a sequence when n tends to infinity\n\nQ) Let, [MASK] , [MASK]. Then [MASK] (A) equals [MASK] (B) does not exist (C) equals [MASK] (D) equals [MASK]  My Approach :- I am not getting a particular direction or any procedure to simplify [MASK] and find its value when n tends to infinity. So, I tried like this simple way to substitute values and trying to find the limiting value :- [MASK]  =[MASK] =0.009*... So, here value is tending to zero. I think option [MASK] is correct. I have tried like this [MASK] = [MASK] Now, again I stuck how to simplify further and find the value for which [MASK] converges when [imath]n[/imath] tends to infinity . Please help if there is any procedure to solve this question. ",
+        "formulaID": "q_546",
+        "qid": "B.60"
+    },
+    {
+        "context": "Prove that the cardinality of the set of rational numbers and the set of integers is equal\n\nI just learned about cardinality in my discrete class a few days ago, and this is in the homework. This is all fairly confusing to me, and I'm not entirely sure where to even start. Here's the full question: Let [MASK] denote the set of rational numbers and [MASK] denote the set of integers. Prove that [MASK]. I thought about saying that every element in [MASK] can be written as some element in [MASK], but I still don't know how to prove that that is a bijection, or even how to prove that [imath]|\\mathbb{Z} \\times \\mathbb{Z}| = |\\mathbb{Z}|[/imath]. Any help would be greatly appreciated.",
+        "formulaID": "q_564",
+        "qid": "B.62"
+    },
+    {
+        "context": "[MASK] and [MASK] of more than [MASK] positive integers\n\nFor any two positive integers [MASK], the relationship between their greatest common divisor and their least common multiple is given by [MASK] If I have a set of [MASK] positive integers [MASK], does the same relationship hold? Is it true that [imath]\\text{lcm}(n_1,n_2,n_3,...,n_r)=\\frac{\\prod_{i=1}^r n_i}{gcd(n_1,n2,n_3,...,n_r)}[/imath] I feel like this should be easy to prove, but I'm struggling to get a handle on it.",
+        "formulaID": "q_572",
+        "qid": "B.63"
+    },
+    {
+        "context": "Suppose that f : [a, b] \u2192 R is continuous and that f([a, b]) \u2282 [a, b]. Prove that there exists a point c \u2208 [a, b] satisfying f(c) = c.\n\nSuppose that [MASK] is continuous and that [MASK]. Prove that there exists a point [MASK] satisfying [MASK].  (If either [MASK] or [MASK] there is nothing left to show, so you might as well assume that [MASK] and [MASK]. Since [MASK] takes its values in [MASK] this is the same as assuming that [MASK] and [MASK].) So far, I have: Pf. Assume [MASK] and [MASK].  Let [MASK] such that [MASK] and [MASK] which means [MASK]. Notice [MASK]. Since f is continuous on [MASK], there exists some [MASK] such that [MASK] is less than or equal to [MASK] is less than or equal to [MASK]... This is where I am stuck because I don't think I can just assume by Intermediate Value Theorem that some [imath]f(c)=c[/imath]?",
+        "formulaID": "q_597",
+        "qid": "B.64"
+    },
+    {
+        "context": "How can we show that [MASK] for all [MASK]?\n\nHow can we show that [MASK] for all [MASK]? Applying [MASK] to both sides yields that [MASK] should be equivalent to [MASK] So, if I did no mistake, it should suffice to show [MASK] for all [imath]x\\ge0[/imath]. How can we do this?",
+        "formulaID": "q_606",
+        "qid": "B.65"
+    },
+    {
+        "context": "if [MASK] and [MASK] is it possible to justify that [MASK]?\n\nif [MASK] and [MASK] is it possible to justify that [imath](x^TAh)^T = h^TA^Tx[/imath]?",
+        "formulaID": "q_612",
+        "qid": "B.66"
+    },
+    {
+        "context": "Combination of matrixes\n\nIf A is a [MASK] matrix,B is a [MASK] matrix and C is a [MASK] matrix prove that: [imath]\\det{\\begin{bmatrix}A&B\\\\O&C\\end{bmatrix}}=\\det(A)\\det(C)[/imath] O is the matrix that all it's elements are equal to zero. I know some rules for calculating determinants but I don't know how to begin in this question.",
+        "formulaID": "q_616",
+        "qid": "B.67"
+    },
+    {
+        "context": "Prove [MASK] is divisible by [MASK] if [MASK] is odd\n\nProve [MASK] is divisible by [MASK] if [MASK] is odd: We know [MASK] cannot be [MASK] and the [MASK]. Since [MASK] must be odd, we can rewrite [MASK] as [MASK]. Now we assume it holds for prove that it holds for the next term. [MASK] [MASK] [MASK] [MASK] Im not sure on what to do next. Since [MASK] means that the exponential term will be even and thus you cant use the fact that [MASK] is divisible by [MASK] if [imath]n[/imath] is odd.    ",
+        "formulaID": "q_636",
+        "qid": "B.68"
+    },
+    {
+        "context": "Induction with two variable parameters\n\nSo I was assigned this homework problem: [MASK] for all s and all [MASK] I've tried to email both my professor and my TA and their explanations seem contradictory. My professor responded saying the statement I need to prove is \"The formula is correct for [imath]0 \\leq s \\leq n[/imath].\" Whereas my TA told me I need to use induction on both variables and I'm not sure how to do that. Any help is appreciated!",
+        "formulaID": "q_639",
+        "qid": "B.69"
+    },
+    {
+        "context": "Proving [MASK]\nLet [MASK] and [MASK]. I need to prove the following: [MASK] I tried to use Euler formula and then sum the first [imath]N[/imath] terms of the geometric serie I get, but it didn't work. Any ideas?",
+        "formulaID": "q_644",
+        "qid": "B.70"
+    },
+    {
+        "context": "Show, with induction that [MASK]\nShow, with induction that [MASK] My attempt Case 1: n = 1 [MASK]  [MASK] Case 2: n = p [MASK] [MASK] Case 3: n = p + 1 [MASK] [MASK] Now to show this with induction I think i need to show that [MASK] [MASK] So I need to rewrite  [MASK]to be equal to [imath]\\frac{p(p+1)(2p+1)}{6} + (p+1)^2[/imath]  Anyone see how I can do that? Or got any other solution?",
+        "formulaID": "q_656",
+        "qid": "B.71"
+    },
+    {
+        "context": "Help on proof of [MASK]\nThe proof is required to be made through the binomial theorem. I will expose the demonstration I was tought, and forward my questions after exposing it. You'll see question marks like this one (?-n) on points I don't quite understand, where [MASK] is the numeration of the mark. This are the doubts I have about the demonstration, the which I hope someone can clarify. Prove that [MASK]. We will use the following equality, and call it [MASK]:  [MASK] (?-1) The result will be proved finding the [MASK] coefficient of both terms of this equality (?-2). According to the binomial theorem, the left-hand side of this equation is the product of two factors, both equal to [MASK] When both factors multiply, a term on [MASK] is obtained when a term of the first factor has some [MASK] and the term of the second factor has some [MASK]. Therefor the coefficients of [MASK] are [MASK] . Since [MASK], the previous summation is equal to [MASK]. So the left hand side of the equation we are asked to proove is a coefficient of [MASK]. When we expand the right-hand side of the equation [MASK], we find that [MASK] is a coefficient of [MASK]. Therefore (?-3) the left-hand side of the equation we were asked to prove is in deed equal to [MASK]. In conclussion, [MASK]. This was all the demonstration. My doubt one (?-1) goes about where the heck does this equation come from? How would I know what equation to come up with if requested to prove a different equality? Doubt two (?-2) goes about why would the solution of the first equation would have anything to do with finding the [MASK] coefficients of the one I just made up (see doubt one). Doubt three (?-3) goes about why demonstrating that [MASK] is a coefficient of [MASK] on the left hand side of the equation I made up, and that [MASK] is a coefficient of [imath]x^n[/imath] on the right-hand side of this equation as well, would prove my original equation, the one I was supposed to prove on the first place? I know there are many doubts here, I hope you guys can help me. Sorry for the long post, it's a long demonstration.",
+        "formulaID": "q_685",
+        "qid": "B.73"
+    },
+    {
+        "context": "Show that the image of the function [MASK], [MASK] is the interval [MASK].\n\n Show that the image of the function [MASK], [MASK] is the interval [MASK].  If [MASK], then [MASK]. So how can I show that the mage of the function is the interval [imath][2,\\infty)[/imath]?",
+        "formulaID": "q_694",
+        "qid": "B.74"
+    },
+    {
+        "context": "Prove that for each integer [MASK], [MASK]\nI'm unsure how to show  that for each integer [MASK], [MASK].   Looking at the solutions it starts with [MASK] [MASK] [imath]\\frac{u^{m+1}}{(m+1)!}[/imath] but not sure how this is a logical step.",
+        "formulaID": "q_701",
+        "qid": "B.75"
+    },
+    {
+        "context": "Covering [MASK] by arithmetic progressions\n\nI am solving problems from an old exam (in topology, but I've translated the problem into more algebraic terms). The problem is the following:  Let [MASK] where [MASK] and [MASK]. Suppose we have a collection of such sets   [MASK]   satisfying: [MASK] Show whether it is always possible to extract a finite   [MASK] s.t. [MASK]  Unfortunately, I seem to have forgotten a lot of my elementary algebra... Nevertheless, I have attempted something: Let [MASK] be the set of primes. We can construct: [MASK] for some appropriate non-negative integers [MASK]. We could for instance pick [MASK]. Suppose there is a finite sub-collection [MASK], [MASK] s.t.  [MASK] Now, assume [MASK] is some prime s.t. [MASK], then clearly [MASK]. But here I run into a problem. I want [MASK]. That is, I want [MASK] and [MASK]. This is of course possible if [MASK] is a prime with a [MASK] as its last digit. However, this approach means I have to prove that there are infinitely many primes ending on a [imath]7[/imath], which seems like a silly thing to prove for a simple problem like this. Surely, there is a nicer way of solving this? EDIT: I am particularily interested in a solution not relying on topology, and whether a solution like my attempted solution works.",
+        "formulaID": "q_725",
+        "qid": "B.76"
+    },
+    {
+        "context": "Show that the relation [MASK] is a consequence of the distributive law\n\n Show that the relation [MASK] is a consequence of the distributive law.  This question is the first problem from 'Number Theory for Beginners\" by Andre Weil. I cannot get the point from where to begin. I tried using [MASK] and [imath] 1\\cdot x = x [/imath], but couldn't get somewhere. Can you help me just with a hint? I would be willing to work up from there.",
+        "formulaID": "q_729",
+        "qid": "B.77"
+    },
+    {
+        "context": "Inequality with complex exponential\n\nRudin in Real and Complex Analysis uses this in a proof near the beginning of chapter 9:  [MASK] for all real [MASK]  Why is this true? Edit: I believe [imath]x[/imath] is real",
+        "formulaID": "q_741",
+        "qid": "B.79"
+    },
+    {
+        "context": "Why does this proof that the set of all finite subsets of N is a countable set not work for the set of all subsets of N?\n\nI found this proof in a StackExchange thread and found it pretty understandable and simple: \"The other answers give some sort of formula, like you were trying to do.  But, the simplest way to see that the set of all finite subsets of [MASK] is countable is probably the following. If you can list out the elements of a set, with one coming first, then the next, and so on, then that shows the set is countable.  There is an easy pattern to see here.  Just start out with the least elements. [MASK] In other words, first comes [MASK], then comes [MASK].  Each time you introduce a new integer, [MASK], list all the subsets of [MASK] that contain [MASK] (the ones that don't contain [MASK] have already showed up).  Therefore, all subsets of [MASK] show up in the first [imath]2^{n}[/imath] elements of this sequence.\" I understand how it applies for finite subsets of N, but I cant really pinpoint of why it would not apply to a set of all subsets of N. We could continue this scheme for ever, couldnt we?  I assume that I think in a wrong way about infinity but I am not quite sure. Any help is greatly appreciated!",
+        "formulaID": "q_751",
+        "qid": "B.80"
+    },
+    {
+        "context": "Any infinite set contains a countable subset. Why is my proof wrong? (Axiom of Choice)\n\nLet [MASK] be an infinite set.    Proposition 1:   For any [MASK], there exists an injection from [MASK] to [MASK].      (1) Since [MASK], there exists [MASK]. Define [MASK] as [MASK]. [MASK] is an injection from [MASK] to [MASK]. (2) Suppose that there exists an injection [MASK] from [MASK] to [MASK]. Since [MASK] is an infinite set, [MASK] is not an empty set. So, there exists [MASK]. Define [MASK] as [MASK] and [MASK]. Obviously, [MASK] is an injection from [MASK] to [MASK].   Let [MASK] be an arbitrary natural number. If I wanna calculate [MASK], then I get an injection [MASK] from [MASK] to [MASK] by Proposition 1. And I return [MASK] as the value of [MASK]. And I store the pairs [MASK] to my database.   If I wanna calculate [MASK] for [MASK], then I search my database and I get the value [MASK] from my database and I return [MASK] as the value of [MASK]. If I wanna calculate [MASK] for [MASK], then I add the pairs [MASK] to my database by Proposition 1 and I return [MASK] as the value of [MASK].   I can calculate [MASK] for any [MASK].   From above, we get an injection [MASK].   Why is my proof wrong? By the way. Suppose that a man wanna know if I have an injection [MASK] or not. Then how can the man know if I have  an injection [imath]h : \\mathbb{N} \\to M[/imath] or not?",
+        "formulaID": "q_797",
+        "qid": "B.81"
+    },
+    {
+        "context": "All definite integrals evaluate to 0 using periodic functions.\n\nI know that my reasoning is incorrect, I just don't know where I went wrong. I did discuss this with my Maths teacher, and even she could not find what I did wrong. Let us begin by assuming a function, [MASK] that is continuous and has an antiderivative in the interval [MASK]. Let [MASK] be the area under the curve for [MASK] in the interval [MASK] [MASK] Now there must exist a function, [MASK] such that:   [MASK] Substituting the value of [MASK]: [MASK] Using t substitution: Let [MASK] Then: [MASK] And:  [MASK] Changing the limits: [MASK] [MASK] becomes [MASK] [MASK] becomes [MASK] Substituting in the definite integral: [MASK] But Definite Integral where the lower and upper bounds are the same is [MASK]. So: [imath]A = 0[/imath], which is not possible. Thanks for the help.",
+        "formulaID": "q_818",
+        "qid": "B.82"
+    },
+    {
+        "context": "Is the sequence of sums of inverse of natural numbers bounded?\n\nI'm reading through Spivak Ch.22 (Infinite Sequences) right now. He mentioned in the written portion that it's often not a trivial matter to determine the boundedness of sequences. With that in mind, he gave us a sequence to chew on before we learn more about boundedness. That sequence is: [MASK] I know that a sequence is bounded above if there is a number [MASK] such that [MASK] for all [imath]n[/imath]. Any hints here?",
+        "formulaID": "q_822",
+        "qid": "B.83"
+    },
+    {
+        "context": "Is the ideal generated by [MASK] a principal ideal in [MASK]?\n\nI've : [MASK] is not a principal ideal in [MASK] where p is prime. My question :   Is [MASK] a principal ideal in [MASK] where p is not a prime? More particularly, is the ideal generated by [MASK] a principal ideal in [imath]Z[x][/imath] ?",
+        "formulaID": "q_830",
+        "qid": "B.84"
+    },
+    {
+        "context": "Expected number of steps for a bug to reach position [MASK]\nA bug starts at time [MASK] at position [MASK]. At each step, the bug either moves to the right by [MASK] step [MASK] with probability [MASK], or returns to the origin with probability [MASK]. What is the expected number of steps for this bug to reach position [MASK]? I tried to first find the possibility that this bug reaches [MASK] as the number of steps goes to infinity. The recurrence equation I find is [MASK], where [MASK] is the possibility for the bug starting at position [MASK] to reach [MASK]. We also have the boundary condition [MASK]. Then we see that [MASK], and that [MASK], which doesn't make sense at all because it is greater than [imath]1[/imath]. I think I should sort out the value of probability first, and think about the number of expected steps later. I'm sure there is something wrong with the recurrence equation, but what's wrong about it?",
+        "formulaID": "q_847",
+        "qid": "B.85"
+    },
+    {
+        "context": "Is it true that [MASK]\nProblem: Is it true that [MASK] My start of solution: [imath]\\sum_{k=0}^{n}k\\cdot \\left(\\begin{array}{l}{n}\\\\{k}\\end{array}\\right)\\leq \\sum_{k=0}^{n}k\\cdot \\left(\\begin{array}{l}{n}\\\\{\\lfloor \\frac{n}{2}\\rfloor}\\end{array}\\right)\\leq \\frac{n\\cdot(n+1)}{2}\\cdot \\left(\\begin{array}{l}{n}\\\\{\\lfloor \\frac{n}{2}\\rfloor}\\end{array}\\right)\\leq n(n+1)! \\leq nn^n \\leq n^{n+1}[/imath] I think this upper bound is way too large and I can't seem to find a solution.",
+        "formulaID": "q_850",
+        "qid": "B.86"
+    },
+    {
+        "context": "Is it true that [MASK] , if all [MASK] are positive?\n\n If  [MASK] , is it true that [MASK] ?  I have been able to prove that this holds for [MASK] , [MASK], and [MASK] using the following lemma:  Lemma 1:  Let [MASK]. If [MASK] then [MASK]  For example, the case for [MASK] can be proven like this: Let [MASK]. Then we have: [MASK] [MASK] By lemma 1, [MASK],  [MASK] and  [MASK] , therefore: [MASK] However I'm not sure the generalized version for all natural [MASK] is true. I can't come up with a counterexample and when I try to prove it by induction I get stuck. Here is my attempt: Let [MASK] Base case: [MASK] , so [MASK] is true. Inductive hypothesis:  I assume [MASK] is true. Inductive step: [MASK] [MASK] [MASK] [MASK] [MASK] And here I don't know what to do with the [imath]\\big( \\sum_{i=1}^{n}a_{i} \\big) \\frac{1}{a_{n+1}} + a_{n+1} \\big(\\sum_{i=1}^{n} \\frac{1}{a_{i}}\\big)[/imath] term. Is this inequality true? If it is, how can I prove it? If it isn't, can anyone show me a counterexample?",
+        "formulaID": "q_879",
+        "qid": "B.87"
+    },
+    {
+        "context": "Is the polynomial [MASK] reducible over [MASK]?\n\nIs the polynomial  [MASK]  reducible over  [imath]\\mathbb{Z}[x][/imath]?",
+        "formulaID": "q_883",
+        "qid": "B.88"
+    },
+    {
+        "context": "Parametrization of pythagorean-like equation\n\nIs there any known complete parametrization of the Diophantine equation [MASK] where [imath]A, B, C, D[/imath] are (positive) rational numbers, or equivalently, integers?",
+        "formulaID": "q_885",
+        "qid": "B.89"
+    },
+    {
+        "context": "Question on the definition of an Inverse matrix\n\nBy definition, if [MASK] is a [MASK] matrix, an inverse of [MASK] is an [MASK] matrix [MASK] with the property that: [MASK]  where [MASK] is the [MASK] identity matrix. Are there any cases where [MASK] but [imath]AA^{-1} \\neq \\mathbb I_n[/imath] or the other way around (and thus making (1) a false statement) ? ",
+        "formulaID": "q_895",
+        "qid": "B.90"
+    },
+    {
+        "context": "Is there a principal maximal ideal in [MASK]?\n\n Given an infinite field [MASK], one can prove that any maximal ideal of [MASK] can't be principal. In fact, every non-principal prime ideal is a maximal ideal, and can be generated by two polynomials. I am wondering whether the same result holds in [MASK]. Can we find a principal ideal [MASK] for some irreducible polynomial [MASK] that is a maximal ideal ?    Such a polynomial [MASK] must have positive degrees in both [MASK] and [MASK]. Indeed, given an irreducible polynomial [MASK] in only one variable, the quotient  [MASK] is a ring of polynomials over a field and as such, can never be a field.   Moreover, such a polynomial [MASK] must have the form  [MASK] where [MASK], the [MASK]'s are polynomials in [MASK] and [MASK] is a nonzero polynomial that vanishes identically on [MASK], thus [MASK] must be divisible by [MASK]. Indeed, if there were some [MASK] such that [MASK], then the ideal [MASK] would contain [MASK] strictly. If [MASK] were to be maximal, [MASK] would be the whole of [MASK]. Writing down the fact that [MASK] and evaluating [MASK] would leads us to the conclusion [MASK], which is absurd.   This is all I could infer so far. With respect to the above, I tried looking at [MASK] or [MASK] in [MASK] for some prime number [imath]p[/imath] but I have trouble determining whether the quotient is a field or not.   Would somebody know the answer of the problem, and according to it, give a proof or a counter-example ? Thank you very much in advance.",
+        "formulaID": "q_934",
+        "qid": "B.92"
+    },
+    {
+        "context": "Characteristic Polynomial [MASK] characteristic polynomial [MASK]?\n\nLet [MASK] matrix on [MASK] size [MASK]. How can I prove that [MASK] if [MASK] and [imath]B[/imath] are singular matrix",
+        "formulaID": "q_942",
+        "qid": "B.93"
+    },
+    {
+        "context": "Are there [MASK] sets of natural numbers such that each two have finite intersection\n\nQuestion: Are there [MASK] sets of natural numbers such that each two have finite intersection. From what I've read about infinite families, I need to ignore those who have the properpty [MASK]. Property [MASK]: the family is threadless, but whenever we take finitely many sets from the family, those sets have infinite intersection. and probably find ones with property [MASK]. Property [imath]T[/imath]: the family is threadless, and it is an \u201calmost-tower\u201d: Whenever you pick two sets in the family, one of them is almost-contained in the other. - probably meaning that we can find such an intersection which is finite, because members are contained in each other. Then I thought.. To find them, I should think of rational numbers instead of natural numbers, remembering that rational numbers can be paired up with natural ones, so solving this problem for families of rational numbers is the same as solving it for families of natural numbers. Now, I need to consider various ways of defining the real numbers. And I'm stuck.. any help is appreciated.",
+        "formulaID": "q_948",
+        "qid": "B.94"
+    },
+    {
+        "context": "Length of convex paths and bounding [MASK]\nThe problem:  Defining [MASK] as the leg [MASK] of a right triangle with [MASK] (in radians) and hypotenuse [MASK], prove that [MASK]  (The motivation is to find the derivative of [MASK] in a elementary, \"pre-Taylor\" and \"pre-series\" context). I have seen many times a proof that it is based in the fact that the length of the arc [MASK] satisfies [MASK] or sometimes [MASK] The lower bound is clear because the [MASK] is the length of a straight segment and [MASK] is the length of a curved segment with the same endpoints. But I find that the upper bound is based on this intuitive fact:  If [MASK] and [MASK] are two convex subsets of [MASK] and   [MASK], then [MASK].  ([MASK] is the length of the boundary of [MASK]). But I haven't ever seen a proof of that. I tried it myself but I get stuck trying to bound [MASK] provided for example that [MASK] is negative and [MASK]. I realize that [MASK] can't be bounded (note for example [MASK], [MASK]). Question Is it possible to justify the derivative of [imath]\\sin x[/imath] or the inequality about the lengths of bounds? Is there any calculus text with this approach (or similar) to define trigonometical functions?",
+        "formulaID": "q_974",
+        "qid": "B.95"
+    },
+    {
+        "context": "Let [MASK] be a convergent sum with positive [MASK]. Does [MASK] always diverge?\n\nLet [MASK] be a convergent sum, with all [MASK] positive.  Let [MASK].   Does [MASK] always diverge?  I've tried a few examples such as [MASK] (geometric series) and [imath]a_i=1/i^2[/imath] and it seems to always diverge.",
+        "formulaID": "q_983",
+        "qid": "B.96"
+    },
+    {
+        "context": "what is the dimension of [MASK] at a vector space over there field [MASK]?\n\nIf we look at [MASK] as a vector space over [MASK] it's dimension will be [MASK], because [MASK].  A question I thought of is what would be the dimension of [MASK] as a vector space over [MASK]?  I feel like the answer should be infinity, because if the dimension was finite, say [MASK], then for every [MASK] real numbers  [MASK] there was a linear combination with rational coefficients that gives [MASK]: [MASK]. Multiplying by [MASK] we get that for every [MASK] real numbers there is a linear combination with natural coefficients that gives [imath]0[/imath]. That feels false, how do you prove it?",
+        "formulaID": "q_999",
+        "qid": "B.97"
+    },
+    {
+        "context": "If [MASK] is a irrational rotation, [MASK] is dense in [MASK] for all points.\n\nLet [MASK] a irrational number, and [MASK] the irrational rotation, i.e., [MASK]. I need to prove that, for all [MASK], the set [MASK] is dense in [MASK]. First, I can write [MASK] by [MASK] So, I can write [MASK], [MASK] by [MASK] I need to prove that, for all [MASK] and for all [MASK], every neighborhood [MASK] of [MASK] contains a point [MASK] such that [MASK] for some [MASK]. That is, [imath]e^{2\\pi i z}=e^{2\\pi i (x+\\alpha n)}\\Rightarrow 2\\pi iz=2\\pi i(x+\\alpha n)+2ik\\pi\\;\\textrm{for some}\\;k\\in\\mathbb{Z}\\Rightarrow z=x+\\alpha n+k.[/imath] Is my way correct? If it does, how can I proceed now? If it doesn't, what I need to do? I don't think this question is duplicate. I'm showing my attempt to proof, that is different from other proofs.",
+        "formulaID": "q_1021",
+        "qid": "B.98"
+    }
+]

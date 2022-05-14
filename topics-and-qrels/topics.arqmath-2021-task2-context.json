@@ -1,0 +1,502 @@
+[
+    {
+        "context": "Matrix over division ring having one sided inverse is invertible\n\nI want to see if there is any elementary way to prove the following assertion about matrices over division rings (such as not using Wedderburn's theory or tensoring techniques). If an [imath]n\\times n[/imath] matrix over a division ring has left inverse, then it also has right inverse. The assertion has elementary proof for matrices over fields, but I am considering over division rings.  One can give some hints also.",
+        "formulaID": "q_1",
+        "qid": "B.201"
+    },
+    {
+        "context": "Rings Trapped Between Fields\n\nSome Background and Motivation: In this question, it is shown that an integral domain [MASK] such that [MASK], [MASK] and [MASK] fields with [MASK] finite, is itself a field.  However, a significantly more general result holds and seems worthy, of independent address; hence, Let [MASK] be fields with [MASK] if [MASK] is a ring such that [MASK] show that [imath]R[/imath] is in fact a field.",
+        "formulaID": "q_11",
+        "qid": "B.202"
+    },
+    {
+        "context": "Why does the subtraction symbol go away? [MASK]\n[MASK] but why is [MASK]??? What's the reason behind the rule, it's really basic and \"obvious\" because a no turns a no to a yes But I don't want to reason like that, lol. So how would you explain it? Do I just say on a real number line [MASK] makes a turnaround and [MASK] would turn it positive again? Also if I say for example: [MASK] then I do have [MASK] Is it correct? It wouldn't matter, right? (Btw: I don't know if the tag \"elementary-number-theory\" is correct) **The question is different to [imath](-x)*(-x)=x[/imath]",
+        "formulaID": "q_19",
+        "qid": "B.203"
+    },
+    {
+        "context": "subscheme where two morphisms agree is points where they agree on residue fields\n\nLet [MASK] be schemes, where [MASK] are [MASK] schemes.  I know the definition of \"the locally closed subscheme of [MASK] where two [MASK]-  morphisms [MASK] agree\" from its universal property.  Also I can define it as the fiber product of the diagonal [MASK] with [MASK] My question:  how to prove that the underlying set of \"the locally closed subscheme where the two morphisms agree\" is the same as the set of points where the two morphism agree on the residue field. It is probably clear thatthe former is contained in the latter, but why is it all of them?  That is, why is a point where [MASK] agree on the residue field necessarily contained in \"the subscheme where [imath]\\pi, \\pi'[/imath] agree\"?",
+        "formulaID": "q_29",
+        "qid": "B.204"
+    },
+    {
+        "context": "How can we find x for x^n = n^x\n\nFind values of x such that   Here, n   I.  One solution will remain x=n But i want to find if any more solutions can exist [imath]x^n=n^x[/imath]",
+        "formulaID": "q_30",
+        "qid": "B.205"
+    },
+    {
+        "context": "I'm confused on the limit of [MASK]\nOkay so I read Richard Rusczyk's AoPS Volume 2 Book, and I stumbled upon the part where he informs very briefly that [MASK]. But he doesn't really provide a rigorous proof as to why that's true (not criticizing him or anything).. It would really help if someone could provide me with the simplest proof possible as to why [imath]\\lim_{n \\rightarrow \\infty} \\left(1+\\frac{1}{n}\\right)^n=e[/imath]. Thank you in advance!",
+        "formulaID": "q_35",
+        "qid": "B.206"
+    },
+    {
+        "context": "What function is asymptotically eqyivalent to [MASK]?\n\nI am working on this problem to find a function [MASK] s.t. [MASK] where [MASK] means that given functions [MASK] and [MASK], we have [MASK]. For instance, given the right hand side of the equation above, on input [MASK] we have the following (it's a divergent series) [MASK] The closest function I can think of are the binomials where: [imath] (N \\text{ choose } r) \\sim \\frac{N^r}{r!} [/imath] But it doesnt really equal the first equation above. Any help?",
+        "formulaID": "q_45",
+        "qid": "B.207"
+    },
+    {
+        "context": "Where does this asymptote for [MASK] come from?\n\n@Claude Leibovici's answer to this Math Stack Exchange question (it's the second answer) gives an asymptote for the generalised harmonic number [MASK]: [imath]H_n^{(k)}=n^{-k}    \\left(-\\frac{n}{k-1}+\\frac{1}{2}-\\frac{k}{12    n}+O\\left(\\frac{1}{n^3}\\right)\\right)    +\\zeta (k)[/imath] Heuristically, this is an excellent fit. But can someone please tell me if this is a published result, and more importantly how it is derived?",
+        "formulaID": "q_48",
+        "qid": "B.208"
+    },
+    {
+        "context": "Evaluate the definite integral: [MASK]\nwhere [MASK]. Could someone explain to me how to solve it? I searched the internet and I found the result is [imath]\\frac{\\sqrt{\\pi}}{2\\sqrt{h}}[/imath] but I couldn't undersand Gauss error function - that is involved in solving.",
+        "formulaID": "q_51",
+        "qid": "B.209"
+    },
+    {
+        "context": "what's an elegant way to show that [MASK]?\n\nfor [MASK], consider [MASK], using traditional methods of finding global extremas, we can show that the derivative has a unique zero at [MASK] and [MASK], thus [imath]x(1-x) \\leq \\frac14 = f(\\frac12)[/imath] is there a more elegant way ?",
+        "formulaID": "q_57",
+        "qid": "B.210"
+    },
+    {
+        "context": "[MASK]\nI was attempting to solve an MIT integration bee problem (1) when I misread the integral and wrote (2) instead.  [MASK] [MASK] I was able to solve (1), as the integrand simplifies to [MASK], however, I'm struggling with solving (2).  If we rewrite the roots as powers, we get: [MASK] combining the powers we get: [MASK] the exponent is the infinite sum [MASK] we can split this into:  [MASK] The right sum is well known except here the sum begins at [MASK], meaning that the right sum evaluates to 1. Messing around with desmos, the integrand appears to be [MASK] implying that (3) converges to 3 and the   converges to 2. Which is part I'm struggling with. Any ideas?  [imath]\\sum^{\\infty}_{n=1}\\frac{n}{2^n}[/imath]",
+        "formulaID": "q_68",
+        "qid": "B.211"
+    },
+    {
+        "context": "Evaluating an infinite series\n\nI've been given the function [MASK] And I have to evaluate [MASK] so find the value of [imath]f(1/4)=\\sum_{n=0}^{\\infty}\\frac{2n+1}{2^{2n}}[/imath] I would appreciate any help with this as I am pretty lost.",
+        "formulaID": "q_72",
+        "qid": "B.212"
+    },
+    {
+        "context": "Calculate [MASK]\nI can prove it converges but I don't know at what value it converges. [imath]\\sum_{x=1}^{\\infty} \\frac{(x-1)}{2^{x}}[/imath]",
+        "formulaID": "q_74",
+        "qid": "B.213"
+    },
+    {
+        "context": "Show that [MASK]\nI want to show that [MASK]. By definition [MASK] and since the integrand [MASK] is an even function [MASK] i.e. we can equivalently show that [MASK]. Since the antiderivative of [MASK] is given by the error function we can't straightforwardly evaluate the integral, so I tried to use the power series expansion, hoping to be able to see that the resulting series will converge to [MASK]: [MASK] However, I'm in a doubt that it converges and a quick check in Wolfram Mathematica shows indeed that with [imath]t\\to\\infty[/imath] the resulting series will diverge. What am I doing wrong? Can anybody help me with a proof for this problem? Any help will be really appreciated.",
+        "formulaID": "q_84",
+        "qid": "B.214"
+    },
+    {
+        "context": "Set Of Discontinuities Of A Derivative\n\nProve that the set of discontinuities of a derivative of an everywhere differentiable function [MASK] is of 1st category. Let [MASK] be a derivative of an everywhere differentiable function [MASK]. Now as the set of discontinuities of any arbitrary functions can be written as a countable union of closed sets. So let [MASK] be the set of discontinuities of [MASK], then we can write [MASK] where all the [MASK] are closed set. Now suppose that for [MASK] the set [MASK] is not nowhere dense then there exists an open interval [MASK] such that for any interval [MASK] in that open interval [MASK] we have [MASK] and hence [MASK] is dense in the open interval [MASK] and as [MASK] is closed so it contains the interval [MASK] and hence [MASK] is entirely discontinuous on the open interval [imath](p, q)[/imath], but as the derivative of an everywhere differentiable function cannot be entirely discontinuous on an interval, so a contradiction. Is My Proof Correct??",
+        "formulaID": "q_103",
+        "qid": "B.215"
+    },
+    {
+        "context": "Compute the limit [MASK]\nI have been working on this limit for days, but I am not getting it. The question is  Compute the limit [MASK]  Note that the integral is well defined and convergent for every [MASK]. Indeed the integrand function is a positive function for every [MASK] since [MASK] And as [MASK] the integrand function behaves like [MASK]. WHAT I TRIED: I consider [MASK] a multiple of [MASK], and see what happens: [MASK] Making the change of variables [MASK] I get   where I write the lower bound with the minimum of the function at [MASK]. Now I use the fact that the integrand function does is integrated over a period of [MASK], and using the result for [MASK] [MASK] I get the estimate   Summing all up, I got that [MASK] As [MASK] the series converges to the Riemann integral [MASK] Hence the limit should be a number larger than [MASK], or [MASK]. Using WA I got for large values of [MASK] that the integral is between [MASK] and [MASK], thus [imath]\\pi/2[/imath] could be the actual limit.",
+        "formulaID": "q_129",
+        "qid": "B.216"
+    },
+    {
+        "context": "An easy Calculus Problem\n\nHere's the question- Find the maximum area of an isosceles triangle inscribed in the ellipse [MASK]. My teacher solved it by considering two arbitrary points on the ellipse to be vertices of the triangle, being [MASK] and [MASK]. (Let's just say [MASK] is theta) and then proceeded with the derivative tests(which i understood) But, he didn't indicate what our [imath]\\theta[/imath] was,and declared that these points always lie on an ellipse. Why so? And even if they do, what's the guarantee that points of such a form will be our required vertices? One more thing, I'd appreciate it if you could suggest another way of solving this problem. Thank you!",
+        "formulaID": "q_134",
+        "qid": "B.217"
+    },
+    {
+        "context": "Problem involving recursion of binomial coefficients\n\nWrt Ramsey numbers I have the following identity given to me: [MASK] And i have the following bases cases: [MASK] and [MASK]. One has to prove that: [imath]R(m, n) \\leq\\left(\\begin{array}{c}{m+n-2} \\\\ {m-1}\\end{array}\\right)[/imath] It is obvious that we have to go on splitting the two terms on the RHS into pairs of terms decrementing the indices by 1 each time. But the appearance of the combination is non-obvious.",
+        "formulaID": "q_138",
+        "qid": "B.218"
+    },
+    {
+        "context": "How to prove a combinatorial identity with a combinatorial argument\n\nI am trying to prove the following identity using a a combinatorial argument: [imath]\\dbinom{n+r+1}{r}=\\sum_{k=0}^{r}\\dbinom{n+k}{k}[/imath]",
+        "formulaID": "q_139",
+        "qid": "B.219"
+    },
+    {
+        "context": "How can i prove the identity [MASK]\nI'm having a difficult time understanding how to give a combinatorics proof of the identity [imath]\\sum_{k=0}^{n} \\binom{x+k}{k}=\\binom{x+n+1}{n}[/imath]",
+        "formulaID": "q_141",
+        "qid": "B.220"
+    },
+    {
+        "context": "What's the minimum number of [MASK]s needed to write a positive integer?\n\nThis is just for fun and inspired by Estimating pi, using only 2s. For a positive integer [MASK], let [MASK] denote the minimum number of [MASK]s needed to express [MASK] using addition, subtraction, multiplication, division, and exponentiation, together with the ability to concatenate [MASK]s, so for example [MASK] is a valid expression. Other variants involving different sets of allowed operations are possible, of course. This function is very far from monotonic, so to smooth it out let's also consider [MASK] For example,  [MASK] ([MASK]) [MASK] ([MASK])   Question: What can you say about [MASK] and [MASK]? Can you give exact values for small values of [MASK]? Can you give (asymptotic or exact) upper bounds? Lower bounds?  As a simple example we can write any positive integer [MASK] in the form [MASK] where [MASK] ([MASK] is just the leading digit in the binary expansion of [MASK]), which gives [MASK]. If we write [MASK] then iterating this gives something like [MASK] This gives an upper bound growing something like [MASK] which I think is pessimistic. For example, in my answer to the linked question I show that [MASK] and [MASK] so maybe we can expect something as good as [MASK] for an upper bound. I have no idea about a lower bound, other than to write down an upper bound on the number of possible expressions that can be made with a given number of [MASK]s. Edit: A related question involving [MASK]s and more allowed operations: How many fours are needed to represent numbers up to [imath]N[/imath]?",
+        "formulaID": "q_171",
+        "qid": "B.221"
+    },
+    {
+        "context": "A company hires [MASK] new employees, and they will be assigned to four different departments, A, B, C, D\n\n A company hires [MASK] new employees, and they will be assigned to four different departments, A, B, C, D. Each department has at least one new employee. In how many ways can these assignments be done?  I know that for each section (A,B,C,D) I should add a () and as long as every section must get a new employee we should start like this: [MASK] then if we look  it's [imath](e^x-1)^4[/imath]. After this step I don't know what to do.",
+        "formulaID": "q_175",
+        "qid": "B.222"
+    },
+    {
+        "context": "combinatorial proof that [MASK]\n Give a combinatorial proof that [MASK].  I'm not sure if Pascal's identity is useful here. Or perhaps there is a way involving binary strings? [MASK] is the number of binary strings of length [MASK], so if there was some way to decompose these strings into disjoint sets [MASK] with cardinality [MASK], a proof using that method might work. [MASK] is the number of binary strings of length [MASK] with exactly [MASK] ones, since one can choose [MASK] of the [MASK] positions to be ones in [MASK] ways and make the rest zeroes in one way. Then we divide by the number of binary strings of length [imath]i[/imath], though I'm not sure how to deduce the combinatorial significance of this. I'm most likely thinking of this the wrong way.",
+        "formulaID": "q_188",
+        "qid": "B.223"
+    },
+    {
+        "context": "I think I found a flaw in the [MASK]-[MASK] definition of continuity.\n\nIf I have a function [MASK] defined as follows.  [MASK] for all [MASK] and [MASK]; [MASK] for [MASK]; [MASK] is undefined anywhere else.  According to the [MASK]-[MASK] definition of continuity, if I take [MASK] as any positive number smaller than [MASK], then [MASK] by definition is continuous at [MASK] because within the [MASK]-neighborhood there is only one point defined, but [MASK] is obviously not continuous at [MASK]. Below is the [MASK]-[MASK] definition of continuity: The function [MASK] is continuous at a point [MASK] of its domain if for every positive [MASK] we can find a positive number [MASK] such that [MASK] for all values [MASK] in the domain of [MASK] for which [imath]|x-x_0|<\\delta[/imath].",
+        "formulaID": "q_216",
+        "qid": "B.224"
+    },
+    {
+        "context": "Finding the sum of non-unique roots of cubic equations\n\nThe real numbers [MASK] satisfy [MASK] [MASK] Find [MASK]  Are the three roots of both cubic equations unique, or is there only one root? How can you prove it? What's the best approach to this problem?  I tried using Vieta's formulas, where the sum of three roots of (1) and (2) are: [MASK] [MASK] Summing both, [imath]\\alpha_1+\\alpha_2+\\alpha_3+\\beta_1+\\beta_2+\\beta_3=6[/imath] Assuming there is only one root for each of (1) and (2), we are done, but what if there isn't?",
+        "formulaID": "q_223",
+        "qid": "B.225"
+    },
+    {
+        "context": "Parametrization of the curve [MASK]\nI was looking at the graph of the equation [MASK] (Desmos link). This graph has two components that cross at the point [MASK]. Component 1 (as I'll call it) is the component [MASK] which has the simple parametrization [MASK]  Does component 2 also admit a parameterization?  To clarify: Component 2 is a path so of course it abstractly admits a parameterization, but I'm asking if there is a parametrization that we can actually write down algebraically in terms of elementary functions.  My motivation for this question is from the limiting behavior of the sequence [MASK], whose behavior is closely related to the solutions to [MASK]. In particular, if [MASK] is less than [imath]e^{-e}[/imath] then this sequence alternates between the upper and lower parts of component 2.",
+        "formulaID": "q_234",
+        "qid": "B.226"
+    },
+    {
+        "context": "[MASK] - Question regarding this\n\nSo, I'm not a big expert in this subject but I know [MASK] isn't to do with 'real' maths but it's all to do with the zeta function; however I was watching a maths video and the equation: [MASK] ... is actually a perfect equation for the series [MASK] etc. where [MASK] represents [MASK] in a series and [MASK] is the sum of the series up to [MASK]. So, you can conclude that: [MASK] However, this is where it gets weird; as you have probably guessed, the roots of the equation is [MASK]  but if I want to find the integral of the roots from [MASK] to [MASK] which is under the [MASK] axis, I get the following: [MASK] So, my question is why is this the case; what connection is there between the value of the integral under the [imath]x[/imath] axis that this graph has compared to the summation of the series? Link to Desmos graph for more clarity",
+        "formulaID": "q_249",
+        "qid": "B.227"
+    },
+    {
+        "context": "Terrible integral with parameter\n\nLet be   [MASK]  Find the integral [imath]F(x, y)=\\int_{-\\infty}^{+\\infty} f(t+x) f(t+y) d t[/imath] I tried exploring f(x), took it in parts, got that it converges. F(x,y) is difficult to investigate, since the product of integrals is there, I don't know what to do with it.",
+        "formulaID": "q_251",
+        "qid": "B.228"
+    },
+    {
+        "context": "Finding integral of function involving fractional part of x\n\nThe integral given is: [MASK] where  [MASK] represents the fractional part of [MASK] I first tried breaking it using a piecewise definition but I couldn't figure out how to do it as there wasn't any consistent pattern that I could spot.  I tried graphing it to get an idea but that also didn't get me anywhere. Finally, I tried using the property of definite integral that [imath]\\int_{0}^{a}f(x)dx=\\int_{0}^{a}f(a-x)dx[/imath] but the first and seccond terms remained the same and the last term changed but not it did not lead to any noticeable changes. I am stuck now. Any help would be appreciated.",
+        "formulaID": "q_255",
+        "qid": "B.229"
+    },
+    {
+        "context": "Question about definition of Ramsey number\n\nSo I went through the definition of Ramsey number and I have a basic question. Definition: For any given number of colours, [MASK], and any given integers [MASK], there is a number, [MASK], such that if the edges of a complete graph of order [MASK] are coloured with c different colours, then for some i between 1 and c, it must contain a complete subgraph of order ni whose edges are all colour i. Question: Is the multicolour Ramsey number [MASK]same as [MASK]or any other permutation of[MASK]? The definition seems to imply so, I just want to verify if I'm thinking right. I have read that [imath]R(m,n)=R(n,m)[/imath] but nothing about symmetricity of multicolour Ramsey numbers.",
+        "formulaID": "q_263",
+        "qid": "B.230"
+    },
+    {
+        "context": "Why is 1 divided by aleph null undefined?\n\nSo recently I have been thinking about infinity, and one of the things that I thought of was if you were able to get a defined value for the reciprocal of a transfinite (cardinal) number. So, I plugged [MASK] into WolframAlpha and it said the following: img1  Why is this the case? Shouldn't this be similar to this case? [MASK] Aren't [MASK] and [imath]\u05d0_0[/imath] equal to the same value in this context? What am I missing here?",
+        "formulaID": "q_267",
+        "qid": "B.231"
+    },
+    {
+        "context": "Definition of Induced Matrix Norm\n\nI'm getting confused between 2 variants of definition of induced matrix norm. Given a norm [MASK] on [MASK], the induced matrix norm is defined by [MASK]  I'm trying to deduce the second variant from this definition i.e. [MASK] Consider [MASK] where [MASK] and [MASK]. Therefore, [MASK] I don't know how to continue from here on.  Also, I 'm reading textbooks where they say : [MASK] My question is shouldn't it be  [MASK] Because [MASK] means [MASK] which is ruled out because [imath]||\\mathbf w||=1.[/imath]",
+        "formulaID": "q_280",
+        "qid": "B.232"
+    },
+    {
+        "context": "Motivation for defining tangent vectors with derivations and why they should act on [MASK]\nI'm revisiting the definition for tangent spaces in Lee's Introduction to Smooth Manifolds and I'm trying to convince myself why we might define tangent vectors as derivations at a point [MASK]:  Let [MASK] be a smooth manifold, and let [MASK]. A linear map [MASK] is called a derivation at [MASK] if [MASK] for all [MASK].  So far, I know that if [MASK], then each derivation can be given as a directional derivative in some direction in [MASK]. After reading the parts on the differential and its computation in coordinates, I'm still wondering why we would be interested in defining a tangent vector as a map that acts on functions on the manifold and the benefits from acting on smooth functions. The main reason that I can think of is that the collection of derivations at a point forms a vector space, which is we what want for a tangent space. I have also looked at the approach of defining tangent vectors with equivalence classes of curves, but it seems that there's also an action on [MASK] going on; we call curves [MASK] the tangent vectors, and they have a directional-derivative-like operators that act on [MASK] by [MASK] This seems really similar to how a vector in [MASK] defines its own directional derivative, but again, I'm not sure why the action on [imath]f\\in C^\\infty(M)[/imath] would be useful/significant.",
+        "formulaID": "q_296",
+        "qid": "B.233"
+    },
+    {
+        "context": "Sards theorem for polynomial\n\nI'm having some struggles with an aspect about something apparently trivial about Sard's theorem, but couldn't find anything online. Let [MASK] be a polynomial. According to Sard's theorem, the image [MASK] of the set of critical values  [MASK] has measure zero. What if I want to show that the set [MASK] itself has measure zero in the domain of [imath]f[/imath]? I feel like it's so simple but i just can't get behind it.",
+        "formulaID": "q_301",
+        "qid": "B.234"
+    },
+    {
+        "context": "Method for solving Diophantine equation [MASK]\nHow do I solve the Diophantine equation [MASK]? The approach I have so far is to use the transformation [MASK] and [MASK]. Applying this, we get, [MASK], where [MASK] and [MASK]. [imath]X^2 - dY^2 = n[/imath] is a Pell equation. Questions:  Is there any other method? What is the complexity of the algorithm for finding the solution to the Pell equation? ",
+        "formulaID": "q_309",
+        "qid": "B.235"
+    },
+    {
+        "context": "Normalizing constant in Dirichlet distribution\n\nAccording to references (e.g. Wikipedia and elsewhere), the Dirichlet distribution, parametrized by [MASK], is [MASK] where [MASK] So, if [MASK] and [MASK] then this gives [MASK] where [MASK] so, [MASK] for all [MASK].  However, [MASK] is defined on the standard [MASK]-simplex defined in [MASK] by [MASK] and [MASK].  This is the span (or affine hull) of the two points [MASK] and [MASK].  Since this is a line segment of length [MASK], the integral of the Dirichlet distribution over this simplex is [MASK], not [MASK] as expected.  What am I missing here? The same problem comes in higher dimensions.  For instance, for [MASK], the simplex is a triangle with side [MASK], but the normalization constant becomes [imath]B(\\boldsymbol\\alpha) = 1/\\Gamma(3) = 1/2[/imath], which is not the area of this triangle. What is wrong here?",
+        "formulaID": "q_331",
+        "qid": "B.236"
+    },
+    {
+        "context": "Rewrite the propositions without implication\n\nI want to rewrite the following types of propositions without the simple or double implication:  [MASK] [MASK] [MASK]  So we have to write these propositions without any implication, for example the first proposition like [imath]p \\land \\lnot q \\land r[/imath] or is something else meant?",
+        "formulaID": "q_335",
+        "qid": "B.237"
+    },
+    {
+        "context": "Definition of Equivalence Relation\n\nI was going through the text \"Discrete Mathematics and its Application\" by Kenneth Rosen (5th Edition) where I am across the definition of equivalence relation and felt that it is one sided.  Definition: A relation on a set A is called an equivalence relation if it is reflexive, symmetric, and transitive.  Now let us analyze the situation of what equivalence is meant to us intuitively. Let there be a binary relation [MASK] defined on a set [MASK]. Now we suppose that [MASK] be reflexive, symmetric and transitive. So we have for [MASK]   [MASK] (by the reflexive property of R) if [MASK] then [MASK]  (by the symmetric property of R) if [MASK] and [MASK] then [MASK] (by the transitive property of R)  Intuitively we can satisfy ourselves with the fact that the above are the necessary conditions for [MASK] to be equivalent. So \"if [MASK] is reflexive, symmetric and transitive, then [MASK] is an equivalence relation\" Now working our intuition for equivalence relation [MASK] we note the following. Let [MASK] be an equivalence relation on a set A, then for [MASK] we have,  [MASK] (by the intuitive knowledge of what [MASK] means) if [MASK] then [MASK] (by the intuitive knowledge of what [MASK] means) if [MASK] and [MASK] then [MASK] (by the intuitive knowledge of what [MASK] means)  Now we see that (1) implies [MASK] is reflexive, (2) implies that [MASK] is symmetric and (3) implies that [MASK] is transitive. So we have \"if [MASK] is an equivalent relation then [MASK] is reflexive, symmetric and transitive\" From the two intuitive implications we can conclude that A relation on a set A is called an equivalence relation if and only if it is reflexive, symmetric, and transitive. and not what the book says. This definition makes quite sense unlike the book definition which says that if [MASK] fails to be either reflexive or symmetric or transitive then [imath]R[/imath] may or may not be an equivalence relation, which after all gives a weird feeling. Correct me if my logic is wrong.",
+        "formulaID": "q_367",
+        "qid": "B.238"
+    },
+    {
+        "context": "Fake proof, symmetric and transitive relation is already reflexive\n\nLet [MASK] be a symmetric, transitive relation. If [MASK] then the symmetric property implies that [MASK]. Using the the transitive property upon [MASK] and [MASK] we can conclude [imath](x, x) \\in R[/imath]. Is this fair logic or is it flawed?",
+        "formulaID": "q_373",
+        "qid": "B.239"
+    },
+    {
+        "context": "What do the constants \"4\" and \"2\" in Bhaskara mean and where did they come from?\n\nIn bhaskar, the way to get the result, is to get the [MASK], and then the [imath]X = (\u2013b \\pm \\sqrt\\Delta)/2a)[/imath]. But from where come these constants?",
+        "formulaID": "q_375",
+        "qid": "B.240"
+    },
+    {
+        "context": "Divisibility of [MASK]\n Let [MASK] be an integer. Show that [MASK] is divisible by [imath]6[/imath].  How should one approach this? Using modular arithmetic or some other approach?",
+        "formulaID": "q_379",
+        "qid": "B.241"
+    },
+    {
+        "context": "Show that for all prime numbers [MASK] greater than [MASK], [MASK] divides [MASK] evenly.\n\n Show that for all prime numbers [MASK] greater than [MASK], [MASK] divides [MASK] evenly.  Since [MASK] we have that [MASK], where [MASK] Now since [MASK] and the numerator contains always at least one even factor(?) we have that [imath]24=2^3\\cdot3\\vert(p+1)(p-1).[/imath] Is my reasoning here correct or am I missing something here?",
+        "formulaID": "q_392",
+        "qid": "B.242"
+    },
+    {
+        "context": "If [MASK] then [MASK]\nThis is the [MASK] case of this question. Suppose that [MASK] and [MASK] Equivalently: Suppose that there are two positive divisors of [MASK] which average to [MASK]. Is it necessarily the case that these two divisors are [MASK] and [imath]2^k+1[/imath]?",
+        "formulaID": "q_403",
+        "qid": "B.243"
+    },
+    {
+        "context": "Compute the Cardinality of a quotient set\n\nLet [MASK] be a an Equivalence relation on [MASK] defined by: [MASK] What is the cardinality of [MASK]?   where [MASK] is the quotient set of [MASK] under [imath]R[/imath].",
+        "formulaID": "q_410",
+        "qid": "B.244"
+    },
+    {
+        "context": "Is there a known set of closed form solutions to the functional equation f(f(z)) = sin z?\n\nThat is [MASK] where [imath] z \\in \\mathbb{Z} [/imath]",
+        "formulaID": "q_412",
+        "qid": "B.245"
+    },
+    {
+        "context": "Finding [MASK] such that in a regular [MASK]-gon [MASK] we have [MASK]\nINMO '92 Question 9:  Find [MASK] such that in a regular [MASK]-gon [MASK] we have [MASK]  I tried the following Assume it is inscribed in a circle. Then length of chord is [MASK] where [MASK] is half the angle subtended at the center between consecutive points. So, [MASK]. Then we get [imath]\\csc(\\theta)=\\csc(2\\theta)+\\csc(3\\theta)[/imath] Not sure quite how to proceed from there- using double and triple angle formulae doesn't seem to work",
+        "formulaID": "q_424",
+        "qid": "B.246"
+    },
+    {
+        "context": "Finding the endpoints of the maximal arc of circle [MASK] visible from [MASK].\n\n The equation of circle [MASK] is [MASK]. The eye is located at [MASK]. The maximal circular arc visible to the eye is [MASK], which is then being projected on to the one-dimensional \"screen\" as [MASK]. What are the co-ordinates of points [MASK] and [MASK]?  I came this far: point [MASK] on circle [MASK] has the coordinates [MASK], [MASK]. Now I should use this to find points [MASK] and [imath]B[/imath], but I don't know how to proceed.",
+        "formulaID": "q_439",
+        "qid": "B.247"
+    },
+    {
+        "context": "product of elements [MASK] implies only one element with order [MASK]\nLet [MASK] be an abelian group with even order and [MASK]. It is easy to show that [MASK] is a sugroup of [MASK] and the number of elements of [MASK] must be a power of [MASK].  I want to prove that the product of the elements of [MASK] (which in this case is equal to the product of the elements of [MASK]) is not the identity element [MASK], if and only if #[MASK] (this means that there is only one element with order [MASK]). I found this claim when I studied the Wilson criterion for the primality of a number.  The case #[MASK] is easy. If [MASK], we can show that [MASK] is not [MASK], hence must be some other element [MASK] and we get [MASK]. But what about #[MASK]? If we have the elements [MASK] and [MASK] and [MASK], the product would be [imath]h[/imath] which is impossible considering my claim.  Who can complete my proof ?",
+        "formulaID": "q_463",
+        "qid": "B.248"
+    },
+    {
+        "context": "An abelian group proof with [MASK] for all [MASK].\n\nI have to show that the following group [MASK] with its operation [MASK], which is defined through [MASK]  for every [imath]g \\in G [/imath] is an abelian group. In order to do that one have only to show that the group is commutative. How can one prove it whereas the operation is defined always between an Element and itself? I reckon it is not so simple as it seems Thanks in advance for your help :)",
+        "formulaID": "q_469",
+        "qid": "B.249"
+    },
+    {
+        "context": "How to show [MASK]\nHow to show [MASK] with [MASK] positive. Well, I tried by induction: with [MASK] then [MASK] is equivalent to say (elevate square in both side) [MASK] and this is equivalent [MASK] and this is true. I suppose it is true for some [MASK]. But with [imath]n+1[/imath], I don't know how to do, Please can help me with a hint or other way, thank you so much.",
+        "formulaID": "q_478",
+        "qid": "B.250"
+    },
+    {
+        "context": "How to prove that [MASK] using mathematical induction?\n\nI've been trying to solve this for hours, but I just can't seem to do it. And yes, I know I have to show that [MASK] from the starting assumption that [imath](k+1)^{\\frac{1}{k+1}} < k^{\\frac{1}{k}}[/imath]. Any hints would be highly welcome.",
+        "formulaID": "q_481",
+        "qid": "B.251"
+    },
+    {
+        "context": "Unexpected appearances of [MASK].\n\n \"The number [MASK] turns up surprisingly often and frequently in unexpected places.\" - Julian Havil, Gamma: Exploring Euler's Constant.   It is well-known, especially in 'pop math,' that [MASK] Euler's proof of which is quite nice. I would like to know where else this constant appears non-trivially. This is a bit broad, so here are the specifics of my question:  We can fiddle with the zeta function at arbitrary even integer values to eek out a [MASK]. I would consider these 'appearances' of [MASK] to be redundant and ask that they not be mentioned unless you have some wickedly compelling reason to include it. By 'non-trivially,' I mean that I do not want converging series, integrals, etc. where it is obvious that [MASK] or [MASK] with [MASK] can simply be 'factored out' in some way such that it looks like [MASK] was included after-the-fact so that said series, integral, etc. would equal [MASK]. For instance, [MASK], but clearly the appearance of [MASK] here is contrived. (But, if you have an answer that seems very interesting but you're unsure if it fits the 'non-trivial' bill, keep in mind that nobody will actually stop you from posting it.)  I hope this is specific enough. This was my attempt at formally saying 'I want to see all the interesting ways we can make [MASK].' With all that being said, I will give my favorite example as an answer below! :[imath])[/imath]  There used to be a chunk of text explaining why this question should be reopened here. It was reopened, so I removed it.",
+        "formulaID": "q_495",
+        "qid": "B.252"
+    },
+    {
+        "context": "How would I show the result below using contour integration?\n\nHow would I show the result below using contour integration? [imath]\\int_{-\\infty}^{\\infty} \\frac{\\cos bx - \\cos ax}{x^2} dx = \\pi (a-b)[/imath] where a>b>0 using contour integration. Any help would be greatly appreciated, thanks!",
+        "formulaID": "q_496",
+        "qid": "B.253"
+    },
+    {
+        "context": "Integration question hard\n\n Can I get some hints on how to solve this integral? [imath] I=\\int_0^\\pi \\frac{x \\ dx}{1-sinx \\ cosx} [/imath] ",
+        "formulaID": "q_497",
+        "qid": "B.254"
+    },
+    {
+        "context": "Integral of [MASK]\nThis is the first time I came across the problem of finding integral of [MASK]. I have a joint distribution [MASK]  where   I attempted to find [MASK] as follows:    where [MASK] Similarly, I derived [MASK] where [imath] u = \\sqrt{94}x - \\frac{13y}{2\\sqrt{94}} [/imath] Could you please show me how to proceed to the destination solutions? Thanks in advance.",
+        "formulaID": "q_506",
+        "qid": "B.255"
+    },
+    {
+        "context": "Why do we have to factorize the function before taking its limit\n\nI am learning about limits and there is something that I cant quite understand: If we have the function:  [MASK]  Let's say that we want to see which value for y (image) the function approaches as x (domain) gets closer to 1. On a nutshell, we have to take this following limit:  [MASK]  As soon as we look to this function, we realize that the function is not continuous at x = 1 (By the way, can I say that?).  I know the algorithm to figure out the solution of the limit: First, there is the need of eliminating the function discontinuity. Usually, it is just a matter of factorizing the function into a new function which the exactly same image as the one before with one crucial difference: The function is continuous for all real numbers  My doubts:Is my way to think about it correct? Can I think like that? Take the example above:    [MASK]  After factorizing, we get: [imath] f(x) = {x+1} [/imath] If we plot both functions, they are the same, although the second one has its continuity all along the real numbers domain Thanks in advance",
+        "formulaID": "q_510",
+        "qid": "B.256"
+    },
+    {
+        "context": "Is \"taking a limit\" a function? Is it a procedure? A ternary operation?\n\nI was sitting in analysis yesterday and, naturally, we took the limit of some expression. It occurred to me that \"taking the limit\" of some expression abides the rules of a linear transformation [MASK] and (my group theory is virtually non existent) appears also to be a homomorphism: [imath]\\lim_{x \\rightarrow k} (fg)(x) = \\lim_{x \\rightarrow k} f(x)g(x), [/imath] etc. Anyway, my real question is, what mathematical construct is the limit? ",
+        "formulaID": "q_512",
+        "qid": "B.257"
+    },
+    {
+        "context": "How to prove [MASK] ? (k is any positive number)\n\nOriginally, i was trying to find the value of [MASK] to find out differentiabiltiy of     at 0. In this case,  [MASK] So when I applied L'Hospital's rule, then its value was 0. And I thought that No matter how big [MASK] is,  [MASK] will be equal to zero because exponential's increase speed is much faster than polynomial's. Definitely, we can also apply L'hospital's rule at here, but I think it is not proper qualitative explanation for the fact that exponential is much bigger than polynomial. Is there any other approach which explains why  about this problem? (In fact, I tried to use [MASK] but how can i show that there exist some [MASK] s.t. for every [MASK] (And I also tried to use inequality like [MASK]  for all [MASK] but it only worked for [imath]k<1[/imath])",
+        "formulaID": "q_525",
+        "qid": "B.258"
+    },
+    {
+        "context": "Why does [MASK] grow faster than [MASK]?\n\nFor every finite case, I can find a [MASK] where [MASK], so why is this true? [MASK] From the finite cases it seems like [MASK] grows faster because we can find a [MASK] to match it at any [imath]n[/imath].",
+        "formulaID": "q_533",
+        "qid": "B.259"
+    },
+    {
+        "context": "limit with two variables\n\nThe limit I need to calculate is [MASK]. Using polar coordinates I get: [MASK]. Now if [MASK] then the limit is [MASK]. How do I handle the case where [MASK] or [imath]\\theta = \\pi[/imath]? And is there a better way to approach this limit?",
+        "formulaID": "q_539",
+        "qid": "B.260"
+    },
+    {
+        "context": "Show that [MASK]\nLet the matrix [MASK], where [MASK] denotes a field, be defined by [MASK] with   Show that  [imath]\\det(T_n)=\\sum_{k=0}^{n}\\alpha^{n-k}\\beta^k[/imath]  My approach: I tried a proof via induction and while the basis step is trivial, I can't seem to solve the induction step since the matrix is never in upper or lower triangular form but always a block matrix, which makes this seemingly difficult as when calculating the determinant of block matrices, one usually calculates the product of all the \"diagonal blocks\". I would very much appreciate help, thank you very much.",
+        "formulaID": "q_545",
+        "qid": "B.261"
+    },
+    {
+        "context": "Positve part and negative part of a real number\n\nLet [MASK] be a real number . The positive part of [MASK], denoted by [MASK] is given by expression   The negative part of [MASK], denoted by [MASK] is given by expression   Both [MASK] and [MASK]  are non negative and the following relationship hold [MASK] Above is the text from my compiler optimization book and I cannot understand the relationship explained. How can [imath]a[/imath] be a real number and have positive and negative parts?",
+        "formulaID": "q_556",
+        "qid": "B.262"
+    },
+    {
+        "context": "Formal relationship between rules of inference and the material conditional\n\nI am not [MASK] clear as to what constitutes the difference between a rule of inference and the material conditional, at least in classical logic. I am using the truth-functional definition of the material conditional, commonly visualised through its truth table, but I'm not entirely sure what the formal definition of a rule of inference is. The wikipedia article defines it to be a particular kind of logical form, which seems to be a term from philosophical logic that I'm not familiar with, but reading that article didn't really answer my question. It pertains more to the mathematical side of things, and I am specifically interested in the interplay between the concepts on the syntactic and semantic level. As far as I can tell, any rule of inference can be 'captured' by a corresponding material conditional: if we take modus ponens as a well-known example, what is the difference between [MASK] and [imath]{a\\to b,\\text{ } a \\over b}?[/imath] On a functional level, both statements seem to be expressing the same thing. What determines the need to use two separate terms and notations, and what, if anything, separates them?",
+        "formulaID": "q_559",
+        "qid": "B.263"
+    },
+    {
+        "context": "Modulo Power Arithmetic\n\nWhile performing some arithmetic operations, i am stuck at one point.I want to know is it possible to write ([MASK] as ([imath]a^{(b\\%p)})\\%p[/imath]?",
+        "formulaID": "q_561",
+        "qid": "B.264"
+    },
+    {
+        "context": "How to show that [MASK] in this situation cannot be an integer\n\nLet [MASK],[MASK] be relatively prime integers which are both greater than or equal to [MASK] . Show that [MASK] cannot be an integer. I have tried to use contradiction to prove this result, but I am not sure that my idea is correct or not. Below is my idea (not a complete proof). Suppose [MASK] be an integer. We have [MASK] is an integer. Then, we have [MASK] where [MASK] is an integer since [MASK] divides [MASK]. Since [MASK] are relatively prime, therefore [MASK] must be [imath]1[/imath]. Hence, contradiction arises. I am not sure that my idea is correct or not, could anyone help me to check it? If my idea is wrong, could you give me a idea to do this question?",
+        "formulaID": "q_575",
+        "qid": "B.265"
+    },
+    {
+        "context": "What happens when we (incorrectly) make improper fractions proper again?\n\nMany folks avoid the \"mixed number\" notation such as [MASK] due to its ambiguity. The example could mean \"[MASK] and two thirds\", i.e. [MASK], but one may also be tempted to multiply, resulting in [MASK]. My questions pertain to what happens when we iterate this process -- alternating between changing a fraction to a mixed number, then \"incorrectly\" multiplying the mixed fraction. The iteration terminates when you arrive at a proper fraction (numerator [MASK] denominator) or an integer. I'll \"define\" this process via sufficiently-complicated example: [MASK]  Does this process always terminate?  For which [MASK] does this process, with initial iterate [MASK], terminate at [imath]\\frac{p \\mod q}{q}[/imath]?  ",
+        "formulaID": "q_584",
+        "qid": "B.266"
+    },
+    {
+        "context": "Dual of Lagrange Dual\n\nFor linear programming, it's well known that the dual of the dual is the primal. I'm wondering if it is the case for Lagrange duality, and I'm having a hard time showing this. Notationally, let the primal problem be: [MASK] [MASK] And the dual be: [MASK] [MASK] Where [imath]L(x,\\lambda) = f_0(x) + \\sum_{i=1}^m \\lambda_i f_i(x)[/imath] is the Lagrangian. I suspect it isn't true in general that the dual of dual is the primal. However, intuitively when I hear the term dual I assume that the dual of the dual should be the primal, so this got me confused. ",
+        "formulaID": "q_589",
+        "qid": "B.267"
+    },
+    {
+        "context": "If [MASK], find the expected value of [MASK]\nThe Problem: Suppose that [MASK]. Find the expected value of [imath]\\dfrac{1}{1+Z}.[/imath] We have that   where we used the Taylor series for the exponential function.  Do you agree with my approach above? Any feedback is most welcomed. Thank you very much for your time.",
+        "formulaID": "q_593",
+        "qid": "B.268"
+    },
+    {
+        "context": "conditional probability in a family\n\nLet a family have two children. It is known that one of the children is a boy. What is the probability that both the children are boys. So for this we build the sample space [MASK] Let our event E be the case where both children are boys [MASK] Let the conditional be F [MASK] Hence [MASK] But the answer in my book is given as [imath]\\frac{1}{3}[/imath] and I can't seem to understand why.",
+        "formulaID": "q_599",
+        "qid": "B.269"
+    },
+    {
+        "context": "Expected number of heads before it turns up tails five times\n\nA fair coin is flipped repeatedly until it turns up tails five times. What is the expected number of heads before that happens? Based on the link given in the comment, I have found it can be solved using the recursion [MASK] which is equivalent to [imath]E(n)=E(n-1)+1[/imath]. Is it correct?",
+        "formulaID": "q_601",
+        "qid": "B.270"
+    },
+    {
+        "context": "Probability of [MASK] where [MASK] are independent Gaussian r.v.'s with mean 0\n\nLet [MASK] be a sequence of independent Gaussian random variables with [MASK] for all [MASK]. Find the probability of the event [imath] \\limsup_{n\\to \\infty} \\big\\{ X_n X_{n+1}> 0 \\big\\} [/imath] My first thought is that it should be 1 since Gaussians are always positive for a finite value. I was thinking of applying Borel-Cantelli and was trying something along the lines of   I'm not sure I'm thinking of this problem right, though.",
+        "formulaID": "q_607",
+        "qid": "B.271"
+    },
+    {
+        "context": "Why is [MASK] = [MASK] not true when a and b are both negative?\n\nApparently [MASK] = [MASK] is only true if a and b are both positive or if a is negative and b is positive or if a is positive and b is negative. In other words, a and b can't both be negative. Is it possible to algebraically prove this? Or is it just a result of the way the square root function is defined?  I know of 1 way to prove this radical property, but I'm still not sure why it won't work for negative numbers. Let x = [MASK]. Let y = [MASK] Square both sides for both equations. [MASK] [MASK] [MASK] [MASK] [MASK] [MASK] or [MASK] Or [MASK] or [MASK]  A lot of people will go through this line of reasoning (shown below) in order to justify why a and b can't both be negative.  Considering that mathematicians define [MASK] or [MASK] [MASK] But this is only a specific instance where this property fails us. This isn't a  rigorous or at least satisfying proof of why [MASK] = [imath]\\sqrt{a}\\sqrt{b}[/imath] can only be true if a and b are not both negative. Note: I just started learning about complex and imaginary numbers and I am no means an expert in  mathematical proofs, so if you do know the answer to this question please try (if possible) your best to answer the question without using too much complex or high-order math that I won't be able to understand. ",
+        "formulaID": "q_628",
+        "qid": "B.272"
+    },
+    {
+        "context": "Can fractional/decimal radicals/roots exist?\n\nFor questions like \"What is the 1/2th root of x would the answer be [MASK]? My logic is that since [MASK] Which simplifies to [MASK]. So as a general rule it could be [MASK] And with a different denominator [MASK] This corresponds to how decimal/fractional exponents denote radicals (their inverse) while fractional radicals are easier shown with exponents. Example : (2/3rd root of 4) [MASK] Example (22/7th root of \u03c0) : [MASK] Example (1/2th root of 1/4) : [imath]\\sqrt[\\cfrac{1}{2}]{\\cfrac{1}{4}}=\\cfrac{1}{4}^{1/(\\cfrac{2}{1})} =\\cfrac{1}{4}^{(\\cfrac{2}{1})} =\\cfrac{1}{4}^{2} =\\cfrac{1}{16} [/imath]",
+        "formulaID": "q_636",
+        "qid": "B.273"
+    },
+    {
+        "context": "Why the Heaviside distribution [MASK] doesn't belong to any Sobolev space [MASK]\nI prooved that the Dirac distribution [MASK] is in the Sobolev space [MASK] for every  [MASK]  but I steel  wrestling to proof that the  Heaviside distribution [MASK]    Doesn't belong to any Sobolev space [imath]H^{s}(\\mathbb{R})[/imath], could you elaborate on that? Thanks in advance!",
+        "formulaID": "q_644",
+        "qid": "B.274"
+    },
+    {
+        "context": "Proving an Integral Identity with Increasing Bounds\n\nHow can I show that  [MASK] I know that can use the fact that, for [MASK],  [imath]x^{-1}\\;=\\;\\int_0^\\infty e^{-xt}dt[/imath] but I'm not sure how to begin.",
+        "formulaID": "q_647",
+        "qid": "B.275"
+    },
+    {
+        "context": "Let [MASK] and [MASK]. Show that [MASK].\n\nI think what I need to do is find the value of [MASK] where [imath]n^k. I know that this value occurs whenever $n>k\\log_an$, however I don't understand how to interpret this result into a general $N$ to pick as a maximum for the sequence convergence. What am I missing here?[/imath]",
+        "formulaID": "q_652",
+        "qid": "B.276"
+    },
+    {
+        "context": "Is the AM-GM inequality the only obstruction for getting a specific sum and product?\n\nThis might be silly, but here it goes. Let [MASK] be positive real numbers that satisfy [MASK].  Does there exist a sequence of positive real numbers [MASK] such that [MASK]?  Clearly, [MASK] is a necessary condition, due to the AM-GM inequality. But is it sufficient? For [MASK], the answer is positive, as can be seen by analysing the discriminant of the associated quadratic equation. (In fact, the solvability criterion for the quadratic, namely- the non-negativity of the discriminant, is equivalent to the AM-GM inequality for the sum and the product). What about [imath]n>3[/imath]?",
+        "formulaID": "q_661",
+        "qid": "B.277"
+    },
+    {
+        "context": "Is there a differentiable function such that [MASK] but [MASK]?\n\nIs there a differentiable function [MASK] such that [MASK], but [MASK]? A friend of mine asserted this without giving any examples. I seriously doubt it, but I had hard time trying to disprove it since analysis isn't really my thing. I can't even think of any class of differentiable functions with [imath]f(\\mathbb Q) \\subseteq \\mathbb Q[/imath] other than the rational functions.",
+        "formulaID": "q_667",
+        "qid": "B.278"
+    },
+    {
+        "context": "If [MASK] show that [MASK].\n\n Question: Suppose [MASK] has the property that [MASK] Show that [MASK].  My approach: Let [MASK] be such that [MASK] Note that if we can show that [MASK], then we will be done. Now since we have [MASK] Next I tried to come up with some bounds in order to use Sandwich theorem to show that [MASK] but the bounds didn't quite work out. The bounds were the following: [imath]\\begin{cases}h(x)\\ge \\frac{h^2(x)}{h(x)+1},\\text{when }h(x)\\ge 0,\\\\h(x)<\\frac{h^2(x)}{h(x)+1},\\text{when }h(x)<0.\\end{cases}[/imath] How to proceed after this?",
+        "formulaID": "q_678",
+        "qid": "B.279"
+    },
+    {
+        "context": "Why do engineers use derivatives in discontinuous functions? Is it correct?\n\nI am a Software Engineering student and this year I learned about how CPUs work, it turns out that electronic engineers and I also see it a lot in my field, we do use derivatives with discontinuous functions. For instance in order to calculate the optimal amount of ripple adders so as to minimise the execution time of the addition process: [MASK] [MASK] [MASK] where [MASK] is the number of bits in the numbers to add, [MASK] is the amount of adders in ripple and [MASK] is the \"delta gate\" (the time that takes to a gate to operate). Clearly you can see that the execution time function is not continuous at all because [MASK] is a natural number and so is [MASK]. This is driving me crazy because on the one hand I understand that I can analyse the function as a continuous one and get results in that way, and indeed I think that's what we do (\"I think\", that's why I am asking), but my intuition and knowledge about mathematical analysis tells me that this is completely wrong, because the truth is that the function is not continuous and will never be and because of that, the derivative with respect to [MASK] or [imath]n[/imath] does not exist because there is no rate of change. If someone could explain me if my first guess is correct or not and why, I'd appreciate it a lot, thanks for reading and helping!",
+        "formulaID": "q_688",
+        "qid": "B.280"
+    },
+    {
+        "context": "Alternate methods to prove that [MASK] where [MASK]\nSo, I was trying to prove that [MASK] where [MASK]. Here's what I did: Since [MASK], let us suppose [MASK] for [MASK] and some [MASK]. Now, I used the binomial expansion and wrote:   So now, we can always find an [MASK] such that [MASK] Now, as [MASK], we have, [MASK] And in this way, I proved that [imath]n^{\\frac{1}{n}}\\rightarrow1[/imath]. I wanted to know how can I prove this without using Binomial expansion. I tried to do this using the Bernoulli's Inequality,  but couldn't get too far. Any help/hint would be highly appreciable.",
+        "formulaID": "q_702",
+        "qid": "B.281"
+    },
+    {
+        "context": "How to prove the value o [MASK] by Functional Analysis?\n\nI have a question about [MASK] = [MASK] I know it can be proven with standard 1 variable analysis (working on Taylor series of [imath]\\arcsin[/imath] or something like that) or basic complex analysis. But someone told me it has also great prove using Functional Analysis. He suggested it is proved on standard first course of FA, but it was not in my case. Can You write here the proof using FA or leave a link in comment? Thanks in advance.",
+        "formulaID": "q_706",
+        "qid": "B.282"
+    },
+    {
+        "context": "Determine whether [MASK] converges or diverges\n\n Given [MASK] and [MASK] for [MASK], determine whether [MASK] converges or diverges.  Since [MASK],  it seems obvious that the sequence is strictly increasing and always positive because we are always adding a positive number to each subsequent element in the sequence.  The trickier part is to show whether [MASK] is bounded or not. If [MASK] is bounded, then [MASK] such that  [MASK] Alternatively, I think this means that [MASK] could be a supremum of the sequence and another way to rewrite [MASK] is given any [MASK] [MASK] Choose [MASK]. Then  [MASK] Thus I conclude that the inequality holds [MASK] and that [MASK] is convergent. Thus by the Monotone Sequence Convergence Theorem, [MASK] is convergent.  The part I am not sure about is my reasoning to show that [imath]x_n[/imath] being bounded is correct or not. ",
+        "formulaID": "q_726",
+        "qid": "B.283"
+    },
+    {
+        "context": "Why decimals of rational numbers behave periodically?\n\nI am interesting in the proof of that every rational number cannot have in decimal form infinite number of digits that don't repeat (or the other way around). So, then is enough to prove following statement: For any [MASK] rational number [MASK] can be represented in decimal form such that it's digits, if there are infinitely many, are repeating. If this is true, then it is true for any [MASK] ([imath]m[/imath] times).",
+        "formulaID": "q_730",
+        "qid": "B.284"
+    },
+    {
+        "context": "How to determine the sum of a series that is neither geometric nor arithmetic but quadratic or cubic?\n\nHow to determine the formula of the sum of a series given its [MASK]th-term formula like: [MASK] or [imath]U_n= 6n^2 -12n + 5[/imath]",
+        "formulaID": "q_733",
+        "qid": "B.285"
+    },
+    {
+        "context": "Knowing[MASK] converges, how to prove that [MASK].\n\nLet [MASK] be decreasing and positive. Then [MASK] converges implies [MASK]. I think since [imath]na_n[/imath] is positive, the only thing to do is to find an upper bound for the sequence. But I don't know how to split the sequence to form the upper bound.",
+        "formulaID": "q_739",
+        "qid": "B.286"
+    },
+    {
+        "context": "What is the closed form of [MASK]\nI looked at [MASK] (division), however both expressions are not equal. I am looking for an expression like [imath]\\sum_{i=1}^n\\frac{2i}{2^i}=5n[/imath] for example.",
+        "formulaID": "q_742",
+        "qid": "B.287"
+    },
+    {
+        "context": "Alternating Harmonic Series Spin-off\n\nWe know that the series [MASK] converges, and clearly every other alternating harmonic series with the sign changing every two or more terms such as [MASK] must converge. My question here is that does the series below also converge? [MASK] Loosely speaking, the sign changes every [MASK] terms. I'd be surprised if it doesn't converge. Wolfram Mathematica, after a couple of minutes of computing, concluded the series diverges but I can't really trust it. My first approach (assuming the series converges) was that if we bundle up terms with the same sign like the example above every bundle must have three or four terms, and since the first three terms of all bundles make an alternating series I was going to fiddle with the remaining fourth terms but they don't make an alternating series so I guess there's no point in this approach. edit: I don't think we can use Dirichlet's test with [MASK] The alternating cycle here is [MASK] and I don't believe it would bound the series. For example if the cycle was a number very slightly smaller than [MASK], then [MASK] (sum of [MASK]) would get larger and larger every four bundles for some time. I believe this should happen for [MASK] as well since it is irrational. I'm not entirely sure why but [MASK] for most small [MASK] though I guess it's because [MASK] is slightly smaller than [MASK]? Anyway [MASK], [MASK], [MASK], [MASK], and [MASK]. [MASK] does not hit [MASK] up to [MASK] with [imath]B_{1\\ 000\\ 000\\ 000}=-2[/imath].",
+        "formulaID": "q_765",
+        "qid": "B.288"
+    },
+    {
+        "context": "Find [MASK] general solution\n\nIf we know [MASK][MASK][MASK] Is it possible to calculate the general solution for [MASK]? I know [imath]a_5=6[/imath] but the way to get it is more an algorithm than an actual solution.",
+        "formulaID": "q_771",
+        "qid": "B.289"
+    },
+    {
+        "context": "Best method for proving that [MASK] is divisible by [MASK]\nI am asked to prove by induction that [MASK] is divisible by [MASK]. I wonder whether there is a more direct method, for example factorizing by [MASK]. If an expression is divisible by [MASK], does this mean that I can factorize it by [imath]10[/imath]? Thanks in advance",
+        "formulaID": "q_778",
+        "qid": "B.290"
+    },
+    {
+        "context": "Summation of [MASK]th partial products of the square of even numbers diverges, but for odd numbers they converge in this series I'm looking at. Why?\n\nSo I have the two following series: [MASK] [MASK] I figured out the [MASK]th partial products: [MASK] [MASK] So putting these back into my series they become the following: [MASK] Now this diverges as expected by the limit test test. However when I look at my other series: [MASK] By the limit test maybe diverges or maybe doesn't, and the ratio test is inconclusive. Since I wasn't sure what to use for the a comparison test I threw this into wolfram alpha and it told me it converges which is baffling to me since both series are very similar if we write them out: [MASK] [MASK] They both have the nth parial product of the even/odd integers squared in the numerator, and are over a factorial that is two greater than [imath]n[/imath], so I'm not sure why one is diverging and the other is converging. Is wolframalpha wrong, as it can be at times? Or is there someething here that I am missing?",
+        "formulaID": "q_789",
+        "qid": "B.291"
+    },
+    {
+        "context": "Find the limit of the sequence [MASK] as [MASK] for all values of[MASK]0 and [MASK]\nI have tried using the ratio lemma to tackle this question and also the fact [imath](n+1)^k \\geq 1 + nk[/imath] and I haven't reached an answer. How should I go about solving this problem?",
+        "formulaID": "q_794",
+        "qid": "B.292"
+    },
+    {
+        "context": "Summation [MASK] Properties\n\nI'm dealing with something like [MASK]. I know I can do this [MASK]. Would that be equal to [MASK] or I'm missing some properties with [imath]n-1[/imath]? If so, which ones?",
+        "formulaID": "q_799",
+        "qid": "B.293"
+    },
+    {
+        "context": "Why is there no hyper-hypercohomology?\n\nI am looking for a reference to answer the question in the title. Let me try to clarify a little what I mean: If a single sheaf [MASK] has a resolution [MASK] by not necessarily injective objects, then the usual cohomology of [MASK] is isomorphic to the hypercohomology of [MASK]:  [MASK] Now, if one was starting with a complex of sheaves [MASK] and a \"resolution\" thereof, i.e. a complex of complexes [imath](\\mathscr G^\\bullet)^\\bullet[/imath], then one should touch on a concept that could be called hyper-hypercohomology.  Yet, I never heard of its existence and I'm pretty sure it does not give you anything new, as soon as you work in the derived category. I just find myself unable to pin down why exactly this is the case.  Any ideas anyone?",
+        "formulaID": "q_806",
+        "qid": "B.294"
+    },
+    {
+        "context": "Help calculating series\n\nI need help with understanding how to solve this task, because I'm a bit lost at the moment. Use the powerseries  [MASK] to decide the sum of the series  [MASK]    and [imath]\\sum_{n=1}^{\\infty} \\frac{n(n+1)}{3^n}[/imath] I don't understand how to manipulate the sums to use the power series of the function.",
+        "formulaID": "q_809",
+        "qid": "B.295"
+    },
+    {
+        "context": "A little confused about the Taylor series of [MASK]\nWe know that [MASK] which can be written out [MASK] but [imath]0^0[/imath] isn't well defined.",
+        "formulaID": "q_813",
+        "qid": "B.296"
+    },
+    {
+        "context": "difficult question\n\nI am confused about a homework problem I have, and don't really know where to begin. I need to prove this. Any idea of where I can start. The statement is that Find all integers n that satisfies [MASK] where [imath]\\phi[/imath] is the Euler\u2019s Phi function.",
+        "formulaID": "q_815",
+        "qid": "B.297"
+    },
+    {
+        "context": "Variable transformation of a Dirac delta function\n\nI am struggling to understand the variable transformation of a Dirac delta function. More specifically, a transformation of the following type, [MASK] Here, [MASK] and [MASK] are constants. The specific relationship between [MASK] and [MASK] is, [MASK] where [MASK] is a non-zero, positive and smoothly varying function of [MASK]. In the context of my Physics problem, for the sake of the interested audience, [MASK] is the Hubble parameter of the Universe while [MASK] is the comoving distance and [MASK] is the redshift of any time in the past. So, let me add what I have done so far:  I start by defining the Dirac delta function in the form a unit step function [MASK]as, [MASK] Then converting this in the form of z using the chain rule as, [MASK] Using the relation with [MASK], we can write the equation as, [MASK] Also, [MASK] can also be replaced by the integral as well, so that left side containing the unit step function can be written as, [imath]\\frac{H(z)}{a}\\frac{d}{dz}\\Theta(\\ a\\int_0^z{\\frac{1}{H(z')}dz'}-b)[/imath]. After this, I am not sure what else to try. Hopefully, this addition helps. Also, please point out an error if you see one. ",
+        "formulaID": "q_833",
+        "qid": "B.298"
+    },
+    {
+        "context": "Prove [MASK] but without finding [MASK]\nI can find the value of [imath]\\cos \\left(\\frac{ \\pi}{5}\\right)[/imath], but is there a way to prove the equality without finding it? I tried looking for both algebraic and geometric methods, but couldn't find anything",
+        "formulaID": "q_836",
+        "qid": "B.299"
+    },
+    {
+        "context": "Uniformly continuous or not?\n\nSo I supposed to find out if [MASK] is uniformly continuous on [MASK] So I have been thinking a lot. Could I say that [MASK] is continuous on [MASK] and therefore uniformly continuous here? Or is this not valid, because [MASK] is not defined at [MASK]? And then say that the derivate is bounded at [imath][1,\\infty][/imath]?",
+        "formulaID": "q_843",
+        "qid": "B.300"
+    }
+]
