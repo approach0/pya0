@@ -26,7 +26,7 @@ for arg in "$@"; do
 done
 
 mkdir -p $DIR/prime-output
-#rm -f $DIR/prime-output/*
+rm -f $DIR/prime-output/*
 
 wc -l $DIR/input/*
 
@@ -40,7 +40,7 @@ if [ ! -e $DIR/formulas_slt_string.tsv ]; then
 	gdown '1nRrG3T2hrQY-VU0awoHSG7-g8W-6pXth'
 fi
 
-#python $DIR/arqmath_2020_task2_convert_runs.py -ru "$DIR/input/" -re "$DIR/prime-output/" -v $DIR/visual_id_file.tsv -q $QREL -ld $TSV -s $DIR/formulas_slt_string.tsv
+python $DIR/arqmath_2020_task2_convert_runs.py -ru "$DIR/input/" -re "$DIR/prime-output/" -v $DIR/visual_id_file.tsv -q $QREL -ld $TSV -s $DIR/formulas_slt_string.tsv
 
 python $DIR/task2_get_results.py -eva trec_eval -qre $QREL -de "$DIR/prime-output/" -res $DIR/result.tsv $NOJUDGE
 
