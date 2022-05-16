@@ -27,7 +27,7 @@ rm -f $DIR/trec-output/*
 
 wc -l $DIR/input/*
 
-set -x
+set -ex
 sed -i 's/ /\t/g' $DIR/input/*
 
 python3 $DIR/arqmath_to_prim_task1.py -qre $QREL  -sub "$DIR/input/" -tre $DIR/trec-output/ -pri $DIR/prime-output/

@@ -30,7 +30,7 @@ rm -f $DIR/prime-output/*
 
 wc -l $DIR/input/*
 
-set -x
+set -ex
 sed -i 's/ /\t/g' $DIR/input/*
 
 python $DIR/de_duplicate_2021.py -qre $QREL -tsv $TSV -sub "$DIR/input/" -pri "$DIR/prime-output/"
