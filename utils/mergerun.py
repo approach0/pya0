@@ -190,8 +190,10 @@ def merge_run_files(runfile1, runfile2, alpha,
     f_out = f_out.replace('.', '_')
     f_out = out_prefix + f_out
     with open(f_out, "w") as f:
+        w1 = alpha if alpha >= 0 else 1
+        w2 = 1 - alpha if alpha >= 0 else 1
         for qid, combined in interpolate_generator(
-            runs1, alpha, runs2, 1 - alpha, whichtokeep=option, topk=topk, normalize=normalize
+            runs1, w1, runs2, w2, whichtokeep=option, topk=topk, normalize=normalize
         ):
             for rank, (doc, score, _1, _2) in enumerate(combined):
                 if merge_null_field:
