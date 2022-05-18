@@ -34,10 +34,10 @@ set -ex
 sed -i 's/ /\t/g' $DIR/input/*
 
 if [ ! -e $DIR/visual_id_file.tsv ]; then
-	gdown '1mUZ34Jx9H5LqnguGZuX2-0G_PBi4kAiS'
+	gdown '1mUZ34Jx9H5LqnguGZuX2-0G_PBi4kAiS' -O $DIR/visual_id_file.tsv
 fi
 if [ ! -e $DIR/formulas_slt_string.tsv ]; then
-	gdown '1nRrG3T2hrQY-VU0awoHSG7-g8W-6pXth'
+	gdown '1nRrG3T2hrQY-VU0awoHSG7-g8W-6pXth' -O $DIR/formulas_slt_string.tsv
 fi
 
 python $DIR/arqmath_2020_task2_convert_runs.py -ru "$DIR/input/" -re "$DIR/prime-output/" -v $DIR/visual_id_file.tsv -q $QREL -ld $TSV -s $DIR/formulas_slt_string.tsv
