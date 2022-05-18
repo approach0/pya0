@@ -10,11 +10,22 @@ trec_eval_for_arqmath() {
 	python -m pya0.judge_rate $QREL $1
 }
 
-#./eval-arqmath2-task1/preprocess.sh cleanup
 for RUN in $RUNS; do
 	echo $RUN
-	#./eval-arqmath2-task1/preprocess.sh $RUN
-	trec_eval_for_arqmath $RUN
-	#trec_eval_for_arqmath $RUN -q
+
+	TMP=`mktemp`
+    n_fields=$(awk '{print NF; exit}' $RUN)
+    if [[ $n_fields -eq 6 ]]; then
+        echo "TREC format, no change..."
+        cp $RUN $TMP
+    elif [[ $n_fields -eq 5 ]]; then
+        echo "ARQMath-v2 format, insert a second column."
+        cat $RUN | awk '{print $1 "\t" "_" "\t" $2 "\t" $3 "\t" $4 "\t" $5}' > $TMP
+    else
+        echo "Unknown format, abort."
+        exit 1
+    fi
+
+	trec_eval_for_arqmath $TMP
+	#trec_eval_for_arqmath $TMP -q
 done
-#./eval-arqmath2-task1/eval.sh --qrels=$QREL
