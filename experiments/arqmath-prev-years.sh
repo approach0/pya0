@@ -18,7 +18,7 @@ merge3() {
 	python utils/mergerun.py --normalize=False __ab__.run $file_c -1
 	rm __ab__.run
 	replace_runname_field mergerun-* contextual_colbert
-	mv mergerun-* $4
+	mv $(./eval-arqmath2-task2/swap-col-2-and-3.sh mergerun-*) $4 # swap back and rename
 }
 
 ####################
