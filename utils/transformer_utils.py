@@ -8,6 +8,7 @@ import fire
 import json
 import pickle
 from tqdm import tqdm
+import numpy as np
 from functools import partial
 
 import torch
@@ -152,7 +153,7 @@ def unmasking_visualize(ckpt_bert, ckpt_tokenizer, num_tokenizer_ver=1,
 
 
 def colbert_visualize(tokenizer_path, model_path, qid, did, q_augment=True,
-    test_file='tests/transformer_colbert.txt', parse_dollars=True,
+    test_file='tests/transformer_colbert.txt', parse_dollars=True, emphasis=False,
     max_ql=512, max_dl=512, use_puct_mask=True, num_tokenizer_ver=1):
     # read testcases
     from replace_post_tex import replace_dollar_tex
@@ -213,6 +214,11 @@ def colbert_visualize(tokenizer_path, model_path, qid, did, q_augment=True,
     print('score:', score)
     print('matrix:\n', cmp_matrix)
 
+    if emphasis:
+        max_loc = np.argmax(cmp_matrix, axis=1)
+        for i, j in enumerate(max_loc):
+            cmp_matrix[i][j] = 1.0
+
     # visualizing
     import matplotlib.pyplot as plt
     h, w = cmp_matrix.shape
@@ -228,20 +234,20 @@ def colbert_visualize(tokenizer_path, model_path, qid, did, q_augment=True,
     plt.imshow(cmp_matrix, cmap='viridis', interpolation='nearest')
     plt.yticks(
         list([i for i in range(h)]),
-        list([tok.replace('$', '_') for tok in qry_tokens])
+        list([tok.replace('$', r'\$') for tok in qry_tokens])
     )
     plt.xticks(
         list([i for i in range(w)]),
-        list([tok.replace('$', '_') for tok in doc_tokens]),
+        list([tok.replace('$', r'\$') for tok in doc_tokens]),
         rotation=90
     )
     wi, hi = fig.get_size_inches()
-    plt.gcf().set_size_inches(wi * 2, hi * 2)
-    #plt.colorbar()
+    plt.gcf().set_size_inches(wi * 1.5, hi * 1.5)
     plt.grid(True)
-    #plt.tight_layout()
+    plt.tight_layout()
     print('generating visualization image...')
-    plt.savefig('scores.png')
+    #plt.savefig('scores.eps')
+    plt.savefig('scores.svg')
     plt.show()
 
 

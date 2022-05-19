@@ -1,5 +1,5 @@
-prove that if $\lim_{n\to \infty}z_n$=1 then $\lim\limits_{n\to \infty}\sigma_n$=1
+Inequality between norm 1, norm 2 and norm $\infty$ of matrices
+
+$\|A\|_2 \leq \sqrt{ \|A\|_1 \|A\|_\infty}$
 
 If $z_n\to 1$, then $\sigma_n\to 1$ as well.
-
-Indeed, suppose that $b_n:=z_n-1$. Then $b_n\to 0$ and it suffices to show that $\lim \limits_{n\to \infty}\dfrac{b_1+\dots+b_n}{n}=0$. Since $b_n\to 0$ then there is $c>0$ ushc that for all $n$ we have $|b_n|<c$. Moreover, for each $\epsilon>0$ there exists $n_0=n_0(\epsilon)$ such that for all $n>n_0$ we have $|b_n|<\epsilon$.
