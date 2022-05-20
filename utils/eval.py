@@ -6,6 +6,7 @@ import tempfile
 import subprocess
 from index_manager import get_cache_home
 from msearch import cascade_run
+from timer import timer_report
 from preprocess import preprocess_query
 import collection_driver
 import tracemalloc
@@ -164,8 +165,9 @@ def run_fold_topics(index, collection, k, fold, cascades, output, topk, purpose,
         print()
 
         # output TREC-format run file
-        collection_driver.TREC_preprocess(collection, index, hits)
-        TREC_output(hits, qid, append=(j!=0), output_file=output)
+        if output is not None:
+            collection_driver.TREC_preprocess(collection, index, hits)
+            TREC_output(hits, qid, append=(j!=0), output_file=output)
 
         #snapshot2 = tracemalloc.take_snapshot()
         #top_stats = snapshot2.compare_to(snapshot1, 'lineno')
@@ -197,6 +199,8 @@ def run_topics(index, collection, output, topk=1000, verbose=False, log=None,
         cur_fold = [f for f in topic_queries if f[0] not in tmp_dict]
 
         def outfor(purpose):
+            if output == '/dev/null':
+                return None
             filename = os.path.basename(output)
             filename_fields = output.split('.')
             filename = '.'.join(filename_fields[:-1])
@@ -210,3 +214,4 @@ def run_topics(index, collection, output, topk=1000, verbose=False, log=None,
         # for testing
         run_fold_topics(index, collection, k, hold_out, cascades, outfor('test'), topk, 'test',
             math_expansion=math_expansion, verbose=verbose, log=log, fork_search=fork_search)
+    timer_report()

@@ -6,6 +6,7 @@ import pickle
 import requests
 import tempfile
 import subprocess
+from timer import timer_begin, timer_end
 from rm3 import rm3_expand_query
 from l2r import L2R_rerank, parse_svmlight_by_topic
 from mergerun import parse_trec_file, parse_qrel_file_to_run
@@ -34,7 +35,9 @@ def msearch(index, query, verbose=False, topk=1000, log=None, fork_search=False,
             fh.flush()
             cmd = ['python3', '-m', 'pya0', '--index', fork_search, '--direct-search', pkl_file]
             print(cmd, file=sys.stderr)
+            timer_begin()
             process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            timer_end()
             output = process.stdout
             print(process.stderr.decode("utf-8"), file=sys.stderr) # debug
             results = json.loads(output)
@@ -46,10 +49,12 @@ def msearch(index, query, verbose=False, topk=1000, log=None, fork_search=False,
             query[i]['field'] = 'content'
             query[i]['op'] = 'OR'
             query[i]['boost'] = 1.0
+        timer_begin()
         results = send_json(index[1], {
             "page": -1, # return results without paging
             "kw": query
         }, verbose=verbose)
+        timer_end()
 
         ret_code = results['ret_code']
         ret_msg = results['ret_str']
@@ -61,16 +66,20 @@ def msearch(index, query, verbose=False, topk=1000, log=None, fork_search=False,
             if verbose: print(f'cluster returns error: #{ret_code} ({ret_msg})')
 
     elif docid:
+        timer_begin()
         result_JSON = pya0.search(
             index, query, verbose=verbose, topk=topk, log=log, docid=docid
         )
+        timer_end()
         results = json.loads(result_JSON)
 
     else:
         try:
+            timer_begin()
             result_JSON = pya0.search(
                 index, query, verbose=verbose, topk=topk, log=log
             )
+            timer_end()
             results = json.loads(result_JSON)
         except UnicodeDecodeError:
             return {
