@@ -530,7 +530,7 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
     import collection_driver
     lookup_index = config[section]['lookup_index']
     print('Lookup index:', lookup_index)
-    lookup_index = collection_driver.open_index(lookup_index)
+    lookup_index = collection_driver.open_special_index(lookup_index)
 
     # output config
     from .eval import TREC_output

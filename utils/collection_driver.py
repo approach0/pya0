@@ -8,9 +8,11 @@ from preprocess import tokenize_text, tokenize_content
 DOCID_FIELD = 'title'
 
 
-def open_index(index_url):
-    idx_type, idx_path = index_url.split(':')
-    if idx_type == 'doclist':
+def open_special_index(index_arg):
+    idx_type, idx_path = index_arg.split(':', maxsplit=1)
+    if idx_type == 'tcp':
+        index = idx_type, idx_path
+    elif idx_type == 'doclist':
         idx_path = os.path.join(idx_path, 'doclist.pkl')
         with open(idx_path, 'rb') as fh:
             idx_load = pickle.load(fh)
@@ -32,7 +34,10 @@ def docid_to_doc(index, docid):
         return doc
     elif type(index).__name__ == 'tuple':
         idx_type, idx_load = index
-        if idx_type == 'doclist':
+        if idx_type == 'tcp':
+            content = None
+            pass
+        elif idx_type == 'doclist':
             docid = int(docid)
             content = idx_load[docid][1]
         elif idx_type == 'docdict':

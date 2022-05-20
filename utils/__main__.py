@@ -44,7 +44,7 @@ if __name__ == '__main__':
         help="Lookup a raw document from index")
     parser.add_argument('--index', type=str, required=False,
         help="Open index at specified path, a prebuilt index name, or a searchd Web API" +
-             " (e.g., http://localhost:8921/search)")
+             " (e.g., tcp:http://localhost:8921/search)")
     parser.add_argument('--topk', type=int, required=False,
         help="Keep at most top-K hits in results")
     parser.add_argument('--trec-output', type=str, required=False,
@@ -201,7 +201,7 @@ if __name__ == '__main__':
 
     elif isinstance(args.index, str) and ':' in args.index:
         import collection_driver
-        index = collection_driver.open_index(args.index)
+        index = collection_driver.open_special_index(args.index)
 
     elif not os.path.exists(args.index):
         index_path = pya0.from_prebuilt_index(args.index, verbose=verbose)

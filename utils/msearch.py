@@ -21,7 +21,7 @@ def send_json(url, obj, verbose=False):
         return j
 
     except Exception as e:
-        print(e)
+        print('send_json ERR:', e)
         exit(1)
 
 
@@ -39,8 +39,14 @@ def msearch(index, query, verbose=False, topk=1000, log=None, fork_search=False,
             print(process.stderr.decode("utf-8"), file=sys.stderr) # debug
             results = json.loads(output)
 
-    elif isinstance(index, str):
-        results = send_json(index, {
+    elif isinstance(index, tuple) and index[0] == 'tcp':
+        # for a valid query JSON, we need a few extra fields:
+        # "field": "content", "op": "OR", "boost": 1.f
+        for i in range(len(query)):
+            query[i]['field'] = 'content'
+            query[i]['op'] = 'OR'
+            query[i]['boost'] = 1.0
+        results = send_json(index[1], {
             "page": -1, # return results without paging
             "kw": query
         }, verbose=verbose)
