@@ -309,7 +309,8 @@ def gen_flat_topics(collection, kw_sep):
         yield qid, query
 
 
-def search(config_file, section, adhoc_query=None, max_print_res=3, verbose=False, device='cpu', query_filter=None):
+def search(config_file, section, adhoc_query=None, max_print_res=3,
+           verbose=False, device='cpu', query_filter=None):
     config = configparser.ConfigParser()
     config.read(config_file)
 
@@ -360,7 +361,9 @@ def search(config_file, section, adhoc_query=None, max_print_res=3, verbose=Fals
         if query_filter is not None and query_filter != qid:
             continue
         print(qid, query)
+        timer_begin()
         search_results = searcher(query, encoder, topk=topk, debug=verbose)
+        timer_end()
         if verbose:
             for j in range(max_print_res):
                 internal_id, score, doc = search_results[j]
@@ -392,6 +395,7 @@ def search(config_file, section, adhoc_query=None, max_print_res=3, verbose=Fals
             assert NotImplementedError
         print()
 
+    timer_report(f'{section}.timer')
     seacher_finalize()
 
 
