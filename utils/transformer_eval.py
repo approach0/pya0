@@ -283,6 +283,7 @@ def searcher__docid_vecs_colbert(idx_dir, config, enc_utils, gpu_dev):
         return results
 
     def finalize():
+        colbert_searcher.report()
         pass
 
     return searcher, finalize
