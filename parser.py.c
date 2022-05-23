@@ -20,7 +20,7 @@ static LIST_IT_CALLBK(append_subtree_pyobject)
 	PyObject *subtree = get_opt_pyobject(opt, args->insert_rank_node);
 
 	if (args->insert_rank_node && !args->commutative) {
-		PyObject *rank = PyTuple_New(5);
+		PyObject *rank = PyTuple_New(6);
 		PyObject *span = PyTuple_New(2);
 
 		PyTuple_SetItem(span, 0, PyLong_FromLong(0));
@@ -29,11 +29,12 @@ static LIST_IT_CALLBK(append_subtree_pyobject)
 		PyObject *py_list = PyList_New(0);
 		PyList_Append(py_list, subtree);
 
-		PyTuple_SetItem(rank, 0, PyLong_FromLong(opt->sign));
-		PyTuple_SetItem(rank, 1, PyUnicode_FromString("RANK"));
-		PyTuple_SetItem(rank, 2, PyUnicode_FromFormat("rank_%d", args->rank));
-		PyTuple_SetItem(rank, 3, span);
-		PyTuple_SetItem(rank, 4, py_list);
+		PyTuple_SetItem(rank, 0, PyLong_FromLong(opt->node_id));
+		PyTuple_SetItem(rank, 1, PyLong_FromLong(opt->sign));
+		PyTuple_SetItem(rank, 2, PyUnicode_FromString("RANK"));
+		PyTuple_SetItem(rank, 3, PyUnicode_FromFormat("rank_%d", args->rank));
+		PyTuple_SetItem(rank, 4, span);
+		PyTuple_SetItem(rank, 5, py_list);
 		PyList_Append(args->py_list, rank);
 
 	} else {
@@ -70,17 +71,18 @@ static PyObject *get_opt_pyobject(struct optr_node *opt, int insert_rank_node)
 	}
 
 
-	PyObject *result = PyTuple_New(5);
+	PyObject *result = PyTuple_New(6);
 	PyObject *span = PyTuple_New(2);
 
 	PyTuple_SetItem(span, 0, PyLong_FromLong(opt->pos_begin));
 	PyTuple_SetItem(span, 1, PyLong_FromLong(opt->pos_end));
 
-	PyTuple_SetItem(result, 0, PyLong_FromLong(opt->sign));
-	PyTuple_SetItem(result, 1, PyUnicode_FromString(token));
-	PyTuple_SetItem(result, 2, PyUnicode_FromString(symbol));
-	PyTuple_SetItem(result, 3, span);
-	PyTuple_SetItem(result, 4, py_list);
+	PyTuple_SetItem(result, 0, PyLong_FromLong(opt->node_id));
+	PyTuple_SetItem(result, 1, PyLong_FromLong(opt->sign));
+	PyTuple_SetItem(result, 2, PyUnicode_FromString(token));
+	PyTuple_SetItem(result, 3, PyUnicode_FromString(symbol));
+	PyTuple_SetItem(result, 4, span);
+	PyTuple_SetItem(result, 5, py_list);
 	return result;
 }
 

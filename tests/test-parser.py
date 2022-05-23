@@ -4,7 +4,7 @@ sys.path.insert(0, '.')
 import pya0
 
 def print_OPT(OPT, level=0, tex=None):
-    sign, token, symbol, span, children = OPT
+    nodeID, sign, token, symbol, span, children = OPT
     sign = '' if sign == 1 else '(-) '
     space = '   ' * level
     if tex and (span[1] - span[0]) > 0:
@@ -27,9 +27,9 @@ def test(tex):
 # parse a valid TeX
 test("a^2 - b^2 = -\\frac{c^3}{2} + 2/(-3)")
 
+# parse wildcards
+test("\\qvar{x} + \\qvar y")
+
 # parse an invalid TeX
 pya0.use_fallback_parser(True)
 test("x__1")
-
-# parse wildcards
-test("\\qvar{x} + \\qvar y")
