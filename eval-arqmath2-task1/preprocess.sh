@@ -1,5 +1,5 @@
 DIR=$(dirname $0)
-INPUTS=$@
+INPUTS=("${@-tmp.run}")
 mkdir -p $DIR/input
 
 if [ "$INPUTS" == "cleanup" ]; then
@@ -8,21 +8,21 @@ if [ "$INPUTS" == "cleanup" ]; then
     exit 0
 fi
 
-for INPUT in $INPUTS; do
+for INPUT in "${INPUTS[@]}"; do
     if [[ "$INPUT" == "filter" ]]; then
         continue
     fi
 
     echo $INPUT
-    n_fields=$(awk '{print NF; exit}' $INPUT)
-    dest_name=$(basename $INPUT)
+    n_fields=$(awk '{print NF; exit}' "$INPUT")
+    dest_name=$(basename "$INPUT")
     dest_name=$(echo $dest_name | sed -e 's/\./_/g')
     if [[ $n_fields -eq 6 ]]; then
         echo "TREC format, we will need to drop the second column..."
-        cat $INPUT | awk '{print $1 "\t" $3 "\t" $4 "\t" $5 "\t" $6}' > $DIR/input/$dest_name
+        cat "$INPUT" | awk '{print $1 "\t" $3 "\t" $4 "\t" $5 "\t" $6}' > $DIR/input/$dest_name
     elif [[ $n_fields -eq 5 ]]; then
         echo "ARQMath-v2 format, no change."
-        cp $INPUT $DIR/input/$dest_name
+        cp "$INPUT" $DIR/input/$dest_name
     else
         echo "Unknown format, abort."
         exit 1
