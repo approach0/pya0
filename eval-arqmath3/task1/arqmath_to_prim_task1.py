@@ -1,0 +1,1 @@
+../../eval-arqmath2-task1/arqmath_to_prim_task1.py

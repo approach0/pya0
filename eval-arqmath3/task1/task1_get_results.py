@@ -1,0 +1,1 @@
+../../eval-arqmath2-task1/task1_get_results.py
