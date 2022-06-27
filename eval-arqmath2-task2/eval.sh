@@ -1,6 +1,6 @@
 DIR=$(dirname $0)
 QREL='topics-and-qrels/qrels.arqmath-2021-task2-official.txt'
-TSV="./latex_representation_v2"
+TSV="./latex_representation_v3"
 
 for arg in "$@"; do
     case $arg in

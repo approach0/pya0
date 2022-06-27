@@ -1,4 +1,4 @@
-QREL="topics-and-qrels/qrels.arqmath-2020-task2-visual_ids.txt"
+QREL="topics-and-qrels/qrels.arqmath-2020-task2-visual_ids.v3.txt"
 TSV="./latex_representation_v2"
 DIR=$(dirname $0)
 
