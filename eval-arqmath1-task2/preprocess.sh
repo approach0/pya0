@@ -5,6 +5,7 @@ mkdir -p $DIR/input
 if [ "$INPUTS" == "cleanup" ]; then
     set -x
     rm -f $DIR/input/*
+    rm -f $DIR/prime-output/*
     exit 0
 fi
 
