@@ -61,4 +61,4 @@ else
 fi
 
 python $DIR/task2_get_results.py -eva trec_eval -qre $QREL -pri "$DIR/prime-output/" -res $DIR/result.tsv $NOJUDGE
-cat $DIR/result.tsv | sed -e 's/[[:blank:]]/ /g'
+cat $DIR/result.tsv
