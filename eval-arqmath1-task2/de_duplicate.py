@@ -2,9 +2,12 @@ import argparse
 import csv
 import operator
 import os
-import sys
 
+### BEGIN patch ###
+import sys
+import pickle
 csv.field_size_limit(sys.maxsize)
+### END patch ###
 
 
 def read_qrel(qrel_file_path):
@@ -32,6 +35,7 @@ def read_visual_files(lst_dir, vid_index):
                 formula_id = int(row[0])
                 visual_id = int(row[vid_index])
                 dic_formula_visual_id[formula_id] = visual_id
+        #break
     return dic_formula_visual_id
 
 
@@ -62,7 +66,7 @@ def deduplicate(dic_formula_visual_ids, submission_file_path, topic_visual_lst):
         temp_dict = {}
         for formula_id in sorted_dict:
             if formula_id not in dic_formula_visual_ids:
-                print(formula_id)
+                print('[ERROR] formula_id not in dic_formula_visual_ids:', formula_id)
                 continue
             visual_id = dic_formula_visual_ids[formula_id]
             if visual_id in visited_visual_ids:
@@ -130,7 +134,23 @@ def main():
     result_dir = args['pri'] + "/"
     visual_index = int(args['v'])
     qrel_file_path = args['qre']
-    dic_formula_visual_ids = read_visual_files(tsv_dir, visual_index)
+
+    ### BEGIN patch ###
+    tsv_dir = tsv_dir.rstrip('/')
+    tsv_dir_cache = tsv_dir + '.cache'
+    print('TSV dir:', tsv_dir)
+    print('TSV cache:', tsv_dir_cache)
+    print('QREL file:', qrel_file_path)
+    if os.path.exists(tsv_dir_cache):
+        print('Loading cache...')
+        with open(tsv_dir_cache, 'rb') as fh:
+            dic_formula_visual_ids = pickle.load(fh)
+    else:
+        dic_formula_visual_ids = read_visual_files(tsv_dir, visual_index)
+        with open(tsv_dir_cache, 'wb') as fh:
+            pickle.dump(dic_formula_visual_ids, fh)
+    ### END patch ###
+
     topic_visual_lst = read_qrel(qrel_file_path)
 
     if not os.path.exists(result_dir):
