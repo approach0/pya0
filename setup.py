@@ -13,7 +13,7 @@ def copy_files():
 
 setup(
     name = 'pya0',
-    version = '0.3.3',
+    version = '0.3.5',
     author = 'Wei Zhong',
     author_email = "clock126@126.com",
     description = 'Approach Zero Python Interface',
