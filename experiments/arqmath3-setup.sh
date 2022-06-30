@@ -1,3 +1,4 @@
+#### Baselines
 sudo useradd arqmath3 -u 34549 -m -s /bin/bash
 
 conda create --name py38 python=3.8
@@ -52,3 +53,14 @@ unzip latex_representation_v3.zip
 ./eval-arqmath3/task2/preprocess.sh cleanup
 ./eval-arqmath3/task2/preprocess.sh ./task2-*.run
 ./eval-arqmath3/task2/eval.sh --tsv=$HOME/latex_representation_v3
+
+
+#### Dense retrieval
+git clone https://github.com/approach0/math-dense-retrievers
+cd math-dense-retrievers/
+mkdir indexes
+wget https://vault.cs.uwaterloo.ca/s/C6ty5GPFyAg7mdp/download -O indexes/index-ColBERT-arqmath3.tar
+wget https://vault.cs.uwaterloo.ca/s/yLMqetX4YXwdyDK/download -O indexes/index-ColBERT-arqmath3-task2.tar
+mkdir -p experiments/runs
+wget https://vault.cs.uwaterloo.ca/s/3fmFDbNDqbHmtD8/download -O experiments/data.azbert_v2.tar.gz
+wget https://vault.cs.uwaterloo.ca/s/iXgGckSP2Jnb6FS/download -O experiments/runs.zip
