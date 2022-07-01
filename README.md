@@ -3,7 +3,7 @@ Here, we document the steps to reproduce our main results, i.e., Table 5 and Tab
 For other experiments, please refer to the `experiments/arqmath3*` scripts.
 
 ## The Approach Zero pass
-We recommend to use a docker environment to reproduce our Approach Zero results, since it requires creating a system-wide new user to access our prebuilt indexes owned by a different `uid`.
+We recommend to use a docker environment to reproduce our Approach Zero results since it requires creating a system-wide new user to access our prebuilt indexes owned by a different `uid`.
 
 Download prebuilt Approach Zero indexes and mount each of them:
 ```sh
@@ -37,7 +37,7 @@ python -m pya0 --trec-output task1-a0none.run --index ./mnt-index-arqmath3_task1
 python -m pya0 --stemmer porter --trec-output task1-a0porter.run --index ./mnt-index-arqmath3_task1_porter.img/ --collection arqmath-2022-task1-manual
 python -m pya0 --trec-output task2-a0.run --index ./mnt-index-arqmath3_task2.img/ --collection arqmath-2022-task2-refined
 ```
-(due to our choice to use mounted block device for index implementation, the first-time reads are extremely slow, however, it speeds up after a second run when OS has cached most of the index files in the ReiserFS filesystem into memory. In real-world application when we run search engine core as daemon, we will cache a large amount of the index files on startup)
+(due to our choice to use mounted block device for index implementation, the first-time reads are extremely slow, however, it speeds up after a second run when OS has cached most of the index files in the ReiserFS filesystem into memory. In real-world applications when we run search engine core as a daemon, we will cache a large amount of the index files on startup)
 
 Install `trec_eval` for later evaluation:
 ```sh
