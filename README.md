@@ -1,8 +1,8 @@
 This is a snapshot branch for the reproducibility of our CLEF ARQMath 2022 participant paper.
 Here, we document the steps to reproduce our main results, i.e., Table 5 and Table 6 in our paper evaluated for the ARQMath 2022 topics.
-For other experiments, please refer to the `pya0/experiments/arqmath3*` scripts.
+For other experiments, please refer to the `experiments/arqmath3*` scripts.
 
-## Approach Zero pass
+## The Approach Zero pass
 We recommend to use a docker environment to reproduce our Approach Zero results, since it requires creating a system-wide new user to access our prebuilt indexes owned by a different `uid`.
 
 Download prebuilt Approach Zero indexes and mount each of them:
@@ -15,6 +15,8 @@ mount -t reiserfs index-arqmath3_task1_nostemmer.img mnt-index-arqmath3_task1_no
 mount -t reiserfs index-arqmath3_task1_porter.img mnt-index-arqmath3_task1_porter.img
 mount -t reiserfs index-arqmath3_task2.img mnt-index-arqmath3_task2.img
 ```
+(because the source code of our up-to-date search engine core is closed-source,
+you will need to contact us for building an Approach Zero index from scratch)
 
 Create a new user to be able to access mounted subdirectories from our prebuilt indexes:
 ```sh
@@ -71,4 +73,60 @@ Run nDCG' mAP' p@10 bpref judge_rate
 task2-a0_run 0.6394 0.5007 0.6145 0.5051 -
 ```
 
-## ColBERT pass
+## The ColBERT pass
+In this pass, we assume an experimental environment on a GPU with 48 GiB of memory,
+otherwise, you will need to modify the `utils/transformer_eval.ini` configurations,
+i.e., change the `devices` and `search_range` configs to fit your GPU capacity.
+
+No need to use a docker container in this pass.
+
+First, set up the math-dense-retrievers repository:
+```
+git clone -b arqmath3 git@github.com:approach0/math-dense-retrievers.git math-dense-retrievers
+cd math-dense-retrievers
+git clone -b patch-colbert-mine git@github.com:w32zhong/pyserini.git ./code/pyserini
+git clone -b arqmath3 git@github.com:approach0/pya0.git ./code/pya0
+```
+
+Download prebuilt dense indexes and model checkpoints, optionally, download a complete backup of our final run files:
+```
+mkdir indexes
+wget https://vault.cs.uwaterloo.ca/s/C6ty5GPFyAg7mdp/download -O indexes/index-ColBERT-arqmath3.tar
+wget https://vault.cs.uwaterloo.ca/s/yLMqetX4YXwdyDK/download -O indexes/index-ColBERT-arqmath3-task2.tar
+(cd indexes && tar xf index-ColBERT-arqmath3.tar && tar xf index-ColBERT-arqmath3-task2.tar)
+mkdir -p experiments/runs
+wget https://vault.cs.uwaterloo.ca/s/3fmFDbNDqbHmtD8/download -O experiments/data.azbert_v2.tar.gz
+wget https://vault.cs.uwaterloo.ca/s/iXgGckSP2Jnb6FS/download -O experiments/runs.zip # optional
+(cd experiments && tar xzf data.azbert_v2.tar.gz)
+```
+
+For indexing from raw corpus, please refer to the README instructions in
+[the math-dense-retrievers repository](https://github.com/approach0/math-dense-retrievers/tree/arqmath3),
+we provide readily available corpus format for dense indexers also, download links:
+[arqmath3 task1.jsonl](https://vault.cs.uwaterloo.ca/s/jbroF9gdN6Dkc6E) and
+[arqmath3 task2.jsonl](https://vault.cs.uwaterloo.ca/s/EwoX7HqnBsRpfYB).
+
+**Optional** To train our dense model,
+please refer to [the training instructions](https://github.com/approach0/math-dense-retrievers/tree/arqmath3#training).
+Download the [data for pretraining](https://vault.cs.uwaterloo.ca/s/Ce6aTdC3AsGEXj9) if you want to train from bert-base.
+
+In addition, the `colbert_ctx` and `fusion02_ctx` runs require more than 500 GiB index storage due to the
+fact that we index an almost identical document for every each formula position. Since their final result
+is not performant, we skip uploading their indexes.
+However, you may use our generated corpus files for `*_ctx` runs to index from there:
+[arqmath3 contextual task2.jsonl](https://vault.cs.uwaterloo.ca/s/rTYYLYqpbGw8YZX).
+
+Edit the `device` (assuming we will use `--device a6000_3`) and the `store` config variables
+in `utils/transformer_eval.ini`, point `store` to the absolute path of the `math-dense-retrievers` repository root.
+
+Run dense retriever:
+```sh
+cd code/pya0/
+SEARCH='python -m pya0.transformer_eval search ./utils/transformer_eval.ini'
+$SEARCH search_arqmath3_colbert --device a6000_3
+$SEARCH search_arqmath3_task2_colbert --device a6000_3
+$SEARCH maprun_arqmath3_to_colbert --device a6000_3
+```
+
+## Efficiency
+Our efficiency evaluation logs can be downloaded [here](https://vault.cs.uwaterloo.ca/s/4E826NiffTPxdxq).
