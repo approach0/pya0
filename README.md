@@ -67,7 +67,7 @@ gdown 1uXU3KGTp0jj_ohzuwU5A5qsa2NZ3mtF4
 unzip latex_representation_v3.zip
 ./eval-arqmath3/task2/preprocess.sh cleanup
 ./eval-arqmath3/task2/preprocess.sh ./task2-*.run
-./eval-arqmath3/task2/eval.sh --tsv=$HOME/latex_representation_v3 --qrels=./pya0/topics-and-qrels/qrels.arqmath-2022-task2-official.v3.txt
+./eval-arqmath3/task2/eval.sh --tsv=latex_representation_v3 --qrels=./pya0/topics-and-qrels/qrels.arqmath-2022-task2-official.v3.txt
 ... (many output omitted)
 Run nDCG' mAP' p@10 bpref judge_rate
 task2-a0_run 0.6394 0.5007 0.6145 0.5051 -
@@ -122,10 +122,34 @@ in `utils/transformer_eval.ini`, point `store` to the absolute path of the `math
 Run dense retriever:
 ```sh
 cd code/pya0/
+
+# end-to-end retrieval
 SEARCH='python -m pya0.transformer_eval search ./utils/transformer_eval.ini'
 $SEARCH search_arqmath3_colbert --device a6000_3
 $SEARCH search_arqmath3_task2_colbert --device a6000_3
-$SEARCH maprun_arqmath3_to_colbert --device a6000_3
+
+# reranking existing run file
+RERANK='python -m pya0.transformer_eval search ./utils/transformer_eval.ini'
+$RERANK maprun_arqmath3_to_colbert --device a6000_3
+```
+
+The final run files will be placed at `math-dense-retrievers.clone/experiments/runs`.
+
+Similar to the Approach Zero pass, use pya0 scripts to evaluate them. For example:
+```sh
+./eval-arqmath3/task1/preprocess.sh cleanup
+./eval-arqmath3/task1/preprocess.sh ./math-dense-retrievers/experiments/runs/search_arqmath3_colbert.run
+./eval-arqmath3/task1/eval.sh --qrels=./pya0/topics-and-qrels/qrels.arqmath-2022-task1-official.txt
+... (many output omitted)
+System nDCG' mAP' p@10 BPref Judge
+search_arqmath3_colbert_run 0.4181 0.1624 0.2513 0.1654 -
+
+./eval-arqmath3/task2/preprocess.sh cleanup
+./eval-arqmath3/task2/preprocess.sh ./math-dense-retrievers/experiments/runs/search_arqmath3_task2_colbert.run
+./eval-arqmath3/task2/eval.sh --tsv=latex_representation_v3 --qrels=./pya0/topics-and-qrels/qrels.arqmath-2022-task2-official.v3.txt
+... (many output omitted)
+Run nDCG' mAP' p@10 bpref judge_rate
+search_arqmath3_task2_colbert_run 0.6036 0.4359 0.6224 0.4456 42.8
 ```
 
 ## Efficiency
