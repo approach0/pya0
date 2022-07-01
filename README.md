@@ -129,8 +129,9 @@ $SEARCH search_arqmath3_colbert --device a6000_3
 $SEARCH search_arqmath3_task2_colbert --device a6000_3
 
 # reranking existing run file
-RERANK='python -m pya0.transformer_eval search ./utils/transformer_eval.ini'
+RERANK='python -m pya0.transformer_eval maprun ./utils/transformer_eval.ini'
 $RERANK maprun_arqmath3_to_colbert --device a6000_3
+$RERANK maprun_arqmath3_to_colbert /path/to/your/pya0-porterstemmer-task1.run --device a6000_3
 ```
 
 The final run files will be placed at `math-dense-retrievers.clone/experiments/runs`.
@@ -150,6 +151,65 @@ search_arqmath3_colbert_run 0.4181 0.1624 0.2513 0.1654 -
 ... (many output omitted)
 Run nDCG' mAP' p@10 bpref judge_rate
 search_arqmath3_task2_colbert_run 0.6036 0.4359 0.6224 0.4456 42.8
+```
+
+## Fusion Results
+We use a pya0 utility script to merge run files:
+```sh
+python -m pya0.mergerun -h
+```
+
+Assume you have all the run files under pya0 directory,
+you can run the following script to produce our fusion runs:
+```sh
+merge() {
+    run1=$1
+    run2=$2
+    python -m pya0.mergerun $run1 $run2 0.2
+    mv $(ls mergerun-*) fusion_alpha02.run
+    python -m pya0.mergerun $run1 $run2 0.3
+    mv $(ls mergerun-*) fusion_alpha03.run
+    python -m pya0.mergerun $run1 $run2 0.5
+    mv $(ls mergerun-*) fusion_alpha05.run
+}
+
+swap() {
+    INPUT=${1-tmp.run}
+    tempfile=$(mktemp)
+    awk 'BEGIN {OFS=" "} {print $1, $3, $2, $4, $5, $6}' $INPUT > $tempfile
+    echo $tempfile
+}
+
+merge search_arqmath3_colbert.run task1-a0porter.run
+mv fusion_alpha02.run task1_fusion_alpha02.run
+mv fusion_alpha03.run task1_fusion_alpha03.run
+mv fusion_alpha05.run task1_fusion_alpha05.run
+
+merge $(swap search_arqmath3_task2_colbert.run) $(swap task2-a0.run)
+mv $(swap fusion_alpha02.run) task2_fusion_alpha02.run
+mv $(swap fusion_alpha03.run) task2_fusion_alpha03.run
+mv $(swap fusion_alpha05.run) task2_fusion_alpha05.run
+```
+
+Now evaluate the fusion runs:
+```sh
+./eval-arqmath3/task1/preprocess.sh cleanup
+./eval-arqmath3/task1/preprocess.sh task1_fusion_alpha*.run
+./eval-arqmath3/task1/eval.sh
+... (many output omitted)
+System nDCG' mAP' p@10 BPref Judge
+task1_fusion_alpha02_run 0.4826 0.1952 0.3051 0.1837 -
+task1_fusion_alpha03_run 0.4953 0.2027 0.3167 0.1921 -
+task1_fusion_alpha05_run 0.5079 0.2162 0.3449 0.2067 -
+
+./eval-arqmath3/task2/preprocess.sh cleanup
+./eval-arqmath3/task2/preprocess.sh task2_fusion_alpha*.run
+./eval-arqmath3/task2/eval.sh --tsv=/path/to/your/latex_representation_v3
+... (many output omitted)
+System nDCG' mAP' p@10 BPref Judge
+task2_fusion_alpha02_run 0.7145 0.5584 0.6592 0.5532 -
+task2_fusion_alpha03_run 0.7195 0.5654 0.6645 0.5624 -
+task2_fusion_alpha05_run 0.7203 0.5684 0.6882 0.5602 -
 ```
 
 ## Efficiency
