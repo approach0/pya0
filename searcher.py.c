@@ -48,7 +48,7 @@ PyObject *do_search(PyObject *self, PyObject *args, PyObject* kwargs)
 			return NULL;
 		}
 
-		PyObject *py_kw = PyDict_GetItemString(item, "str");
+		PyObject *py_kw = PyDict_GetItemString(item, "keyword");
 		PyObject *py_type = PyDict_GetItemString(item, "type");
 		PyObject *py_field = PyDict_GetItemString(item, "field");
 		PyObject *py_boost = PyDict_GetItemString(item, "boost");
