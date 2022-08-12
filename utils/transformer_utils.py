@@ -144,7 +144,6 @@ def unmasking_visualize(ckpt_bert, ckpt_tokenizer, num_tokenizer_ver=1,
             print('*', highlight_masked(sentence))
             # print unmasked
             with torch.no_grad():
-                display = ['\n', '']
                 classifier = model.cls
                 partial_hook = partial(classifier_hook, tokenizer, tokens, 3)
                 hook = classifier.register_forward_hook(partial_hook)
