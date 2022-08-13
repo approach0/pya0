@@ -151,9 +151,12 @@ def unmasking_visualize(ckpt_bert, ckpt_tokenizer, num_tokenizer_ver=1,
                 hook.remove()
 
 
-def colbert_visualize(tokenizer_path, model_path, qid, did, q_augment=True,
+def colbert_visualize(tokenizer_path, model_path, qid=0, did=1, q_augment=True,
     test_file='tests/transformer_colbert.txt', parse_dollars=True, emphasis=False,
     max_ql=512, max_dl=512, use_puct_mask=True, num_tokenizer_ver=1):
+    # handle HOME in path
+    tokenizer_path = os.path.expanduser(tokenizer_path)
+    model_path = os.path.expanduser(model_path)
     # read testcases
     from replace_post_tex import replace_dollar_tex
     from replace_post_tex import replace_display_tex
@@ -194,6 +197,7 @@ def colbert_visualize(tokenizer_path, model_path, qid, did, q_augment=True,
     assert D_mark_id == 2
     if use_puct_mask:
         model.use_puct_mask(tokenizer)
+        print(model.skiplist)
 
     # encoding
     enc_Q = tokenizer([Q_prepend + ' ' + Q],
