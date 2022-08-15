@@ -145,14 +145,14 @@ def visualize_hits(index, run_name, qid, query, hits, qrels=None, scores=None, v
             doc = collection_driver.docid_to_doc(index, docid)
             hit['content'] = doc['content']
         elif ver == 'colbert':
+            docid = hit['docid'] # must be internal docid
+            doc = collection_driver.docid_to_doc(index, docid)
+            hit['content'] = doc['content']
             from transformer_utils import colbert_infer
             from preprocess import tokenize_query
             model, tokenizer, prepends, top_k, tok_ver, kw_sep = args
             if i >= top_k:
-                break
-            docid = hit['docid'] # must be internal docid
-            doc = collection_driver.docid_to_doc(index, docid)
-            hit['content'] = doc['content']
+                continue
             if kw_sep == 'comma':
                 kw_sep = ', '
             elif kw_sep == 'space':
@@ -160,13 +160,22 @@ def visualize_hits(index, run_name, qid, query, hits, qrels=None, scores=None, v
             else:
                 kw_sep = ' '
             Q, D = kw_sep.join(tokenize_query(query)), hit['content']
-            scores, cmp_matrix, (enc_Q, enc_D) = colbert_infer(
+            infer_score, cmp_matrix, (enc_Q, enc_D) = colbert_infer(
                 model, tokenizer, prepends,
-                Q, D, tok_ver=tok_ver, q_augment=True
+                Q, D, tok_ver=tok_ver, q_augment=False
             )
-            print(scores, hit['score'])
-            print(cmp_matrix.shape)
-            quit()
+            tok_Q = [
+                tokenizer.decode(x).replace(' ', '') for x in enc_Q
+            ]
+            tok_D = [
+                tokenizer.decode(x).replace(' ', '') for x in enc_D
+            ]
+            q_weights = cmp_matrix.max(1).tolist()
+            q_indexes = cmp_matrix.argmax(1).tolist()
+            idx_Q = list(zip(tok_Q, q_weights, q_indexes))
+            hit['vis_score'] = infer_score
+            hit['vis_idx_Q'] = idx_Q
+            hit['vis_tok_D'] = tok_D
         elif ver == 'contextual_task2':
             formulaID = hit['docid']
             postID = hit['_'] # postID

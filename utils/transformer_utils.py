@@ -200,9 +200,8 @@ def colbert_infer(model, tokenizer, prepends, Q, D, q_augment=False, tok_ver=2):
     #print(tokenizer.decode(enc_D['input_ids'][0]), end="\n\n")
     # scoring
     score, cmp_matrix = model(enc_Q, enc_D)
+    score = score.cpu().item()
     cmp_matrix = cmp_matrix.squeeze(0).T.cpu().detach().numpy()
-    #print('score:', score)
-    #print('matrix:\n', cmp_matrix)
     return score, cmp_matrix, (enc_Q['input_ids'][0], enc_D['input_ids'][0])
 
 
