@@ -137,13 +137,36 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
             fh.write('</body></html>\n')
 
 
-def visualize_hits(index, run_name, qid, query, hits, qrels=None, scores=None, ver=None):
+def visualize_hits(index, run_name, qid, query, hits, qrels=None, scores=None, ver=None, args=None):
     # lookup document content
-    for hit in hits:
+    for i, hit in enumerate(hits):
         if ver is None:
             docid = hit['docid'] # must be internal docid
             doc = collection_driver.docid_to_doc(index, docid)
             hit['content'] = doc['content']
+        elif ver == 'colbert':
+            from transformer_utils import colbert_infer
+            from preprocess import tokenize_query
+            model, tokenizer, prepends, top_k, tok_ver, kw_sep = args
+            if i >= top_k:
+                break
+            docid = hit['docid'] # must be internal docid
+            doc = collection_driver.docid_to_doc(index, docid)
+            hit['content'] = doc['content']
+            if kw_sep == 'comma':
+                kw_sep = ', '
+            elif kw_sep == 'space':
+                kw_sep = ' '
+            else:
+                kw_sep = ' '
+            Q, D = kw_sep.join(tokenize_query(query)), hit['content']
+            scores, cmp_matrix, (enc_Q, enc_D) = colbert_infer(
+                model, tokenizer, prepends,
+                Q, D, tok_ver=tok_ver, q_augment=True
+            )
+            print(scores, hit['score'])
+            print(cmp_matrix.shape)
+            quit()
         elif ver == 'contextual_task2':
             formulaID = hit['docid']
             postID = hit['_'] # postID
@@ -166,12 +189,28 @@ def visualize_hits(index, run_name, qid, query, hits, qrels=None, scores=None, v
 
 
 def visualize_collection_runs(index, collection, tsv_file_path, ver):
+    args = None
     if ver is None:
         run_per_topic, _ = parse_trec_file(tsv_file_path)
     elif ver == 'contextual_task2':
         run_per_topic, _ = parse_trec_file(tsv_file_path)
     elif ver == 'task3':
         run_per_topic, _ = parse_task3_file(tsv_file_path)
+    elif ver == 'colbert':
+        import configparser
+        config = configparser.ConfigParser()
+        config.read(tsv_file_path)
+        default = config['DEFAULT']
+        run_per_topic, _ = parse_trec_file(default['run_file'])
+        from transformer_utils import colbert_init
+        model_path, tokenizer_path = default['model'], default['tokenizer']
+        args = colbert_init(model_path, tokenizer_path,
+            use_puct_mask=default.getboolean('use_puct_mask'))
+        args = (*args,
+            int(default['top_k']),
+            int(default['tokenizer_ver']),
+            default['query_keyword_separator']
+        )
     else:
         raise NotImplementedError
     scores_file_path = '.'.join(tsv_file_path.split('.')[0:-1]) + '.scores'
@@ -184,7 +223,7 @@ def visualize_collection_runs(index, collection, tsv_file_path, ver):
         print(qid, query)
         topic_hits = run_per_topic[qid] if qid in run_per_topic else []
         collection_driver.TREC_reverse(collection, index, topic_hits)
-        visualize_hits(index, run_name, qid, query, topic_hits, qrels=qrels, scores=scores, ver=ver)
+        visualize_hits(index, run_name, qid, query, topic_hits, qrels=qrels, scores=scores, ver=ver, args=args)
 
 
 def visualize(index, tsv_file_path, collection=None, adhoc_query=None, ver=None):

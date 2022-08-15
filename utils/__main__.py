@@ -65,6 +65,8 @@ if __name__ == '__main__':
         help="Visualize existing run file")
     parser.add_argument('--visualize-contextual-task2', type=str, required=False,
         help="Visualize existing task2 file with contextual doc preview")
+    parser.add_argument('--visualize-colbert-run-cfg', type=str, required=False,
+        help="Visualize existing colbert run (specify a config file here)")
     parser.add_argument('--visualize-task3', type=str, required=False,
         help="Visualize existing task3 file")
     parser.add_argument('--visualize', action='store_true', required=False,
@@ -233,6 +235,12 @@ if __name__ == '__main__':
     elif args.visualize_run and args.collection:
         from .visualize import visualize
         visualize(index, args.visualize_run, collection=args.collection)
+        quit(0)
+
+    elif args.visualize_colbert_run_cfg and args.collection:
+        from .visualize import visualize
+        visualize(index, args.visualize_colbert_run_cfg,
+            collection=args.collection, ver='colbert')
         quit(0)
 
     elif args.visualize_contextual_task2 and args.collection:

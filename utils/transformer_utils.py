@@ -151,34 +151,9 @@ def unmasking_visualize(ckpt_bert, ckpt_tokenizer, num_tokenizer_ver=1,
                 hook.remove()
 
 
-def colbert_visualize(tokenizer_path, model_path, qid=0, did=1, q_augment=True,
-    test_file='tests/transformer_colbert.txt', parse_dollars=True, emphasis=False,
-    max_ql=512, max_dl=512, use_puct_mask=True, num_tokenizer_ver=1):
-    # handle HOME in path
-    tokenizer_path = os.path.expanduser(tokenizer_path)
+def colbert_init(model_path, tokenizer_path, use_puct_mask=True):
     model_path = os.path.expanduser(model_path)
-    # read testcases
-    from replace_post_tex import replace_dollar_tex
-    from replace_post_tex import replace_display_tex
-    from replace_post_tex import replace_inline_tex
-    with open(test_file) as fh:
-        test_cases = fh.read()
-    test_cases = test_cases.split('\n\n')
-    Q, D = test_cases[int(qid)], test_cases[int(did)]
-    if parse_dollars:
-        Q, D = replace_dollar_tex(Q), replace_dollar_tex(D)
-        Q, D = replace_display_tex(Q), replace_display_tex(D)
-        Q, D = replace_inline_tex(Q), replace_inline_tex(D)
-    Q = preprocess_for_transformer(Q,
-        num_tokenizer_ver=num_tokenizer_ver
-    )
-    D = preprocess_for_transformer(D,
-        num_tokenizer_ver=num_tokenizer_ver
-    )
-    print(Q, end="\n\n")
-    print(D, end="\n\n")
-
-    # loading tokenizer and model
+    tokenizer_path = os.path.expanduser(tokenizer_path)
     from transformer import ColBERT
     print('Loading', tokenizer_path)
     tokenizer = BertTokenizer.from_pretrained(tokenizer_path)
@@ -197,39 +172,76 @@ def colbert_visualize(tokenizer_path, model_path, qid=0, did=1, q_augment=True,
     assert D_mark_id == 2
     if use_puct_mask:
         model.use_puct_mask(tokenizer)
-        print(model.skiplist)
+        print('use_puct_mask:', model.skiplist)
+    return model, tokenizer, (Q_prepend, D_prepend)
 
+
+def colbert_infer(model, tokenizer, prepends, Q, D, q_augment=False, tok_ver=2):
+    # text preprocess
+    Q = preprocess_for_transformer(Q,
+        num_tokenizer_ver=tok_ver
+    )
+    D = preprocess_for_transformer(D,
+        num_tokenizer_ver=tok_ver
+    )
     # encoding
-    enc_Q = tokenizer([Q_prepend + ' ' + Q],
-        padding='longest', truncation=True, return_tensors="pt")
-    enc_D = tokenizer([D_prepend + ' ' + D],
-        padding='longest', truncation=True, return_tensors="pt")
     if q_augment:
+        enc_Q = tokenizer([prepends[0] + ' ' + Q],
+            padding='max_length', truncation=True, return_tensors="pt")
         ids, mask = enc_Q['input_ids'], enc_Q['attention_mask']
         enc_Q['input_ids'][ids == 0] = 103
-
+    else:
+        enc_Q = tokenizer([prepends[0] + ' ' + Q],
+            padding='longest', truncation=True, return_tensors="pt")
+    enc_D = tokenizer([prepends[1] + ' ' + D],
+        padding='longest', truncation=True, return_tensors="pt")
     #print(tokenizer.get_vocab())
-    print(tokenizer.decode(enc_Q['input_ids'][0]), end="\n\n")
-    print(tokenizer.decode(enc_D['input_ids'][0]), end="\n\n")
+    #print(tokenizer.decode(enc_Q['input_ids'][0]), end="\n\n")
+    #print(tokenizer.decode(enc_D['input_ids'][0]), end="\n\n")
     # scoring
     score, cmp_matrix = model(enc_Q, enc_D)
     cmp_matrix = cmp_matrix.squeeze(0).T.cpu().detach().numpy()
-    print('score:', score)
-    print('matrix:\n', cmp_matrix)
+    #print('score:', score)
+    #print('matrix:\n', cmp_matrix)
+    return score, cmp_matrix, (enc_Q['input_ids'][0], enc_D['input_ids'][0])
 
+
+def colbert_visualize(tokenizer_path, model_path, qid=0, did=1,
+    test_file='tests/transformer_colbert.txt', num_tokenizer_ver=1,
+    q_augment=False, parse_dollars=True, emphasis=False, use_puct_mask=True):
+    # handle HOME in path
+    tokenizer_path = os.path.expanduser(tokenizer_path)
+    model_path = os.path.expanduser(model_path)
+    # read testcases
+    from replace_post_tex import replace_dollar_tex
+    from replace_post_tex import replace_display_tex
+    from replace_post_tex import replace_inline_tex
+    with open(test_file) as fh:
+        test_cases = fh.read()
+    test_cases = test_cases.split('\n\n')
+    Q, D = test_cases[int(qid)], test_cases[int(did)]
+    if parse_dollars:
+        Q, D = replace_dollar_tex(Q), replace_dollar_tex(D)
+        Q, D = replace_display_tex(Q), replace_display_tex(D)
+        Q, D = replace_inline_tex(Q), replace_inline_tex(D)
+    # loading tokenizer and model
+    model, tokenizer, prepends = colbert_init(
+        model_path, tokenizer_path, use_puct_mask=use_puct_mask)
+    # invoke colbert
+    _, cmp_matrix, (enc_Q, enc_D) = colbert_infer(model, tokenizer, prepends,
+        Q, D, q_augment=q_augment, tok_ver=num_tokenizer_ver)
     if emphasis:
         max_loc = np.argmax(cmp_matrix, axis=1)
         for i, j in enumerate(max_loc):
             cmp_matrix[i][j] = 1.0
-
     # visualizing
     import matplotlib.pyplot as plt
     h, w = cmp_matrix.shape
     qry_tokens = [
-        tokenizer.decode(x).replace(' ', '') for x in enc_Q['input_ids'][0]
+        tokenizer.decode(x).replace(' ', '') for x in enc_Q
     ]
     doc_tokens = [
-        tokenizer.decode(x).replace(' ', '') for x in enc_D['input_ids'][0]
+        tokenizer.decode(x).replace(' ', '') for x in enc_D
     ]
     print(qry_tokens)
     print(doc_tokens)

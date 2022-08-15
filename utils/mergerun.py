@@ -6,6 +6,7 @@ from collections import defaultdict
 def parse_trec_file(file_path):
     run_per_topic = dict()
     run_name = None
+    file_path = os.path.expanduser(file_path)
     with open(file_path, 'r') as fh:
         for line in fh.readlines():
             line = line.rstrip()
