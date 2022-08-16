@@ -54,6 +54,71 @@ def degree_color(relev):
         return 'red'
 
 
+def write_colbert_visualization(fh, hit):
+    vis_score = hit['vis_score']
+    idx_Q = hit['vis_idx_Q']
+    tok_D = hit['vis_tok_D']
+    fh.write(f'<b>colbert score: {vis_score:.2f}</b>')
+    def map_degree(score):
+        if score >= 0.97:
+            return degree_color(4)
+        elif score >= 0.96:
+            return degree_color(3)
+        elif score >= 0.95:
+            return degree_color(2)
+        elif score >= 0.92:
+            return degree_color(1)
+        else:
+            return degree_color(0)
+    # write query
+    fh.write('<p>')
+
+    import uuid;
+    for i, (q_kw, score, index) in enumerate(idx_Q):
+        uid = uuid.uuid4().hex.upper()[0:8] + '-' + str(i)
+        if q_kw.startswith('$'):
+            q_kw = q_kw.strip('$')
+            q_kw = f'（{q_kw}）'
+        color = map_degree(score)
+        tok_D[index] = (tok_D[index], color, uid)
+        fh.write(
+            f'''
+            <span style="background-color:{color}"
+             onmouseenter="
+                //console.log('{uid}');
+                let ele = document.getElementsByClassName('{uid}')[0]
+                ele.style.filter = 'brightness(125%)';
+             "
+             onmouseleave="
+                let ele = document.getElementsByClassName('{uid}')[0]
+                ele.style.filter = 'brightness(100%)';
+             "
+             >
+                {q_kw}
+            </span>
+            '''
+        )
+    fh.write('</p>')
+    # write document
+    fh.write('<p>')
+    for d in tok_D:
+        linked = []
+        while isinstance(d, tuple):
+            d, color, uid = d
+            linked.append(uid)
+        if d.startswith('$'):
+            d = d.strip('$')
+            d = f'（{d}）'
+        if len(linked):
+            fh.write(f'<span style="background-color:{color}" class="')
+            for l in linked:
+                fh.write(l + ' ')
+            fh.write(f'"> {d} </span>')
+        else:
+            fh.write(f'{d} ')
+    fh.write('</p>')
+
+
 def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=False, scores=None):
     # lookup relevance scores
     for hit in hits:
@@ -124,6 +189,8 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
                 color = degree_color(relev)
                 fh.write('<b>relevance levels: ' + ' '.join(colors) + ':</b>')
                 fh.write(f'<p style="background: {color};">{content}</p>\n')
+                if 'vis_score' in hit:
+                    write_colbert_visualization(fh, hit)
                 fh.write('</li>\n')
             fh.write(f'</ol>\n')
             output_html_pagination(fh, qid, page, tot_pages)
@@ -233,6 +300,8 @@ def visualize_collection_runs(index, collection, tsv_file_path, ver):
         topic_hits = run_per_topic[qid] if qid in run_per_topic else []
         collection_driver.TREC_reverse(collection, index, topic_hits)
         visualize_hits(index, run_name, qid, query, topic_hits, qrels=qrels, scores=scores, ver=ver, args=args)
+        #if query:
+        #    quit() ## DEBUG
 
 
 def visualize(index, tsv_file_path, collection=None, adhoc_query=None, ver=None):
