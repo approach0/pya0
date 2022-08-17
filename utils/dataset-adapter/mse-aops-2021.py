@@ -48,8 +48,9 @@ def mse_aops_dataloader(corpus, endat=0, num_tokenizer_ver=1):
             num_tokenizer_ver=num_tokenizer_ver)
         sentences = sent_tokenize(document)
         dataset.append((sentences, tags, url))
-        if i % 1000 == 0:
+        if i % 2500 == 0:
             print(vocab)
+            print('vocabulary size:', len(vocab))
         i += 1
     return vocab, dataset
 
