@@ -47,13 +47,14 @@ def mse_aops_dataloader(corpus, endat=0, num_tokenizer_ver=1):
             num_tokenizer_ver=num_tokenizer_ver)
         sentences = sent_tokenize(document)
         dataset.append((sentences, tags, url))
+        if j % 1000 == 0:
+            print(vocab)
     return vocab, dataset
 
 
 def main(corpus, num_tokenizer_ver=3, endat=-1):
     vocab, dataset = mse_aops_dataloader(corpus,
         endat=endat, num_tokenizer_ver=num_tokenizer_ver)
-    print(vocab)
     print('New vocabulary size:', len(vocab))
     with open(f'mse-aops-2021-data-v{num_tokenizer_ver}.pkl', 'wb') as fh:
         pickle.dump(dataset, fh)

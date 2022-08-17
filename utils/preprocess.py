@@ -219,12 +219,16 @@ def preprocess_for_transformer(text, math_vocab=None, num_tokenizer_ver=1):
         number_str = piece[slice(*span)]
         return list(number_str) # buggy!
     def num_tokenizer_v3(piece, tok_type, sym, span):
-        string = piece[slice(*span)]
-        if tok_type in ['NUM', 'FLOAT']:
-            return list(string)
-        else:
-            string = string.strip('\\')
+        #print(tok_type, piece, sym)
+        if tok_type == 'VAR':
+            if '`' in sym:
+                string = sym.split('`')[-1].strip('\'')
+            else:
+                string = sym.strip('\\')
             return [string]
+        else:
+            string = piece[slice(*span)]
+            return list(string)
     num_tokenizer = locals()['num_tokenizer_v' + str(num_tokenizer_ver)]
 
     for type_, piece, *_ in iter_imath_splits(text):
@@ -259,6 +263,8 @@ def preprocess_for_transformer(text, math_vocab=None, num_tokenizer_ver=1):
 
 if __name__ == '__main__':
     math = r'4.077 = 1+\frac{1+2}{2!}+\frac{1+2+3}{3!}+\cdots+\frac{1+2+3+...+20}{20!}'
+    #math = r'1.50941045653627123243833773286186'
+    #math = r'αK'
     output = preprocess_for_transformer('[imath]' + math + '[/imath]',
-        num_tokenizer_ver=2)
+        num_tokenizer_ver=3)
     print(output)
