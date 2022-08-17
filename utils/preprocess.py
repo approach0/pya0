@@ -217,7 +217,14 @@ def preprocess_for_transformer(text, math_vocab=None, num_tokenizer_ver=1):
         return [sym]
     def num_tokenizer_v2(piece, tok_type, sym, span):
         number_str = piece[slice(*span)]
-        return list(number_str)
+        return list(number_str) # buggy!
+    def num_tokenizer_v3(piece, tok_type, sym, span):
+        string = piece[slice(*span)]
+        if tok_type in ['NUM', 'FLOAT']:
+            return list(string)
+        else:
+            string = string.strip('\\')
+            return [string]
     num_tokenizer = locals()['num_tokenizer_v' + str(num_tokenizer_ver)]
 
     for type_, piece, *_ in iter_imath_splits(text):
