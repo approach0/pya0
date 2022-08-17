@@ -39,6 +39,7 @@ def mse_aops_dataloader(corpus, endat=0, num_tokenizer_ver=1):
     word_tokenizer = RegexpTokenizer(r'\w+')
     print('Reading MSE/AoPS data from: %s ...' % corpus)
     L = len(list(json_file_iterator(corpus, endat)))
+    i = 0
     for j in tqdm(mse_aops_json_file_iterator(corpus, endat), total=L):
         text = j['text']
         tags = j['tags'] if 'tags' in j else ''
@@ -47,8 +48,9 @@ def mse_aops_dataloader(corpus, endat=0, num_tokenizer_ver=1):
             num_tokenizer_ver=num_tokenizer_ver)
         sentences = sent_tokenize(document)
         dataset.append((sentences, tags, url))
-        if j % 1000 == 0:
+        if i % 1000 == 0:
             print(vocab)
+        i += 1
     return vocab, dataset
 
 
