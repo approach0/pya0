@@ -176,7 +176,7 @@ def colbert_init(model_path, tokenizer_path, use_puct_mask=True):
     return model, tokenizer, (Q_prepend, D_prepend)
 
 
-def colbert_infer(model, tokenizer, prepends, Q, D, q_augment=False, tok_ver=2):
+def colbert_infer(model, tokenizer, prepends, Q, D, q_augment=False, tok_ver=3):
     # text preprocess
     Q = preprocess_for_transformer(Q,
         num_tokenizer_ver=tok_ver
@@ -265,12 +265,20 @@ def colbert_visualize(tokenizer_path, model_path, qid=0, did=1,
     plt.show()
 
 
-def pft_print(passage_file):
+def pft_print(passage_file, num_tokenizer_ver=3):
     with open(passage_file, 'r') as fh:
         for line in fh:
             line = line.rstrip()
-            line = preprocess_for_transformer(line)
-            print(line)
+            fields = line.split('\t')
+            maskpos = list(map(int, fields[0].split(',')))
+            sentence = preprocess_for_transformer(fields[1],
+                num_tokenizer_ver=num_tokenizer_ver)
+            tokens = sentence.split()
+            for pos in filter(lambda x: x!=0, maskpos):
+                if pos - 1 < len(tokens):
+                    tokens[pos - 1] = '[MASK]'
+            sentence = ' '.join(tokens)
+            print(sentence)
 
 
 def pickle_print(pkl_file):
