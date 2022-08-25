@@ -18,6 +18,7 @@ for INPUT in "${INPUTS[@]}"; do
     n_fields=$(awk '{print NF; exit}' "$INPUT")
     dest_name=$(basename "$INPUT")
     dest_name=$(echo $dest_name | sed -e 's/\./_/g')
+    dest_name=$(echo $dest_name | sed -e 's/:/_/g')
     if [[ " $INPUTS " =~ " swap " ]]; then
         echo "SWAP format: Query_Id {Post_Id <=> Formula_Id} Rank Score Run"
         cat $($DIR/swap-col-2-and-3.sh "$INPUT") > $DIR/input/$dest_name

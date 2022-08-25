@@ -17,6 +17,7 @@ for INPUT in "${INPUTS[@]}"; do
     n_fields=$(awk '{print NF; exit}' "$INPUT")
     dest_name=$(basename "$INPUT")
     dest_name=$(echo $dest_name | sed -e 's/\./_/g')
+    dest_name=$(echo $dest_name | sed -e 's/:/_/g')
     if [[ $n_fields -eq 6 ]]; then
         echo "TREC format, we will need to drop the second column..."
         cat "$INPUT" | awk '{print $1 "\t" $3 "\t" $4 "\t" $5 "\t" $6}' > $DIR/input/$dest_name
