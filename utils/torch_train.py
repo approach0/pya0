@@ -155,16 +155,16 @@ class BaseTrainer:
     def _prepare_testing(self, mini_batch):
         if self.test_file and self.test_data_cls:
             if not os.path.isfile(self.test_file):
-                print('Error: Cannot find test file', self.test_file)
-                quit(1)
-            test_data = self.test_data_cls(self.test_file)
-            print(f'Loading test data: {self.test_file} (bsize={mini_batch})')
-            self.test_loader = DataLoader(test_data,
-                batch_size=mini_batch,
-                collate_fn=lambda batch: batch,
-                shuffle=False
-            )
-            self.test_cnt = 0
+                print('Warning: Cannot find test file', self.test_file)
+            else:
+                test_data = self.test_data_cls(self.test_file)
+                print(f'Loading test data: {self.test_file} (bsize={mini_batch})')
+                self.test_loader = DataLoader(test_data,
+                    batch_size=mini_batch,
+                    collate_fn=lambda batch: batch,
+                    shuffle=False
+                )
+        self.test_cnt = 0
 
     def do_testing(self, eval_func, *args):
         done = False
@@ -244,7 +244,8 @@ def _train_thread(local_rank, trainer, loop):
         print('Enter Torch DDP.')
         dist.barrier(device_ids=[int(trainer.device_ordinal)])
         trainer.model = DDP(trainer.model, broadcast_buffers=False,
-            device_ids=[torch.cuda.current_device()]
+            device_ids=[torch.cuda.current_device()],
+            find_unused_parameters=False # export TORCH_DISTRIBUTED_DEBUG=DETAIL to know which!
         )
         dist.barrier(device_ids=[int(trainer.device_ordinal)])
 

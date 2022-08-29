@@ -13,13 +13,16 @@ outputs = lambda d: namedtuple('outputs', d.keys())(**d)
 
 
 class Condenser(nn.Module):
-    def __init__(self, n_dec_layers=2, skip_from=0):
+    def __init__(self, base_model, n_dec_layers=2, skip_from=0, **kargs):
         super().__init__()
         # pretrained encoder
-        self.enc = BertForPreTraining.from_pretrained(
-            'bert-base-uncased',
-            tie_word_embeddings=True
-        )
+        self.enc = BertForPreTraining.from_pretrained(base_model, **kargs)
+        # remove unused parameters that confuse DDP
+        for p in self.enc.cls.parameters():
+            p.requires_grad = False
+        for p in self.enc.bert.pooler.parameters():
+            p.requires_grad = False
+
         config = self.enc.config
 
         # new decoder
@@ -34,16 +37,18 @@ class Condenser(nn.Module):
         self.dec_pretrain_head.apply(self.enc._init_weights)
         self.dec_pretrain_pooler.apply(self.enc._init_weights)
 
-        # save parameter
+        # save parameters
+        self.config = self.enc.config
         self.n_dec_layers = n_dec_layers
         self.skip_from = skip_from
+        self.vocab_size = self.config.vocab_size
 
-    def forward(self, inputs, mode,
-        labels=None, next_sentence_label=None, cot_cls_hiddens=None):
+    def forward(self, input_ids, token_type_ids, attention_mask,
+        mode='condenser', labels=None, next_sentence_label=None, cot_cls_hiddens=None):
         assert mode in ['condenser', 'cot-mae-enc', 'cot-mae-dec']
 
         enc_output = self.enc(
-            **inputs,
+            input_ids, token_type_ids, attention_mask,
             output_hidden_states=True,
             return_dict=True # output in a dict structure
         )
@@ -66,9 +71,8 @@ class Condenser(nn.Module):
         if mode == 'cot-mae-enc':
             if labels is not None:
                 loss_func = nn.CrossEntropyLoss()
-                vocab_size = self.enc.config.vocab_size
                 # MAE encoder loss
-                enc_mlm_loss = loss_func(enc_output_preds.view(-1, vocab_size), labels.view(-1))
+                enc_mlm_loss = loss_func(enc_output_preds.view(-1, self.vocab_size), labels.view(-1))
             else:
                 enc_mlm_loss = None
             return outputs({
@@ -84,9 +88,7 @@ class Condenser(nn.Module):
             raise NotImplementedError
 
         attention_mask = self.enc.get_extended_attention_mask(
-            inputs['attention_mask'],
-            inputs['attention_mask'].shape,
-            inputs['attention_mask'].device
+            attention_mask, attention_mask.shape, attention_mask.device
         )
         for layer in self.dec:
             layer_out = layer(
@@ -101,14 +103,14 @@ class Condenser(nn.Module):
         dec_output_preds, dec_ctx_preds = self.dec_pretrain_head(sequence_output, pooled_output)
         #print(dec_output_preds.shape) # [B, N, vocab_size]
         #print(dec_ctx_preds.shape) # [B, 2]
+        assert dec_output_preds.shape[-1] == self.config.vocab_size
 
         if labels is not None and next_sentence_label is not None:
             loss_func = nn.CrossEntropyLoss()
-            vocab_size = self.enc.config.vocab_size
-            dec_mlm_loss = loss_func(dec_output_preds.view(-1, vocab_size), labels.view(-1))
+            dec_mlm_loss = loss_func(dec_output_preds.view(-1, self.vocab_size), labels.view(-1))
             dec_ctx_loss = loss_func(dec_ctx_preds.view(-1, 2), next_sentence_label.view(-1))
             if mode == 'condenser':
-                enc_mlm_loss = loss_func(enc_output_preds.view(-1, vocab_size), labels.view(-1))
+                enc_mlm_loss = loss_func(enc_output_preds.view(-1, self.vocab_size), labels.view(-1))
                 loss = enc_mlm_loss + dec_mlm_loss + dec_ctx_loss # CoCondenser loss
             else:
                 loss = dec_mlm_loss + dec_ctx_loss # MAE decoder loss
@@ -121,7 +123,7 @@ class Condenser(nn.Module):
             'loss': loss
         })
 
-    def save_pretrained(self, path):
+    def save_pretrained(self, path, save_function=None):
         self.enc.save_pretrained(os.path.join(path, 'encoder.ckpt'))
         all_state_dict = self.state_dict()
         dec_state_dict = {}
@@ -138,7 +140,7 @@ class Condenser(nn.Module):
         with open(os.path.join(path, 'params.json'), 'r') as fh:
             model_args = json.load(fh)
             print('model args:', model_args)
-        condenser = Condenser(*model_args)
+        condenser = Condenser('bert-base-uncased', *model_args)
         # load encoder
         enc_path = os.path.join(path, 'encoder.ckpt')
         enc = BertForPreTraining.from_pretrained(enc_path, *args, **kargs)
@@ -147,13 +149,21 @@ class Condenser(nn.Module):
         state_dict = torch.load(os.path.join(path, 'decoder.ckpt'))
         condenser.load_state_dict(state_dict, strict=False)
 
+    def resize_token_embeddings(self, length):
+        print('Condenser resize vocab:', self.vocab_size, '=>', length)
+        self.vocab_size = length
+        self.config.vocab_size = length
+        self.dec_pretrain_head = BertPreTrainingHeads(self.config)
+        self.dec_pretrain_head.apply(self.enc._init_weights)
+        return self.enc.resize_token_embeddings(length)
+
 
 if __name__ == '__main__':
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     inputs = tokenizer('foo bar', truncation=True, return_tensors="pt")
 
-    condenser = Condenser()
-    outputs = condenser(inputs, 'condenser')
+    condenser = Condenser('bert-base-uncased')
+    outputs = condenser(**inputs)
     print(outputs.enc_output_preds.shape)
     print(outputs.dec_output_preds.shape)
 

@@ -24,6 +24,7 @@ from transformers import BertForPreTraining
 from transformers import BertConfig
 from transformers import BertForNextSentencePrediction
 from transformers import BertModel, BertPreTrainedModel
+from condenser import Condenser
 
 from nltk import LancasterStemmer
 from nltk.corpus import stopwords
@@ -317,7 +318,7 @@ class DprEncoder(BertPreTrainedModel):
 class Trainer(BaseTrainer):
 
     def __init__(self, lr='1e-6', debug=False,
-        math_keywords_file=None, **args):
+        math_keywords_file=None, architecture='standard', **args):
         super().__init__(**args)
         if math_keywords_file is not None:
             print('Enable extracting keywords ...')
@@ -330,6 +331,7 @@ class Trainer(BaseTrainer):
                 self.ma_keywords = {self.stemmer.stem(w) for w in kw_set}
         else:
             self.do_keyword_extraction = False
+        self.architecture = architecture
         self.debug = debug
         self.logger = None
         self.lr=float(lr)
@@ -422,6 +424,8 @@ class Trainer(BaseTrainer):
         if os.path.basename(ckpoint) == 'bert-from-scratch':
             config = BertConfig(tie_word_embeddings=True)
             self.model = BertForPreTraining(config)
+        elif self.architecture in ['condenser']:
+            self.model = Condenser(ckpoint)
         else:
             self.model = BertForPreTraining.from_pretrained(ckpoint,
                 tie_word_embeddings=True
