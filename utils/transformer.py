@@ -565,6 +565,7 @@ class Trainer(BaseTrainer):
             f"{n_nodes} nodes, " +
             f"{device_desc}, " +
             f"In{input_shape}, " +
+            f"lr={self.get_dynamic_lr():.2e}, " +
             f'loss={loss_}'
         )
 

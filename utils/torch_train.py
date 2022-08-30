@@ -34,6 +34,8 @@ class BaseTrainer:
     caller: str = 'nocaller'
     dev_map: tuple = None
     device_ordinal: int = 0
+    warmup_epochs: int = 0
+    warmup_rate: float = 1.0
 
     def infer_start_point(self, save_name):
         if '/' in save_name:
@@ -130,7 +132,15 @@ class BaseTrainer:
         else:
             loss.backward(**args)
 
+    def warmup(self):
+        for g in self.optimizer.param_groups:
+            g['lr'] = self.lr * self.warmup_rate
+
+    def get_dynamic_lr(self):
+        return self.optimizer.param_groups[0]['lr']
+
     def step(self):
+        self.warmup()
         if self.xla_cores:
             import torch_xla.core.xla_model as xm
             xm.optimizer_step(self.optimizer)
@@ -229,6 +239,8 @@ def _train_thread(local_rank, trainer, loop):
 
     print('Training on device:', device)
     print(trainer.local_device_info())
+    print('warmup epochs:', trainer.warmup_epochs)
+
     trainer.model.to(device)
 
     # Cluster/XLA barrier
@@ -277,6 +289,7 @@ def _train_thread(local_rank, trainer, loop):
     trainer._prepare_testing(m_batch)
 
     save_cycle = 0
+    warmup_steps = 0
     for epoch in range(trainer.epochs):
         if (epoch,) < trainer.start_point[:1]: continue
         for shard, shard_file in enumerate(shard_files):
@@ -289,6 +302,9 @@ def _train_thread(local_rank, trainer, loop):
                 save_cycle = 0
             else:
                 save_cycle = n_batches // trainer.save_fold
+            # calculating warm-up learning rate weight
+            if epoch == 0:
+                warmup_steps = n_batches * trainer.warmup_epochs
             # prepare dataset loader
             loader = DataLoader(dataset,
                 batch_size=trainer.batch_size,
@@ -320,6 +336,8 @@ def _train_thread(local_rank, trainer, loop):
                         else:
                             loop(*arg_vals)
                         iteration += 1
+                        if warmup_steps != 0:
+                            trainer.warmup_rate = min(1., iteration / warmup_steps)
                     # save on cycle
                     if save_cycle > 0 and batch % save_cycle == 0:
                         trainer._save_model(
