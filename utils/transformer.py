@@ -317,7 +317,7 @@ class DprEncoder(BertPreTrainedModel):
 
 class Trainer(BaseTrainer):
 
-    def __init__(self, lr='1e-6', debug=False,
+    def __init__(self, lr='1e-4', debug=False,
         math_keywords_file=None, architecture='standard', **args):
         super().__init__(**args)
         if math_keywords_file is not None:
