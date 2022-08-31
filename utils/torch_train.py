@@ -297,14 +297,15 @@ def _train_thread(local_rank, trainer, loop):
             print(f'Loading shard {shard_file} ...')
             dataset = trainer.dataset_cls(shard_file)
             # calculating save fold ...
-            n_batches = len(dataset) // trainer.batch_size + 1
+            n_steps_per_shard = len(dataset) // trainer.batch_size + 1
             if trainer.save_fold == 0 or trainer.test_only:
                 save_cycle = 0
             else:
-                save_cycle = n_batches // trainer.save_fold
+                save_cycle = n_steps_per_shard // trainer.save_fold
             # calculating warm-up learning rate weight
             if epoch == 0:
-                warmup_steps = n_batches * trainer.warmup_epochs
+                steps_per_epoch = n_shards * n_steps_per_shard
+                warmup_steps = steps_per_epoch * trainer.warmup_epochs
             # prepare dataset loader
             loader = DataLoader(dataset,
                 batch_size=trainer.batch_size,
