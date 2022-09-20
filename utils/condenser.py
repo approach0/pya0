@@ -4,7 +4,7 @@ import torch
 from collections import namedtuple
 from torch import nn
 from transformers import BertLayer
-from transformers.models.bert.modeling_bert import BertPreTrainingHeads, BertPooler
+from transformers.models.bert.modeling_bert import BertOnlyMLMHead
 from transformers import BertTokenizer
 from transformers import BertForPreTraining
 
@@ -19,8 +19,10 @@ class Condenser(nn.Module):
         self.enc = BertForPreTraining.from_pretrained(base_model, **kargs)
         # remove unused parameters that confuse DDP
         for p in self.enc.cls.parameters():
+            # no objective head in encoder
             p.requires_grad = False
         for p in self.enc.bert.pooler.parameters():
+            # stick to the CoCondenser way: no pooling before CLS embedding dot product
             p.requires_grad = False
 
         config = self.enc.config
@@ -29,13 +31,11 @@ class Condenser(nn.Module):
         self.dec = nn.ModuleList(
             [BertLayer(config) for _ in range(n_dec_layers)]
         )
-        self.dec_pretrain_head = BertPreTrainingHeads(config)
-        self.dec_pretrain_pooler = BertPooler(config)
+        self.dec_pretrain_head = BertOnlyMLMHead(config)
 
         # load as much as good initial weights
         self.dec.apply(self.enc._init_weights)
         self.dec_pretrain_head.apply(self.enc._init_weights)
-        self.dec_pretrain_pooler.apply(self.enc._init_weights)
 
         # save parameters
         self.config = self.enc.config
@@ -68,13 +68,15 @@ class Condenser(nn.Module):
         #print(cls_hiddens.shape)  # [B, 1, 768]
         #print(skip_hiddens.shape) # [B, N-1, 768]
 
+        # encoder MLM loss
+        if labels is not None:
+            mlm_loss_func = nn.CrossEntropyLoss()
+            enc_mlm_loss = mlm_loss_func(enc_output_preds.view(-1, self.vocab_size), labels.view(-1))
+        else:
+            enc_mlm_loss = None
+
+        # before feed into the decoder ...
         if mode == 'cot-mae-enc':
-            if labels is not None:
-                loss_func = nn.CrossEntropyLoss()
-                # MAE encoder loss
-                enc_mlm_loss = loss_func(enc_output_preds.view(-1, self.vocab_size), labels.view(-1))
-            else:
-                enc_mlm_loss = None
             return outputs({
                 'enc_output_preds': enc_output_preds,
                 'cls_hiddens': cls_hiddens,
@@ -87,6 +89,7 @@ class Condenser(nn.Module):
         else:
             raise NotImplementedError
 
+        # decoder pass
         attention_mask = self.enc.get_extended_attention_mask(
             attention_mask, attention_mask.shape, attention_mask.device
         )
@@ -99,27 +102,32 @@ class Condenser(nn.Module):
             hiddens = layer_out[0]
 
         sequence_output = hiddens
-        pooled_output = self.dec_pretrain_pooler(sequence_output)
-        dec_output_preds, dec_ctx_preds = self.dec_pretrain_head(sequence_output, pooled_output)
+        dec_output_preds = self.dec_pretrain_head(sequence_output)
         #print(dec_output_preds.shape) # [B, N, vocab_size]
-        #print(dec_ctx_preds.shape) # [B, 2]
         assert dec_output_preds.shape[-1] == self.config.vocab_size
 
         if labels is not None and next_sentence_label is not None:
-            loss_func = nn.CrossEntropyLoss()
-            dec_mlm_loss = loss_func(dec_output_preds.view(-1, self.vocab_size), labels.view(-1))
-            dec_ctx_loss = loss_func(dec_ctx_preds.view(-1, 2), next_sentence_label.view(-1))
+            mlm_loss_func = nn.CrossEntropyLoss()
+            ctx_loss_func = nn.CrossEntropyLoss()
+            dec_mlm_loss = mlm_loss_func(dec_output_preds.view(-1, self.vocab_size), labels.view(-1))
+            cls_emb = cls_hiddens.squeeze()
+            scores = cls_emb @ cls_emb.T
+            print(scores.shape)#[2,2]
+            print(next_sentence_label.shape)#[2]
+            quit()
+            #labels = torch.arange(len(queries), device=device)
+            #dec_ctx_loss = ctx_loss_func(dec_ctx_preds.view(-1, 2), next_sentence_label.view(-1))
             if mode == 'condenser':
-                enc_mlm_loss = loss_func(enc_output_preds.view(-1, self.vocab_size), labels.view(-1))
-                loss = enc_mlm_loss + dec_mlm_loss + dec_ctx_loss # CoCondenser loss
+                loss = enc_mlm_loss + dec_mlm_loss #+ dec_ctx_loss # CoCondenser loss
             else:
-                loss = dec_mlm_loss + dec_ctx_loss # MAE decoder loss
+                loss = dec_mlm_loss #+ dec_ctx_loss # MAE decoder loss
         else:
             loss = None
+
         return outputs({
             'enc_output_preds': enc_output_preds,
             'dec_output_preds': dec_output_preds,
-            'dec_ctx_preds': dec_ctx_preds,
+            'cls_emb': cls_emb,
             'loss': loss
         })
 
@@ -153,7 +161,7 @@ class Condenser(nn.Module):
         print('Condenser resize vocab:', self.vocab_size, '=>', length)
         self.vocab_size = length
         self.config.vocab_size = length
-        self.dec_pretrain_head = BertPreTrainingHeads(self.config)
+        self.dec_pretrain_head = BertOnlyMLMHead(self.config)
         self.dec_pretrain_head.apply(self.enc._init_weights)
         return self.enc.resize_token_embeddings(length)
 
