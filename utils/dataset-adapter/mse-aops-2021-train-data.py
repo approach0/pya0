@@ -8,7 +8,7 @@ from transformers import BertTokenizer
 
 
 class SentencePairGennerator():
-    def __init__(self, D, maxlen, tokenize, short_prob=0.1):
+    def __init__(self, D, maxlen, tokenize, short_prob=0.1, mode='bert_pretrain'):
         data, ridx = D
         self.ridx = ridx
         self.N = len(ridx) # total number of sentences
@@ -17,6 +17,7 @@ class SentencePairGennerator():
         self.tokenize = tokenize
         self.short_prob = short_prob
         self.now = 0
+        self.mode = mode
 
     def __len__(self):
         return self.N
@@ -27,6 +28,7 @@ class SentencePairGennerator():
         while randomly and idx == self.now:
             idx = randint(0, self.N - 1)
         row, col = self.ridx[idx]
+        content = self.data[row][0]
         tags = self.data[row][1]
         url = self.data[row][2]
         # concatenate sentences into one no longer than `read_length`
@@ -34,7 +36,7 @@ class SentencePairGennerator():
         sentences = ''
         cnt = 0
         breakout = False
-        for sentence in self.data[row][0][col:]:
+        for sentence in content[col:]:
             sent_tokens = self.tokenize(sentence)
             tokens += sent_tokens
             sentences += sentence + ' '
@@ -50,7 +52,7 @@ class SentencePairGennerator():
                 self.now += cnt
         return breakout, sentences, tags, url
 
-    def __iter__(self):
+    def pretrain_iter_for_bert(self):
         while True:
             # determine sentence pair lengths
             p = self.short_prob
@@ -69,15 +71,36 @@ class SentencePairGennerator():
                         # span over a document.
                         break
                 except StopIteration:
-                    return
+                    return # stop generator
 
             yield [pair_1, pair_2], 1 if ctx else 0, (url_1, url_2)
+
+    def pretrain_iter_for_condenser(self):
+        p = self.short_prob
+        while True:
+            maxlen = self.maxlen // 4 if rand() < p else self.maxlen
+            length = randint(1, maxlen - 1 - 1) # minus [CLS], [SEP]
+            try:
+                br_1, pair_1, _, url_1 = self.read(length)
+                br_2, pair_2, _, url_2 = self.read(length)
+                if (url_1 == url_2) and (br_1 and br_2):
+                    yield [pair_1, pair_2], True, url_1
+            except StopIteration:
+                return # stop generator
+
+    def __iter__(self):
+        if self.mode == 'bert_pretrain':
+            yield from self.pretrain_iter_for_bert()
+        elif self.mode == 'condenser_pretrain':
+            yield from self.pretrain_iter_for_condenser()
+        else:
+            raise NotImplemented
 
 
 def generate_sentpairs(
     docs_file='mse-aops-2021-data.pkl', show_sample_cycle=10_000,
     tok_ckpoint='bert-base-uncased', random_seed=123,
-    maxlen=512, n_per_split=382_000, limit=-1):
+    maxlen=512, n_per_split=382_000, limit=-1, condenser_mode=False):
 
     tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
     tokenize = tokenizer.tokenize
@@ -91,7 +114,7 @@ def generate_sentpairs(
         def do_aggregate(pairs_cnt, flush=False):
             nonlocal aggregate
             if flush or len(aggregate) >= n_per_split:
-                flush_file = docs_file + f'.pairs.{pairs_cnt}'
+                flush_file = os.path.basename(docs_file) + f'.pairs.{pairs_cnt}'
                 print('FLUSH', flush_file)
                 with open(flush_file, 'wb') as fh:
                     pickle.dump(aggregate, fh)
@@ -99,12 +122,14 @@ def generate_sentpairs(
 
         print(f'Generating ...')
         seed(random_seed)
-        data_iter = SentencePairGennerator((docs, ridx), maxlen, tokenize)
+        mode = 'condenser_pretrain' if condenser_mode else 'bert_pretrain'
+        data_iter = SentencePairGennerator((docs, ridx), maxlen, tokenize, mode=mode)
         with tqdm(data_iter) as progress:
             for cnt, (pair, relevance, urls) in enumerate(progress):
                 if cnt % show_sample_cycle == 0:
-                    print('\n', relevance, urls)
-                    print('---' * 10)
+                    print('\n', '===' * 10)
+                    print(relevance, urls)
+                    print('~~~' * 10)
                     print(pair[0])
                     print('---' * 10)
                     print(pair[1])
