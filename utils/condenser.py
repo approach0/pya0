@@ -1,6 +1,7 @@
 import os
 import json
 import torch
+import torch.nn.functional as F
 from collections import namedtuple
 from torch import nn
 from transformers import BertLayer
@@ -92,7 +93,10 @@ class Condenser(nn.Module):
         # encoder MLM loss
         if labels is not None:
             mlm_loss_func = nn.CrossEntropyLoss()
-            enc_mlm_loss = mlm_loss_func(enc_output_preds.view(-1, self.vocab_size), labels.view(-1))
+            enc_mlm_loss = mlm_loss_func(
+                enc_output_preds.view(-1, self.vocab_size),
+                labels.view(-1)
+            )
         else:
             enc_mlm_loss = None
 
@@ -128,20 +132,30 @@ class Condenser(nn.Module):
         assert dec_output_preds.shape[-1] == self.vocab_size
 
         if labels is not None and next_sentence_label is not None:
+            # calculate decoder MLM loss
             mlm_loss_func = nn.CrossEntropyLoss()
+            dec_mlm_loss = mlm_loss_func(
+                dec_output_preds.view(-1, self.vocab_size),
+                labels.view(-1)
+            )
+
+            # calculate decoder CLS loss
             ctx_loss_func = nn.CrossEntropyLoss()
-            dec_mlm_loss = mlm_loss_func(dec_output_preds.view(-1, self.vocab_size), labels.view(-1))
-            cls_emb = cls_hiddens.squeeze()
-            scores = cls_emb @ cls_emb.T
-            print(scores.shape)#[2,2]
-            print(next_sentence_label.shape)#[2]
-            quit()
-            #labels = torch.arange(len(queries), device=device)
-            #dec_ctx_loss = ctx_loss_func(dec_ctx_preds.view(-1, 2), next_sentence_label.view(-1))
+            cls_emb = cls_hiddens.squeeze() # [B, 768]
+            scores = cls_emb @ cls_emb.T # [B, B]
+            # convert cls_labels from [0, 1, 2, 3, 4, 5] to [1, 0, 3, 2, 5, 4]
+            B = scores.shape[0]
+            cls_labels = torch.arange(B, dtype=torch.long).view(-1, 2).flip([1])
+            cls_labels = cls_labels.flatten().contiguous().to(scores.device)
+            # actual loss calculation
+            scores.fill_diagonal_(float('-inf'))
+            dec_ctx_loss = F.cross_entropy(scores, cls_labels)
+
+            # final "overall loss"
             if mode == 'condenser':
-                loss = enc_mlm_loss + dec_mlm_loss #+ dec_ctx_loss # CoCondenser loss
+                loss = enc_mlm_loss + dec_mlm_loss + dec_ctx_loss # CoCondenser loss
             else:
-                loss = dec_mlm_loss #+ dec_ctx_loss # MAE decoder loss
+                loss = dec_mlm_loss + dec_ctx_loss # MAE decoder loss
         else:
             cls_emb = None
             loss = None

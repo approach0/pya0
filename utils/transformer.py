@@ -501,8 +501,15 @@ class Trainer(BaseTrainer):
         pairs = [pair for pair, label in inputs]
         labels = [label for pari, label in inputs]
 
-        enc_inputs = self.tokenizer(pairs,
-            padding=True, truncation=True, return_tensors="pt")
+        if self.architecture == 'standard':
+            enc_inputs = self.tokenizer(pairs,
+                padding=True, truncation=True, return_tensors="pt")
+        elif self.architecture == 'condenser':
+            flatten = [single for pair in pairs for single in pair]
+            enc_inputs = self.tokenizer(flatten, # use flatten input (doubled length)
+                padding=True, truncation=True, return_tensors="pt")
+        else:
+            assert NotImplementedError
 
         # mask sentence tokens
         unmask_tokens = enc_inputs['input_ids'].numpy()
