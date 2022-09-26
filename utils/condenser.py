@@ -34,6 +34,7 @@ class Condenser(nn.Module):
         # save parameters
         self.n_dec_layers = n_dec_layers
         self.skip_from = skip_from
+        self.config = self.enc.config # expose to outsider
 
     @staticmethod
     def copy_weights(dst_module, src_module):

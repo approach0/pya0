@@ -52,6 +52,7 @@ class SentencePairsShard(Dataset):
 
     def __getitem__(self, idx):
         row = self.shard[idx]
+        #print(row) # (bool_rele, pair_1, pair_2)
         label = 1 if row[0] == 0 else 0
         pair  = row[1:]
         return pair, label
@@ -331,6 +332,7 @@ class Trainer(BaseTrainer):
                 self.ma_keywords = {self.stemmer.stem(w) for w in kw_set}
         else:
             self.do_keyword_extraction = False
+        assert architecture in ['standard', 'condenser']
         self.architecture = architecture
         self.debug = debug
         self.logger = None
@@ -420,12 +422,12 @@ class Trainer(BaseTrainer):
         self.dataset_cls = SentencePairsShard
         self.test_data_cls = SentenceUnmaskTest
 
-        print(f'Loading model {ckpoint}...')
+        print(f'Loading model {ckpoint} of {self.architecture}...')
         if os.path.basename(ckpoint) == 'bert-from-scratch':
             config = BertConfig(tie_word_embeddings=True)
             self.model = BertForPreTraining(config)
         elif self.architecture in ['condenser']:
-            self.model = Condenser(ckpoint)
+            self.model = Condenser(ckpoint)   # use condenser architecture
         else:
             self.model = BertForPreTraining.from_pretrained(ckpoint,
                 tie_word_embeddings=True
