@@ -15,7 +15,8 @@ outputs = lambda d: namedtuple('outputs', d.keys())(**d)
 class Condenser(nn.Module):
     def __init__(self, base_model, n_dec_layers=2, skip_from=0, **kargs):
         super().__init__()
-        # pretrained encoder
+
+        # create encoder
         self.enc = BertForPreTraining.from_pretrained(base_model, **kargs)
         # remove unused parameters that confuse DDP
         for p in self.enc.cls.parameters():
@@ -25,23 +26,42 @@ class Condenser(nn.Module):
             # stick to the CoCondenser way: no pooling before CLS embedding dot product
             p.requires_grad = False
 
-        config = self.enc.config
-
-        # new decoder
-        self.dec = nn.ModuleList(
-            [BertLayer(config) for _ in range(n_dec_layers)]
-        )
-        self.dec_pretrain_head = BertOnlyMLMHead(config)
-
-        # load as much as good initial weights
-        self.dec.apply(self.enc._init_weights)
-        self.dec_pretrain_head.apply(self.enc._init_weights)
+        # create decoder
+        self.create_decoder_using_curr_encoder_settings(n_dec_layers)
+        # initialize a set of good weights for the decoder head
+        self.copy_weights(self.dec_pretrain_head, self.enc.cls)
 
         # save parameters
-        self.config = self.enc.config
         self.n_dec_layers = n_dec_layers
         self.skip_from = skip_from
-        self.vocab_size = self.config.vocab_size
+
+    @staticmethod
+    def copy_weights(dst_module, src_module):
+        src_dict = dict(src_module.named_parameters())
+        dst_dict = dict(dst_module.named_parameters())
+        src_keys = {key for key, _ in src_module.named_parameters()}
+        dst_keys = {key for key, _ in dst_module.named_parameters()}
+        for common_key in src_keys.intersection(dst_keys):
+            dst_dict[common_key].data.copy_(src_dict[common_key].data)
+
+    def resize_token_embeddings(self, length):
+        # resize for encoder
+        if length is None:
+            length = self.enc.config.vocab_size
+        else:
+            self.enc.config.vocab_size = length
+            self.enc.resize_token_embeddings(length)
+        print('Condenser resize vocab to', length)
+        # resize for decoder
+        self.vocab_size = length
+        self.dec_pretrain_head = BertOnlyMLMHead(self.enc.config)
+        self.dec_pretrain_head.apply(self.enc._init_weights) # initialize random weights
+
+    def create_decoder_using_curr_encoder_settings(self, n_dec_layers):
+        self.dec = nn.ModuleList(
+            [BertLayer(self.enc.config) for _ in range(n_dec_layers)]
+        )
+        self.resize_token_embeddings(None)
 
     def forward(self, input_ids, token_type_ids, attention_mask,
         mode='condenser', labels=None, next_sentence_label=None, cot_cls_hiddens=None):
@@ -104,7 +124,7 @@ class Condenser(nn.Module):
         sequence_output = hiddens
         dec_output_preds = self.dec_pretrain_head(sequence_output)
         #print(dec_output_preds.shape) # [B, N, vocab_size]
-        assert dec_output_preds.shape[-1] == self.config.vocab_size
+        assert dec_output_preds.shape[-1] == self.vocab_size
 
         if labels is not None and next_sentence_label is not None:
             mlm_loss_func = nn.CrossEntropyLoss()
@@ -122,6 +142,7 @@ class Condenser(nn.Module):
             else:
                 loss = dec_mlm_loss #+ dec_ctx_loss # MAE decoder loss
         else:
+            cls_emb = None
             loss = None
 
         return outputs({
@@ -132,19 +153,24 @@ class Condenser(nn.Module):
         })
 
     def save_pretrained(self, path, save_function=None):
+        # save encoder
         self.enc.save_pretrained(os.path.join(path, 'encoder.ckpt'))
+        # extract decoder state as a dictionary
         all_state_dict = self.state_dict()
         dec_state_dict = {}
         for key in all_state_dict.keys():
             if key.startswith('dec'):
                 dec_state_dict[key] = all_state_dict[key]
+        # save decoder
         torch.save(dec_state_dict, os.path.join(path, 'decoder.ckpt'))
+        # save module args
         params = [self.n_dec_layers, self.skip_from]
         with open(os.path.join(path, 'params.json'), 'w') as fh:
             json.dump(params, fh)
 
     @classmethod
     def from_pretrained(cls, path, *args, **kargs):
+        # load model args and construct the model frame
         with open(os.path.join(path, 'params.json'), 'r') as fh:
             model_args = json.load(fh)
             print('model args:', model_args)
@@ -153,17 +179,11 @@ class Condenser(nn.Module):
         enc_path = os.path.join(path, 'encoder.ckpt')
         enc = BertForPreTraining.from_pretrained(enc_path, *args, **kargs)
         condenser.enc = enc
+        # create decoder
+        condenser.create_decoder_using_curr_encoder_settings(condenser.n_dec_layers)
         # load decoder
         state_dict = torch.load(os.path.join(path, 'decoder.ckpt'))
         condenser.load_state_dict(state_dict, strict=False)
-
-    def resize_token_embeddings(self, length):
-        print('Condenser resize vocab:', self.vocab_size, '=>', length)
-        self.vocab_size = length
-        self.config.vocab_size = length
-        self.dec_pretrain_head = BertOnlyMLMHead(self.config)
-        self.dec_pretrain_head.apply(self.enc._init_weights)
-        return self.enc.resize_token_embeddings(length)
 
 
 if __name__ == '__main__':
@@ -171,6 +191,7 @@ if __name__ == '__main__':
     inputs = tokenizer('foo bar', truncation=True, return_tensors="pt")
 
     condenser = Condenser('bert-base-uncased')
+    condenser.resize_token_embeddings(31_000)
     outputs = condenser(**inputs)
     print(outputs.enc_output_preds.shape)
     print(outputs.dec_output_preds.shape)
