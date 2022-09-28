@@ -20,11 +20,11 @@ class Condenser(nn.Module):
         # create encoder
         self.enc = BertForPreTraining.from_pretrained(base_model, **kargs)
         # remove unused parameters that confuse DDP
-        for p in self.enc.cls.parameters():
-            # no objective head in encoder
+        for p in self.enc.cls.seq_relationship.parameters():
+            # CLS prediction head is NOT used in encoder
             p.requires_grad = False
         for p in self.enc.bert.pooler.parameters():
-            # stick to the CoCondenser way: no pooling before CLS embedding dot product
+            # CLS pooling layer is NOT used in encoder
             p.requires_grad = False
 
         # create decoder
@@ -131,7 +131,7 @@ class Condenser(nn.Module):
         #print(dec_output_preds.shape) # [B, N, vocab_size]
         assert dec_output_preds.shape[-1] == self.vocab_size
 
-        if labels is not None and next_sentence_label is not None:
+        if labels is not None:
             # calculate decoder MLM loss
             mlm_loss_func = nn.CrossEntropyLoss()
             dec_mlm_loss = mlm_loss_func(
@@ -155,7 +155,7 @@ class Condenser(nn.Module):
             if mode == 'condenser':
                 loss = enc_mlm_loss + dec_mlm_loss + dec_ctx_loss # CoCondenser loss
             else:
-                loss = dec_mlm_loss + dec_ctx_loss # MAE decoder loss
+                loss = enc_mlm_loss + dec_mlm_loss + dec_ctx_loss # MAE decoder loss
         else:
             cls_emb = None
             loss = None
