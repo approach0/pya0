@@ -467,12 +467,15 @@ class Trainer(BaseTrainer):
             padding=True, truncation=True, return_tensors="pt")
         enc_inputs.to(device)
 
-        def classifier_hook(display, topk, module, inputs, outputs):
-            unmask_scores, seq_rel_scores = outputs
+        def classifier_hook(name, display, topk, module, inputs, outputs):
+            display.append('-'*8 + name + '-'*8)
+            if isinstance(outputs, tuple):
+                unmask_scores, seq_rel_scores = outputs
+            else:
+                unmask_scores = outputs
             for b, token_ids in enumerate(enc_inputs['input_ids']):
                 text = test_inputs[b]
-                display[0] += Trainer.highlight_masked(text) + '\n'
-                display[1] += text + '  \n'
+                display.append(Trainer.highlight_masked(text))
                 masked_idx = (
                     token_ids == torch.tensor([MSK_CODE], device=device)
                 )
@@ -482,17 +485,30 @@ class Trainer(BaseTrainer):
                     top_cands = mask_cands[:topk].detach().cpu()
                     result = (f'\033[92m MASK[{i}] \033[0m top candidates: ' +
                         str(self.tokenizer.convert_ids_to_tokens(top_cands)))
-                    display[0] += result + '\n'
-                    display[1] += result + '  \n'
+                    display.append(result)
 
-        display = ['\n', '']
         model = self.unwrap_model()
-        classifier = model.cls
-        partial_hook = partial(classifier_hook, display, 3)
-        hook = classifier.register_forward_hook(partial_hook)
+        hooks = []
+        display = []
+        if self.architecture == 'standard':
+            classifier = model.cls
+            partial_hook = partial(classifier_hook, '', display, 3)
+            hooks.append(classifier.register_forward_hook(partial_hook))
+        elif self.architecture == 'condenser':
+            # register encoder hook
+            encoder_head = model.enc.cls
+            encoder_hook = partial(classifier_hook, 'encoder', display, 3)
+            hooks.append(encoder_head.register_forward_hook(encoder_hook))
+            # register decoder hook
+            decoder_head = model.dec_pretrain_head
+            decoder_hook = partial(classifier_hook, 'decoder', display, 3)
+            hooks.append(decoder_head.register_forward_hook(decoder_hook))
+            pass
+        else:
+            assert NotImplementedError
         self.model(**enc_inputs)
-        hook.remove()
-        print(display[0])
+        for hook in hooks: hook.remove()
+        print('\n'.join(display))
 
     def pretrain_loop(self, inputs, device,
         progress, epoch, shard, batch, iteration,
