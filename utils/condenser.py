@@ -14,7 +14,7 @@ outputs = lambda d: namedtuple('outputs', d.keys())(**d)
 
 
 class Condenser(nn.Module):
-    def __init__(self, base_model, n_dec_layers=2, skip_from=0, **kargs):
+    def __init__(self, base_model, n_dec_layers=2, skip_from=6, **kargs):
         super().__init__()
 
         # create encoder
