@@ -467,8 +467,7 @@ class Trainer(BaseTrainer):
             padding=True, truncation=True, return_tensors="pt")
         enc_inputs.to(device)
 
-        def classifier_hook(name, display, topk, module, inputs, outputs):
-            display.append('-'*8 + name + '-'*8)
+        def classifier_hook(display, topk, module, inputs, outputs):
             if isinstance(outputs, tuple):
                 unmask_scores, seq_rel_scores = outputs
             else:
@@ -485,30 +484,42 @@ class Trainer(BaseTrainer):
                     top_cands = mask_cands[:topk].detach().cpu()
                     result = (f'\033[92m MASK[{i}] \033[0m top candidates: ' +
                         str(self.tokenizer.convert_ids_to_tokens(top_cands)))
-                    display.append(result)
+                    display[-1] += '\n' + result
 
         model = self.unwrap_model()
         hooks = []
         display = []
         if self.architecture == 'standard':
             classifier = model.cls
-            partial_hook = partial(classifier_hook, '', display, 3)
+            partial_hook = partial(classifier_hook, display, 3)
             hooks.append(classifier.register_forward_hook(partial_hook))
         elif self.architecture == 'condenser':
             # register encoder hook
             encoder_head = model.enc.cls
-            encoder_hook = partial(classifier_hook, 'encoder', display, 3)
+            encoder_hook = partial(classifier_hook, display, 3)
             hooks.append(encoder_head.register_forward_hook(encoder_hook))
             # register decoder hook
             decoder_head = model.dec_pretrain_head
-            decoder_hook = partial(classifier_hook, 'decoder', display, 3)
+            decoder_hook = partial(classifier_hook, display, 3)
             hooks.append(decoder_head.register_forward_hook(decoder_hook))
             pass
         else:
             assert NotImplementedError
-        self.model(**enc_inputs)
+
+        model_outputs = self.model(**enc_inputs)
         for hook in hooks: hook.remove()
-        print('\n'.join(display))
+
+        if self.architecture == 'standard':
+            print('\n'.join(display))
+        elif self.architecture == 'condenser':
+            scores = model_outputs.cls_scores
+            argmax = scores.argmax(dim=1).cpu().numpy()
+            L = len(argmax)
+            for idx, (match_idx, string) in enumerate(zip(argmax, display)):
+                location = 'encoder' if idx < L // 2 else 'decoder'
+                print(f'{location}[{idx}] -> [{match_idx}]', string)
+        else:
+            assert NotImplementedError
 
     def pretrain_loop(self, inputs, device,
         progress, epoch, shard, batch, iteration,

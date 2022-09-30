@@ -131,6 +131,18 @@ class Condenser(nn.Module):
         #print(dec_output_preds.shape) # [B, N, vocab_size]
         assert dec_output_preds.shape[-1] == self.vocab_size
 
+        # calculate decoder CLS loss
+        ctx_loss_func = nn.CrossEntropyLoss()
+        cls_emb = cls_hiddens.squeeze() # [B, 768]
+        scores = cls_emb @ cls_emb.T # [B, B]
+        # convert cls_labels from [0, 1, 2, 3, 4, 5] to [1, 0, 3, 2, 5, 4]
+        B = scores.shape[0]
+        cls_labels = torch.arange(B, dtype=torch.long).view(-1, 2).flip([1])
+        cls_labels = cls_labels.flatten().contiguous().to(scores.device)
+        # actual loss calculation
+        scores.fill_diagonal_(float('-inf'))
+        dec_ctx_loss = F.cross_entropy(scores, cls_labels)
+
         if labels is not None:
             # calculate decoder MLM loss
             mlm_loss_func = nn.CrossEntropyLoss()
@@ -139,31 +151,19 @@ class Condenser(nn.Module):
                 labels.view(-1)
             )
 
-            # calculate decoder CLS loss
-            ctx_loss_func = nn.CrossEntropyLoss()
-            cls_emb = cls_hiddens.squeeze() # [B, 768]
-            scores = cls_emb @ cls_emb.T # [B, B]
-            # convert cls_labels from [0, 1, 2, 3, 4, 5] to [1, 0, 3, 2, 5, 4]
-            B = scores.shape[0]
-            cls_labels = torch.arange(B, dtype=torch.long).view(-1, 2).flip([1])
-            cls_labels = cls_labels.flatten().contiguous().to(scores.device)
-            # actual loss calculation
-            scores.fill_diagonal_(float('-inf'))
-            dec_ctx_loss = F.cross_entropy(scores, cls_labels)
-
             # final "overall loss"
             if mode == 'condenser':
                 loss = enc_mlm_loss + dec_mlm_loss + dec_ctx_loss # CoCondenser loss
             else:
                 loss = enc_mlm_loss + dec_mlm_loss + dec_ctx_loss # MAE decoder loss
         else:
-            cls_emb = None
             loss = None
 
         return outputs({
             'enc_output_preds': enc_output_preds,
             'dec_output_preds': dec_output_preds,
             'cls_emb': cls_emb,
+            'cls_scores': scores,
             'loss': loss
         })
 
