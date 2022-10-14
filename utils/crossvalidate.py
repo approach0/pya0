@@ -88,7 +88,7 @@ def cross_validate_tsv(tsv_file, name_field=0, score_field=1, verbose=False, sav
         best_params_idx = max(range(len(best_params_arr)), key=lambda i: best_params_arr[i][1])
         best_params_name = best_params_arr[best_params_idx][0]
         import shutil
-        src = best_params_name.strip('.')
+        src = best_params_name[:-1]
         shutil.copy(src, save_folder)
     if verbose:
         print('best params and frqs:', best_params_set.items())

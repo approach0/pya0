@@ -52,8 +52,8 @@ fusion() {
     kfold_dir=runs.kfold
     mkdir -p $save_dir
 
-    > $name.result
-    > $name.verbose
+    > $save_dir/$name.result
+    > $save_dir/$name.verbose
     # for each fusion of the same base run
     for eval_run in ${fusion_list[@]}; do
         rm -rf $kfold_dir
@@ -87,7 +87,7 @@ fusion() {
             ./eval-arqmath2-task1/preprocess.sh $kfold_dir/*holdout
             ./eval-arqmath2-task1/preprocess.sh $kfold_dir/*foldtest
             ./eval-arqmath2-task1/eval.sh --nojudge
-            cat ./eval-arqmath2-task1/result.tsv | sort | sed -e 's/[[:blank:]]/ /g' > kfold.tsv
+            cat ./eval-arqmath2-task1/result.tsv | sort | sed -e 's/[[:blank:]]/ /g' | sed -e "s-^-${kfold_dir}/-g" > kfold.tsv
             # output cross validate result
             ndcg=$($CROSS_VALID --score_field 1)
             map=$($CROSS_VALID --score_field 2)
@@ -100,7 +100,7 @@ fusion() {
             $CROSS_VALID --score_field 4 --save_folder $save_dir --verbose True >> $save_dir/$name.verbose
         fi
     done
-    cat $name.result
+    cat $save_dir/$name.result
 }
 
 RERANK='python -m pya0.transformer_eval maprun ./utils/transformer_eval.ini'
