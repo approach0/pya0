@@ -43,7 +43,7 @@ def split_run_files(*all_run_files, kfold=5, seed=123):
                         print(line, file=holdout_fh)
 
 
-def cross_validate_tsv(tsv_file, name_field=0, score_field=1, verbose=True):
+def cross_validate_tsv(tsv_file, name_field=0, score_field=1, verbose=False, save_folder=None):
     scores = defaultdict(dict)
     with open(tsv_file, 'r') as fh:
         for line in fh:
@@ -83,6 +83,13 @@ def cross_validate_tsv(tsv_file, name_field=0, score_field=1, verbose=True):
         best_params_set[best_params] += 1
     mean_test_score = np.array(test_scores).mean()
     mean_test_score = round(mean_test_score, 4)
+    if save_folder is not None:
+        best_params_arr = list(best_params_set.items())
+        best_params_idx = max(range(len(best_params_arr)), key=lambda i: best_params_arr[i][1])
+        best_params_name = best_params_arr[best_params_idx][0]
+        import shutil
+        src = best_params_name.strip('.')
+        shutil.copy(src, save_folder)
     if verbose:
         print('best params and frqs:', best_params_set.items())
         print('mean test score:', mean_test_score)
