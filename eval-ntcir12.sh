@@ -1,12 +1,14 @@
 QREL=./topics-and-qrels/qrels.ntcir12-math-browsing.txt
 EVAL="trec_eval $QREL"
 RUN="${1-tmp.run}"
-TSV_OUTPUT="${2-false}"
+OPTIONAL_ARG="${2-false}"
 
 set -e
-if [ $TSV_OUTPUT == "tsv" ]; then
+if [ $OPTIONAL_ARG == "tsv" ]; then
     echo -n "$RUN "
     $EVAL $RUN -l3 -m bpref | awk '{printf $3 " "}'
+elif [ $OPTIONAL_ARG == "byquery" ]; then
+	$EVAL $RUN -l3 -m bpref -q > $RUN.full_bpref
 else
     echo "Fully relevant:"
     $EVAL $RUN -l3 -m P.5
@@ -16,8 +18,10 @@ else
     $EVAL $RUN -l3 -m bpref
 fi
 
-if [ $TSV_OUTPUT == "tsv" ]; then
+if [ $OPTIONAL_ARG == "tsv" ]; then
     $EVAL $RUN -l1 -m bpref | awk '{print $3}'
+elif [ $OPTIONAL_ARG == "byquery" ]; then
+	$EVAL $RUN -l1 -m bpref -q > $RUN.part_bpref
 else
     echo "Partial relevant:"
     $EVAL $RUN -l1 -m P.5

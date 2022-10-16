@@ -3,19 +3,17 @@ import fire
 import pandas as pd
 from scipy.stats import ttest_ind, ttest_rel
 
-def do_ttest(*paths, baseline_idx=0, model_idx=1):
+def do_ttest(*paths, use_col=2, remove_last_row=True, sided='two-sided', threshold=0.05):
     compare = []
     for path in paths:
-        df = pd.read_csv(path, header=None, sep='\t', usecols=[1, 2])
-        mean = df.mean().to_numpy()[0]
-        std = df.std().to_numpy()[0]
-        col = df.to_numpy()[:,1]
-        print(path, 'mean/std:', mean, std)
+        df = pd.read_csv(path, header=None, sep='\t', usecols=[use_col])
+        col = df.to_numpy()[:,0]
+        if remove_last_row:
+            col = col[:-1]
         compare.append(col)
-    baseline_col = compare[baseline_idx]
-    model_col = compare[model_idx]
-    ttest = ttest_rel(baseline_col, model_col, alternative='two-sided')
-    print(ttest)
+    ttest = ttest_rel(compare[0], compare[1], alternative=sided)
+    print('Delta:', compare[1] - compare[0])
+    print('p-value:', ttest.pvalue, '*' if ttest.pvalue <= threshold else '')
 
 
 if __name__ == '__main__':
