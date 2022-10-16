@@ -8,10 +8,13 @@ def do_ttest(*paths, use_col=2, remove_last_row=True, sided='two-sided', thresho
     for path in paths:
         df = pd.read_csv(path, header=None, sep='\t', usecols=[use_col])
         col = df.to_numpy()[:,0]
-        if remove_last_row:
-            col = col[:-1]
         compare.append(col)
+    if remove_last_row:
+        compare[0] = compare[0][:-1]
+        compare[1] = compare[1][:-1]
     ttest = ttest_rel(compare[0], compare[1], alternative=sided)
+    print('[0]:', compare[0])
+    print('[1]:', compare[1])
     print('Delta:', compare[1] - compare[0])
     print('p-value:', ttest.pvalue, '*' if ttest.pvalue <= threshold else '')
 
