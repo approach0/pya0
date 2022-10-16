@@ -7,6 +7,10 @@ for arg in "$@"; do
       NOJUDGE=-nojudge
       shift
       ;;
+    --byquery)
+      BYQUERY=-byquery
+      shift
+      ;;
     --qrels=*)
       QREL="${arg#*=}"
       shift
@@ -31,6 +35,6 @@ set -x
 sed -i 's/ /\t/g' $DIR/input/*
 
 python3 $DIR/arqmath_to_prim_task1.py -qre $QREL  -sub "$DIR/input/" -tre $DIR/trec-output/ -pri $DIR/prime-output/
-python3 $DIR/task1_get_results.py -eva "trec_eval" -qre $QREL -pri $DIR/prime-output/ -res "$DIR/result.tsv" $NOJUDGE
+python3 $DIR/task1_get_results.py -eva "trec_eval" -qre $QREL -pri $DIR/prime-output/ -res "$DIR/result.tsv" $NOJUDGE $BYQUERY
 
 cat $DIR/result.tsv | sed -e 's/[[:blank:]]/ /g'
