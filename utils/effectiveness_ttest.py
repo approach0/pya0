@@ -55,16 +55,17 @@ def ttest_tsv_tab(tsv_path, trec_res_dir='runs/by-query-res'):
         for row, x in enumerate(baselines):
             pvalue, removed = ttest_trec_res(x, y, verbose=False)
             _, x_score, y_score = removed
-            if pvalue < 0.05:
-                sig = ' **'
-            elif pvalue < 0.1:
-                sig = ' *'
+            if pvalue < 0.01:
+                sig = '**'
+            elif pvalue < 0.05:
+                sig = '*'
             else:
                 sig = ''
-            df.at[row, column] = f'{x_score:.3f} (p={pvalue:.2f}){sig}'
+            df.at[row, column] = f'{x_score:.3f}{sig} (p={pvalue:.4f})'
             df.at[len(baselines), column] = f'{y_score:.3f}'
     # print t-tested table
-    df = df.drop('sed', axis=1)
+    if 'sed' in df:
+        df = df.drop('sed', axis=1)
     print(df)
 
 
