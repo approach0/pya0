@@ -5,7 +5,7 @@ import pandas as pd
 pd.set_option('display.max_columns', 8)
 from scipy.stats import ttest_ind, ttest_rel
 
-def ttest_trec_res(*paths, use_cols=[1, 2], remove_last_row=True, sided='two-sided', threshold=0.05, verbose=True):
+def ttest_trec_res(*paths, use_cols=[1, 2], remove_last_row=True, sided='two-sided', verbose=True):
     compare = []
     for path in paths:
         df = pd.read_csv(path, header=None, names=['topic', 'score'], sep='\t', usecols=use_cols)
@@ -19,14 +19,13 @@ def ttest_trec_res(*paths, use_cols=[1, 2], remove_last_row=True, sided='two-sid
         removed = None
     compare = [df[label].to_numpy() for label in ['score_x', 'score_y']]
     ttest = ttest_rel(compare[0], compare[1], alternative=sided)
-    significant = ttest.pvalue <= threshold
     if verbose:
         print('[0]:', compare[0])
         print('[1]:', compare[1])
         print('Delta:', compare[1] - compare[0])
         print(removed)
-        print('p-value:', ttest.pvalue, '*' if significant else '')
-    return ttest.pvalue, removed, significant
+        print('p-value:', ttest.pvalue)
+    return ttest.pvalue, removed
 
 
 def ttest_tsv_tab(tsv_path, trec_res_dir='runs/by-query-res'):
@@ -54,11 +53,18 @@ def ttest_tsv_tab(tsv_path, trec_res_dir='runs/by-query-res'):
         baselines = col_paths[:-1]
         y = col_paths[-1]
         for row, x in enumerate(baselines):
-            pvalue, removed, sig = ttest_trec_res(x, y, verbose=False)
+            pvalue, removed = ttest_trec_res(x, y, verbose=False)
             _, x_score, y_score = removed
-            df.at[row, column] = f'{x_score:.3f} (p={pvalue:.2f})'
+            if pvalue < 0.05:
+                sig = ' **'
+            elif pvalue < 0.1:
+                sig = ' *'
+            else:
+                sig = ''
+            df.at[row, column] = f'{x_score:.3f} (p={pvalue:.2f}){sig}'
             df.at[len(baselines), column] = f'{y_score:.3f}'
     # print t-tested table
+    df = df.drop('sed', axis=1)
     print(df)
 
 
