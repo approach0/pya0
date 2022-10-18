@@ -38,6 +38,7 @@ def ttest_tsv_tab(tsv_path, trec_res_dir='runs/by-query-res'):
                 sed = row['sed']
                 for sed_exp in sed.split('&'):
                     sed_exp = sed_exp.strip()
+                    if len(sed_exp) == 0: break
                     m = re.match(r"\('(.*)',[ ]*'(.*)'\)", sed_exp)
                     #print(f's/{m.group(1)}/{m.group(2)}/g')
                     run = re.sub(m.group(1), m.group(2), run)
