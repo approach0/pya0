@@ -34,13 +34,13 @@ def individual_topic(*files, topic, topk=10, draw=False, labels=None, cutoff=100
         from matplotlib.ticker import MaxNLocator
         ax = plt.figure().gca()
         ax.yaxis.set_major_locator(MaxNLocator(integer=True))
-        markers = ['r+', 'bx', 'g_']
+        markers = ['r+', 'bx', ':g|']
         for j, x in enumerate(plots):
             label = None if labels is None else labels[j]
             plt.plot(range(1, len(x) + 1), x,
                 markers[j % len(markers)], label=label)
         if labels:
-            plt.legend(loc="upper left")
+            plt.legend(loc="best")
         plt.show()
     return plots
 
