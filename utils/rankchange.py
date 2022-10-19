@@ -45,8 +45,25 @@ def individual_topic(*files, topic, topk=10, draw=False, labels=None, cutoff=100
     return plots
 
 
+def byquery_metric_change(*files):
+    def read_byquery_file(path):
+        return pd.read_csv(path, header=None, sep="\s+",
+            names=['topic', 'metric'],
+            usecols=[1, 2]
+        )
+    dfs = list(map(read_byquery_file, files))
+    merged_df = pd.merge(*dfs, on='topic', how='inner')
+    merged_df = merged_df.reset_index()
+    merged_df['delta'] = merged_df['metric_y'] - merged_df['metric_x']
+    argmax = merged_df['delta'].idxmax()
+    print(merged_df)
+    print('max change row:')
+    print(merged_df.loc[argmax])
+
+
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
     fire.Fire({
         'individual_topic': individual_topic,
+        'byquery_metric_change': byquery_metric_change,
     })
