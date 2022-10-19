@@ -30,15 +30,18 @@ def individual_topic(*files, topic, topk=10, draw=False, labels=None, cutoff=100
             plots[i].append(prev_rank)
         plots[-1].append(rank)
     if draw:
+        L = len(plots[-1])
         import matplotlib.pyplot as plt
         from matplotlib.ticker import MaxNLocator
         ax = plt.figure().gca()
         ax.yaxis.set_major_locator(MaxNLocator(integer=True))
-        markers = ['r+', 'bx', ':g|']
+        markers = ['r+', 'bx', ':g|', ':m']
         for j, x in enumerate(plots):
             label = None if labels is None else labels[j]
-            plt.plot(range(1, len(x) + 1), x,
+            plt.plot(range(1, L + 1), x,
                 markers[j % len(markers)], label=label)
+        plt.plot(range(1, L + 1), [cutoff] * L,
+            markers[-1], label='beyond cutoff')
         if labels:
             plt.legend(loc="best")
         plt.show()
