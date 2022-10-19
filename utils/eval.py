@@ -14,9 +14,7 @@ import tracemalloc
 def gen_topics_queries(collection, qfilter=None):
     func_name = '_topic_process__' + collection.replace('-', '_')
     handler = getattr(collection_driver, func_name)
-    cache = get_cache_home()
-    curdir = os.path.dirname(os.path.abspath(__file__))
-    prefix = f'{curdir}/topics-and-qrels/topics.{collection}'
+    prefix = f'topics-and-qrels/topics.{collection}'
     print(f'Searching topics file at: {prefix} ...')
     found = False
     for src in [f'{prefix}.{ent}' for ent in ['txt', 'json', 'xml']]:
@@ -45,7 +43,7 @@ def gen_topics_queries(collection, qfilter=None):
             for qid, query, args in handler(src):
                 yield qid, query, args
     if not found:
-        raise ValueError(f'Unrecognized index name {collection}')
+        raise ValueError(f'Unrecognized collection name {collection}')
 
 
 def trec_eval(qrels: str, run: str, eval_args: str):
@@ -111,8 +109,7 @@ def TREC_output(hits, queryID, append=False, output_file="tmp.run", name="APPROA
 
 
 def get_qrels_filepath(collection: str):
-    curdir = os.path.dirname(os.path.abspath(__file__))
-    path = f'{curdir}/topics-and-qrels/qrels.{collection}.txt'
+    path = f'topics-and-qrels/qrels.{collection}.txt'
     if os.path.exists(path):
         return path
     else:

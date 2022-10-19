@@ -1,4 +1,3 @@
-import pya0
 import copy
 import os
 import re
@@ -140,7 +139,12 @@ def visualize_hits(index, run_name, qid, query, hits, qrels=None, scores=None):
     # lookup document content
     for hit in hits:
         docid = hit['docid'] # must be internal docid
-        doc = collection_driver.docid_to_doc(index, docid)
+        if isinstance(docid, str) and '-' in docid:
+            docid = docid.split('-')[1]
+            hit['docid'] = docid
+        #doc = collection_driver.docid_to_doc(index, docid)
+        ### Ad-hoc fix!!! For colbert index the key is actually TREC docID.
+        doc = collection_driver.docid_to_doc(index, hit['trec_docid'])
         hit['content'] = doc['content']
     # output HTML preview
     if qrels:
@@ -279,3 +283,17 @@ def visualize_compare_scores(score_files):
     print(f'Saving figure to {save_path} ...')
     plt.savefig(save_path, bbox_inches='tight')
     #plt.show()
+
+
+def fire_visualize_wrapper(index, tsv_file_path,
+    collection=None, adhoc_query=None):
+    if isinstance(index, str) and ':' in index:
+        import collection_driver
+        index = collection_driver.open_index(index)
+    visualize(index, tsv_file_path, collection, adhoc_query)
+
+
+if __name__ == '__main__':
+    import fire
+    os.environ["PAGER"] = 'cat'
+    fire.Fire(fire_visualize_wrapper)
