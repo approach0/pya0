@@ -130,7 +130,6 @@ $SEARCH search_arqmath3_task2_colbert --device a6000_3
 
 # reranking existing run file
 RERANK='python -m pya0.transformer_eval maprun ./utils/transformer_eval.ini'
-$RERANK maprun_arqmath3_to_colbert --device a6000_3
 $RERANK maprun_arqmath3_to_colbert /path/to/your/pya0-porterstemmer-task1.run --device a6000_3
 ```
 
