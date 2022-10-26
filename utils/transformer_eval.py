@@ -458,6 +458,34 @@ def psg_scorer__colbert_default(tok_ckpoint, model_ckpoint, config, gpu_dev):
     return scorer, (None, None)
 
 
+def psg_scorer__math_10(tok_ckpoint, model_ckpoint, config, gpu_dev):
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification
+    tokenizer = AutoTokenizer.from_pretrained(tok_ckpoint)
+    model = AutoModelForSequenceClassification.from_pretrained(model_ckpoint)
+    model.to(gpu_dev)
+    model.eval()
+
+    def process(content):
+        content = content.replace('[imath]', '$')
+        content = content.replace('[/imath]', '$')
+        return content
+
+    def scorer(batch_query, batch_doc, verbose=False):
+        batch_query = [process(x) for x in batch_query]
+        batch_doc = [process(x) for x in batch_doc]
+        batch_inputs = list(zip(batch_query, batch_doc))
+        batch_tokens = tokenizer(batch_inputs, padding=True,
+            truncation=True, return_tensors="pt")
+        batch_tokens = batch_tokens.to(gpu_dev)
+        with torch.no_grad():
+            out_logits = model(**batch_tokens).logits
+            out_probs = torch.softmax(out_logits, dim=1).tolist()
+        out_scores = [s[1] for s in out_probs]
+        return out_scores
+
+    return scorer, (None, None)
+
+
 def select_sentences(lookup_index, batch, fields, qid2query,
                      min_select_sent, max_select_sent, always_start_0):
     import collection_driver
