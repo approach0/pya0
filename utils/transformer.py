@@ -332,7 +332,7 @@ class Trainer(BaseTrainer):
                 self.ma_keywords = {self.stemmer.stem(w) for w in kw_set}
         else:
             self.do_keyword_extraction = False
-        assert architecture in ['standard', 'condenser']
+        assert architecture in ['standard', 'condenser', 'mae']
         self.architecture = architecture
         self.debug = debug
         self.logger = None
@@ -426,8 +426,8 @@ class Trainer(BaseTrainer):
         if os.path.basename(ckpoint) == 'bert-from-scratch':
             config = BertConfig(tie_word_embeddings=True)
             self.model = BertForPreTraining(config)
-        elif self.architecture in ['condenser']:
-            self.model = Condenser(ckpoint)   # use condenser architecture
+        elif self.architecture in ['condenser', 'mae']:
+            self.model = Condenser(ckpoint, mode=self.architecture)
         else:
             self.model = BertForPreTraining.from_pretrained(ckpoint,
                 tie_word_embeddings=True
@@ -512,12 +512,13 @@ class Trainer(BaseTrainer):
         if self.architecture == 'standard':
             print('\n'.join(display))
         elif self.architecture == 'condenser':
+            # in Condenser, also visualize CLS relevance predictions
             scores = model_outputs.cls_scores
             argmax = scores.argmax(dim=1).cpu().numpy()
             L = len(argmax)
-            for idx, (match_idx, string) in enumerate(zip(argmax, display)):
+            for idx, (match_idx, curr_str) in enumerate(zip(argmax, display)):
                 location = 'encoder' if idx < L // 2 else 'decoder'
-                print(f'{location}[{idx}] -> [{match_idx}]', string)
+                print(f'{location}[{idx}] -> [{match_idx}]', curr_str)
         else:
             assert NotImplementedError
 
@@ -531,9 +532,10 @@ class Trainer(BaseTrainer):
         if self.architecture == 'standard':
             enc_inputs = self.tokenizer(pairs,
                 padding=True, truncation=True, return_tensors="pt")
-        elif self.architecture == 'condenser':
-            flatten = [single for pair in pairs for single in pair]
-            enc_inputs = self.tokenizer(flatten, # use flatten input (doubled length)
+        elif self.architecture in ['condenser', 'mae']:
+            # use flatten input (doubled length)
+            flatten_inputs = [single for pair in pairs for single in pair]
+            enc_inputs = self.tokenizer(flatten_inputs,
                 padding=True, truncation=True, return_tensors="pt")
         else:
             assert NotImplementedError

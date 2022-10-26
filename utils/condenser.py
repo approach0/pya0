@@ -14,7 +14,8 @@ outputs = lambda d: namedtuple('outputs', d.keys())(**d)
 
 
 class Condenser(nn.Module):
-    def __init__(self, base_model, n_dec_layers=2, skip_from=6, **kargs):
+    def __init__(self, base_model, mode='condensor',
+        n_dec_layers=2, skip_from=6, **kargs):
         super().__init__()
 
         # create encoder
@@ -33,6 +34,7 @@ class Condenser(nn.Module):
         self.copy_weights(self.dec_pretrain_head, self.enc.cls)
 
         # save parameters
+        self.mode = mode
         self.n_dec_layers = n_dec_layers
         self.skip_from = skip_from
         self.config = self.enc.config # expose to outsider
@@ -66,17 +68,16 @@ class Condenser(nn.Module):
         self.resize_token_embeddings(None)
 
     def forward(self, input_ids, token_type_ids, attention_mask,
-        mode='condenser', labels=None, next_sentence_label=None, cot_cls_hiddens=None):
-        assert mode in ['condenser', 'cot-mae-enc', 'cot-mae-dec']
+        labels=None, next_sentence_label=None):
+        mode = self.mode
+        assert mode in ['condenser', 'mae']
 
         enc_output = self.enc(
             input_ids, token_type_ids, attention_mask,
             output_hidden_states=True,
             return_dict=True # output in a dict structure
         )
-        #print(enc_output.keys())
 
-        # all_hidden_states == all_hidden_states + (hidden_states,)
         enc_hidden_states = enc_output.hidden_states # [13, B, N, 768]
         enc_output_preds = enc_output.prediction_logits # [B, N, vocab_size]
         # where B is batch size and N is the sequence length.
@@ -86,7 +87,6 @@ class Condenser(nn.Module):
 
         cls_hiddens = enc_hidden_states[-1][:, :1]
         skip_hiddens = enc_hidden_states[self.skip_from][:, 1:]
-        #print(enc_hidden_states[-1].shape) # [B, N, 768]
         #print(cls_hiddens.shape)  # [B, 1, 768]
         #print(skip_hiddens.shape) # [B, N-1, 768]
 
@@ -100,19 +100,16 @@ class Condenser(nn.Module):
         else:
             enc_mlm_loss = None
 
-        # before feed into the decoder ...
-        if mode == 'cot-mae-enc':
-            return outputs({
-                'enc_output_preds': enc_output_preds,
-                'cls_hiddens': cls_hiddens,
-                'loss': enc_mlm_loss
-            })
-        elif mode == 'cot-mae-dec':
-            hiddens = torch.cat([cot_cls_hiddens, skip_hiddens], dim=1)
+        # before feed into the decoder, concate CLS and skip hiddens
+        if mode == 'mae':
+            dim = cls_hiddens.shape[-1]
+            cls_hiddens = cls_hiddens.view(-1, 2, dim).flip([1])
+            cls_hiddens = cls_hiddens.view(-1, 1, dim).contiguous()
         elif mode == 'condenser':
-            hiddens = torch.cat([cls_hiddens, skip_hiddens], dim=1)
+            pass
         else:
             raise NotImplementedError
+        hiddens = torch.cat([cls_hiddens, skip_hiddens], dim=1)
 
         # decoder pass
         attention_mask = self.enc.get_extended_attention_mask(
@@ -125,18 +122,17 @@ class Condenser(nn.Module):
             )
             # layer_out == (layer_out,) + attention_weights
             hiddens = layer_out[0]
-
         sequence_output = hiddens
+
         dec_output_preds = self.dec_pretrain_head(sequence_output)
         #print(dec_output_preds.shape) # [B, N, vocab_size]
         assert dec_output_preds.shape[-1] == self.vocab_size
 
         # calculate decoder CLS loss
-        ctx_loss_func = nn.CrossEntropyLoss()
         cls_emb = cls_hiddens.squeeze() # [B, 768]
         scores = cls_emb @ cls_emb.T # [B, B]
-        # convert cls_labels from [0, 1, 2, 3, 4, 5] to [1, 0, 3, 2, 5, 4]
         B = scores.shape[0]
+        # B -> cls_labels: [0, 1, 2, 3, 4, 5] to [1, 0, 3, 2, 5, 4]
         cls_labels = torch.arange(B, dtype=torch.long).view(-1, 2).flip([1])
         cls_labels = cls_labels.flatten().contiguous().to(scores.device)
         # actual loss calculation
@@ -152,10 +148,7 @@ class Condenser(nn.Module):
             )
 
             # final "overall loss"
-            if mode == 'condenser':
-                loss = enc_mlm_loss + dec_mlm_loss + dec_ctx_loss # CoCondenser loss
-            else:
-                loss = enc_mlm_loss + dec_mlm_loss + dec_ctx_loss # MAE decoder loss
+            loss = enc_mlm_loss + dec_mlm_loss + dec_ctx_loss
         else:
             loss = None
 
@@ -163,8 +156,8 @@ class Condenser(nn.Module):
             'enc_output_preds': enc_output_preds,
             'dec_output_preds': dec_output_preds,
             'cls_emb': cls_emb,
-            'cls_scores': scores,
-            'loss': loss
+            'cls_scores': scores, # for visualization
+            'loss': loss # for loss backprop
         })
 
     def save_pretrained(self, path, save_function=None):
@@ -179,7 +172,7 @@ class Condenser(nn.Module):
         # save decoder
         torch.save(dec_state_dict, os.path.join(path, 'decoder.ckpt'))
         # save module args
-        params = [self.n_dec_layers, self.skip_from]
+        params = [self.mode, self.n_dec_layers, self.skip_from]
         with open(os.path.join(path, 'params.json'), 'w') as fh:
             json.dump(params, fh)
 
