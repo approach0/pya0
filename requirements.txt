@@ -10,3 +10,4 @@ tensorboard
 transformers
 python-dateutil
 pyjnius
+BeautifulSoup4
