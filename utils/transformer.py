@@ -427,7 +427,10 @@ class Trainer(BaseTrainer):
             config = BertConfig(tie_word_embeddings=True)
             self.model = BertForPreTraining(config)
         elif self.architecture in ['condenser', 'mae']:
-            self.model = Condenser(ckpoint, mode=self.architecture)
+            if self.start_point[-1] == -1:
+                self.model = Condenser(ckpoint, mode=self.architecture)
+            else:
+                self.model = Condenser.from_pretrained(ckpoint)
         else:
             self.model = BertForPreTraining.from_pretrained(ckpoint,
                 tie_word_embeddings=True

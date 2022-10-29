@@ -16,6 +16,7 @@ outputs = lambda d: namedtuple('outputs', d.keys())(**d)
 class Condenser(nn.Module):
     def __init__(self, base_model, mode='condensor',
         n_dec_layers=2, skip_from=6, **kargs):
+        assert mode in ['condenser', 'mae']
         super().__init__()
 
         # create encoder
@@ -70,7 +71,6 @@ class Condenser(nn.Module):
     def forward(self, input_ids, token_type_ids, attention_mask,
         labels=None, next_sentence_label=None):
         mode = self.mode
-        assert mode in ['condenser', 'mae']
 
         enc_output = self.enc(
             input_ids, token_type_ids, attention_mask,
@@ -181,6 +181,8 @@ class Condenser(nn.Module):
         # load model args and construct the model frame
         with open(os.path.join(path, 'params.json'), 'r') as fh:
             model_args = json.load(fh)
+            if len(model_args) == 2: # for compatibility
+                model_args.insert(0, 'condenser')
             print('model args:', model_args)
         condenser = Condenser('bert-base-uncased', *model_args)
         # load encoder
@@ -192,6 +194,7 @@ class Condenser(nn.Module):
         # load decoder
         state_dict = torch.load(os.path.join(path, 'decoder.ckpt'))
         condenser.load_state_dict(state_dict, strict=False)
+        return condenser
 
 
 if __name__ == '__main__':
