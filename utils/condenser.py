@@ -10,11 +10,8 @@ from transformers import BertTokenizer
 from transformers import BertForPreTraining
 
 
-outputs = lambda d: namedtuple('outputs', d.keys())(**d)
-
-
 class Condenser(nn.Module):
-    def __init__(self, base_model, mode='condensor',
+    def __init__(self, base_model, mode='condenser',
         n_dec_layers=2, skip_from=6, **kargs):
         assert mode in ['condenser', 'mae']
         super().__init__()
@@ -30,6 +27,8 @@ class Condenser(nn.Module):
             p.requires_grad = False
 
         # create decoder
+        self.dec = None
+        self.dec_pretrain_head = None
         self.create_decoder_using_curr_encoder_settings(n_dec_layers)
         # initialize a set of good weights for the decoder head
         self.copy_weights(self.dec_pretrain_head, self.enc.cls)
@@ -61,11 +60,14 @@ class Condenser(nn.Module):
         self.vocab_size = length
         self.dec_pretrain_head = BertOnlyMLMHead(self.enc.config)
         self.dec_pretrain_head.apply(self.enc._init_weights) # initialize random weights
+        self.dec_pretrain_head = BertOnlyMLMHead(self.enc.config)
 
     def create_decoder_using_curr_encoder_settings(self, n_dec_layers):
         self.dec = nn.ModuleList(
             [BertLayer(self.enc.config) for _ in range(n_dec_layers)]
         )
+        self.dec.eval() # disable dropout to reproduce results, also
+        # Huggingface models are initialized in eval mode by default
         self.resize_token_embeddings(None)
 
     def forward(self, input_ids, token_type_ids, attention_mask,
@@ -120,7 +122,7 @@ class Condenser(nn.Module):
                 hiddens,
                 attention_mask,
             )
-            # layer_out == (layer_out,) + attention_weights
+            #layer_out == (layer_out,) + attention_weights
             hiddens = layer_out[0]
         sequence_output = hiddens
 
@@ -152,6 +154,7 @@ class Condenser(nn.Module):
         else:
             loss = None
 
+        outputs = lambda d: namedtuple('outputs', d.keys())(**d)
         return outputs({
             'enc_output_preds': enc_output_preds,
             'dec_output_preds': dec_output_preds,
@@ -190,22 +193,52 @@ class Condenser(nn.Module):
         enc = BertForPreTraining.from_pretrained(enc_path, *args, **kargs)
         condenser.enc = enc
         # create decoder
-        condenser.create_decoder_using_curr_encoder_settings(condenser.n_dec_layers)
+        condenser.create_decoder_using_curr_encoder_settings(
+            condenser.n_dec_layers
+        )
         # load decoder
         state_dict = torch.load(os.path.join(path, 'decoder.ckpt'))
         condenser.load_state_dict(state_dict, strict=False)
         return condenser
 
 
+def compare_models(model_1, model_2):
+    model_1 = model_1.state_dict()
+    model_2 = model_2.state_dict()
+    keys_1 = model_1.keys()
+    for key in keys_1:
+        print(key)
+        value_1 = model_1[key]
+        value_2 = model_2[key]
+        if torch.equal(value_1, value_2):
+            pass
+        else:
+            print('Not matched!')
+            return
+    print('All matched!')
+
+
 if __name__ == '__main__':
+    #import transformers
+    #print(transformers.__file__)
+    #quit()
+
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    inputs = tokenizer('foo bar', truncation=True, return_tensors="pt")
+    inputs = tokenizer(
+        ['foo bar', 'bar baz'],
+        truncation=True, padding=True, return_tensors="pt"
+    )
 
     condenser = Condenser('bert-base-uncased')
     condenser.resize_token_embeddings(31_000)
     outputs = condenser(**inputs)
-    print(outputs.enc_output_preds.shape)
-    print(outputs.dec_output_preds.shape)
-
+    print(outputs.enc_output_preds)
+    print(outputs.dec_output_preds)
     condenser.save_pretrained('./test-condenser')
+
     condenser_ckpt = Condenser.from_pretrained('./test-condenser')
+    outputs = condenser_ckpt(**inputs)
+    print(outputs.enc_output_preds)
+    print(outputs.dec_output_preds)
+
+    #compare_models(condenser_ckpt, condenser)
