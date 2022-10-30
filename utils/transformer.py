@@ -1287,7 +1287,8 @@ class Trainer(BaseTrainer):
                 f"shard#{shard+1}/{n_shards}, " +
                 f"save@{batch % (save_cycle+1)}%{save_cycle}, " +
                 f"{n_nodes} nodes, " +
-                f"{device_desc}, {shape} " +
+                f"{device_desc}, {shape}, " +
+                f"lr={self.get_dynamic_lr():.2e}, " +
                 f'loss={loss_}'
             )
 
