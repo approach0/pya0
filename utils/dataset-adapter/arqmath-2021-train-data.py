@@ -6,7 +6,7 @@ from tqdm import tqdm
 from collections import defaultdict
 
 import _pya0
-from preprocess import preprocess_for_transformer
+import preprocess
 
 from xmlr import xmliter
 
@@ -55,7 +55,8 @@ def generate_contrastive_pairs(
     tag_bank_file='arqmath-tag-bank.pkl',
     answer_bank_file='arqmath-answer-bank.pkl',
     postlink_file='PostLinks.V1.2.xml',
-    num_tokenizer_ver=1, n_splits=10, limit=-1, debug=False, min_votes=7,
+    replace_isolated_groups=True,
+    num_tokenizer_ver=3, n_splits=10, limit=-1, debug=False, min_votes=7,
     random_seed=123, allow_vote_postive=True):
 
     print(f'Reading {postlink_file} ...')
@@ -80,7 +81,11 @@ def generate_contrastive_pairs(
         for qid, (ac, tags, Q) in progress:
             reminder = aggregate_cnt % n_per_split
             progress.set_description(f'{reminder} % {n_per_split}')
-            Q = preprocess_for_transformer(Q,
+
+            if replace_isolated_groups:
+                Q = preprocess.unwrap_isolated_tex_groups(Q)
+
+            Q = preprocess.preprocess_for_transformer(Q,
                 num_tokenizer_ver=num_tokenizer_ver
             )
 
@@ -121,10 +126,14 @@ def generate_contrastive_pairs(
                     print(negative_A, end='\n\n')
                     quit(0)
 
-                positive_A = preprocess_for_transformer(positive_A,
+                if replace_isolated_groups:
+                    positive_A = preprocess.unwrap_isolated_tex_groups(positive_A)
+                    negative_A = preprocess.unwrap_isolated_tex_groups(negative_A)
+
+                positive_A = preprocess.preprocess_for_transformer(positive_A,
                     num_tokenizer_ver=num_tokenizer_ver
                 )
-                negative_A = preprocess_for_transformer(negative_A,
+                negative_A = preprocess.preprocess_for_transformer(negative_A,
                     num_tokenizer_ver=num_tokenizer_ver
                 )
 

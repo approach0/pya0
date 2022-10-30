@@ -261,6 +261,21 @@ def preprocess_for_transformer(text, math_vocab=None, num_tokenizer_ver=1):
     return output
 
 
+def unwrap_isolated_tex_group(text, group_name):
+    regex = re.compile(
+        r"\\begin{" + group_name +
+        r"\*?}(.+?)\\end{" + group_name +
+        r"\*?}(?!\s+\[/imath\])", re.DOTALL) # negative lookahead
+    return re.sub(regex, r"[imath]\1[/imath]", text)
+
+
+def unwrap_isolated_tex_groups(text,
+    groups=['align', 'alignat', 'equation', 'gather']):
+    for grp in groups:
+        text = unwrap_isolated_tex_group(text, grp)
+    return text
+
+
 if __name__ == '__main__':
     math = r'4.077 = 1+\frac{1+2}{2!}+\frac{1+2+3}{3!}+\cdots+\frac{1+2+3+...+20}{20!}'
     #math = r'1.50941045653627123243833773286186'

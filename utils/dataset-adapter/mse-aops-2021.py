@@ -34,21 +34,6 @@ def mse_aops_json_file_iterator(corpus, endat):
                 break
 
 
-def unwrap_isolated_tex_group(text, group_name):
-    regex = re.compile(
-        r"\\begin{" + group_name +
-        r"\*?}(.+?)\\end{" + group_name +
-        r"\*?}(?!\s+\[/imath\])", re.DOTALL) # negative lookahead
-    return re.sub(regex, r"[imath]\1[/imath]", text)
-
-
-def unwrap_isolated_tex_groups(text,
-    groups=['align', 'alignat', 'equation', 'gather']):
-    for grp in groups:
-        text = unwrap_isolated_tex_group(text, grp)
-    return text
-
-
 def mse_aops_dataloader(corpus, endat=0, num_tokenizer_ver=1,
     replace_isolated_groups=True):
     dataset = []
@@ -62,7 +47,7 @@ def mse_aops_dataloader(corpus, endat=0, num_tokenizer_ver=1,
         tags = j['tags'] if 'tags' in j else ''
         url = j['url']
         if replace_isolated_groups:
-            text = unwrap_isolated_tex_groups(text)
+            text = preprocess.unwrap_isolated_tex_groups(text)
         document = preprocess.preprocess_for_transformer(text, vocab,
             num_tokenizer_ver=num_tokenizer_ver)
         sentences = sent_tokenize(document)
