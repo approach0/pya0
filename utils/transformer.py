@@ -496,7 +496,7 @@ class Trainer(BaseTrainer):
             classifier = model.cls
             partial_hook = partial(classifier_hook, display, 3)
             hooks.append(classifier.register_forward_hook(partial_hook))
-        elif self.architecture == 'condenser':
+        elif self.architecture in ['condenser', 'mae']:
             # register encoder hook
             encoder_head = model.enc.cls
             encoder_hook = partial(classifier_hook, display, 3)
@@ -514,7 +514,7 @@ class Trainer(BaseTrainer):
 
         if self.architecture == 'standard':
             print('\n'.join(display))
-        elif self.architecture == 'condenser':
+        elif self.architecture in ['condenser', 'mae']:
             # in Condenser, also visualize CLS relevance predictions
             scores = model_outputs.cls_scores
             argmax = scores.argmax(dim=1).cpu().numpy()

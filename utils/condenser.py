@@ -18,13 +18,7 @@ class Condenser(nn.Module):
 
         # create encoder
         self.enc = BertForPreTraining.from_pretrained(base_model, **kargs)
-        # remove unused parameters that confuse DDP
-        for p in self.enc.cls.seq_relationship.parameters():
-            # CLS prediction head is NOT used in encoder
-            p.requires_grad = False
-        for p in self.enc.bert.pooler.parameters():
-            # CLS pooling layer is NOT used in encoder
-            p.requires_grad = False
+        self.disable_unused_parameter_for_producing_loss()
 
         # create decoder
         self.dec = None
@@ -38,6 +32,15 @@ class Condenser(nn.Module):
         self.n_dec_layers = n_dec_layers
         self.skip_from = skip_from
         self.config = self.enc.config # expose to outsider
+
+    def disable_unused_parameter_for_producing_loss(self):
+        # remove unused parameters that confuse DDP
+        for p in self.enc.cls.seq_relationship.parameters():
+            # CLS prediction head is NOT used in encoder
+            p.requires_grad = False
+        for p in self.enc.bert.pooler.parameters():
+            # CLS pooling layer is NOT used in encoder
+            p.requires_grad = False
 
     @staticmethod
     def copy_weights(dst_module, src_module):
@@ -139,7 +142,7 @@ class Condenser(nn.Module):
         cls_labels = cls_labels.flatten().contiguous().to(scores.device)
         # actual loss calculation
         scores.fill_diagonal_(float('-inf'))
-        dec_ctx_loss = F.cross_entropy(scores, cls_labels)
+        enc_ctx_loss = F.cross_entropy(scores, cls_labels)
 
         if labels is not None:
             # calculate decoder MLM loss
@@ -150,7 +153,7 @@ class Condenser(nn.Module):
             )
 
             # final "overall loss"
-            loss = enc_mlm_loss + dec_mlm_loss + dec_ctx_loss
+            loss = enc_mlm_loss + dec_mlm_loss + enc_ctx_loss
         else:
             loss = None
 
@@ -192,6 +195,7 @@ class Condenser(nn.Module):
         enc_path = os.path.join(path, 'encoder.ckpt')
         enc = BertForPreTraining.from_pretrained(enc_path, *args, **kargs)
         condenser.enc = enc
+        condenser.disable_unused_parameter_for_producing_loss()
         # create decoder
         condenser.create_decoder_using_curr_encoder_settings(
             condenser.n_dec_layers
