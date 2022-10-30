@@ -519,9 +519,14 @@ class Trainer(BaseTrainer):
             scores = model_outputs.cls_scores
             argmax = scores.argmax(dim=1).cpu().numpy()
             L = len(argmax)
-            for idx, (match_idx, curr_str) in enumerate(zip(argmax, display)):
-                location = 'encoder' if idx < L // 2 else 'decoder'
-                print(f'{location}[{idx}] -> [{match_idx}]', curr_str)
+            double_argmax = [*argmax, *argmax]
+            for i, (match_idx, curr_str) in enumerate(
+                zip(double_argmax, display)
+            ):
+                j = i % L
+                location = 'encoder' if i < L else 'decoder'
+                print(f'{location}[{j}] -> [{match_idx}]', curr_str)
+            print('=' * 50)
         else:
             assert NotImplementedError
 
