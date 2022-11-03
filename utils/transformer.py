@@ -313,7 +313,7 @@ class DprEncoder(BertPreTrainedModel):
         outputs = self.m_bert(**inputs)
         last_hidden_state = outputs.last_hidden_state
         pooler_output = outputs.pooler_output # BERT pooler is just CLS
-        return last_hidden_state, pooler_output
+        return None, pooler_output
 
 
 class SpladeMaxEncoder(BertPreTrainedModel):
@@ -322,15 +322,24 @@ class SpladeMaxEncoder(BertPreTrainedModel):
         super().__init__(config)
 
         self.encoder = BertForPreTraining(config)
+        for p in self.encoder.cls.seq_relationship.parameters():
+            p.requires_grad = False
+        for p in self.encoder.bert.pooler.parameters():
+            p.requires_grad = False
         self.init_weights()
+        self.flops_scaler = 1e-4
+
+    def flops(self, w):
+        return torch.sum(torch.mean(torch.abs(w), dim=0) ** 2)
 
     def forward(self, inputs):
         outputs = self.encoder(**inputs)
         W = outputs.prediction_logits
         t = torch.log(1 + torch.relu(W))
         mask = inputs.attention_mask.unsqueeze(-1)
-        w, _ = torch.max(t * mask, dim=1)
-        return t, w
+        sparse_vec, _ = torch.max(t * mask, dim=1)
+        regularizer = self.flops_scaler * self.flops(sparse_vec)
+        return regularizer, sparse_vec
 
 
 class Trainer(BaseTrainer):
@@ -1248,6 +1257,7 @@ class Trainer(BaseTrainer):
             self.model = SpladeMaxEncoder.from_pretrained(ckpoint,
                 tie_word_embeddings=True
             )
+            self.model.flops_scaler = 0.01
         else:
             raise NotImplementedError
         self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
@@ -1277,8 +1287,11 @@ class Trainer(BaseTrainer):
             padding=True, truncation=True, return_tensors="pt")
         enc_passages.to(device)
 
-        vec_queries = self.model(enc_queries)[1]
-        vec_passages = self.model(enc_passages)[1]
+        out_queries = self.model(enc_queries)
+        out_passages = self.model(enc_passages)
+
+        vec_queries = out_queries[1]
+        vec_passages = out_passages[1]
 
         if random.random() < 0.01:
             print('---' * 10)
@@ -1289,6 +1302,11 @@ class Trainer(BaseTrainer):
         scores = vec_queries @ vec_passages.T
         labels = torch.arange(len(queries), device=device)
         loss = self.criterion(scores, labels)
+
+        if self.architecture == 'splade':
+            regularizer = out_queries[0] + out_passages[0]
+            loss += regularizer
+
         loss_ = round(loss.item(), 2)
 
         if test_loop:
