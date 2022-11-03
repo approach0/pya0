@@ -229,8 +229,8 @@ if __name__ == '__main__':
 
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     inputs = tokenizer(
-        ['foo bar', 'bar baz'],
-        truncation=True, padding=True, return_tensors="pt"
+        ['foo bar', 'bar baz foo', 'foo foo'],
+        padding=True, return_tensors="pt"
     )
 
     condenser = Condenser('bert-base-uncased')

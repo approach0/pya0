@@ -312,8 +312,25 @@ class DprEncoder(BertPreTrainedModel):
     def forward(self, inputs):
         outputs = self.m_bert(**inputs)
         last_hidden_state = outputs.last_hidden_state
-        pooler_output = outputs.pooler_output
+        pooler_output = outputs.pooler_output # BERT pooler is just CLS
         return last_hidden_state, pooler_output
+
+
+class SpladeMaxEncoder(BertPreTrainedModel):
+
+    def __init__(self, config):
+        super().__init__(config)
+
+        self.encoder = BertForPreTraining(config)
+        self.init_weights()
+
+    def forward(self, inputs):
+        outputs = self.encoder(**inputs)
+        W = outputs.prediction_logits
+        t = torch.log(1 + torch.relu(W))
+        mask = inputs.attention_mask.unsqueeze(-1)
+        w, _ = torch.max(t * mask, dim=1)
+        return t, w
 
 
 class Trainer(BaseTrainer):
@@ -332,7 +349,7 @@ class Trainer(BaseTrainer):
                 self.ma_keywords = {self.stemmer.stem(w) for w in kw_set}
         else:
             self.do_keyword_extraction = False
-        assert architecture in ['standard', 'condenser', 'mae']
+        assert architecture in ['standard', 'condenser', 'mae', 'splade']
         self.architecture = architecture
         self.debug = debug
         self.logger = None
@@ -1214,25 +1231,33 @@ class Trainer(BaseTrainer):
                         fh.write('\t'.join(map(str, out)) + '\n')
                         fh.flush()
 
-    def dpr(self, ckpoint, tok_ckpoint):
+    def single_vec_retriever(self, ckpoint, tok_ckpoint):
         self.dataset_cls = ContrastiveQAShard
         self.test_data_cls = ContrastiveQAShard
         with open(self.test_file, 'r') as fh:
             dirname = os.path.dirname(self.test_file)
             self.test_file = dirname + '/' + fh.read().rstrip()
 
-        print('Loading as DPR model ...')
-        self.model = DprEncoder.from_pretrained(ckpoint,
-            tie_word_embeddings=True
-        )
+        if self.architecture == 'standard':
+            print('Loading as DPR model ...')
+            self.model = DprEncoder.from_pretrained(ckpoint,
+                tie_word_embeddings=True
+            )
+        elif self.architecture == 'splade':
+            print('Loading as Splade model ...')
+            self.model = SpladeMaxEncoder.from_pretrained(ckpoint,
+                tie_word_embeddings=True
+            )
+        else:
+            raise NotImplementedError
         self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
         self.criterion = nn.CrossEntropyLoss()
 
         print('Invoke training ...')
-        self.start_training(self.dpr_loop)
+        self.start_training(self.single_vec_train_loop)
 
-    def dpr_loop(self, batch, inputs, device, progress, iteration,
-        epoch, shard, n_shards, save_cycle, n_nodes, test_loop=False):
+    def single_vec_train_loop(self, batch, inputs, device, progress,
+        iteration, epoch, shard, n_shards, save_cycle, n_nodes, test_loop=False):
         # collate inputs
         queries = [Q for Q, pos, neg in inputs]
         positives = [pos for Q, pos, neg in inputs]
@@ -1255,7 +1280,7 @@ class Trainer(BaseTrainer):
         vec_queries = self.model(enc_queries)[1]
         vec_passages = self.model(enc_passages)[1]
 
-        if random.random() < 0.05:
+        if random.random() < 0.01:
             print('---' * 10)
             print(queries[0], '\n\n')
             print(passages[0])
@@ -1281,13 +1306,13 @@ class Trainer(BaseTrainer):
 
             # update progress bar information
             device_desc = self.local_device_info()
-            shape = scores.shape
+            shape = list(scores.shape)
             progress.set_description(
                 f"Ep#{epoch+1}/{self.epochs}, "
                 f"shard#{shard+1}/{n_shards}, " +
                 f"save@{batch % (save_cycle+1)}%{save_cycle}, " +
                 f"{n_nodes} nodes, " +
-                f"{device_desc}, {shape}, " +
+                f"{device_desc}, {shape}*{vec_queries.shape[-1]}, " +
                 f"lr={self.get_dynamic_lr():.2e}, " +
                 f'loss={loss_}'
             )
@@ -1306,7 +1331,8 @@ class Trainer(BaseTrainer):
             self.test_n_iters = 0
             ellipsis = [None] * 7
             ellipsis = [None] * 7
-            if self.do_testing(self.dpr_loop, device, *ellipsis, True):
+            if self.do_testing(self.single_vec_train_loop, device,
+                *ellipsis, True):
                 # log testing loss
                 test_avg_loss = self.test_acc_loss / self.test_n_iters
                 print(f'Test avg loss: {test_avg_loss}')
