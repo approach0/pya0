@@ -1361,5 +1361,8 @@ class Trainer(BaseTrainer):
 
 
 if __name__ == '__main__':
+    import time
+    print('start in 1 sec ...')
+    time.sleep(1)
     os.environ["PAGER"] = 'cat'
     fire.Fire(Trainer)
