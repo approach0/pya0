@@ -14,7 +14,7 @@ from functools import partial
 import torch
 from transformers import BertTokenizer
 from transformers import BertForPreTraining
-from transformer import ColBERT, DprEncoder
+from transformer import ColBERT, DprEncoder, SpladeMaxEncoder
 
 
 def attention_visualize(ckpoint, tok_ckpoint, passage_file, debug=False):
@@ -206,7 +206,7 @@ def colbert_infer(model, tokenizer, prepends, Q, D, q_augment=False, tok_ver=3):
 
 
 def colbert_visualize(tokenizer_path, model_path, qid=0, did=1,
-    test_file='tests/transformer_colbert.txt', num_tokenizer_ver=1,
+    test_file='tests/transformer_example_inputs.txt', num_tokenizer_ver=1,
     q_augment=False, parse_dollars=True, emphasis=False, use_puct_mask=True):
     # handle HOME in path
     tokenizer_path = os.path.expanduser(tokenizer_path)
@@ -265,6 +265,62 @@ def colbert_visualize(tokenizer_path, model_path, qid=0, did=1,
     plt.show()
 
 
+def splade_visualize(tokenizer_path, model_path,
+    parse_dollars=True, qid=0, did=1, num_tokenizer_ver=3,
+    test_file='tests/transformer_example_inputs.txt'):
+    # handle HOME in path
+    tokenizer_path = os.path.expanduser(tokenizer_path)
+    model_path = os.path.expanduser(model_path)
+    # read testcases
+    from replace_post_tex import replace_dollar_tex
+    from replace_post_tex import replace_display_tex
+    from replace_post_tex import replace_inline_tex
+    with open(test_file) as fh:
+        test_cases = fh.read()
+    test_cases = test_cases.split('\n\n')
+    Q, D = test_cases[int(qid)], test_cases[int(did)]
+    # preprocess testcases
+    if parse_dollars:
+        Q, D = replace_dollar_tex(Q), replace_dollar_tex(D)
+        Q, D = replace_display_tex(Q), replace_display_tex(D)
+        Q, D = replace_inline_tex(Q), replace_inline_tex(D)
+    Q = preprocess_for_transformer(Q,
+        num_tokenizer_ver=num_tokenizer_ver
+    )
+    D = preprocess_for_transformer(D,
+        num_tokenizer_ver=num_tokenizer_ver
+    )
+    # pass through model
+    model = SpladeMaxEncoder.from_pretrained(model_path,
+        tie_word_embeddings=True)
+    tokenizer = BertTokenizer.from_pretrained(tokenizer_path)
+
+    enc_qry = tokenizer(Q, padding=True, return_tensors="pt")
+    enc_psg = tokenizer(D, padding=True, return_tensors="pt")
+    out_qry = model(enc_qry)
+    out_psg = model(enc_psg)
+
+    def visualize_splade_scores(inv_vocab, tok_ids, scores):
+        vec, idx = torch.max(scores, dim=1)
+        vec, idx = vec.detach().numpy()[0], idx.detach().numpy()[0]
+        enum = np.array(range(len(vec)))
+        vec, idx, enum = vec[vec > 0.], idx[vec > 0.], enum[vec > 0.]
+        vecidx = list(zip(enum, vec, idx))
+        vecidx = sorted(vecidx, key=lambda x: x[0], reverse=True)
+        index = list(map(lambda x: (inv_vocab[x[0]], x[1], x[2]), vecidx))
+        tokens = tokenizer.convert_ids_to_tokens(tok_ids)
+        for i, token in enumerate(tokens):
+            found = next(item for item in index if item[2] == i)
+            print(token, ':', found)
+
+    vocab = tokenizer.get_vocab()
+    assert len(vocab) == out_psg[1].shape[-1]
+    inv_vocab = {v: k for k, v in vocab.items()}
+    visualize_splade_scores(inv_vocab, enc_qry['input_ids'][0], out_qry[2])
+    print('=' * 50)
+    visualize_splade_scores(inv_vocab, enc_psg['input_ids'][0], out_psg[2])
+
+
 def pft_print(passage_file, num_tokenizer_ver=3):
     with open(passage_file, 'r') as fh:
         for line in fh:
@@ -307,6 +363,7 @@ if __name__ == '__main__':
         "attention": attention_visualize,
         "unmasking": unmasking_visualize,
         "colbert_visualize": colbert_visualize,
+        "splade_visualize": splade_visualize,
         "pft_print": pft_print,
         "pickle_print": pickle_print,
         "test_determinisity": test_determinisity,

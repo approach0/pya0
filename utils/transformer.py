@@ -335,11 +335,11 @@ class SpladeMaxEncoder(BertPreTrainedModel):
     def forward(self, inputs):
         outputs = self.encoder(**inputs)
         W = outputs.prediction_logits
-        t = torch.log(1 + torch.relu(W))
         mask = inputs.attention_mask.unsqueeze(-1)
-        sparse_vec, _ = torch.max(t * mask, dim=1)
+        scores = torch.log(1 + torch.relu(W)) * mask
+        sparse_vec, _ = torch.max(scores, dim=1)
         regularizer = self.flops_scaler * self.flops(sparse_vec)
-        return regularizer, sparse_vec
+        return regularizer, sparse_vec, scores
 
 
 class Trainer(BaseTrainer):
@@ -1257,7 +1257,7 @@ class Trainer(BaseTrainer):
             self.model = SpladeMaxEncoder.from_pretrained(ckpoint,
                 tie_word_embeddings=True
             )
-            self.model.flops_scaler = 0.01
+            self.model.flops_scaler = 1e-4
         else:
             raise NotImplementedError
         self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
@@ -1297,6 +1297,9 @@ class Trainer(BaseTrainer):
             print('---' * 10)
             print(queries[0], '\n\n')
             print(passages[0])
+            if self.architecture == 'splade':
+                print(vec_queries.sum())
+                print(vec_passages.sum())
 
         # compute loss: [n_query, dim] @ [dim, n_pos + n_neg]
         scores = vec_queries @ vec_passages.T
