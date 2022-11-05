@@ -301,6 +301,7 @@ def splade_visualize(tokenizer_path, model_path,
     out_psg = model(enc_psg)
 
     def visualize_splade_scores(inv_vocab, tok_ids, scores):
+        assert (1, len(tok_ids), len(inv_vocab)) == scores.shape
         vec, idx = torch.max(scores, dim=1)
         vec, idx = vec.detach().numpy()[0], idx.detach().numpy()[0]
         enum = np.array(range(len(vec)))
@@ -314,7 +315,6 @@ def splade_visualize(tokenizer_path, model_path,
             print(token, ':', found)
 
     vocab = tokenizer.get_vocab()
-    assert len(vocab) == out_psg[1].shape[-1]
     inv_vocab = {v: k for k, v in vocab.items()}
     visualize_splade_scores(inv_vocab, enc_qry['input_ids'][0], out_qry[2])
     print('=' * 50)
