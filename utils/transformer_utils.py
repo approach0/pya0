@@ -12,6 +12,7 @@ import numpy as np
 from functools import partial
 
 import torch
+from transformers import logging as transformer_logging
 from transformers import BertTokenizer
 from transformers import BertForPreTraining
 from transformer import ColBERT, DprEncoder, SpladeMaxEncoder
@@ -91,7 +92,7 @@ def attention_visualize(ckpoint, tok_ckpoint, passage_file, debug=False):
     model(**tokens)
 
 
-def unmasking_visualize(ckpt_bert, ckpt_tokenizer, num_tokenizer_ver=1,
+def unmasking_visualize(ckpt_tokenizer, ckpt_bert, num_tokenizer_ver=3,
     test_file='./tests/transformer_unmask.txt', vocab_file=None):
     def highlight_masked(txt):
         return re.sub(r"(\[MASK\])", '\033[92m' + r"\1" + '\033[0m', txt)
@@ -290,6 +291,7 @@ def splade_visualize(tokenizer_path, model_path,
     D = preprocess_for_transformer(D,
         num_tokenizer_ver=num_tokenizer_ver
     )
+
     # pass through model
     model = SpladeMaxEncoder.from_pretrained(model_path,
         tie_word_embeddings=True)
@@ -300,19 +302,32 @@ def splade_visualize(tokenizer_path, model_path,
     out_qry = model(enc_qry)
     out_psg = model(enc_psg)
 
-    def visualize_splade_scores(inv_vocab, tok_ids, scores):
+    def visualize_splade_scores(inv_vocab, tok_ids, scores, topk=3):
         assert (1, len(tok_ids), len(inv_vocab)) == scores.shape
         vec, idx = torch.max(scores, dim=1)
         vec, idx = vec.detach().numpy()[0], idx.detach().numpy()[0]
         enum = np.array(range(len(vec)))
         vec, idx, enum = vec[vec > 0.], idx[vec > 0.], enum[vec > 0.]
-        vecidx = list(zip(enum, vec, idx))
-        vecidx = sorted(vecidx, key=lambda x: x[0], reverse=True)
-        index = list(map(lambda x: (inv_vocab[x[0]], x[1], x[2]), vecidx))
+        zipped = list(zip(vec, idx, enum))
+        ranked = sorted(zipped, key=lambda x: x[0], reverse=True)
         tokens = tokenizer.convert_ids_to_tokens(tok_ids)
-        for i, token in enumerate(tokens):
-            found = next(item for item in index if item[2] == i)
-            print(token, ':', found)
+        ranked = list(map(
+            # (score, pos, pos_tok, word)
+            lambda x: (x[0], x[1], inv_vocab[x[2]]), ranked
+        ))
+        for pos, token in enumerate(tokens):
+            print(f'{token:>10}', end=': ')
+            cnt = 0
+            for item in ranked:
+                if item[1] == pos:
+                    print(item[-1], end='')
+                    cnt += 1
+                    if cnt == topk:
+                        print(end='.')
+                        break
+                    else:
+                        print(end=', ')
+            print('')
 
     vocab = tokenizer.get_vocab()
     inv_vocab = {v: k for k, v in vocab.items()}
@@ -358,6 +373,7 @@ def test_determinisity(path, tokenizer_path='math-dpr/bert-tokenizer-for-math'):
 
 
 if __name__ == '__main__':
+    transformer_logging.set_verbosity_warning()
     os.environ["PAGER"] = 'cat'
     fire.Fire({
         "attention": attention_visualize,

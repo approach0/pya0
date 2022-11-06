@@ -3,3 +3,5 @@ Inequality between norm 1, norm 2 and norm $\infty$ of matrices
 $\|A\|_2 \leq \sqrt{ \|A\|_1 \|A\|_\infty}$, $\alpha + 3.14 - 8921$
 
 If $z_n\to 1$, then $\sigma_n\to 1$ as well.
+
+The goal of life is [MASK].
