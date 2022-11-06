@@ -10,6 +10,7 @@ import torch.distributed as dist
 from torch.utils.data import DataLoader
 from torch.nn.parallel import DistributedDataParallel as DDP
 
+import transformers
 
 @dataclass
 class BaseTrainer:
@@ -287,6 +288,7 @@ def _train_thread(local_rank, trainer, loop):
     print('Start training at:', trainer.start_point)
 
     trainer._prepare_testing(m_batch)
+    transformers.logging.set_verbosity_error() # less verbose, less logs
 
     save_cycle = 0
     warmup_steps = 0

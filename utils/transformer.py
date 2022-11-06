@@ -38,8 +38,6 @@ MSK_CODE = 103
 PAD_CODE = 0
 BASE_CODE = 1000
 
-transformers.logging.set_verbosity_warning()
-
 
 class SentencePairsShard(Dataset):
 
@@ -1377,5 +1375,7 @@ if __name__ == '__main__':
     import time
     print('start in 1 sec ...')
     time.sleep(1)
+
+    transformers.logging.set_verbosity_warning()
     os.environ["PAGER"] = 'cat'
     fire.Fire(Trainer)
