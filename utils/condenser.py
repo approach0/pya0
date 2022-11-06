@@ -229,7 +229,7 @@ if __name__ == '__main__':
 
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     inputs = tokenizer(
-        ['foo bar', 'bar baz foo', 'foo foo'],
+        ['foo bar', 'bar baz foo', 'foo foo', 'python'],
         padding=True, return_tensors="pt"
     )
 
