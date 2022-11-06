@@ -322,11 +322,14 @@ class SpladeMaxEncoder(nn.Module):
         super().__init__()
         config = BertConfig(tie_word_embeddings=True)
         self.m_bert = BertForPreTraining(config)
+        self.disable_unused_parameter_for_producing_loss()
+        self.flops_scaler = 1e-3 # 1e-2 to 1e-4
+
+    def disable_unused_parameter_for_producing_loss(self):
         for p in self.m_bert.cls.seq_relationship.parameters():
             p.requires_grad = False
         for p in self.m_bert.bert.pooler.parameters():
             p.requires_grad = False
-        self.flops_scaler = 1e-3 # 1e-2 to 1e-4
 
     def save_pretrained(self, path, save_function=None):
         self.m_bert.save_pretrained(path)
@@ -335,6 +338,7 @@ class SpladeMaxEncoder(nn.Module):
     def from_pretrained(cls, path, *args, **kargs):
         splade = SpladeMaxEncoder()
         splade.m_bert = BertForPreTraining.from_pretrained(path, *args, **kargs)
+        splade.disable_unused_parameter_for_producing_loss()
         return splade
 
     def flops(self, w):
