@@ -306,34 +306,44 @@ class DprEncoder(BertPreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
 
-        self.m_bert = BertModel(config)
+        # self.bert has to be named so to load weights from pretrained models,
+        # and add BERT pooling to pool the "CLS", i.e., 768-dim embedding.
+        self.bert = BertModel(config, add_pooling_layer=True)
         self.init_weights()
 
     def forward(self, inputs):
-        outputs = self.m_bert(**inputs)
+        outputs = self.bert(**inputs)
         last_hidden_state = outputs.last_hidden_state
-        pooler_output = outputs.pooler_output # BERT pooler is just CLS
-        return None, pooler_output
+        pooler_output = outputs.pooler_output
+        return last_hidden_state, pooler_output
 
 
-class SpladeMaxEncoder(BertPreTrainedModel):
+class SpladeMaxEncoder(nn.Module):
 
-    def __init__(self, config):
-        super().__init__(config)
-
-        self.encoder = BertForPreTraining(config)
-        for p in self.encoder.cls.seq_relationship.parameters():
+    def __init__(self):
+        super().__init__()
+        config = BertConfig(tie_word_embeddings=True)
+        self.m_bert = BertForPreTraining(config)
+        for p in self.m_bert.cls.seq_relationship.parameters():
             p.requires_grad = False
-        for p in self.encoder.bert.pooler.parameters():
+        for p in self.m_bert.bert.pooler.parameters():
             p.requires_grad = False
-        self.init_weights()
-        self.flops_scaler = 1e-4
+        self.flops_scaler = 1e-3 # 1e-2 to 1e-4
+
+    def save_pretrained(self, path, save_function=None):
+        self.m_bert.save_pretrained(path)
+
+    @classmethod
+    def from_pretrained(cls, path, *args, **kargs):
+        splade = SpladeMaxEncoder()
+        splade.m_bert = BertForPreTraining.from_pretrained(path, *args, **kargs)
+        return splade
 
     def flops(self, w):
         return torch.sum(torch.mean(torch.abs(w), dim=0) ** 2)
 
     def forward(self, inputs):
-        outputs = self.encoder(**inputs)
+        outputs = self.m_bert(**inputs)
         W = outputs.prediction_logits
         mask = inputs.attention_mask.unsqueeze(-1)
         scores = torch.log(1 + torch.relu(W)) * mask
