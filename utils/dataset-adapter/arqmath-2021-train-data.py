@@ -82,11 +82,9 @@ def generate_contrastive_pairs(
             reminder = aggregate_cnt % n_per_split
             progress.set_description(f'{reminder} % {n_per_split}')
 
-            if replace_isolated_groups:
-                Q = preprocess.unwrap_isolated_tex_groups(Q)
-
             Q = preprocess.preprocess_for_transformer(Q,
-                num_tokenizer_ver=num_tokenizer_ver
+                num_tokenizer_ver=num_tokenizer_ver,
+                replace_isolated_groups=replace_isolated_groups
             )
 
             # retrieve thread AC as postive
@@ -126,15 +124,13 @@ def generate_contrastive_pairs(
                     print(negative_A, end='\n\n')
                     quit(0)
 
-                if replace_isolated_groups:
-                    positive_A = preprocess.unwrap_isolated_tex_groups(positive_A)
-                    negative_A = preprocess.unwrap_isolated_tex_groups(negative_A)
-
                 positive_A = preprocess.preprocess_for_transformer(positive_A,
-                    num_tokenizer_ver=num_tokenizer_ver
+                    num_tokenizer_ver=num_tokenizer_ver,
+                    replace_isolated_groups=replace_isolated_groups
                 )
                 negative_A = preprocess.preprocess_for_transformer(negative_A,
-                    num_tokenizer_ver=num_tokenizer_ver
+                    num_tokenizer_ver=num_tokenizer_ver,
+                    replace_isolated_groups=replace_isolated_groups
                 )
 
                 aggregate.append((Q, all_tags, positive_A, negative_A))

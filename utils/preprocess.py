@@ -206,8 +206,27 @@ def tokenize_query(query):
     return tokens
 
 
-def preprocess_for_transformer(text, math_vocab=None, num_tokenizer_ver=1):
+def unwrap_isolated_tex_group(text, group_name):
+    regex = re.compile(
+        r"\\begin{" + group_name +
+        r"\*?}(.+?)\\end{" + group_name +
+        r"\*?}(?!\s+\[/imath\])", re.DOTALL) # negative lookahead
+    return re.sub(regex, r"[imath]\1[/imath]", text)
+
+
+def unwrap_isolated_tex_groups(text,
+    groups=['align', 'alignat', 'equation', 'gather']):
+    for grp in groups:
+        text = unwrap_isolated_tex_group(text, grp)
+    return text
+
+
+def preprocess_for_transformer(text, math_vocab=None,
+    num_tokenizer_ver=3, replace_isolated_groups=True):
     output = ''
+
+    if replace_isolated_groups:
+        text = unwrap_isolated_tex_groups(text)
 
     def num_tokenizer_v1(piece, tok_type, sym, span):
         if '`' in sym:
@@ -232,7 +251,6 @@ def preprocess_for_transformer(text, math_vocab=None, num_tokenizer_ver=1):
     num_tokenizer = locals()['num_tokenizer_v' + str(num_tokenizer_ver)]
 
     for type_, piece, *_ in iter_imath_splits(text):
-        piece = piece.strip('\n')
         if type_ == 'math':
             tex_toks = []
             try:
@@ -240,7 +258,7 @@ def preprocess_for_transformer(text, math_vocab=None, num_tokenizer_ver=1):
                     include_syntatic_literal=True)
             except Exception as err:
                 print(err)
-                print('Occurred when parsing:', piece)
+                print('Occurred when parsing:', piece.strip('\n'))
                 continue
             tex_syms = []
             for _, tok_type, sym, span in tex_toks:
@@ -261,25 +279,20 @@ def preprocess_for_transformer(text, math_vocab=None, num_tokenizer_ver=1):
     return output
 
 
-def unwrap_isolated_tex_group(text, group_name):
-    regex = re.compile(
-        r"\\begin{" + group_name +
-        r"\*?}(.+?)\\end{" + group_name +
-        r"\*?}(?!\s+\[/imath\])", re.DOTALL) # negative lookahead
-    return re.sub(regex, r"[imath]\1[/imath]", text)
-
-
-def unwrap_isolated_tex_groups(text,
-    groups=['align', 'alignat', 'equation', 'gather']):
-    for grp in groups:
-        text = unwrap_isolated_tex_group(text, grp)
-    return text
-
-
 if __name__ == '__main__':
-    math = r'4.077 = 1+\frac{1+2}{2!}+\frac{1+2+3}{3!}+\cdots+\frac{1+2+3+...+20}{20!}'
+    #math = r'4.7 = 1+\frac{1+2}{2!}+\frac{1+2+3}{3!}+\cdots+\frac{1+2+3+...+20}{20!}'
     #math = r'1.50941045653627123243833773286186'
     #math = r'αK'
-    output = preprocess_for_transformer('[imath]' + math + '[/imath]',
-        num_tokenizer_ver=3)
+    math = r'''
+how to express these equations as polynomial equations in [imath]x,\alpha,z[/imath]?
+\begin{align*}
+x&=\cos(2\alpha)\\
+z&=\sin(2\alpha)
+\end{align*}
+I expect that the polynomial equations can give the same surface in [imath]\mathbb R^3[/imath]:
+[imath]
+x^2+y^2+z^2-4a^2+4b^2-5=0
+[/imath]
+    '''
+    output = preprocess_for_transformer(math)
     print(output)

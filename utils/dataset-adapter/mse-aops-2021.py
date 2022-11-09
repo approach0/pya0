@@ -46,10 +46,9 @@ def mse_aops_dataloader(corpus, endat=0, num_tokenizer_ver=1,
         text = j['text']
         tags = j['tags'] if 'tags' in j else ''
         url = j['url']
-        if replace_isolated_groups:
-            text = preprocess.unwrap_isolated_tex_groups(text)
         document = preprocess.preprocess_for_transformer(text, vocab,
-            num_tokenizer_ver=num_tokenizer_ver)
+            num_tokenizer_ver=num_tokenizer_ver,
+            replace_isolated_groups=replace_isolated_groups)
         sentences = sent_tokenize(document)
         dataset.append((sentences, tags, url))
         if i % 2500 == 0:
