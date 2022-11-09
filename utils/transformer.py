@@ -945,6 +945,7 @@ class Trainer(BaseTrainer):
                 f"{n_nodes} nodes, " +
                 f"{device_desc}, " +
                 f"Q{Q_shape} D{D_shape}, " +
+                f"lr={self.get_dynamic_lr():.2e}, " +
                 f'loss={loss_}'
             )
 
