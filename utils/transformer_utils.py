@@ -320,7 +320,7 @@ def splade_visualize(tokenizer_path, model_path,
             cnt = 0
             for item in ranked:
                 if item[1] == pos:
-                    print(item[-1], end='')
+                    print(f'{item[-1]:>8} ({item[0]:.2f})', end='')
                     cnt += 1
                     if cnt == topk:
                         print(end='.')
