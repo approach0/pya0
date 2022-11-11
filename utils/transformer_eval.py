@@ -112,7 +112,42 @@ def psg_encoder__colbert_default(tok_ckpoint, model_ckpoint, config, mold, gpu_d
     return encoder, (None, colbert_encoder, colbert_encoder.dim)
 
 
-def indexer__docid_vec_flat_faiss(output_path, dim, sample_frq):
+def psg_encoder__splade_default(tok_ckpoint, model_ckpoint, force_dim,
+    config, mold, gpu_dev):
+    from transformers import BertTokenizer
+    from transformer import SpladeMaxEncoder
+    from preprocess import preprocess_for_transformer
+
+    tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
+    model = SpladeMaxEncoder.from_pretrained(model_ckpoint,
+        tie_word_embeddings=True)
+    model.flops_scaler = 0.0
+    model.to(gpu_dev)
+    model.eval()
+
+    source_dim = len(tokenizer)
+    print(f'source_dim={source_dim}')
+    offset_dim = source_dim - force_dim
+    assert offset_dim >= 0
+    assert offset_dim <= 998 # last [unused]
+    vocab = list(tokenizer.vocab.items())
+    print(f'force_dim={force_dim}. First used token:', vocab[offset_dim])
+
+    def encoder(batch_psg, debug=False):
+        batch_psg = [preprocess_for_transformer(p) for p in batch_psg]
+        inputs = tokenizer(batch_psg, truncation=True,
+                           return_tensors="pt", padding=True)
+        inputs = inputs.to(gpu_dev)
+        if debug:
+            print(tokenizer.decode(inputs['input_ids'][0]))
+        with torch.no_grad():
+            outputs = model.forward(inputs)[1]
+        return outputs.cpu().numpy()[:, offset_dim:]
+
+    return encoder, (tokenizer, model, force_dim)
+
+
+def indexer__docid_vec_flat_faiss(output_path, dim, display_frq):
     os.makedirs(output_path, exist_ok=False)
     import pickle
     import faiss
@@ -123,7 +158,7 @@ def indexer__docid_vec_flat_faiss(output_path, dim, sample_frq):
         nonlocal doclist
         # docs is of [((docid, *doc_props), doc_content), ...]
         passages = [psg for docid, psg in docs]
-        embs = encoder(passages, debug=(i % sample_frq == 0))
+        embs = encoder(passages, debug=(i % display_frq == 0))
         faiss_index.add(embs)
         doclist += docs
         return docs[-1][0][0]
@@ -137,7 +172,7 @@ def indexer__docid_vec_flat_faiss(output_path, dim, sample_frq):
     return indexer, finalize
 
 
-def indexer__docid_vecs_colbert(output_path, dim, sample_frq):
+def indexer__docid_vecs_colbert(output_path, dim, display_frq):
     os.makedirs(output_path, exist_ok=False)
     import pickle
     from pyserini.index import ColBertIndexer
@@ -148,7 +183,7 @@ def indexer__docid_vecs_colbert(output_path, dim, sample_frq):
         # docs is of [((docid, *doc_props), doc_content), ...]
         doc_ids = [doc[0][0] for doc in docs]
         passages = [psg for docid, psg in docs]
-        embs, lengths = encoder(passages, debug=(i % sample_frq == 0))
+        embs, lengths = encoder(passages, debug=(i % display_frq == 0))
         colbert_index.write(embs, doc_ids, lengths)
         for doc in docs:
             docid = doc[0][0]
@@ -159,6 +194,36 @@ def indexer__docid_vecs_colbert(output_path, dim, sample_frq):
         with open(os.path.join(output_path, 'docdict.pkl'), 'wb') as fh:
             pickle.dump(docdict, fh)
         colbert_index.close()
+        print('Done!')
+
+    return indexer, finalize
+
+
+def indexer__docid_vec_pq_faiss(output_path,
+    segments, nbits, sample_frq, dim, display_frq):
+    os.makedirs(output_path, exist_ok=False)
+    import pickle
+    import faiss
+    import numpy as np
+    faiss_index = faiss.IndexPQ(dim, segments, nbits)
+    assert faiss_index.is_trained == False
+
+    train_vecs = []
+    def indexer(i, docs, encoder):
+        nonlocal train_vecs
+        # docs is of [((docid, *doc_props), doc_content), ...]
+        passages = [psg for docid, psg in docs]
+        if i % sample_frq == 0:
+            embs = encoder(passages, debug=False)
+            train_vecs.append(embs)
+        return len(train_vecs) * embs.shape[0]
+
+    def finalize():
+        nonlocal train_vecs
+        train_vecs = np.vstack(train_vecs)
+        print('Training ...', train_vecs.shape)
+        faiss_index.train(train_vecs)
+        faiss.write_index(faiss_index, os.path.join(output_path, 'trained.faiss'))
         print('Done!')
 
     return indexer, finalize
@@ -192,9 +257,9 @@ def index(config_file, section, device='cpu'):
     # prepare indexer
     indexer = config[section]['indexer']
     print('embedding dim:', dim)
-    display_sample_frq = config.getint('DEFAULT', 'display_sample_frq')
+    display_frq = config.getint('DEFAULT', 'display_frq')
     indexer, indexer_finalize = auto_invoke('indexer', indexer, [
-        dim, display_sample_frq
+        dim, display_frq
     ])
 
     # go through corpus and index
