@@ -214,17 +214,20 @@ def indexer__docid_vec_pq_faiss(output_path,
     assert faiss_index.is_trained == False
 
     train_vecs = []
+    train_ntotal = 0
     def trainer(i, docs, encoder):
         nonlocal faiss_index
         if faiss_index.is_trained:
             return indexer(i, docs, encoder)
         else:
-            nonlocal train_vecs
+            nonlocal train_vecs, train_ntotal
             # docs is of [((docid, *doc_props), doc_content), ...]
             passages = [psg for docid, psg in docs]
             if i % sample_frq == 0:
                 embs = encoder(passages, debug=False)
                 train_vecs.append(embs)
+                train_ntotal += embs.shape[0]
+            return train_ntotal
 
     def tainer_finalize():
         nonlocal faiss_index
