@@ -128,6 +128,7 @@ def psg_encoder__splade_default(tok_ckpoint, model_ckpoint, force_dim,
 
     source_dim = len(tokenizer)
     print(f'source_dim={source_dim}')
+    if force_dim == 0: force_dim = source_dim
     offset_dim = source_dim - force_dim
     assert offset_dim >= 0
     assert offset_dim <= 998 # last [unused]

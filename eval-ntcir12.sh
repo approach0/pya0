@@ -3,7 +3,7 @@ EVAL="trec_eval $QREL"
 RUN="${1-tmp.run}"
 TSV_OUTPUT="${2-false}"
 
-set -ex
+set -e
 if [ $TSV_OUTPUT == "tsv" ]; then
     echo -n "$RUN "
     $EVAL $RUN -l3 -m bpref | awk '{printf $3 " "}'
