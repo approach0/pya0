@@ -114,6 +114,7 @@ def psg_encoder__colbert_default(tok_ckpoint, model_ckpoint, config, mold, gpu_d
 
 def psg_encoder__splade_default(tok_ckpoint, model_ckpoint, force_dim,
     config, mold, gpu_dev):
+    import numpy as np
     from transformers import BertTokenizer
     from transformer import SpladeMaxEncoder
     from preprocess import preprocess_for_transformer
@@ -142,7 +143,9 @@ def psg_encoder__splade_default(tok_ckpoint, model_ckpoint, force_dim,
             print(tokenizer.decode(inputs['input_ids'][0]))
         with torch.no_grad():
             outputs = model.forward(inputs)[1]
-        return outputs.cpu().numpy()[:, offset_dim:]
+            outputs = outputs.cpu().numpy()
+            outputs = outputs[:, offset_dim:]
+        return np.ascontiguousarray(outputs)
 
     return encoder, (tokenizer, model, force_dim)
 
@@ -201,7 +204,9 @@ def indexer__docid_vecs_colbert(output_path, dim, display_frq):
 
 def indexer__docid_vec_pq_faiss(output_path,
     segments, nbits, sample_frq, dim, display_frq):
-    os.makedirs(output_path, exist_ok=False)
+    indexer, indexer_finalize = indexer__docid_vec_flat_faiss(
+        output_path, dim, display_frq)
+
     import pickle
     import faiss
     import numpy as np
@@ -209,24 +214,33 @@ def indexer__docid_vec_pq_faiss(output_path,
     assert faiss_index.is_trained == False
 
     train_vecs = []
-    def indexer(i, docs, encoder):
-        nonlocal train_vecs
-        # docs is of [((docid, *doc_props), doc_content), ...]
-        passages = [psg for docid, psg in docs]
-        if i % sample_frq == 0:
-            embs = encoder(passages, debug=False)
-            train_vecs.append(embs)
-        return len(train_vecs) * embs.shape[0]
+    def trainer(i, docs, encoder):
+        nonlocal faiss_index
+        if faiss_index.is_trained:
+            return indexer(i, docs, encoder)
+        else:
+            nonlocal train_vecs
+            # docs is of [((docid, *doc_props), doc_content), ...]
+            passages = [psg for docid, psg in docs]
+            if i % sample_frq == 0:
+                embs = encoder(passages, debug=False)
+                train_vecs.append(embs)
 
-    def finalize():
-        nonlocal train_vecs
-        train_vecs = np.vstack(train_vecs)
-        print('Training ...', train_vecs.shape)
-        faiss_index.train(train_vecs)
-        faiss.write_index(faiss_index, os.path.join(output_path, 'trained.faiss'))
-        print('Done!')
+    def tainer_finalize():
+        nonlocal faiss_index
+        if faiss_index.is_trained:
+            return indexer_finalize()
+        else:
+            nonlocal train_vecs
+            train_vecs = np.vstack(train_vecs)
+            print('Training ...', train_vecs.shape)
+            faiss_index.train(train_vecs)
+            faiss.write_index(faiss_index,
+                os.path.join(output_path, 'trained.faiss'))
+            print('Done!')
+        return False # continue to the actual indexing stage
 
-    return indexer, finalize
+    return trainer, tainer_finalize
 
 
 def index(config_file, section, device='cpu'):
@@ -266,28 +280,30 @@ def index(config_file, section, device='cpu'):
     n = auto_invoke('corpus_length', corpus_reader, [corpus_max_reads])
     if n is None: n = 0
     print('corpus length:', n)
-    progress = tqdm(auto_invoke('corpus_reader', corpus_reader), total=n)
-    batch = []
-    batch_cnt = 0
-    for row_idx, doc in enumerate(progress):
-        # doc is of ((docid, *doc_props), doc_content)
-        if doc[1] is None: continue # Task1 Question is skipped
-        if row_idx < corpus_reader_begin:
-            continue
-        elif corpus_reader_end > 0 and row_idx >= corpus_reader_end:
-            break
-        batch.append(doc)
-        if len(batch) == batch_sz:
+    while True:
+        progress = tqdm(auto_invoke('corpus_reader', corpus_reader), total=n)
+        batch = []
+        batch_cnt = 0
+        for row_idx, doc in enumerate(progress):
+            # doc is of ((docid, *doc_props), doc_content)
+            if doc[1] is None: continue # Task1 Question is skipped
+            if row_idx < corpus_reader_begin:
+                continue
+            elif corpus_reader_end > 0 and row_idx >= corpus_reader_end:
+                break
+            batch.append(doc)
+            if len(batch) == batch_sz:
+                index_result = indexer(batch_cnt, batch, encoder)
+                progress.set_description(f"Indexed doc: {index_result}")
+                batch = []
+                batch_cnt += 1
+
+        if len(batch) > 0:
             index_result = indexer(batch_cnt, batch, encoder)
-            progress.set_description(f"Indexed doc: {index_result}")
-            batch = []
-            batch_cnt += 1
+            print(f"Final indexed doc: {index_result}")
 
-    if len(batch) > 0:
-        index_result = indexer(batch_cnt, batch, encoder)
-        print(f"Final indexed doc: {index_result}")
-
-    indexer_finalize()
+        if indexer_finalize() in [None, True]:
+            break
 
 
 def searcher__docid_vec_flat_faiss(idx_dir, config, enc_utils, gpu_dev):
