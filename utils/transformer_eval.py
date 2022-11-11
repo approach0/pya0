@@ -204,35 +204,50 @@ def indexer__docid_vecs_colbert(output_path, dim, display_frq):
 
 def indexer__docid_vec_pq_faiss(output_path,
     segments, nbits, sample_frq, dim, display_frq):
-    indexer, indexer_finalize = indexer__docid_vec_flat_faiss(
-        output_path, dim, display_frq)
-
+    os.makedirs(output_path, exist_ok=True)
     import pickle
     import faiss
     import numpy as np
-    faiss_index = faiss.IndexPQ(dim, segments, nbits)
-    assert faiss_index.is_trained == False
+    trained_faiss_index = os.path.join(output_path, 'trained.faiss')
+    if os.path.exists(trained_faiss_index):
+        print('Using already-trained PQ index ...')
+        faiss_index = faiss.read_index(trained_faiss_index)
+        assert faiss_index.is_trained == True
+    else:
+        print('Creating new PQ index ...')
+        faiss_index = faiss.IndexPQ(dim, segments, nbits)
+        assert faiss_index.is_trained == False
 
+    doclist = []
     train_vecs = []
     train_ntotal = 0
-    def trainer(i, docs, encoder):
-        nonlocal faiss_index
+    def trainer_and_indexer(i, docs, encoder):
+        nonlocal faiss_index, doclist
+        passages = [psg for docid, psg in docs]
         if faiss_index.is_trained:
-            return indexer(i, docs, encoder)
+            embs = encoder(passages, debug=(i % display_frq == 0))
+            if i % display_frq == 0:
+                print(faiss_index.sa_encode(embs[:1]))
+            faiss_index.add(embs)
+            doclist += docs
+            return docs[-1][0][0]
         else:
             nonlocal train_vecs, train_ntotal
-            # docs is of [((docid, *doc_props), doc_content), ...]
-            passages = [psg for docid, psg in docs]
             if i % sample_frq == 0:
                 embs = encoder(passages, debug=False)
                 train_vecs.append(embs)
                 train_ntotal += embs.shape[0]
             return train_ntotal
 
-    def tainer_finalize():
+    def finalize():
         nonlocal faiss_index
         if faiss_index.is_trained:
-            return indexer_finalize()
+            with open(os.path.join(output_path, 'doclist.pkl'), 'wb') as fh:
+                pickle.dump(doclist, fh)
+            faiss.write_index(faiss_index,
+                os.path.join(output_path, 'index.faiss'))
+            print('Done!')
+            return True # finalize
         else:
             nonlocal train_vecs
             train_vecs = np.vstack(train_vecs)
@@ -241,9 +256,9 @@ def indexer__docid_vec_pq_faiss(output_path,
             faiss.write_index(faiss_index,
                 os.path.join(output_path, 'trained.faiss'))
             print('Done!')
-        return False # continue to the actual indexing stage
+            return False # continue to the actual indexing stage
 
-    return trainer, tainer_finalize
+    return trainer_and_indexer, finalize
 
 
 def index(config_file, section, device='cpu'):
