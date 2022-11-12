@@ -356,7 +356,7 @@ class SpladeMaxEncoder(nn.Module):
 
 class Trainer(BaseTrainer):
 
-    def __init__(self, lr='1e-4', debug=False,
+    def __init__(self, lr='1e-4', debug=False, splade_reg=1e-3,
         math_keywords_file=None, architecture='standard', **args):
         super().__init__(**args)
         if math_keywords_file is not None:
@@ -370,6 +370,9 @@ class Trainer(BaseTrainer):
                 self.ma_keywords = {self.stemmer.stem(w) for w in kw_set}
         else:
             self.do_keyword_extraction = False
+
+        self.splade_reg = splade_reg
+
         assert architecture in ['standard', 'condenser', 'mae', 'splade']
         self.architecture = architecture
         self.debug = debug
@@ -1270,6 +1273,8 @@ class Trainer(BaseTrainer):
             self.model = SpladeMaxEncoder.from_pretrained(ckpoint,
                 tie_word_embeddings=True
             )
+            self.model.flops_scaler = self.splade_reg
+            print('Using regularization:', self.model.flops_scaler)
         else:
             raise NotImplementedError
         self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
