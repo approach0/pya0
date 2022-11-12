@@ -1270,7 +1270,6 @@ class Trainer(BaseTrainer):
             self.model = SpladeMaxEncoder.from_pretrained(ckpoint,
                 tie_word_embeddings=True
             )
-            self.model.flops_scaler = 1e-4
         else:
             raise NotImplementedError
         self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
