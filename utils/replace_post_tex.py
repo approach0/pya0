@@ -52,10 +52,5 @@ def replace_inline_tex(s):
 	regex = re.compile(r'\\\((.+)\\\)')
 	return re.sub(regex, r"[imath]\1[/imath]", s)
 
-def replace_alignS_tex(s, prefix='align'):
-	# replace '\begin{align*} * \end{align*}'
-	regex = re.compile(r'\\begin{' + prefix + r'.*}(.+)\\end{' + prefix + r'.*}')
-	return re.sub(regex, r"[imath]\1[/imath]", s)
-
 # curl http://math.stackexchange.com/questions/1886701/justify-a-function-series-is-approximating-another-function
 # to test everything.

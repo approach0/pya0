@@ -210,7 +210,7 @@ def unwrap_isolated_tex_group(text, group_name):
     regex = re.compile(
         r"\\begin{" + group_name +
         r"\*?}(.+?)\\end{" + group_name +
-        r"\*?}(?!\s+\[/imath\])", re.DOTALL) # negative lookahead
+        r"\*?}(?!\s*\[/imath\])", re.DOTALL) # negative lookahead
     return re.sub(regex, r"[imath]\1[/imath]", text)
 
 

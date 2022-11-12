@@ -186,6 +186,7 @@ def _topic_process__arqmath_2020_task1_origin(xmlfile):
     from xmlr import xmliter
     from bs4 import BeautifulSoup
     import replace_post_tex
+    from preprocess import unwrap_isolated_tex_groups
     print(xmlfile)
     for attrs in xmliter(xmlfile, 'Topic'):
         qid = attrs['@number']
@@ -193,7 +194,7 @@ def _topic_process__arqmath_2020_task1_origin(xmlfile):
         post_xml = title + '\n' + attrs['Question']
         s = BeautifulSoup(post_xml, "html.parser")
         post = replace_post_tex.replace_dollar_tex(s.text)
-        post = replace_post_tex.replace_alignS_tex(post)
+        post = unwrap_isolated_tex_groups(post)
         query = [{
             'type': 'term',
             'str': post
