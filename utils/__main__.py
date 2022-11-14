@@ -61,18 +61,6 @@ if __name__ == '__main__':
         help="Specified collection name so this program can associate its qrels/topics")
     parser.add_argument('--eval-args', type=str, required=False,
         help="Passing extra command line arguments to trec_eval. E.g., '-q -m map -m P.30'")
-    parser.add_argument('--visualize-run', type=str, required=False,
-        help="Visualize existing run file")
-    parser.add_argument('--visualize-contextual-task2', type=str, required=False,
-        help="Visualize existing task2 file with contextual doc preview")
-    parser.add_argument('--visualize-colbert-run-cfg', type=str, required=False,
-        help="Visualize existing colbert run (specify a config file here)")
-    parser.add_argument('--visualize-task3', type=str, required=False,
-        help="Visualize existing task3 file")
-    parser.add_argument('--visualize', action='store_true', required=False,
-        help="Visualize after generating a run file")
-    parser.add_argument('--visualize-compare-scores', type=str, required=False,
-        help="Visualize scores comparison")
     parser.add_argument('--concate-runs', type=str, required=False,
         help="Concatenate run files, format: A,B,n where n is the top hit number that are kept in A")
     parser.add_argument('--merge-runs', type=str, required=False,
@@ -168,13 +156,6 @@ if __name__ == '__main__':
                 print('\t'.join(row), file=fh)
         quit(0)
 
-    # visualize score comparison?
-    elif args.visualize_compare_scores:
-        from .visualize import visualize_compare_scores
-        files = args.visualize_compare_scores.split(':')
-        visualize_compare_scores(files)
-        quit(0)
-
     # concatenate run files?
     elif args.concate_runs:
         A, B, n = args.concate_runs.split(',')
@@ -229,30 +210,6 @@ if __name__ == '__main__':
             res = msearch(index, query, topk=topk, log=log)
             print(json.dumps(res, indent=4))
         pya0.index_close(index)
-        quit(0)
-
-    # visualize existing runfile?
-    elif args.visualize_run and args.collection:
-        from .visualize import visualize
-        visualize(index, args.visualize_run, collection=args.collection)
-        quit(0)
-
-    elif args.visualize_colbert_run_cfg and args.collection:
-        from .visualize import visualize
-        visualize(index, args.visualize_colbert_run_cfg,
-            collection=args.collection, ver='colbert')
-        quit(0)
-
-    elif args.visualize_contextual_task2 and args.collection:
-        from .visualize import visualize
-        visualize(index, args.visualize_contextual_task2,
-            collection=args.collection, ver='contextual_task2')
-        quit(0)
-
-    elif args.visualize_task3 and args.collection:
-        from .visualize import visualize
-        visualize(index, args.visualize_task3, collection=args.collection,
-            ver='task3')
         quit(0)
 
     # generate l2r training data
@@ -351,12 +308,6 @@ if __name__ == '__main__':
             collection_driver.TREC_preprocess(collection, index, hits)
             TREC_output(hits, 'TEST.0', append=False, output_file=trec_output)
 
-        # output HTML file
-        if args.visualize:
-            from .visualize import visualize
-            visualize(index, trec_output,
-                adhoc_query=origin_query, collection=collection)
-
     elif args.docid:
         abort_on_non_a0_index(index)
         doc = pya0.index_lookup_doc(index, args.docid)
@@ -381,10 +332,6 @@ if __name__ == '__main__':
             select_topic=args.select_topic
         )
 
-        # output HTML file
-        if args.visualize:
-            from .visualize import visualize
-            visualize(index, trec_output, collection=args.collection)
     else:
         print('No --docid, --query or --collection specifed, abort.')
         exit(1)

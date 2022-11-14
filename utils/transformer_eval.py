@@ -11,11 +11,11 @@ from corpus_reader import *
 from collections import defaultdict
 
 
-def auto_invoke(prefix, value, extra_args=[]):
+def auto_invoke(prefix, value, extra_args=[], global_ids=None):
     fields = json.loads(value)
     func_name = prefix + '__' + fields[0]
     func_args = fields[1:] + extra_args
-    global_ids = globals()
+    global_ids = globals() if global_ids is None else global_ids
     if func_name in global_ids:
         print('invoke:', func_name)
         func_args = list(map(
@@ -390,8 +390,8 @@ def searcher__docid_vecs_colbert(idx_dir, config, enc_utils, gpu_dev):
 
 
 def gen_flat_topics(collection, kw_sep):
-    from .eval import gen_topics_queries
-    from .preprocess import tokenize_query
+    from pya0.eval import gen_topics_queries
+    from pya0.preprocess import tokenize_query
     for qid, query, _ in gen_topics_queries(collection):
         # skip topic file header / comments
         if qid is None or query is None or len(query) == 0:

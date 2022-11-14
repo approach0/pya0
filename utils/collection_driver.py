@@ -14,11 +14,13 @@ def open_special_index(index_arg):
         index = idx_type, idx_path
     elif idx_type == 'doclist':
         idx_path = os.path.join(idx_path, 'doclist.pkl')
+        idx_path = os.path.expanduser(idx_path)
         with open(idx_path, 'rb') as fh:
             idx_load = pickle.load(fh)
         index = idx_type, idx_load
     elif idx_type == 'docdict':
         idx_path = os.path.join(idx_path, 'docdict.pkl')
+        idx_path = os.path.expanduser(idx_path)
         with open(idx_path, 'rb') as fh:
             idx_load = pickle.load(fh)
         index = idx_type, idx_load

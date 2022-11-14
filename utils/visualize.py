@@ -1,7 +1,7 @@
-import pya0
-import copy
+import json
 import os
-import re
+from functools import partial
+from transformer_eval import auto_invoke, gen_flat_topics
 from eval import gen_topics_queries
 from eval import get_qrels_filepath, parse_qrel_file
 from mergerun import parse_trec_file, parse_task3_file
@@ -54,95 +54,18 @@ def degree_color(relev):
         return 'red'
 
 
-def write_colbert_visualization(fh, hit):
-    vis_score = hit['vis_score']
-    idx_Q = hit['vis_idx_Q']
-    tok_D = hit['vis_tok_D']
-    fh.write(f'<b>colbert score: {vis_score:.2f}</b>')
-    def map_degree(score):
-        if score >= 0.97:
-            return degree_color(4)
-        elif score >= 0.96:
-            return degree_color(3)
-        elif score >= 0.95:
-            return degree_color(2)
-        elif score >= 0.92:
-            return degree_color(1)
-        else:
-            return degree_color(0)
-    # write query
-    fh.write('<p>')
-
-    import uuid;
-    for i, (q_kw, score, index) in enumerate(idx_Q):
-        uid = uuid.uuid4().hex.upper()[0:8] + '-' + str(i)
-        if q_kw.startswith('$'):
-            q_kw = q_kw.strip('$')
-            q_kw = f'（{q_kw}）'
-        color = map_degree(score)
-        tok_D[index] = (tok_D[index], color, uid)
-        fh.write(
-            f'''
-            <span style="background-color:{color}"
-             onmouseenter="
-                //console.log('{uid}');
-                let ele = document.getElementsByClassName('{uid}')[0]
-                ele.style.filter = 'brightness(125%)';
-             "
-             onmouseleave="
-                let ele = document.getElementsByClassName('{uid}')[0]
-                ele.style.filter = 'brightness(100%)';
-             "
-             >
-                {q_kw}
-            </span>
-            '''
-        )
-    fh.write('</p>')
-    # write document
-    fh.write('<p>')
-    for d in tok_D:
-        linked = []
-        while isinstance(d, tuple):
-            d, color, uid = d
-            linked.append(uid)
-        if d.startswith('$'):
-            d = d.strip('$')
-            d = f'（{d}）'
-        if len(linked):
-            fh.write(f'<span style="background-color:{color}" class="')
-            for l in linked:
-                fh.write(l + ' ')
-            fh.write(f'"> {d} </span>')
-        else:
-            fh.write(f'{d} ')
-    fh.write('</p>')
-
-
-def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=False, scores=None):
-    # lookup relevance scores
-    for hit in hits:
-        docID = hit["trec_docid"]
-        qrel_id = f'{qid}/{docID}'
-        relev = -1
-        if qrels and qrel_id in qrels:
-            relev = int(float(qrels[qrel_id]))
-        hit['relev'] = relev
-    # generate judged-only results, if specified
-    if judged_only:
-        hits = [h for h in hits if h['relev'] > -1]
-    # fix ranks based on score (just like trec_eval does)
-    hits = sorted(hits, key=lambda x: x['score'], reverse=True)
+def output_html(output_dir, output_name, qid, query, hits, qrels,
+    judged_only, hits_per_page, generator_mapper):
     # prepare output
-    RESULTS_PER_PAGE = 100
-    tot_pages = len(hits) // RESULTS_PER_PAGE + (len(hits) % RESULTS_PER_PAGE > 0)
-    parent_dir = f'./visualization/{run_name}' + ('__judged_only' if judged_only else '')
-    scores_str = scores[qid].__str__() if scores and qid in scores else '{ No score available }'
+    hits_per_page = 100
+    tot_pages = len(hits) // hits_per_page + (len(hits) % hits_per_page > 0)
+    parent_dir = f'{output_dir}/{output_name}' + ('__J' if judged_only else '')
+    parent_dir = os.path.expanduser(parent_dir)
     if not os.path.exists(parent_dir):
         os.makedirs(parent_dir)
     for page in range(tot_pages):
-        start = page * RESULTS_PER_PAGE
-        page_hits = hits[start : start + RESULTS_PER_PAGE]
+        start = page * hits_per_page
+        page_hits = hits[start : start + hits_per_page]
         # start output page
         with open(f'{parent_dir}/{qid}__p{page + 1:03}.html', 'w') as fh:
             mathjax_cdn = "https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-chtml-full.js"
@@ -159,21 +82,15 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
             # query
             fh.write(f'<h3>Query Keywords (Topic ID: {qid})</h3>\n')
             fh.write('<ul id="topbar">\n')
-            if query is None: query = []
-            actual_query = preprocess_query(copy.deepcopy(query), expansion=False)
-            for q, aq in zip(query, actual_query):
+            for q in query:
                 if q['type'] == 'term':
-                    kw_str = f'{q["str"]} &nbsp;&nbsp; (<b>stemmed</b>: {aq["str"]})'
+                    kw_str = f'{q["str"]} &nbsp;&nbsp;'
                 else:
                     kw_str = f'[imath]{q["str"]}[/imath]'
                 fh.write(f'<li>{kw_str}</li>\n')
             fh.write('</ul>\n')
             # hits
-            if judged_only:
-                fh.write(f'<h3>Judged Hits (page #{page + 1} / {tot_pages})</h3>\n')
-            else:
-                fh.write(f'<h3>Hits (page #{page + 1} / {tot_pages})</h3>\n')
-            fh.write(f'<h5>Scores: {scores_str}</h5>\n')
+            fh.write(f'<h3>Hits (page #{page + 1} / {tot_pages})</h3>\n')
             output_html_pagination(fh, qid, page, tot_pages)
             fh.write('<ol>\n')
             for hit in page_hits:
@@ -183,14 +100,17 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
                 relev = hit['relev']
                 content = hit['content'].replace(r'\require', '')
                 fh.write('<li>\n')
-                fh.write(f'<b id="{rank}">rank <a href="#{rank}">#{rank}</a>, ' +
-                         f'doc #{docID}, score: {score}, relevance: {relev}, </b>\n')
-                colors = [f'<b style="background: {degree_color(i)}">{i}</b>' for i in range(4)]
+                fh.write(f'<b id="{rank}"><a href="#{rank}">#{rank}</a>, ' +
+                         f'doc#{docID}, score: {score}, relev: {relev}, </b>\n')
+                colors = [
+                    f'<b style="background: {degree_color(i)}">{i}</b>'
+                    for i in range(4)
+                ]
                 color = degree_color(relev)
                 fh.write('<b>relevance levels: ' + ' '.join(colors) + ':</b>')
                 fh.write(f'<p style="background: {color};">{content}</p>\n')
-                if 'vis_score' in hit:
-                    write_colbert_visualization(fh, hit)
+                if generator_mapper is not None:
+                    generator_mapper(fh, query, hit)
                 fh.write('</li>\n')
             fh.write(f'</ol>\n')
             output_html_pagination(fh, qid, page, tot_pages)
@@ -199,124 +119,182 @@ def output_html_topic_run(run_name, qid, query, hits, qrels=None, judged_only=Fa
                 "loader: { source: {'[tex]/AMScd': '[tex]/amscd'} }," +
                 'tex: { inlineMath: [ ["$","$"], ["[imath]", "[/imath]"] ] }' +
             '}; </script>')
-            fh.write(f'<script type="text/javascript" src="{mathjax_cdn}"></script>')
+            fh.write(f'<script src="{mathjax_cdn}"></script>')
             # end document
             fh.write('</body></html>\n')
 
 
-def visualize_hits(index, run_name, qid, query, hits, qrels=None, scores=None, ver=None, args=None):
-    # lookup document content
-    for i, hit in enumerate(hits):
-        if ver is None:
-            docid = hit['docid'] # must be internal docid
-            doc = collection_driver.docid_to_doc(index, docid)
-            hit['content'] = doc['content']
-        elif ver == 'colbert':
-            docid = hit['docid'] # must be internal docid
-            doc = collection_driver.docid_to_doc(index, docid)
-            hit['content'] = doc['content']
-            from transformer_utils import colbert_infer
-            from preprocess import tokenize_query
-            model, tokenizer, prepends, top_k, tok_ver, kw_sep = args
-            if i >= top_k:
-                continue
-            if kw_sep == 'comma':
-                kw_sep = ', '
-            elif kw_sep == 'space':
-                kw_sep = ' '
-            else:
-                kw_sep = ' '
-            Q, D = kw_sep.join(tokenize_query(query)), hit['content']
-            infer_score, cmp_matrix, (enc_Q, enc_D) = colbert_infer(
-                model, tokenizer, prepends,
-                Q, D, tok_ver=tok_ver, q_augment=False
-            )
-            tok_Q = [
-                tokenizer.decode(x).replace(' ', '') for x in enc_Q
-            ]
-            tok_D = [
-                tokenizer.decode(x).replace(' ', '') for x in enc_D
-            ]
-            q_weights = cmp_matrix.max(1).tolist()
-            q_indexes = cmp_matrix.argmax(1).tolist()
-            idx_Q = list(zip(tok_Q, q_weights, q_indexes))
-            hit['vis_score'] = infer_score
-            hit['vis_idx_Q'] = idx_Q
-            hit['vis_tok_D'] = tok_D
-        elif ver == 'contextual_task2':
-            formulaID = hit['docid']
-            postID = hit['_'] # postID
-            doc = collection_driver.docid_to_doc(index, postID)
-            hit['content'] = doc['content']
-        elif ver == 'task3':
-            #docid = hit['docid'] # must be internal docid
-            #doc = collection_driver.docid_to_doc(index, docid)
-            #hit['content'] = (hit['content'] +
-            #    '<br/>' + ('-'*15) + '<br/>' +
-            #    doc['content'])
-            pass
+def generator_init__colbert(tokenizer_path, model_path, config):
+    import uuid;
+    from transformer_utils import colbert_init, colbert_infer
+    use_puct_mask = config.getboolean('use_puct_mask')
+    model, tokenizer, prepends = colbert_init(
+        model_path, tokenizer_path, use_puct_mask=use_puct_mask)
+
+    def map_degree(score):
+        if score >= 0.97:
+            return degree_color(4)
+        elif score >= 0.96:
+            return degree_color(3)
+        elif score >= 0.95:
+            return degree_color(2)
+        elif score >= 0.92:
+            return degree_color(1)
         else:
-            raise NotImplementedError
-    # output HTML preview
-    if qrels:
-        output_html_topic_run(run_name, qid, query, hits, qrels=qrels, judged_only=True, scores=scores)
-    if True:
-        output_html_topic_run(run_name, qid, query, hits, qrels=qrels, judged_only=False, scores=scores)
+            return degree_color(0)
 
-
-def visualize_collection_runs(index, collection, tsv_file_path, ver):
-    args = None
-    if ver is None:
-        run_per_topic, _ = parse_trec_file(tsv_file_path)
-    elif ver == 'contextual_task2':
-        run_per_topic, _ = parse_trec_file(tsv_file_path)
-    elif ver == 'task3':
-        run_per_topic, _ = parse_task3_file(tsv_file_path)
-    elif ver == 'colbert':
-        import configparser
-        config = configparser.ConfigParser()
-        config.read(tsv_file_path)
-        default = config['DEFAULT']
-        run_per_topic, _ = parse_trec_file(default['run_file'])
-        from transformer_utils import colbert_init
-        model_path, tokenizer_path = default['model'], default['tokenizer']
-        args = colbert_init(model_path, tokenizer_path,
-            use_puct_mask=default.getboolean('use_puct_mask'))
-        args = (*args,
-            int(default['top_k']),
-            int(default['tokenizer_ver']),
-            default['query_keyword_separator']
+    def mapper(fh, query, hit):
+        Q = query[0]['str']
+        D = hit['content']
+        infer_score, cmp_matrix, (enc_Q, enc_D) = colbert_infer(
+            model, tokenizer, prepends, Q, D,  q_augment=False
         )
+        tok_Q = [
+            tokenizer.decode(x).replace(' ', '') for x in enc_Q
+        ]
+        tok_D = [
+            tokenizer.decode(x).replace(' ', '') for x in enc_D
+        ]
+        q_weights = cmp_matrix.max(1).tolist()
+        q_indexes = cmp_matrix.argmax(1).tolist()
+        idx_Q = list(zip(tok_Q, q_weights, q_indexes))
+
+        fh.write(f'<b>colbert score: {infer_score:.5f}</b>')
+        # write query
+        fh.write('<p>')
+        for i, (q_kw, score, index) in enumerate(idx_Q):
+            uid = uuid.uuid4().hex.upper()[0:8] + '-' + str(i)
+            if q_kw.startswith('$'):
+                q_kw = q_kw.strip('$')
+                q_kw = f'（{q_kw}）'
+            color = map_degree(score)
+            tok_D[index] = (tok_D[index], color, uid)
+            fh.write(
+                f'''
+                <span style="background-color:{color}"
+                 onmouseenter="
+                    //console.log('{uid}');
+                    let ele = document.getElementsByClassName('{uid}')[0]
+                    ele.style.color = 'cyan';
+                 "
+                 onmouseleave="
+                    let ele = document.getElementsByClassName('{uid}')[0]
+                    ele.style.color = 'black';
+                 "
+                 >
+                    {q_kw}
+                </span>
+                '''
+            )
+        fh.write('</p>')
+        # write document
+        fh.write('<p>')
+        for d in tok_D:
+            linked = []
+            while isinstance(d, tuple):
+                d, color, uid = d
+                linked.append(uid)
+            if d.startswith('$'):
+                d = d.strip('$')
+                d = f'（{d}）'
+            if len(linked):
+                fh.write(f'<span style="background-color:{color}" class="')
+                for l in linked:
+                    fh.write(l + ' ')
+                fh.write(f'"> {d} </span>')
+            else:
+                fh.write(f'{d} ')
+        fh.write('</p>')
+    return mapper
+
+
+def visualize_file(config_file, section, input_file):
+    import configparser
+    config = configparser.ConfigParser()
+    config.read(config_file)
+
+    # parse common config
+    topk = config.getint('DEFAULT', 'topk')
+    judged_only = config.getboolean('DEFAULT', 'judged_only')
+    output_name = os.path.basename(input_file)
+    filter_topics = json.loads(config['DEFAULT']['filter_topics'])
+    hits_per_page = config.getint('DEFAULT', 'hits_per_page')
+    output_dir = config['DEFAULT']['output_dir']
+    print('filter_topics:', filter_topics)
+
+    # parse lookup index config
+    index_path = config['DEFAULT']['lookup']
+    if ':' in index_path:
+        index = collection_driver.open_special_index(index_path)
     else:
         raise NotImplementedError
-    scores_file_path = '.'.join(tsv_file_path.split('.')[0:-1]) + '.scores'
-    scores = parse_scores_file(scores_file_path)
-    run_name = os.path.basename(tsv_file_path)
-    qrels_path = get_qrels_filepath(collection)
-    print('QRELS:', qrels_path)
-    qrels = parse_qrel_file(qrels_path)
-    for i, (qid, query, _) in enumerate(gen_topics_queries(collection)):
-        print(qid, query)
-        topic_hits = run_per_topic[qid] if qid in run_per_topic else []
-        collection_driver.TREC_reverse(collection, index, topic_hits)
-        visualize_hits(index, run_name, qid, query, topic_hits, qrels=qrels, scores=scores, ver=ver, args=args)
-        #if query:
-        #    quit() ## DEBUG
 
-
-def visualize(index, tsv_file_path, collection=None, adhoc_query=None, ver=None):
-    print(f'\n\t Visualize runfile: {tsv_file_path} ...\n')
-    if collection and not adhoc_query:
-        visualize_collection_runs(index, collection, tsv_file_path, ver)
-    elif collection and adhoc_query:
-        run_name = os.path.basename(tsv_file_path)
-        run_per_topic, _ = parse_trec_file(tsv_file_path)
-        for qid, hits in run_per_topic.items():
-            collection_driver.TREC_reverse(collection, index, hits)
-            visualize_hits(index, run_name, qid, adhoc_query, hits)
+    # parse input relevant configs
+    input_type = config[section]['input_type']
+    if input_type == 'trec_runfile':
+        hits_per_topic, _ = parse_trec_file(input_file)
     else:
-        print('Error: Please specify --collection for visualization.')
-        quit(1)
+        raise NotImplementedError
+
+    # parse topic relevant configs
+    topic_type, topic_arg = json.loads(config[section]['topics'])
+    if topic_type == 'topics':
+        collection = topic_arg
+        # filter out "None line" or header line
+        gen_topic = filter(lambda x: x[0], gen_topics_queries(collection))
+        gen_topic = [(qid, preprocess_query(q)) for qid, q, _ in gen_topic]
+        qrels_path = get_qrels_filepath(collection)
+    elif topic_type == 'flat':
+        collection = topic_arg
+        gen_topic = list(gen_flat_topics(collection, 'space'))
+        assert isinstance(gen_topic[0][1], str)
+        gen_topic = [(qid, [{'type': 'term', 'str': q}])
+            for qid, q in gen_topic]
+        qrels_path = get_qrels_filepath(collection)
+    else:
+        raise NotImplementedError
+    print('topic:', topic_arg)
+    print('QRELS:', qrels_path)
+    qrels = parse_qrel_file(qrels_path) if qrels_path else {}
+
+    # parse generator relevant configs
+    if 'generator' in config[section]:
+        print(config[section]['generator'])
+        generator_mapper = auto_invoke(
+            'generator_init', config[section]['generator'],
+            extra_args=[config[section]], global_ids=globals()
+        )
+    else:
+        generator_mapper = None
+
+    for qid, query in gen_topic:
+        if len(filter_topics) > 0 and qid not in filter_topics:
+            continue
+        print(qid, query)
+        topic_hits = hits_per_topic[qid] if qid in hits_per_topic else []
+        # fix ranks based on score (just like trec_eval does)
+        topic_hits = sorted(topic_hits,
+            key=lambda x: (x['score'], x['docid']), reverse=True)
+        # preprocess hits
+        collection_driver.TREC_reverse(collection, index, topic_hits)
+        for j, hit in enumerate(topic_hits):
+            # set fixed rank
+            hit['rank'] = j + 1
+            # set content
+            int_docid = hit['docid'] # must be internal docid
+            doc = collection_driver.docid_to_doc(index, int_docid)
+            hit['content'] = doc['content']
+            # set relevance
+            qrel_id = f'{qid}/' + hit["trec_docid"]
+            relev = int(float(qrels[qrel_id])) if qrel_id in qrels else -1
+            hit['relev'] = relev
+        # filter hits
+        if judged_only:
+            topic_hits = [h for h in topic_hits if h['relev'] > -1]
+        topic_hits = topic_hits[:topk]
+        # output this topic
+        output_html(output_dir, output_name, qid, query, topic_hits, qrels,
+            judged_only, hits_per_page, generator_mapper)
 
 
 def bar_plot(ax, data, colors=None, total_width=0.8, single_width=1.3, legend=True):
@@ -387,7 +365,8 @@ def bar_plot(ax, data, colors=None, total_width=0.8, single_width=1.3, legend=Tr
         ax.legend(bars, data.keys())
 
 
-def visualize_compare_scores(score_files):
+def visualize_score_files_in_bar_graph(score_files):
+    import re
     all_topics = set()
     for scores_file_path in score_files:
         scores = parse_scores_file(scores_file_path)
@@ -419,3 +398,12 @@ def visualize_compare_scores(score_files):
     print(f'Saving figure to {save_path} ...')
     plt.savefig(save_path, bbox_inches='tight')
     #plt.show()
+
+
+if __name__ == '__main__':
+    import fire
+    os.environ["PAGER"] = 'cat'
+    fire.Fire({
+        'visualize_file': visualize_file,
+        'visualize_score_files_in_bar_graph': visualize_score_files_in_bar_graph
+    })
