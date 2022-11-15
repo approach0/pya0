@@ -124,8 +124,8 @@ def output_html(output_dir, output_name, qid, query, hits, qrels,
             fh.write('</body></html>\n')
 
 
-def generator_init__colbert(tokenizer_path, model_path, config):
-    import uuid;
+def generator__colbert(tokenizer_path, model_path, config):
+    import uuid
     from transformer_utils import colbert_init, colbert_infer
     use_puct_mask = config.getboolean('use_puct_mask')
     model, tokenizer, prepends = colbert_init(
@@ -205,6 +205,125 @@ def generator_init__colbert(tokenizer_path, model_path, config):
             else:
                 fh.write(f'{d} ')
         fh.write('</p>')
+
+    return mapper
+
+
+def generator__splade(tokenizer_path, model_path, dim, config):
+    import torch
+    import uuid
+    from collections import defaultdict
+    from transformers import BertTokenizer
+    from transformer import SpladeMaxEncoder
+    from pya0.preprocess import preprocess_for_transformer
+
+    vocab_topk = config.getint('vocab_topk')
+    model = SpladeMaxEncoder.from_pretrained(model_path,
+        tie_word_embeddings=True)
+    tokenizer = BertTokenizer.from_pretrained(tokenizer_path)
+
+    vocab = tokenizer.get_vocab()
+    inv_vocab = {v: k for k, v in vocab.items()}
+    offset = len(vocab) - dim
+
+    def map_degree(score):
+        if score >= 1.5:
+            return degree_color(4)
+        elif score >= 1.0:
+            return degree_color(3)
+        elif score >= 0.5:
+            return degree_color(2)
+        elif score >= 0.2:
+            return degree_color(1)
+        else:
+            return degree_color(0)
+
+    def output_vocab_vec(fh, vec, zip_Q):
+        uid = uuid.uuid4().hex.upper()[0:8]
+        maps = defaultdict(list)
+        # write tokens
+        fh.write('<p>')
+        for i, (tok, tok_vec) in enumerate(zip_Q):
+            tok_id = vocab[tok]
+            tok_score = tok_vec[tok_id]
+            tok_uid = uid + '-' + str(i)
+            for i in range(dim):
+                if tok_vec[offset + i] > 0:
+                    maps[i].append(tok_uid)
+            if tok.startswith('$'):
+                tok = tok.strip('$')
+                tok = f'（{tok}）'
+            color = map_degree(tok_score)
+            fh.write(
+                f'''
+                <span style="background-color:{color}"
+                 onmouseenter="
+                    let eles = document.getElementsByClassName('{tok_uid}')
+                    for (const ele of eles) {{
+                        ele.style.borderColor = 'cyan';
+                    }}
+                 "
+                 onmouseleave="
+                    let eles = document.getElementsByClassName('{tok_uid}')
+                    for (const ele of eles) {{
+                        ele.style.borderColor = 'black';
+                    }}
+                 "
+                 >
+                    {tok}
+                </span>
+                '''
+            )
+        fh.write('</p>')
+        # write vector grids
+        fh.write('<p><div style="width: 900px">')
+        for i in range(dim):
+            if vec[0][offset + i] > 0:
+                classes = ' '.join(maps[i])
+                fh.write(
+                    f'''
+                    <div id="{uid}-vocab-{offset + i}" class="{classes}"
+                     title="<{inv_vocab[offset + i]}> {vec[0][offset + i]}@{i}"
+                     style="display: inline-block; cursor: pointer;
+                     background: {map_degree(vec[0][offset + i])};
+                     width: 4px; height: 4px; border: grey solid 1px;">
+                    </div>
+                    '''
+                )
+        fh.write('</div></p>')
+
+    def mapper(fh, query, hit):
+        Q = preprocess_for_transformer(query[0]['str'])
+        D = preprocess_for_transformer(hit['content'])
+        enc_Q = tokenizer(Q, truncation=True, return_tensors="pt")
+        enc_D = tokenizer(D, truncation=True, return_tensors="pt")
+        tok_Q = [
+            tokenizer.decode(x).replace(' ', '') for x in enc_Q['input_ids'][0]
+        ]
+        tok_D = [
+            tokenizer.decode(x).replace(' ', '') for x in enc_D['input_ids'][0]
+        ]
+        with torch.no_grad():
+            out_Q, out_D = model(enc_Q), model(enc_D)
+            zip_Q = zip(tok_Q, out_Q[2][0].tolist())
+            zip_D = zip(tok_D, out_D[2][0].tolist())
+            vec_q = out_Q[1][0][offset:]
+            vec_d = out_D[1][0][offset:]
+            overall_score = vec_q.T @ vec_d
+            top_eles = (vec_q * vec_d).topk(vocab_topk)
+
+        fh.write(f'<b>splade score: {overall_score:.5f}</b><br/>')
+        fh.write(f'<b>top dim:</b> ')
+        for partial_score, idx in zip(
+            top_eles.values.tolist(), top_eles.indices.tolist()):
+            tok = inv_vocab[offset + idx]
+            if tok.startswith('$'):
+                tok = tok.strip('$')
+                tok = f'（{tok}）'
+            fh.write(f'{tok} {partial_score:.5f} | ')
+        output_vocab_vec(fh, out_Q[1], zip_Q)
+        output_vocab_vec(fh, out_D[1], zip_D)
+
     return mapper
 
 
@@ -261,7 +380,7 @@ def visualize_file(config_file, section, input_file):
     if 'generator' in config[section]:
         print(config[section]['generator'])
         generator_mapper = auto_invoke(
-            'generator_init', config[section]['generator'],
+            'generator', config[section]['generator'],
             extra_args=[config[section]], global_ids=globals()
         )
     else:
