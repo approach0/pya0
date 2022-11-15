@@ -247,6 +247,7 @@ def generator__splade(tokenizer_path, model_path, dim, config):
         # write tokens
         fh.write('<p>')
         for i, (tok, tok_vec) in enumerate(zip_Q):
+            if tok not in vocab: continue
             tok_id = vocab[tok]
             tok_score = tok_vec[tok_id]
             tok_uid = uid + '-' + str(i)
