@@ -1,5 +1,6 @@
 import json
 import os
+from html import escape
 from tqdm import tqdm
 from functools import partial
 from transformer_eval import auto_invoke, gen_flat_topics
@@ -87,7 +88,8 @@ def output_html(output_dir, output_name, qid, query, hits, qrels,
             fh.write('<ul id="topbar">\n')
             for q in query:
                 if q['type'] == 'term':
-                    kw_str = f'{q["str"]} &nbsp;&nbsp;'
+                    disp_qstr = escape(q["str"])
+                    kw_str = f'{disp_qstr} &nbsp;&nbsp;'
                 else:
                     kw_str = f'[imath]{q["str"]}[/imath]'
                 fh.write(f'<li>{kw_str}</li>\n')
@@ -111,7 +113,8 @@ def output_html(output_dir, output_name, qid, query, hits, qrels,
                 ]
                 color = degree_color(relev)
                 fh.write('<b>relevance levels: ' + ' '.join(colors) + ':</b>')
-                fh.write(f'<p style="background: {color};">{content}</p>\n')
+                disp_content = escape(content)
+                fh.write(f'<p style="background:{color};">{disp_content}</p>')
                 if generator_mapper is not None:
                     generator_mapper(fh, query, hit)
                 fh.write('</li>\n')
@@ -162,7 +165,7 @@ def generator__colbert(tokenizer_path, model_path, config):
         q_indexes = cmp_matrix.argmax(1).tolist()
         idx_Q = list(zip(tok_Q, q_weights, q_indexes))
 
-        fh.write(f'<b>colbert score: {infer_score:.5f}</b>')
+        fh.write(f'<p>colbert score: {infer_score:.5f}</p>')
         # write query
         fh.write('<p>')
         for i, (q_kw, score, index) in enumerate(idx_Q):
@@ -170,6 +173,7 @@ def generator__colbert(tokenizer_path, model_path, config):
             if q_kw.startswith('$'):
                 q_kw = q_kw.strip('$')
                 q_kw = f'（{q_kw}）'
+            disp_qkw = escape(q_kw)
             color = map_degree(score)
             tok_D[index] = (tok_D[index], color, uid)
             fh.write(
@@ -185,7 +189,7 @@ def generator__colbert(tokenizer_path, model_path, config):
                     ele.style.color = 'black';
                  "
                  >
-                    {q_kw}
+                    {disp_qkw}
                 </span>
                 '''
             )
@@ -200,13 +204,14 @@ def generator__colbert(tokenizer_path, model_path, config):
             if d.startswith('$'):
                 d = d.strip('$')
                 d = f'（{d}）'
+            disp_d = escape(d)
             if len(linked):
                 fh.write(f'<span style="background-color:{color}" class="')
                 for l in linked:
                     fh.write(l + ' ')
-                fh.write(f'"> {d} </span>')
+                fh.write(f'"> {disp_d} </span>')
             else:
-                fh.write(f'{d} ')
+                fh.write(f'{disp_d} ')
         fh.write('</p>')
 
     return mapper
@@ -257,6 +262,7 @@ def generator__splade(tokenizer_path, model_path, dim, config):
             if tok.startswith('$'):
                 tok = tok.strip('$')
                 tok = f'（{tok}）'
+            disp_tok = escape(tok)
             color = map_degree(tok_score)
             fh.write(
                 f'''
@@ -274,7 +280,7 @@ def generator__splade(tokenizer_path, model_path, dim, config):
                     }}
                  "
                  >
-                    {tok}
+                    {disp_tok}
                 </span>
                 '''
             )
@@ -316,7 +322,7 @@ def generator__splade(tokenizer_path, model_path, dim, config):
             overall_score = vec_q.T @ vec_d
             top_eles = (vec_q * vec_d).topk(vocab_topk)
 
-        fh.write(f'<b>splade score: {overall_score:.5f}</b><br/>')
+        fh.write(f'<p>splade score: {overall_score:.5f}</p>')
         fh.write(f'<b>top dim:</b> ')
         for partial_score, idx in zip(
             top_eles.values.tolist(), top_eles.indices.tolist()):
@@ -324,7 +330,8 @@ def generator__splade(tokenizer_path, model_path, dim, config):
             if tok.startswith('$'):
                 tok = tok.strip('$')
                 tok = f'（{tok}）'
-            fh.write(f'{tok} {partial_score:.5f} | ')
+            disp_tok = escape(tok)
+            fh.write(f'{disp_tok} {partial_score:.5f} | ')
         output_vocab_vec(fh, out_Q[1], zip_Q)
         output_vocab_vec(fh, out_D[1], zip_D)
 
