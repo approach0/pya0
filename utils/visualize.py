@@ -1,5 +1,6 @@
 import json
 import os
+from tqdm import tqdm
 from functools import partial
 from transformer_eval import auto_invoke, gen_flat_topics
 from eval import gen_topics_queries
@@ -66,8 +67,10 @@ def output_html(output_dir, output_name, qid, query, hits, qrels,
     for page in range(tot_pages):
         start = page * hits_per_page
         page_hits = hits[start : start + hits_per_page]
+        page_output = f'{parent_dir}/{qid}__p{page + 1:03}.html'
+        print(f'Page {page + 1} => {page_output}')
         # start output page
-        with open(f'{parent_dir}/{qid}__p{page + 1:03}.html', 'w') as fh:
+        with open(page_output, 'w') as fh:
             mathjax_cdn = "https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-chtml-full.js"
             fh.write('<html>\n')
             # head
@@ -93,7 +96,7 @@ def output_html(output_dir, output_name, qid, query, hits, qrels,
             fh.write(f'<h3>Hits (page #{page + 1} / {tot_pages})</h3>\n')
             output_html_pagination(fh, qid, page, tot_pages)
             fh.write('<ol>\n')
-            for hit in page_hits:
+            for hit in tqdm(page_hits):
                 docID = hit["trec_docid"]
                 rank = hit['rank']
                 score = hit['score']
