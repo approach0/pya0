@@ -263,11 +263,13 @@ def indexer__docid_vec_pq_faiss(outdir,
 
 
 def indexer__inverted_index_feed(outdir, rescaler, tok_ckpt, mode, dim, _):
+    import re
     import numpy as np
     from transformers import BertTokenizer
     assert mode in ['query', 'document']
     os.makedirs(outdir, exist_ok=False)
-    output_file = os.path.join(outdir, 'output.jsonl')
+    ext = 'tsv' if mode == 'query' else 'jsonl'
+    output_file = os.path.join(outdir, 'output.' + ext)
     fh = open(output_file, 'w')
 
     tokenizer = BertTokenizer.from_pretrained(tok_ckpt)
@@ -275,7 +277,7 @@ def indexer__inverted_index_feed(outdir, rescaler, tok_ckpt, mode, dim, _):
     vocab_dict = {v: k for k, v in vocab_dict.items()}
     offset_dim = len(tokenizer) - dim
     assert offset_dim >= 0
-    print('-> JSONL: sparse vector offset dim =', offset_dim)
+    print('-> inverted_index_feed: sparse vector offset dim =', offset_dim)
 
     def converter(i, docs, encoder):
         # doc_props is of format (docid, *doc_props)
@@ -284,16 +286,25 @@ def indexer__inverted_index_feed(outdir, rescaler, tok_ckpt, mode, dim, _):
         reps = encoder(passages, debug=False)
         for rep, id_ in zip(reps, ids):
             id_ = str(id_) # ensure id is a string
+            # make sure query ID contains only numbers to make Anserini happy.
+            if mode == 'query':
+                id_ = re.sub('[^0-9]','', id_)
             nonzero_idx = np.nonzero(rep)
             freq_vec = np.rint(rep[nonzero_idx] * rescaler).astype(int)
             freq_dict = dict()
             for i, freq in zip(nonzero_idx[0], freq_vec):
                 token = vocab_dict[offset_dim + i]
+                # make sure token does not contain spaces, otherwise it
+                # will break the format.
+                if '\n' in token or '\t' in token or ' ' in token:
+                    print('found a token containing space/newline:',
+                        token.replace('\n', '\\n'))
+                    continue
                 freq_dict[token] = int(freq) # int64 to int
             if len(freq_dict) == 0:
                 freq_dict[vocab_dict[998]] = 1
                 # in a few cases when the freq_vec are all zeros,
-                # have a placeholder to avoid issues with anserini.
+                # have a placeholder to avoid issues with Anserini.
             if mode == 'document':
                 dict_ = dict(id=id_, content="", vector=freq_dict)
                 json_dict = json.dumps(dict_)
