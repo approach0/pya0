@@ -1,0 +1,1 @@
+qrels.arqmath-2022-task1-official.txt
