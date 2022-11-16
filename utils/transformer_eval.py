@@ -462,9 +462,7 @@ def gen_flat_topics(collection, kw_sep):
 
 
 def corpus_length__flat_topics(collection_name, max_items):
-    li = list(gen_flat_topics(collection_name, ''))
-    li = li[:max_items]
-    return len(li)
+    return len(list(gen_flat_topics(collection_name, '')))
 
 
 def corpus_reader__flat_topics(collection_name):
