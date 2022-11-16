@@ -151,8 +151,8 @@ def psg_encoder__splade_default(tok_ckpoint, model_ckpoint, force_dim,
     return encoder, (tokenizer, model, force_dim)
 
 
-def indexer__docid_vec_flat_faiss(output_path, dim, display_frq):
-    os.makedirs(output_path, exist_ok=False)
+def indexer__docid_vec_flat_faiss(outdir, dim, display_frq):
+    os.makedirs(outdir, exist_ok=False)
     import pickle
     import faiss
     faiss_index = faiss.IndexFlatIP(dim)
@@ -168,19 +168,19 @@ def indexer__docid_vec_flat_faiss(output_path, dim, display_frq):
         return docs[-1][0][0]
 
     def finalize():
-        with open(os.path.join(output_path, 'doclist.pkl'), 'wb') as fh:
+        with open(os.path.join(outdir, 'doclist.pkl'), 'wb') as fh:
             pickle.dump(doclist, fh)
-        faiss.write_index(faiss_index, os.path.join(output_path, 'index.faiss'))
+        faiss.write_index(faiss_index, os.path.join(outdir, 'index.faiss'))
         print('Done!')
 
     return indexer, finalize
 
 
-def indexer__docid_vecs_colbert(output_path, dim, display_frq):
-    os.makedirs(output_path, exist_ok=False)
+def indexer__docid_vecs_colbert(outdir, dim, display_frq):
+    os.makedirs(outdir, exist_ok=False)
     import pickle
     from pyserini.index import ColBertIndexer
-    colbert_index = ColBertIndexer(output_path, dim=dim)
+    colbert_index = ColBertIndexer(outdir, dim=dim)
     docdict = dict()
 
     def indexer(i, docs, encoder):
@@ -195,7 +195,7 @@ def indexer__docid_vecs_colbert(output_path, dim, display_frq):
         return docid
 
     def finalize():
-        with open(os.path.join(output_path, 'docdict.pkl'), 'wb') as fh:
+        with open(os.path.join(outdir, 'docdict.pkl'), 'wb') as fh:
             pickle.dump(docdict, fh)
         colbert_index.close()
         print('Done!')
@@ -203,13 +203,13 @@ def indexer__docid_vecs_colbert(output_path, dim, display_frq):
     return indexer, finalize
 
 
-def indexer__docid_vec_pq_faiss(output_path,
+def indexer__docid_vec_pq_faiss(outdir,
     segments, nbits, sample_frq, dim, display_frq):
-    os.makedirs(output_path, exist_ok=True)
+    os.makedirs(outdir, exist_ok=True)
     import pickle
     import faiss
     import numpy as np
-    trained_faiss_index = os.path.join(output_path, 'trained.faiss')
+    trained_faiss_index = os.path.join(outdir, 'trained.faiss')
     if os.path.exists(trained_faiss_index):
         print('Using already-trained PQ index ...')
         faiss_index = faiss.read_index(trained_faiss_index)
@@ -243,10 +243,10 @@ def indexer__docid_vec_pq_faiss(output_path,
     def finalize():
         nonlocal faiss_index
         if faiss_index.is_trained:
-            with open(os.path.join(output_path, 'doclist.pkl'), 'wb') as fh:
+            with open(os.path.join(outdir, 'doclist.pkl'), 'wb') as fh:
                 pickle.dump(doclist, fh)
             faiss.write_index(faiss_index,
-                os.path.join(output_path, 'index.faiss'))
+                os.path.join(outdir, 'index.faiss'))
             print('Done!')
             return True # finalize
         else:
@@ -255,11 +255,62 @@ def indexer__docid_vec_pq_faiss(output_path,
             print('Training ...', train_vecs.shape)
             faiss_index.train(train_vecs)
             faiss.write_index(faiss_index,
-                os.path.join(output_path, 'trained.faiss'))
+                os.path.join(outdir, 'trained.faiss'))
             print('Done!')
             return False # continue to the actual indexing stage
 
     return trainer_and_indexer, finalize
+
+
+def indexer__inverted_index_feed(outdir, rescaler, tok_ckpt, mode, dim, _):
+    import numpy as np
+    from transformers import BertTokenizer
+    assert mode in ['query', 'document']
+    os.makedirs(outdir, exist_ok=False)
+    output_file = os.path.join(outdir, 'output.jsonl')
+    fh = open(output_file, 'w')
+
+    tokenizer = BertTokenizer.from_pretrained(tok_ckpt)
+    vocab_dict = tokenizer.get_vocab()
+    vocab_dict = {v: k for k, v in vocab_dict.items()}
+    offset_dim = len(tokenizer) - dim
+    assert offset_dim >= 0
+    print('-> JSONL: sparse vector offset dim =', offset_dim)
+
+    def converter(i, docs, encoder):
+        # doc_props is of format (docid, *doc_props)
+        passages = [psg for doc_props, psg in docs]
+        ids = [doc_props[0] for doc_props, psg in docs]
+        reps = encoder(passages, debug=False)
+        for rep, id_ in zip(reps, ids):
+            id_ = str(id_) # ensure id is a string
+            nonzero_idx = np.nonzero(rep)
+            freq_vec = np.rint(rep[nonzero_idx] * rescaler).astype(int)
+            freq_dict = dict()
+            for i, freq in zip(nonzero_idx[0], freq_vec):
+                token = vocab_dict[offset_dim + i]
+                freq_dict[token] = int(freq) # int64 to int
+            if len(freq_dict) == 0:
+                freq_dict[vocab_dict[998]] = 1
+                # in a few cases when the freq_vec are all zeros,
+                # have a placeholder to avoid issues with anserini.
+            if mode == 'document':
+                dict_ = dict(id=id_, content="", vector=freq_dict)
+                json_dict = json.dumps(dict_)
+                fh.write(json_dict + "\n")
+            else:
+                oneline_topic = " ".join(
+                    [" ".join([tok] * freq)
+                        for tok, freq in freq_dict.items()
+                    ])
+                fh.write(id_ + "\t" + oneline_topic + "\n")
+        return ids[-1]
+
+    def finalize():
+        fh.close()
+        print('Done!')
+
+    return converter, finalize
 
 
 def index(config_file, section, device='cpu'):
@@ -410,6 +461,17 @@ def gen_flat_topics(collection, kw_sep):
         yield qid, query
 
 
+def corpus_length__flat_topics(collection_name, max_items):
+    li = list(gen_flat_topics(collection_name, ''))
+    li = li[:max_items]
+    return len(li)
+
+
+def corpus_reader__flat_topics(collection_name):
+    for qid, query in gen_flat_topics(collection_name, ''):
+        yield (qid, ), query
+
+
 def search(config_file, section, adhoc_query=None, max_print_res=3,
            verbose=False, device='cpu', query_filter=None):
     config = configparser.ConfigParser()
@@ -445,7 +507,7 @@ def search(config_file, section, adhoc_query=None, max_print_res=3,
     output_id_fields = json.loads(config[section]['output_id_fields'])
     output_dir = config['DEFAULT']['run_outdir']
     output_filename = f'{section}.run' if adhoc_query is None else 'adhoc.run'
-    output_path = os.path.join(output_dir, output_filename)
+    outdir = os.path.join(output_dir, output_filename)
     os.makedirs(output_dir, exist_ok=True)
 
     # get topics
@@ -457,7 +519,7 @@ def search(config_file, section, adhoc_query=None, max_print_res=3,
     ]
 
     # search
-    open(output_path, 'w').close() # clear output file
+    open(outdir, 'w').close() # clear output file
     for qid, query in topics:
         if query_filter is not None and query_filter != qid:
             continue
@@ -491,7 +553,7 @@ def search(config_file, section, adhoc_query=None, max_print_res=3,
                 })
 
             TREC_output(hits, qid, append=True,
-                output_file=output_path, name=section)
+                output_file=outdir, name=section)
         else:
             assert NotImplementedError
         print()
@@ -671,7 +733,7 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
     output_dir = config['DEFAULT']['run_outdir']
     trecfile_basename = os.path.basename(input_trecfile)
     output_filename = f'{section}--{trecfile_basename}'
-    output_path = os.path.join(output_dir, output_filename)
+    outdir = os.path.join(output_dir, output_filename)
     os.makedirs(output_dir, exist_ok=True)
 
     # build collection topic maps
@@ -691,7 +753,7 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
     # map TREC input to output
     batch, scores = [], None
     query_cnt = defaultdict(int)
-    open(output_path, 'w').close() # clear output file
+    open(outdir, 'w').close() # clear output file
     with open(input_trecfile, 'r') as fh:
         n_lines = sum(1 for line in fh)
         fh.seek(0)
@@ -728,9 +790,9 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
                         item["run"] = section # overwrite run name
                         if max_select_sent == 0:
                             TREC_output([item], item['qid'], append=True,
-                                output_file=output_path, name=item["run"])
+                                output_file=outdir, name=item["run"])
                         else:
-                            task3_output(item, output_path)
+                            task3_output(item, outdir)
             # flush batches
             flush_batches(scores)
         # flush the last batches
