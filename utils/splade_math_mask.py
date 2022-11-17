@@ -4,10 +4,10 @@ from transformers import BertTokenizer
 
 def splade_math_mask(tokenizer, mode='nomath'):
     assert mode in ['nomath', 'somemath', 'all']
+    vocab = tokenizer.get_vocab()
     if mode == 'all':
         mask = np.ones(len(vocab))
     else:
-        vocab = tokenizer.get_vocab()
         allow_keys = []
         allow_keys.append('$a$')
         for key in vocab:
