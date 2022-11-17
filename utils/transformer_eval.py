@@ -112,12 +112,13 @@ def psg_encoder__colbert_default(tok_ckpoint, model_ckpoint, config, mold, gpu_d
     return encoder, (None, colbert_encoder, colbert_encoder.dim)
 
 
-def psg_encoder__splade_default(tok_ckpoint, model_ckpoint, force_dim,
+def psg_encoder__splade_default(tok_ckpoint, model_ckpoint, force_dim, mask_mode,
     config, mold, gpu_dev):
     import numpy as np
     from transformers import BertTokenizer
     from transformer import SpladeMaxEncoder
     from preprocess import preprocess_for_transformer
+    from splade_math_mask import splade_math_mask
 
     tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
     model = SpladeMaxEncoder.from_pretrained(model_ckpoint,
@@ -134,6 +135,7 @@ def psg_encoder__splade_default(tok_ckpoint, model_ckpoint, force_dim,
     assert offset_dim <= 998 # last [unused]
     vocab = list(tokenizer.vocab.items())
     print(f'force_dim={force_dim}. First used token:', vocab[offset_dim])
+    mask = splade_math_mask(tokenizer, mode=mask_mode)[offset_dim:]
 
     def encoder(batch_psg, debug=False):
         batch_psg = [preprocess_for_transformer(p) for p in batch_psg]
@@ -146,6 +148,7 @@ def psg_encoder__splade_default(tok_ckpoint, model_ckpoint, force_dim,
             outputs = model.forward(inputs)[1]
             outputs = outputs.cpu().numpy()
             outputs = outputs[:, offset_dim:]
+            outputs = outputs * mask
         return np.ascontiguousarray(outputs)
 
     return encoder, (tokenizer, model, force_dim)
