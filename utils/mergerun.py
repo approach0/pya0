@@ -127,7 +127,7 @@ def concatenate_run_files(A, B, n, topK, verbose=False):
     print('Output:', output_file)
 
 
-def normalized_scores(docs, dryrun=False):
+def normalized_scores(docs, threshold, dryrun=False):
     if len(docs) == 0:
         return {}
     elif dryrun:
@@ -136,18 +136,25 @@ def normalized_scores(docs, dryrun=False):
     min_score = min(doc_scores)
     max_score = max(doc_scores)
     score_range = max_score - min_score
+    def scoring(score):
+        if score <= threshold:
+            return 0
+        else:
+            return (score - min_score) / score_range
+
     if score_range == 0:
         docs = {doc['docid']: (0, doc['_']) for doc in docs}
     else:
-        docs = {doc['docid']: ((doc['score'] - min_score) / score_range, doc['_']) for doc in docs}
+        docs = {doc['docid']: (scoring(doc['score']), doc['_']) for doc in docs}
     return docs
 
 
-def interpolate_generator(runs1, w1, runs2, w2, whichtokeep="both", verbose=False, topk=1_000, normalize=True):
+def interpolate_generator(runs1, th1, w1, runs2, th2, w2,
+    whichtokeep="both", verbose=False, topk=1_000, normalize=True):
     for qid in runs1.keys():
         dryrun = not normalize
-        docs1 = normalized_scores(runs1[qid], dryrun=dryrun) if qid in runs1 else {} # docID -> (score, _)
-        docs2 = normalized_scores(runs2[qid], dryrun=dryrun) if qid in runs2 else {} # docID -> (score, _)
+        docs1 = normalized_scores(runs1[qid], th1, dryrun=dryrun) if qid in runs1 else {} # docID -> (score, _)
+        docs2 = normalized_scores(runs2[qid], th2, dryrun=dryrun) if qid in runs2 else {} # docID -> (score, _)
 
         # first, merge the scores for the overlapping set
         overlap = set(docs1.keys()) & set(docs2.keys()) # unique docID
@@ -185,16 +192,27 @@ def merge_run_files(runfile1, runfile2, alpha,
     topk=1_000, verbose=False, option="both", merge_null_field=True, out_prefix='', normalize=True):
     available_options = ["overlap", "run1", "run2", "both"]
     assert option in available_options
+    threshold1, threshold2 = float("-inf"), float("-inf")
+    if ":" in runfile1:
+        runfile1, threshold1 = runfile1.split(":")
+        threshold1 = float(threshold1)
+    if ":" in runfile2:
+        runfile2, threshold2 = runfile2.split(":")
+        threshold2 = float(threshold2)
     runs1, run_name1 = parse_trec_file(runfile1)
     runs2, run_name2 = parse_trec_file(runfile2)
-    f_out = f"mergerun-{run_name1}-{run_name2}-alpha{alpha}.run"
+    th1_param = '' if threshold1 == float("-inf") else f'_t{threshold1}'
+    th2_param = '' if threshold2 == float("-inf") else f'_t{threshold2}'
+    f_out = f"mergerun-{run_name1}{th1_param}-{run_name2}{th2_param}-alpha{alpha}.run"
     f_out = f_out.replace('.', '_')
     f_out = out_prefix + f_out
     with open(f_out, "w") as f:
         w1 = alpha if alpha >= 0 else 1
         w2 = 1 - alpha if alpha >= 0 else 1
         for qid, combined in interpolate_generator(
-            runs1, w1, runs2, w2, whichtokeep=option, topk=topk, normalize=normalize
+            runs1, threshold1, w1,
+            runs2, threshold2, w2,
+            whichtokeep=option, topk=topk, normalize=normalize
         ):
             for rank, (doc, score, _1, _2) in enumerate(combined):
                 if merge_null_field:
