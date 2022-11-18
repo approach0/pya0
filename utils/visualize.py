@@ -223,6 +223,7 @@ def generator__splade(tokenizer_path, model_path, dim, config):
     from collections import defaultdict
     from transformers import BertTokenizer
     from transformer import SpladeMaxEncoder
+    from splade_math_mask import splade_math_mask
     from pya0.preprocess import preprocess_for_transformer
 
     vocab_topk = config.getint('vocab_topk')
@@ -233,6 +234,9 @@ def generator__splade(tokenizer_path, model_path, dim, config):
     vocab = tokenizer.get_vocab()
     inv_vocab = {v: k for k, v in vocab.items()}
     offset = len(vocab) - dim
+
+    mask_mode = config['mask_mode']
+    mask = splade_math_mask(tokenizer, mode=mask_mode)
 
     def map_degree(score):
         if score >= 1.5:
@@ -246,13 +250,14 @@ def generator__splade(tokenizer_path, model_path, dim, config):
         else:
             return degree_color(0)
 
-    def output_vocab_vec(fh, vec, zip_Q):
+    def output_vocab_vec(fh, vec, zip_tok_and_vec):
         uid = uuid.uuid4().hex.upper()[0:8]
         maps = defaultdict(list)
         # write tokens
         fh.write('<p>')
-        for i, (tok, tok_vec) in enumerate(zip_Q):
+        for i, (tok, tok_vec) in enumerate(zip_tok_and_vec):
             if tok not in vocab: continue
+            tok_vec = tok_vec * mask
             tok_id = vocab[tok]
             tok_score = tok_vec[tok_id]
             tok_uid = uid + '-' + str(i)
@@ -317,8 +322,8 @@ def generator__splade(tokenizer_path, model_path, dim, config):
             out_Q, out_D = model(enc_Q), model(enc_D)
             zip_Q = zip(tok_Q, out_Q[2][0].tolist())
             zip_D = zip(tok_D, out_D[2][0].tolist())
-            vec_q = out_Q[1][0][offset:]
-            vec_d = out_D[1][0][offset:]
+            vec_q = out_Q[1][0][offset:] * mask[offset:]
+            vec_d = out_D[1][0][offset:] * mask[offset:]
             overall_score = vec_q.T @ vec_d
             top_eles = (vec_q * vec_d).topk(vocab_topk)
 
