@@ -9,7 +9,6 @@ def splade_math_mask(tokenizer, mode='nomath'):
         mask = np.ones(len(vocab))
     else:
         allow_keys = []
-        allow_keys.append('$a$')
         for key in vocab:
             if key.startswith('$'):
                 if mode == 'somemath':
