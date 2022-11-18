@@ -660,6 +660,21 @@ def psg_scorer__math_10(tok_ckpoint, model_ckpoint, config, gpu_dev):
     return scorer, (None, None)
 
 
+def psg_scorer__splade(tok_ckpoint, model_ckpoint, force_dim, mask_mode,
+    config, gpu_dev):
+    encoder, _ = psg_encoder__splade_default(tok_ckpoint, model_ckpoint,
+        force_dim, mask_mode, config, '_',  gpu_dev)
+
+    def scorer(batch_query, batch_doc, verbose=False):
+        with torch.no_grad():
+            code_qry = encoder(batch_query)
+            code_doc = encoder(batch_doc)
+            scores = (code_qry * code_doc).sum(-1)
+        return scores
+
+    return scorer, (None, None)
+
+
 def select_sentences(lookup_index, batch, fields, qid2query,
                      min_select_sent, max_select_sent, always_start_0):
     import collection_driver
@@ -760,7 +775,10 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
     max_select_sent = config.getint(section, 'max_select_sentence')
     min_select_sent = config.getint(section, 'min_select_sentence')
     always_start_0 = config.getboolean(section, 'always_start_0', fallback=True)
+
+    # filter scope of subjects
     topk = config.getint(section, 'topk')
+    filter_topics = json.loads(config[section]['filter_topics'])
 
     # map TREC input to output
     batch, scores = [], None
@@ -775,6 +793,8 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
             sp = '\t' if line.find('\t') != -1 else None
             fields = line.split(sp)
             qid = fields[0]
+            if len(filter_topics) > 0 and qid not in filter_topics:
+                continue
             query_cnt[qid] += 1
             if query_cnt[qid] > topk:
                 continue
