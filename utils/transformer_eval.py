@@ -729,9 +729,17 @@ def task3_output(item, output_file, append=True):
         ), file=fh)
 
 
-def maprun(config_file, section, input_trecfile, device='cpu'):
+def maprun(config_file, section, input_trecfile, device='cpu', inject_json=None):
     config = configparser.ConfigParser()
     config.read(config_file)
+
+    # inject configs
+    if inject_json:
+        print(inject_json)
+        for key in inject_json:
+            rewritten_val = json.dumps(inject_json[key])
+            print('[Rewrite config]:', key, '=>', rewritten_val)
+            config[section][key] = rewritten_val
 
     # pyserini path
     if 'pyserini_path' in config[section]:
@@ -831,6 +839,40 @@ def maprun(config_file, section, input_trecfile, device='cpu'):
         flush_batches(scores, final=True)
 
 
+def metrics__arqmath(output):
+    last_line = output.split('\n')[-2]
+    fields = last_line.split('\t')[1:-1]
+    vals = list(map(lambda v: float(v), fields))
+    keys = ['ndcg', 'map', 'p@10', 'bpref']
+    return dict(zip(keys, vals))
+
+
+def pipeline(config_file, section, *str_args):
+    import subprocess
+    config = configparser.ConfigParser()
+    config.read(config_file)
+
+    commands = config[section]['commands']
+    commands = json.loads(commands)
+    last_out = ''
+    for i, cmd in enumerate(commands):
+        for j, arg in enumerate(str_args):
+            cmd = cmd.replace(f'{{str_args[{j}]}}', arg)
+        print('>>>', cmd)
+        if i == len(commands) - 1:
+            out : subprocess.CompletedProcess = subprocess.run(
+                cmd, shell=True, capture_output=True)
+            print(out.stdout.decode("utf-8"))
+            print(out.stderr.decode("utf-8"))
+            last_out = out.stdout.decode("utf-8")
+        else:
+            out : subprocess.CompletedProcess = subprocess.run(
+                cmd, shell=True, stderr=sys.stderr, stdout=sys.stdout)
+
+    metrics = auto_invoke('metrics', config[section]['metrics'], [last_out])
+    return metrics
+
+
 if __name__ == '__main__':
     """
     USAGE: python -m pya0.transformer_eval
@@ -839,5 +881,6 @@ if __name__ == '__main__':
     fire.Fire({
         'index': index,
         'search': search,
-        'maprun': maprun
+        'maprun': maprun,
+        'pipeline': pipeline
     })
