@@ -868,6 +868,9 @@ def pipeline(config_file, section, *str_args):
         else:
             out : subprocess.CompletedProcess = subprocess.run(
                 cmd, shell=True, stderr=sys.stderr, stdout=sys.stdout)
+            if out.returncode != 0:
+                print('Pipeline failed.')
+                return None
 
     metrics = auto_invoke('metrics', config[section]['metrics'], [last_out])
     return metrics
