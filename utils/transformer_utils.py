@@ -373,6 +373,7 @@ def test_determinisity(path, tokenizer_path='math-dpr/bert-tokenizer-for-math'):
 
 
 def eval_trained_ckpts(cfg_section, tokenizer_path, model_ckpt_dir):
+    import time
     from transformer_eval import pipeline
     ckpt_dirs = [d for d in os.listdir(model_ckpt_dir)]
     def key2tuple(key):
@@ -385,7 +386,8 @@ def eval_trained_ckpts(cfg_section, tokenizer_path, model_ckpt_dir):
         metrics = pipeline('utils/transformer_eval.ini', cfg_section,
             tokenizer_path, model_path)
         history.append((ckpt_dir, metrics))
-        print(ckpt_dir, metrics)
+        for c, m in history: print(c, m)
+        time.sleep(3)
 
 
 if __name__ == '__main__':
