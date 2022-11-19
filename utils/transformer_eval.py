@@ -729,7 +729,9 @@ def task3_output(item, output_file, append=True):
         ), file=fh)
 
 
-def maprun(config_file, section, input_trecfile, device='cpu', inject_json=None):
+def maprun(config_file, section, input_file, input_format='runfile',
+    device='cpu', inject_json=None):
+    assert input_format in ['runfile', 'qrels']
     config = configparser.ConfigParser()
     config.read(config_file)
 
@@ -766,8 +768,7 @@ def maprun(config_file, section, input_trecfile, device='cpu', inject_json=None)
     # output config
     from .eval import TREC_output
     output_dir = config['DEFAULT']['run_outdir']
-    trecfile_basename = os.path.basename(input_trecfile)
-    output_filename = f'{section}--{trecfile_basename}'
+    output_filename = f'{section}--{os.path.basename(input_file)}'
     outdir = os.path.join(output_dir, output_filename)
     os.makedirs(output_dir, exist_ok=True)
 
@@ -792,7 +793,7 @@ def maprun(config_file, section, input_trecfile, device='cpu', inject_json=None)
     batch, scores = [], None
     query_cnt = defaultdict(int)
     open(outdir, 'w').close() # clear output file
-    with open(input_trecfile, 'r') as fh:
+    with open(input_file, 'r') as fh:
         n_lines = sum(1 for line in fh)
         fh.seek(0)
         progress = tqdm(fh, total=n_lines)
@@ -800,13 +801,19 @@ def maprun(config_file, section, input_trecfile, device='cpu', inject_json=None)
             line = line.rstrip()
             sp = '\t' if line.find('\t') != -1 else None
             fields = line.split(sp)
-            qid = fields[0]
+            qid = fields[0] # in either input format, the 1st field is qid.
             if len(filter_topics) > 0 and qid not in filter_topics:
                 continue
             query_cnt[qid] += 1
             if query_cnt[qid] > topk:
                 continue
             #print(qid, 'TREC file line:', i)
+            if input_format == 'runfile':
+                qid, _, docid, rank, score, runname = fields
+            elif input_format == 'qrels':
+                fields = [qid, '_', fields[2], '1', fields[3], 'qrels']
+            else:
+                raise NotImplementedError
             select_sentences(lookup_index, batch, fields, qid2query,
                 min_select_sent, max_select_sent, always_start_0)
             def print_batches(batch):
