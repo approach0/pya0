@@ -383,8 +383,11 @@ def eval_trained_ckpts(cfg_section, tokenizer_path, model_ckpt_dir):
     history = []
     for ckpt_dir in ckpt_dirs:
         model_path = os.path.join(model_ckpt_dir, ckpt_dir)
-        metrics = pipeline('utils/transformer_eval.ini', cfg_section,
-            tokenizer_path, model_path)
+        injects = {
+            'var_tokenizer': tokenizer_path,
+            'var_model': model_path
+        }
+        metrics = pipeline('utils/transformer_eval.ini', cfg_section, **injects)
         history.append((ckpt_dir, metrics))
         for c, m in history: print(c, m)
         time.sleep(3)

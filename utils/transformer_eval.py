@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import json
 import math
@@ -30,6 +31,18 @@ def auto_invoke(prefix, value, extra_args=[], global_ids=None):
         return global_ids[func_name](*func_args)
     else:
         return None
+
+
+def inject_arguments(inject_args, config, section):
+    for key, val in inject_args.items():
+        print('[inject config]:', key, '=>', val)
+        config[section][key] = str(val)
+    for key, val in config.items(section):
+        mlist = re.findall(r"{(\w+)}", val)
+        if len(mlist) > 0:
+            for var in mlist:
+                val = val.replace('{%s}' % var, config[section][var])
+            config[section][key] = val
 
 
 def alloc_dev(device_specifier, config, section):
@@ -266,7 +279,6 @@ def indexer__docid_vec_pq_faiss(outdir,
 
 
 def indexer__inverted_index_feed(outdir, rescaler, tok_ckpt, mode, dim, _):
-    import re
     import numpy as np
     from transformers import BertTokenizer
     assert mode in ['query', 'document']
@@ -327,9 +339,10 @@ def indexer__inverted_index_feed(outdir, rescaler, tok_ckpt, mode, dim, _):
     return converter, finalize
 
 
-def index(config_file, section, device='cpu'):
+def index(config_file, section, device='cpu', **inject_args):
     config = configparser.ConfigParser()
     config.read(config_file)
+    inject_arguments(inject_args, config, section)
 
     # prepare corpus reader
     corpus_reader_begin = config.getint('DEFAULT', 'corpus_reader_begin')
@@ -485,9 +498,10 @@ def corpus_reader__flat_topics(collection_name):
 
 
 def search(config_file, section, adhoc_query=None, max_print_res=3,
-           verbose=False, device='cpu', query_filter=None):
+           verbose=False, device='cpu', query_filter=None, **inject_args):
     config = configparser.ConfigParser()
     config.read(config_file)
+    inject_arguments(inject_args, config, section)
 
     # pyserini path
     if 'pyserini_path' in config[section]:
@@ -730,18 +744,11 @@ def task3_output(item, output_file, append=True):
 
 
 def maprun(config_file, section, input_file, input_format='runfile',
-    device='cpu', inject_json=None):
+    device='cpu', **inject_args):
     assert input_format in ['runfile', 'qrels']
     config = configparser.ConfigParser()
     config.read(config_file)
-
-    # inject configs
-    if inject_json:
-        print(inject_json)
-        for key in inject_json:
-            rewritten_val = json.dumps(inject_json[key])
-            print('[Rewrite config]:', key, '=>', rewritten_val)
-            config[section][key] = rewritten_val
+    inject_arguments(inject_args, config, section)
 
     # pyserini path
     if 'pyserini_path' in config[section]:
@@ -854,17 +861,16 @@ def metrics__arqmath(output):
     return dict(zip(keys, vals))
 
 
-def pipeline(config_file, section, *str_args):
+def pipeline(config_file, section, **inject_args):
     import subprocess
     config = configparser.ConfigParser()
     config.read(config_file)
+    inject_arguments(inject_args, config, section)
 
     commands = config[section]['commands']
     commands = json.loads(commands)
     last_out = ''
     for i, cmd in enumerate(commands):
-        for j, arg in enumerate(str_args):
-            cmd = cmd.replace(f'{{str_args[{j}]}}', arg)
         print('>>>', cmd)
         if i == len(commands) - 1:
             out : subprocess.CompletedProcess = subprocess.run(
