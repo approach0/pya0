@@ -372,6 +372,22 @@ def test_determinisity(path, tokenizer_path='math-dpr/bert-tokenizer-for-math'):
         print(outputs.sum())
 
 
+def eval_trained_ckpts(cfg_section, tokenizer_path, model_ckpt_dir):
+    from transformer_eval import pipeline
+    ckpt_dirs = [d for d in os.listdir(model_ckpt_dir)]
+    def key2tuple(key):
+        fields = key.split('-')
+        return tuple(map(lambda x: int(x), fields))
+    ckpt_dirs = sorted(ckpt_dirs, key=key2tuple)
+    history = []
+    for ckpt_dir in ckpt_dirs:
+        model_path = os.path.join(model_ckpt_dir, ckpt_dir)
+        metrics = pipeline('utils/transformer_eval.ini', cfg_section,
+            tokenizer_path, model_path)
+        history.append((ckpt_dir, metrics))
+        print(ckpt_dir, metrics)
+
+
 if __name__ == '__main__':
     transformer_logging.set_verbosity_warning()
     os.environ["PAGER"] = 'cat'
@@ -383,4 +399,5 @@ if __name__ == '__main__':
         "pft_print": pft_print,
         "pickle_print": pickle_print,
         "test_determinisity": test_determinisity,
+        "eval_trained_ckpts": eval_trained_ckpts,
     })
