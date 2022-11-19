@@ -356,8 +356,8 @@ class SpladeMaxEncoder(nn.Module):
 
 class Trainer(BaseTrainer):
 
-    def __init__(self, lr='1e-4', debug=False, splade_reg=1e-3,
-        math_keywords_file=None, architecture='standard', **args):
+    def __init__(self, lr='1e-4', debug=False, math_keywords_file=None,
+        splade_reg=1e-3, splade_mask_mode='all', architecture='standard', **args):
         super().__init__(**args)
         if math_keywords_file is not None:
             print('Enable extracting keywords ...')
@@ -371,7 +371,9 @@ class Trainer(BaseTrainer):
         else:
             self.do_keyword_extraction = False
 
+        # splade args
         self.splade_reg = splade_reg
+        self.splade_mask_mode = splade_mask_mode
 
         assert architecture in ['standard', 'condenser', 'mae', 'splade']
         self.architecture = architecture
@@ -393,6 +395,9 @@ class Trainer(BaseTrainer):
                 self.bce_loss = nn.BCELoss(weights, reduction='none')
             else:
                 self.bce_loss = nn.BCEWithLogitsLoss(weights, reduction='none')
+
+        if self.architecture == 'splade':
+            self.splade_mask = self.splade_mask.to(device)
 
         self.optimizer = AdamW(
             self.model.parameters(),
@@ -1263,22 +1268,28 @@ class Trainer(BaseTrainer):
             dirname = os.path.dirname(self.test_file)
             self.test_file = dirname + '/' + fh.read().rstrip()
 
+        self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
+        self.criterion = nn.CrossEntropyLoss()
+
         if self.architecture == 'standard':
             print('Loading as DPR model ...')
             self.model = DprEncoder.from_pretrained(ckpoint,
                 tie_word_embeddings=True
             )
         elif self.architecture == 'splade':
+            from splade_math_mask import splade_math_mask
             print('Loading as Splade model ...')
             self.model = SpladeMaxEncoder.from_pretrained(ckpoint,
                 tie_word_embeddings=True
             )
             self.model.flops_scaler = self.splade_reg
             print('Using regularization:', self.model.flops_scaler)
+            self.splade_mask = splade_math_mask(self.tokenizer,
+                mode=self.splade_mask_mode)
+            self.splade_mask = torch.tensor(self.splade_mask, requires_grad=False)
+            print('Splade mask mode:', self.splade_mask_mode)
         else:
             raise NotImplementedError
-        self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
-        self.criterion = nn.CrossEntropyLoss()
 
         print('Invoke training ...')
         self.start_training(self.single_vec_train_loop)
@@ -1314,12 +1325,15 @@ class Trainer(BaseTrainer):
             print('---' * 10)
             print(queries[0], '\n\n')
             print(passages[0])
-            if self.architecture == 'splade':
-                print(vec_queries.sum())
-                print(vec_passages.sum())
 
-        # compute loss: [n_query, dim] @ [dim, n_pos + n_neg]
-        scores = vec_queries @ vec_passages.T
+        if self.architecture == 'splade':
+            tmp_q = vec_queries * self.splade_mask
+            tmp_p = vec_passages * self.splade_mask
+            scores = tmp_q @ tmp_p.T
+        else:
+            # compute loss: [n_query, dim] @ [dim, n_pos + n_neg]
+            scores = vec_queries @ vec_passages.T
+
         labels = torch.arange(len(queries), device=device)
         loss = self.criterion(scores, labels)
 
