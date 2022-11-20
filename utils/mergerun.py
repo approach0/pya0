@@ -188,7 +188,7 @@ def interpolate_generator(runs1, th1, w1, runs2, th2, w2,
         yield qid, combined
 
 
-def merge_run_files(runfile1, runfile2, alpha,
+def merge_run_file(runfile1, runfile2, alpha,
     topk=1_000, verbose=False, option="both", merge_null_field=True, out_prefix='', normalize=True):
     available_options = ["overlap", "run1", "run2", "both"]
     assert option in available_options
@@ -229,7 +229,76 @@ def merge_run_files(runfile1, runfile2, alpha,
     print(f"Output: {f_out}")
 
 
+def merge_run_files(*inputs, topk=1_000, debug_docid=None,
+    out_prefix='', out_name=None, out_delimiter=' '):
+    import pandas as pd
+    import numpy as np
+    from functools import reduce
+    pd.set_option('display.max_columns', 20)
+
+    # read in data
+    tables = []
+    fnames = []
+    alphas = []
+    for i, inp in enumerate(inputs):
+        path, alpha = inp.split(':')
+        if i == len(inputs) - 1:
+            alpha = 1.0 - np.array(alphas).sum()
+            assert alpha >= 0 and alpha <= 1.0
+        else:
+            alpha = float(alpha)
+        df = pd.read_csv(path, header=None, sep="\s+",
+            converters={"topic": str, "docid": str},
+            names=['topic', 'docid', 'score'], usecols=[0, 2, 4])
+        if debug_docid is not None:
+            print(path)
+            print(df.loc[df['docid'] == str(debug_docid)])
+        tables.append(df)
+        fnames.append(os.path.basename(path))
+        alphas.append(alpha)
+
+    # normalize
+    for i, tab in enumerate(tables):
+        normalized_scores = tab.groupby('topic')['score'].transform(
+            lambda x: (x - x.min()) / (x.max() - x.min())
+        )
+        tab['score'] = normalized_scores
+
+    # join and interpolate
+    for i in range(1, len(tables)):
+        df = pd.merge(tables[i - 1], tables[i], on=['topic', 'docid'], how='outer')
+        df = df.fillna(0)
+        df['score'] = alphas[i - 1] * df['score_x'] + alphas[i] * df['score_y']
+        if debug_docid is not None:
+            print('After normalization ...')
+            print(df.loc[df['docid'] == str(debug_docid)])
+        df = df.drop(columns=['score_x', 'score_y'])
+
+    # rerank (sort)
+    df = df.sort_values(
+        by=['topic', 'score', 'docid'],
+        ascending=(True, False, False))
+    df = df.groupby('topic').head(topk)
+    df = df.reset_index(drop=True)
+    rank = df.groupby('topic')['score'].rank(method='first', ascending=False)
+    df['rank'] = rank.astype(int)
+
+    # output
+    if out_name is None:
+        out_name = 'mergerun--' + '--'.join(fnames)
+    out_path = os.path.join(out_prefix, out_name)
+    with open(out_path, 'w') as fh:
+        for row in df.values:
+            row = map(lambda x: str(x), row)
+            topic, docid, score, rank = row
+            write_fields = [topic, '_', docid, rank, score, 'merged']
+            fh.write(out_delimiter.join(write_fields) + '\n')
+
+
 if __name__ == '__main__':
     import fire
     os.environ["PAGER"] = 'cat'
-    fire.Fire(merge_run_files)
+    fire.Fire({
+        'merge_run_file': merge_run_file,
+        'merge_run_files': merge_run_files
+    })
