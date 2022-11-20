@@ -32,14 +32,14 @@ for eval_run in "${fusion_list[@]}"; do
 
     if [ $task -eq 1 ]; then
         ./eval-arqmath2-task1/preprocess.sh cleanup
-        ./eval-arqmath2-task1/preprocess.sh $kfold_dir/*holdout
-        ./eval-arqmath2-task1/preprocess.sh $kfold_dir/*foldtest
+        ./eval-arqmath2-task1/preprocess.sh $kfold_dir/*train
+        ./eval-arqmath2-task1/preprocess.sh $kfold_dir/*test
         ./eval-arqmath2-task1/eval.sh --nojudge
         cat ./eval-arqmath2-task1/result.tsv | sort | sed -e 's/[[:blank:]]/ /g' > kfold.tsv
     elif [ $task -eq 2 ]; then
         ./eval-arqmath2-task2/preprocess.sh cleanup
-        ./eval-arqmath2-task2/preprocess.sh swap $kfold_dir/*holdout
-        ./eval-arqmath2-task2/preprocess.sh swap $kfold_dir/*foldtest
+        ./eval-arqmath2-task2/preprocess.sh swap $kfold_dir/*train
+        ./eval-arqmath2-task2/preprocess.sh swap $kfold_dir/*test
         ./eval-arqmath2-task2/eval.sh --nojudge --tsv=$latex_corpus
         cat eval-arqmath2-task2/result.tsv | sort | sed -e 's/[[:blank:]]/ /g' > kfold.tsv
     else

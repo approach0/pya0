@@ -30,9 +30,12 @@ def split_run_files(*all_run_files, kfold=5, seed=123):
         test_fold = set(folds[k])
         for run_file in each_run_file(all_run_files):
             print(f'fold{k}, runfile: {run_file}')
-            holdout_file = f'{run_file}.fold{k}holdout'
-            test_file = f'{run_file}.fold{k}foldtest'
-            with open(run_file, 'r') as fh, open(holdout_file, 'w') as holdout_fh, open(test_file, 'w') as test_fh:
+            train_file = f'{run_file}.fold{k}train'
+            test_file = f'{run_file}.fold{k}test'
+            with (
+                open(run_file, 'r') as fh,
+                open(train_file, 'w') as train_fh,
+                open(test_file, 'w') as test_fh):
                 for line in fh:
                     line = line.rstrip()
                     fields = line.split()
@@ -40,10 +43,25 @@ def split_run_files(*all_run_files, kfold=5, seed=123):
                     if topic in test_fold:
                         print(line, file=test_fh)
                     else:
-                        print(line, file=holdout_fh)
+                        print(line, file=train_fh)
 
 
 def cross_validate_tsv(tsv_file, name_field=0, score_field=1, verbose=True):
+    """
+    Given a tsv file with the following fields:
+
+    param_i.fold1train  score
+    param_i.fold1test   score
+    param_i.fold2train  score
+    param_i.fold2test   score
+    ...
+    param_j.fold1train  score
+    param_j.fold1test   score
+    param_j.fold2train  score
+    param_j.fold2test   score
+
+    do k-fold cross validation and report mean test score.
+    """
     scores = defaultdict(dict)
     with open(tsv_file, 'r') as fh:
         for line in fh:
@@ -58,11 +76,11 @@ def cross_validate_tsv(tsv_file, name_field=0, score_field=1, verbose=True):
                 if verbose:
                     print('skip this line:', line)
                 continue
-            m = re.match(r'(.*)fold([0-9]+)(foldtest|holdout)$', name)
+            m = re.match(r'(.*)fold([0-9]+)(train|test)$', name)
             params, k, kind = m.group(1), m.group(2), m.group(3)
-            if kind == 'foldtest': # test score
+            if kind == 'test': # test score
                 scores[k]['__test__' + params] = score
-            elif kind == 'holdout': # validation score
+            elif kind == 'train': # validation score
                 scores[k][params] = score
             else:
                 assert 0, f"unexpected: {kind}"
@@ -72,13 +90,13 @@ def cross_validate_tsv(tsv_file, name_field=0, score_field=1, verbose=True):
     for k, score_dict in scores.items():
         tune_scores = list(filter(
             lambda x: not x[0].startswith('__test__'),
-            score_dict.items()
+            score_dict.items() # [(params, score), ...]
         ))
         best_params_idx = max(range(len(tune_scores)), key=lambda i: tune_scores[i][1])
         best_params = tune_scores[best_params_idx][0]
         test_score = score_dict['__test__' + best_params]
         if verbose:
-            print(f'train and test fold#{k}: test_score={test_score}')
+            print(f'fold#{k}: test_score={test_score}')
         test_scores.append(test_score)
         best_params_set[best_params] += 1
     mean_test_score = np.array(test_scores).mean()
