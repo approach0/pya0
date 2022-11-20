@@ -532,7 +532,10 @@ def search(config_file, section, adhoc_query=None, max_print_res=3,
     output_format = config[section]['output_format']
     output_id_fields = json.loads(config[section]['output_id_fields'])
     output_dir = config['DEFAULT']['run_outdir']
-    output_filename = f'{section}.run' if adhoc_query is None else 'adhoc.run'
+    if 'output_filename' in config[section]:
+        output_filename = config[section]['output_filename']
+    else:
+        output_filename = f'{section}.run'
     outdir = os.path.join(output_dir, output_filename)
     os.makedirs(output_dir, exist_ok=True)
 
