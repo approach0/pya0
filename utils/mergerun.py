@@ -244,7 +244,8 @@ def merge_run_files(*inputs, topk=1_000, debug_docid=None,
         path, alpha = inp.split(':')
         if i == len(inputs) - 1:
             alpha = 1.0 - np.array(alphas).sum()
-            assert alpha >= 0 and alpha <= 1.0
+            if alpha < 0 or alpha > 1.0:
+                return None
         else:
             alpha = float(alpha)
         df = pd.read_csv(path, header=None, sep="\s+",
@@ -304,11 +305,12 @@ def merge_run_files_gridsearch(*files, step=0.1, **kargs):
     import itertools
     n = len(files)
     ranges = [np.arange(0.0, 1.0 + step, step) for i in range(n - 1)]
-    for weights in itertools.product(*ranges):
+    cartesian_product = list(itertools.product(*ranges))
+    for i, weights in enumerate(cartesian_product):
         weights = (*weights, -1.0)
         weights = map(lambda v: round(v, 5), weights) # avoid tiny decimals
         inputs = [':'.join(map(str, t)) for t in zip(files, weights)]
-        print(inputs)
+        print(f'{i}/{len(cartesian_product)}', inputs)
         out_path = merge_run_files(*inputs, **kargs)
         print('>>', out_path)
 
