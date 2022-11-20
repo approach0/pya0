@@ -256,6 +256,7 @@ def merge_run_files(*inputs, topk=1_000, debug_docid=None,
         tables.append(df)
         fnames.append(os.path.basename(path))
         alphas.append(alpha)
+    alphas = list(map(lambda v: round(v, 5), alphas)) # avoid tiny decimals
 
     # normalize
     for i, tab in enumerate(tables):
@@ -265,6 +266,7 @@ def merge_run_files(*inputs, topk=1_000, debug_docid=None,
         tab['score'] = normalized_scores
 
     # join and interpolate
+    df = None
     for i in range(1, len(tables)):
         df = pd.merge(tables[i - 1], tables[i], on=['topic', 'docid'], how='outer')
         df = df.fillna(0)
@@ -285,7 +287,8 @@ def merge_run_files(*inputs, topk=1_000, debug_docid=None,
 
     # output
     if out_name is None:
-        out_name = 'mergerun--' + '--'.join(fnames)
+        out_fields = ['W_'.join(t) for t in zip(map(str, alphas), fnames)]
+        out_name = 'mergerun--' + '--'.join(out_fields)
     out_path = os.path.join(out_prefix, out_name)
     with open(out_path, 'w') as fh:
         for row in df.values:
@@ -293,12 +296,28 @@ def merge_run_files(*inputs, topk=1_000, debug_docid=None,
             topic, docid, score, rank = row
             write_fields = [topic, '_', docid, rank, score, 'merged']
             fh.write(out_delimiter.join(write_fields) + '\n')
+    return out_path
+
+
+def merge_run_files_gridsearch(*files, step=0.1, **kargs):
+    import numpy as np
+    import itertools
+    n = len(files)
+    ranges = [np.arange(0.0, 1.0 + step, step) for i in range(n - 1)]
+    for weights in itertools.product(*ranges):
+        weights = (*weights, -1.0)
+        weights = map(lambda v: round(v, 5), weights) # avoid tiny decimals
+        inputs = [':'.join(map(str, t)) for t in zip(files, weights)]
+        print(inputs)
+        out_path = merge_run_files(*inputs, **kargs)
+        print('>>', out_path)
 
 
 if __name__ == '__main__':
     import fire
     os.environ["PAGER"] = 'cat'
     fire.Fire({
-        'merge_run_file': merge_run_file,
-        'merge_run_files': merge_run_files
+        'merge_run_file': merge_run_file, # old code
+        'merge_run_files': merge_run_files, # new code, supporting multiple inputs
+        'merge_run_files_gridsearch': merge_run_files_gridsearch
     })
