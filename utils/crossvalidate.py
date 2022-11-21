@@ -73,8 +73,8 @@ def cross_validate_tsv(tsv_file, name_field=0, score_field=1, verbose=True):
             try:
                 score = float(fields[score_field])
             except ValueError:
-                if verbose:
-                    print('skip this line:', line)
+                #if verbose:
+                #    print('skip this line:', line)
                 continue
             m = re.match(r'(.*)fold([0-9]+)(train|test)$', name)
             params, k, kind = m.group(1), m.group(2), m.group(3)
@@ -95,8 +95,8 @@ def cross_validate_tsv(tsv_file, name_field=0, score_field=1, verbose=True):
         best_params_idx = max(range(len(tune_scores)), key=lambda i: tune_scores[i][1])
         best_params = tune_scores[best_params_idx][0]
         test_score = score_dict['__test__' + best_params]
-        if verbose:
-            print(f'fold#{k}: test_score={test_score}')
+        #if verbose:
+        #    print(f'fold#{k}: test_score={test_score}')
         test_scores.append(test_score)
         best_params_set[best_params] += 1
     mean_test_score = np.array(test_scores).mean()
