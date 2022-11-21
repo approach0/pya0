@@ -300,16 +300,27 @@ def merge_run_files(*inputs, topk=1_000, debug_docid=None,
     return out_path
 
 
-def merge_run_files_gridsearch(*files, step=0.1, **kargs):
+def merge_run_files_gridsearch(*inputs, step=0.1, **kargs):
     import numpy as np
     import itertools
-    n = len(files)
-    ranges = [np.arange(0.0, 1.0 + step, step) for i in range(n - 1)]
+    # parse input runfile paths and potentially specified search range
+    runs = []
+    ends = []
+    for i, inp in enumerate(inputs):
+        if ':' in inp:
+            path, begin, end = inp.split(':')
+            begin, end = float(begin), float(end)
+        else:
+            path, begin, end = inp, 0.0, 1.0
+        runs.append(path)
+        ends.append((begin, end))
+    ranges = [np.arange(begin, end + step, step) for begin, end in ends[:-1]]
+    # grid search
     cartesian_product = list(itertools.product(*ranges))
     for i, weights in enumerate(cartesian_product):
         weights = (*weights, -1.0)
         weights = map(lambda v: round(v, 5), weights) # avoid tiny decimals
-        inputs = [':'.join(map(str, t)) for t in zip(files, weights)]
+        inputs = [':'.join(map(str, t)) for t in zip(runs, weights)]
         print(f'{i}/{len(cartesian_product)}', inputs)
         out_path = merge_run_files(*inputs, **kargs)
         print('>>', out_path)
