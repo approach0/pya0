@@ -2,7 +2,7 @@ set -e
 task=1
 kfold=5
 topk=1000
-step=0.25
+step=0.1
 seed=1234
 kfold_dir=runs.kfold
 #eval_prefix=./eval-arqmath2-task${task}/
