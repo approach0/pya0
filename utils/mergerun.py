@@ -242,18 +242,12 @@ def merge_run_files(*inputs, topk=1_000, debug_docid=None,
     alphas = []
     for i, inp in enumerate(inputs):
         path, alpha = inp.split(':')
-        if i == len(inputs) - 1:
+        alpha = float(alpha)
+        if i == len(inputs) - 1 and alpha < 0:
             alpha = 1.0 - np.array(alphas).sum()
-            if alpha < 0 or alpha > 1.0:
-                return None
-        else:
-            alpha = float(alpha)
         df = pd.read_csv(path, header=None, sep="\s+",
             converters={"topic": str, "docid": str},
             names=['topic', 'docid', 'score'], usecols=[0, 2, 4])
-        if debug_docid is not None:
-            print(path)
-            print(df.loc[df['docid'] == str(debug_docid)])
         tables.append(df)
         fnames.append(os.path.basename(path))
         alphas.append(alpha)
@@ -265,17 +259,24 @@ def merge_run_files(*inputs, topk=1_000, debug_docid=None,
             lambda x: (x - x.min()) / (x.max() - x.min())
         )
         tab['score'] = normalized_scores
+        if debug_docid is not None:
+            print('After normalization ...')
+            print(tab.loc[tab['docid'] == str(debug_docid)])
 
     # join and interpolate
     df = None
     for i in range(1, len(tables)):
         df = pd.merge(tables[i - 1], tables[i], on=['topic', 'docid'], how='outer')
         df = df.fillna(0)
-        df['score'] = alphas[i - 1] * df['score_x'] + alphas[i] * df['score_y']
+        if i == 1:
+            df['score'] = alphas[i - 1] * df['score_x'] + alphas[i] * df['score_y']
+        else:
+            df['score'] = df['score_x'] + alphas[i] * df['score_y']
         if debug_docid is not None:
-            print('After normalization ...')
+            print('After interpolation ...')
             print(df.loc[df['docid'] == str(debug_docid)])
         df = df.drop(columns=['score_x', 'score_y'])
+        tables[i] = df
 
     # rerank (sort)
     df = df.sort_values(
