@@ -474,18 +474,20 @@ def gen_flat_topics(collection, kw_sep):
         # skip topic file header / comments
         if qid is None or query is None or len(query) == 0:
             continue
-        # query example: [{'type': 'tex', 'str': '-0.026838601\\ldots'}]
-        if kw_sep in ['mathonly:comma', 'mathonly:space']:
-            math_keywords = [kw['str'] for kw in query if kw['type'] == 'tex']
+        elif kw_sep in ['mathonly:comma', 'mathonly:space']:
+            math_keywords = [kw for kw in query if kw['type'] == 'tex']
+            query = tokenize_query(math_keywords)
             if len(math_keywords) == 0:
+                # we are doing math-only, so skip this.
                 continue
             elif kw_sep == 'mathonly:comma':
-                query = ', '.join(math_keywords)
+                query = ', '.join(query)
             elif kw_sep == 'mathonly:space':
-                query = ' '.join(math_keywords)
+                query = ' '.join(query)
             else:
                 raise NotImplementedError
         elif len(query) == 1 and query[0]['type'] == 'term':
+            # in this case the $ has been replaced by [imath]
             query = query[0]['str']
         else:
             query = tokenize_query(query)
