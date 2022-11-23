@@ -312,7 +312,7 @@ def merge_run_files(*inputs, topk=1_000, debug_docid=None,
     return out_path
 
 
-def merge_run_files_gridsearch(*inputs, step=0.1, **kargs):
+def merge_run_files_gridsearch(*inputs, step=0.1, enforce_sum1=True, **kargs):
     import numpy as np
     import itertools
     # parse input runfile paths and potentially specified search range
@@ -326,14 +326,29 @@ def merge_run_files_gridsearch(*inputs, step=0.1, **kargs):
             path, begin, end = inp, 0.0, 1.0
         runs.append(path)
         ends.append((begin, end))
-    ranges = [np.arange(begin, end + step, step) for begin, end in ends[:-1]]
+    ranges = [np.arange(begin, end + step, step) for begin, end in ends]
     # grid search
     cartesian_product = list(itertools.product(*ranges))
+    feasible_weights = []
+    feasible_weights_set = set()
     for i, weights in enumerate(cartesian_product):
-        weights = (*weights, -1.0)
         weights = map(lambda v: round(v, 5), weights) # avoid tiny decimals
+        weights = list(weights)
+        if enforce_sum1:
+            if sum(weights) > 1 - 1e-5:
+                continue
+            else:
+                weights[-1] = round(1 - sum(weights[:-1]), 5)
+        flag = '_'.join(map(str, weights))
+        if flag in feasible_weights_set:
+            continue
+        else:
+            feasible_weights.append(weights)
+            feasible_weights_set.add(flag)
+
+    for i, weights in enumerate(feasible_weights):
         inputs = [':'.join(map(str, t)) for t in zip(runs, weights)]
-        print(f'{i}/{len(cartesian_product)}', inputs)
+        print(f'* {i}/{len(feasible_weights)}', weights, inputs)
         out_path = merge_run_files(*inputs, **kargs)
         print('>>', out_path)
 
