@@ -602,6 +602,7 @@ def search(config_file, section, adhoc_query=None, max_print_res=3,
         print()
 
     timer_report(f'{section}.timer')
+    print('Output:', outdir)
     seacher_finalize()
 
 
