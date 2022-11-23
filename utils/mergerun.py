@@ -230,7 +230,7 @@ def merge_run_file(runfile1, runfile2, alpha,
 
 
 def merge_run_files(*inputs, topk=1_000, debug_docid=None,
-    out_prefix='', out_name=None, out_delimiter=' '):
+    do_normalization=True, out_prefix='', out_name=None, out_delimiter=' '):
     import pandas as pd
     import numpy as np
     from functools import reduce
@@ -253,18 +253,29 @@ def merge_run_files(*inputs, topk=1_000, debug_docid=None,
         alphas.append(alpha)
     alphas = list(map(lambda v: round(v, 5), alphas)) # avoid tiny decimals
 
-    # normalize
+    # sum duplicate (topic, docid) scores
     for i, tab in enumerate(tables):
-        normalized_scores = tab.groupby('topic')['score'].transform(
-            lambda x: (x - x.min()) / (x.max() - x.min())
-        )
-        tab['score'] = normalized_scores
-        if debug_docid is not None:
-            print('After normalization ...')
-            print(tab.loc[tab['docid'] == str(debug_docid)])
+        agg_scores = tab.groupby(['topic', 'docid'])['score'].transform('sum')
+        tab['score'] = agg_scores
+        new_tab = tab.drop_duplicates(subset=['topic', 'docid'], keep='first')
+        n_rm_rows = len(tab.index) - len(new_tab.index)
+        if n_rm_rows > 0:
+            print(f'Removed {n_rm_rows} duplicate rows.')
+            tables[i] = new_tab.copy()
+
+    # normalize
+    if do_normalization:
+        for i, tab in enumerate(tables):
+            normalized_scores = tab.groupby('topic')['score'].transform(
+                lambda x: (x - x.min()) / (x.max() - x.min())
+            )
+            tab['score'] = normalized_scores
+            if debug_docid is not None:
+                print('After normalization ...')
+                print(tab.loc[tab['docid'] == str(debug_docid)])
 
     # join and interpolate
-    df = None
+    df = tables[0]
     for i in range(1, len(tables)):
         df = pd.merge(tables[i - 1], tables[i], on=['topic', 'docid'], how='outer')
         df = df.fillna(0)
