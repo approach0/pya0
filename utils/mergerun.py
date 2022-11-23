@@ -348,7 +348,7 @@ def merge_run_files_gridsearch(*inputs, step=0.1, enforce_sum1=True, **kargs):
 
     for i, weights in enumerate(feasible_weights):
         inputs = [':'.join(map(str, t)) for t in zip(runs, weights)]
-        print(f'* {i}/{len(feasible_weights)}', weights, inputs)
+        print(f'* {i+1}/{len(feasible_weights)}', weights, inputs)
         out_path = merge_run_files(*inputs, **kargs)
         print('>>', out_path)
 
