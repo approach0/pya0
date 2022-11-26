@@ -393,6 +393,17 @@ def eval_trained_ckpts(cfg_section, tokenizer_path, model_ckpt_dir):
         time.sleep(3)
 
 
+def create_math_tokenizer(base_tokenizer, vocab_file):
+    tokenizer = BertTokenizer.from_pretrained(base_tokenizer)
+    print('Before loading new vocabulary:', len(tokenizer))
+    with open(vocab_file, 'rb') as fh:
+        vocab = pickle.load(fh)
+        for w in vocab.keys():
+            tokenizer.add_tokens(w)
+    print('After loading new vocabulary:', len(tokenizer))
+    tokenizer.save_pretrained(f"./math-tokenizer")
+
+
 if __name__ == '__main__':
     transformer_logging.set_verbosity_warning()
     os.environ["PAGER"] = 'cat'
@@ -405,4 +416,5 @@ if __name__ == '__main__':
         "pickle_print": pickle_print,
         "test_determinisity": test_determinisity,
         "eval_trained_ckpts": eval_trained_ckpts,
+        'create_math_tokenizer': create_math_tokenizer
     })

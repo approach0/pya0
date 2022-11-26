@@ -463,7 +463,7 @@ class Trainer(BaseTrainer):
                     pass # unchanged
         return batch_tokens, mask_labels
 
-    def pretrain(self, ckpoint, tok_ckpoint, vocab_file):
+    def pretrain(self, ckpoint, tok_ckpoint):
         self.start_point = self.infer_start_point(ckpoint)
         self.dataset_cls = SentencePairsShard
         self.test_data_cls = SentenceUnmaskTest
@@ -485,22 +485,7 @@ class Trainer(BaseTrainer):
         print(self.model.config.to_json_string(use_diff=False))
 
         self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
-
-        if os.path.isfile(vocab_file):
-            print('Before loading new vocabulary:', len(self.tokenizer))
-            with open(vocab_file, 'rb') as fh:
-                vocab = pickle.load(fh)
-                for w in vocab.keys():
-                    self.tokenizer.add_tokens(w)
-            print('After loading new vocabulary:', len(self.tokenizer))
-            print('Resize model embedding and save new tokenizer ...')
-
         self.model.resize_token_embeddings(len(self.tokenizer))
-
-        if self.debug:
-            print('Saving tokenizer ...')
-            self.tokenizer.save_pretrained(f"./save/tokenizer")
-
         print('Invoke training ...')
         self.start_training(self.pretrain_loop)
 
