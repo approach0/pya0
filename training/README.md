@@ -31,9 +31,12 @@ $ python -m pickle mse-aops-2021-vocab-v3.pkl | grep A
 Now, create sentence pairs for pretraining. One for BERT-NSP and the other for in-document contrastive spans:
 ```
 mkdir -p data.pretrain-bertnsp data.pretrain-cotmae
-python -m pya0.mse-aops-2021-train-data generate_sentpairs --docs_file ./mse-aops-2021-data-v3.pkl --condenser_mode=False --out_dir=data.pretrain-bertnsp
-python -m pya0.mse-aops-2021-train-data generate_sentpairs --docs_file ./mse-aops-2021-data-v3.pkl --condenser_mode=True  --out_dir=data.pretrain-cotmae
+python -m pya0.mse-aops-2021-train-data generate_sentpairs --docs_file ./mse-aops-2021-data-v3.pkl \
+    --condenser_mode=False --out_dir=data.pretrain-bertnsp --tok_ckpoint ./math-tokenizer
+python -m pya0.mse-aops-2021-train-data generate_sentpairs --docs_file ./mse-aops-2021-data-v3.pkl \
+    --condenser_mode=True  --out_dir=data.pretrain-cotmae --tok_ckpoint ./math-tokenizer
 ```
+(See the next sections for how to create math-tokenizer)
 
 ### Create math-aware tokenizer
 ```
