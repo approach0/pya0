@@ -99,7 +99,7 @@ class SentencePairGennerator():
 
 def generate_sentpairs(
     docs_file='mse-aops-2021-data.pkl', show_sample_cycle=10_000,
-    tok_ckpoint='bert-base-uncased', random_seed=123,
+    tok_ckpoint='bert-base-uncased', random_seed=123, out_dir='.',
     maxlen=512, n_per_split=382_000, limit=-1, condenser_mode=False):
 
     tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
@@ -115,6 +115,7 @@ def generate_sentpairs(
             nonlocal aggregate
             if flush or len(aggregate) >= n_per_split:
                 flush_file = os.path.basename(docs_file) + f'.pairs.{pairs_cnt}'
+                flush_file = os.path.join(flush_file, out_dir)
                 print('FLUSH', flush_file)
                 with open(flush_file, 'wb') as fh:
                     pickle.dump(aggregate, fh)
