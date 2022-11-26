@@ -102,6 +102,7 @@ def generate_sentpairs(
     tok_ckpoint='bert-base-uncased', random_seed=123, out_dir='.',
     maxlen=512, n_per_split=382_000, limit=-1, condenser_mode=False):
 
+    print('Using tokenizer:', tok_ckpoint)
     tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
     tokenize = tokenizer.tokenize
     with open(docs_file, 'rb') as fh:
@@ -152,8 +153,8 @@ def generate_tag_pairs(
     docs_file='mse-aops-2021-data.pkl', debug=False,
     maxlen=512, n_splits=10, limit=-1, min_tagfreq=5000, min_tokens=128,
     tok_ckpoint='bert-base-uncased', random_seed=123):
-
     seed(random_seed)
+    print('Using tokenizer:', tok_ckpoint)
     tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
     tokenize = tokenizer.tokenize
     tag_dict = defaultdict(int)
