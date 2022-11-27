@@ -404,6 +404,14 @@ def create_math_tokenizer(base_tokenizer, vocab_file):
     tokenizer.save_pretrained(f"./math-tokenizer")
 
 
+def test_math_tokenizer(tokenizer_path, test_psg):
+    tokenizer = BertTokenizer.from_pretrained(tokenizer_path)
+    tokens = tokenizer(test_psg, return_tensors="pt")
+    token_ids = tokens['input_ids'][0]
+    dec_tokens = [tokenizer.decode([id_]) for id_ in token_ids]
+    print(dec_tokens)
+
+
 if __name__ == '__main__':
     transformer_logging.set_verbosity_warning()
     os.environ["PAGER"] = 'cat'
@@ -416,5 +424,6 @@ if __name__ == '__main__':
         "pickle_print": pickle_print,
         "test_determinisity": test_determinisity,
         "eval_trained_ckpts": eval_trained_ckpts,
-        'create_math_tokenizer': create_math_tokenizer
+        'create_math_tokenizer': create_math_tokenizer,
+        'test_math_tokenizer': test_math_tokenizer
     })
