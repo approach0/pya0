@@ -116,7 +116,7 @@ def generate_sentpairs(
             nonlocal aggregate
             if flush or len(aggregate) >= n_per_split:
                 flush_file = os.path.basename(docs_file) + f'.pairs.{pairs_cnt}'
-                flush_file = os.path.join(flush_file, out_dir)
+                flush_file = os.path.join(out_dir, flush_file)
                 print('FLUSH', flush_file)
                 with open(flush_file, 'wb') as fh:
                     pickle.dump(aggregate, fh)
