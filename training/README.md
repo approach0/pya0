@@ -40,7 +40,7 @@ python -m pya0.mse-aops-2021-train-data generate_sentpairs --docs_file ./mse-aop
 
 ### Create math-aware tokenizer
 ```
-python -m pya0.transformer_utils create_math_tokenizer bert-base-uncased ./mse-aops-2021-vocab-v3.pkl
+python -m pya0.transformer_utils create_math_tokenizer ./mse-aops-2021-vocab-v3.pkl
 Before loading new vocabulary: 30522
-After loading new vocabulary: 31432
+After loading new vocabulary: 31523
 ```

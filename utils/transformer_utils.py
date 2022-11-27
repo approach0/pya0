@@ -393,8 +393,10 @@ def eval_trained_ckpts(cfg_section, tokenizer_path, model_ckpt_dir):
         time.sleep(3)
 
 
-def create_math_tokenizer(base_tokenizer, vocab_file):
-    tokenizer = BertTokenizer.from_pretrained(base_tokenizer)
+def create_math_tokenizer(vocab_file, base_tokenizer='bert-base-uncased'):
+    tokenizer = BertTokenizer.from_pretrained(
+        base_tokenizer, do_lower_case=False)
+    assert tokenizer.do_lower_case == False
     print('Before loading new vocabulary:', len(tokenizer))
     with open(vocab_file, 'rb') as fh:
         vocab = pickle.load(fh)
