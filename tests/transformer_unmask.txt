@@ -18,3 +18,4 @@
 5,8	Hints: [imath]\left| v \right|_2 = \sqrt{v^\ast v}[/imath] iff [MASK] is maximized.
 3,11,16	Prove that [imath]a^{4/a} + b^{4/b} + c^{4/c} \ge 3[/imath].
 4,10,15,16	Evaluating the integral [imath] \int_0^\infty \frac{\sin x} x dx = \frac \pi 2 [/imath].
+10,13	[imath]\|A\|_2 \leq \sqrt{ \|A\|_1 \|A\|_\infty}[/imath]
