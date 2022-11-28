@@ -63,7 +63,7 @@ class SentencePairGennerator():
                 ctx = (rand() < 0.5) # do we sample in a context window?
                 try:
                     # get a pair of random sample or context sample
-                    br, pair_1, _, url_1 = self.read(len_1)
+                    _, pair_1, _, url_1 = self.read(len_1)
                     br, pair_2, _, url_2 = self.read(len_2, randomly=not ctx)
                     if (not ctx or url_1 == url_2) and br:
                         # when we sample randomly, or we want to sample
@@ -79,11 +79,12 @@ class SentencePairGennerator():
         p = self.short_prob
         while True:
             maxlen = self.maxlen // 4 if rand() < p else self.maxlen
-            length = randint(1, maxlen - 1 - 1) # minus [CLS], [SEP]
+            len1 = randint(1, maxlen - 1 - 1) # minus [CLS], [SEP]
+            len2 = randint(1, maxlen - 1 - 1) # minus [CLS], [SEP]
             try:
-                br_1, pair_1, _, url_1 = self.read(length)
-                br_2, pair_2, _, url_2 = self.read(length)
-                if (url_1 == url_2) and (br_1 and br_2):
+                br_1, pair_1, _, url_1 = self.read(len1)
+                br_2, pair_2, _, url_2 = self.read(len2)
+                if url_1 == url_2:
                     yield [pair_1, pair_2], True, url_1
             except StopIteration:
                 return # stop generator
