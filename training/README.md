@@ -53,6 +53,12 @@ Before loading new vocabulary: 30522
 After loading new vocabulary: 31523
 ```
 
+Alternatively, download our pre-built tokenizer:
+```
+$ wget https://vault.cs.uwaterloo.ca/s/NaBLRCz4W72KKFY/download -O math-tokenizer.tar.gz
+$ tar xzf math-tokenizer.tar.gz
+```
+
 ### Create data for finetuning
 Download ARQMath-3 corpus data:
 ```
