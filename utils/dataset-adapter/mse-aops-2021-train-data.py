@@ -28,18 +28,18 @@ class SentencePairGennerator():
         while randomly and idx == self.now:
             idx = randint(0, self.N - 1)
         row, col = self.ridx[idx]
-        content = self.data[row][0]
+        sentences = self.data[row][0]
         tags = self.data[row][1]
         url = self.data[row][2]
         # concatenate sentences into one no longer than `read_length`
         tokens = []
-        sentences = ''
+        content = ''
         cnt = 0
         breakout = False
-        for sentence in content[col:]:
+        for sentence in sentences[col:]:
             sent_tokens = self.tokenize(sentence)
             tokens += sent_tokens
-            sentences += sentence + ' '
+            content += sentence + ' '
             cnt += 1 # ensure to increment one at least
             if len(tokens) >= read_length:
                 breakout = True
@@ -50,7 +50,7 @@ class SentencePairGennerator():
                 raise StopIteration
             else:
                 self.now += cnt
-        return breakout, sentences, tags, url
+        return breakout, content, tags, url
 
     def pretrain_iter_for_bert(self):
         while True:
