@@ -221,7 +221,7 @@ def unwrap_isolated_tex_groups(text,
     return text
 
 
-def preprocess_for_transformer(text, math_vocab=None,
+def preprocess_for_transformer(text, math_vocab=None, text_lowercase=True,
     num_tokenizer_ver=3, replace_isolated_groups=True):
     output = ''
 
@@ -275,7 +275,7 @@ def preprocess_for_transformer(text, math_vocab=None,
                         math_vocab[dollar_prefix_sym] += 1
             output += ' '.join(tex_syms)
         else:
-            output += piece
+            output += piece.lower() if text_lowercase else piece
     return output
 
 
@@ -284,7 +284,8 @@ if __name__ == '__main__':
     #math = r'1.50941045653627123243833773286186'
     #math = r'αK'
     math = r'''
-how to express these equations as polynomial equations in [imath]x,\alpha,z[/imath]?
+How to express these equations as polynomial equations in [imath]x,
+\alpha, z[/imath]?
 \begin{align*}
 x&=\cos(2\alpha)\\
 z&=\sin(2\alpha)
