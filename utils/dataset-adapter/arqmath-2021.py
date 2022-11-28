@@ -15,10 +15,11 @@ def generate_qdict(xml_file, maxitems=0):
         type_ = meta_data[1]
         if type_ == 'Q':
             ID, _, title, body, vote, tags, accept = meta_data
+            Q_content = title + '\n\n' + body
             if accept is None:
-                Q_dict[ID] = (None, tags, data)
+                Q_dict[ID] = (None, tags, Q_content)
             else:
-                Q_dict[ID] = (int(accept), tags, data)
+                Q_dict[ID] = (int(accept), tags, Q_content)
         else:
             continue
 
