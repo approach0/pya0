@@ -1,67 +1,56 @@
-import os
-import fire
-import json
 import pickle
+from tqdm import tqdm
+from corpus_reader import *
 from collections import defaultdict
 
 
-def file_iterator(corpus, endat, ext):
-    cnt = 0
-    for dirname, dirs, files in os.walk(corpus):
-        print(dirname)
-        for f in files:
-            if cnt >= endat and endat > 0:
-                return
-            elif f.split('.')[-1] == ext:
-                cnt += 1
-                yield (cnt, dirname, f)
+def generate_qdict(xml_file, maxitems=0):
+    total_lines = corpus_length__arqmath3_rawxml(xml_file, maxitems)
+    print('total lines:', total_lines)
+    reader = corpus_reader__arqmath3_rawxml(xml_file)
 
-
-def file_read(path):
-    if not os.path.isfile(path):
-        return None
-    with open(path, 'r') as fh:
-        return fh.read()
-
-
-def generate_qdict(corpus, endat=-1):
     Q_dict = dict()
-    for cnt, dirname, fname in file_iterator(corpus, endat, 'question'):
-        path = dirname + '/' + fname
-        Q_id = os.path.basename(path).split('.')[0]
-        Q = file_read(path)
-        ac = file_read(path + '_ac')
-        tags = file_read(path + '_tags')
-        tags = tags.replace('<', ' ').replace('>', '').split()
-        if ac is None:
+    for cnt, (meta_data, data) in tqdm(enumerate(reader), total=total_lines):
+        if cnt >= total_lines: break
+        type_ = meta_data[1]
+        if type_ == 'Q':
+            ID, _, title, body, vote, tags, accept = meta_data
+            if accept is None:
+                Q_dict[ID] = (None, tags, data)
+            else:
+                Q_dict[ID] = (int(accept), tags, data)
+        else:
             continue
-        Q_dict[int(Q_id)] = (int(ac), tags, Q)
 
-    # Q_id -> (ac, tags, Q)
     with open('arqmath-question-dict.pkl', 'wb') as fh:
         pickle.dump(Q_dict, fh)
 
 
-def generate_tag_bank(corpus, endat=-1):
+def generate_answer_banks(xml_file, maxitems=0):
     with open('arqmath-question-dict.pkl', 'rb') as fh:
         Q_dict = pickle.load(fh)
 
+    total_lines = corpus_length__arqmath3_rawxml(xml_file, maxitems)
+    print('total lines:', total_lines)
+    reader = corpus_reader__arqmath3_rawxml(xml_file)
+
     A_dict = dict()
     tag_dict = defaultdict(list)
-    for cnt, dirname, fname in file_iterator(corpus, endat, 'answer'):
-        path = dirname + '/' + fname
-        A = file_read(path)
-        fields = os.path.basename(path).split('.')
-        A_id = int(fields[0])
-        Q_id = int(fields[1])
-
-        if Q_id not in Q_dict:
+    answer_bank = defaultdict(list)
+    for cnt, (meta_data, data) in tqdm(enumerate(reader), total=total_lines):
+        if cnt >= total_lines: break
+        type_ = meta_data[1]
+        if type_ == 'A':
+            ID, _, parentID, vote = meta_data
+            if parentID not in Q_dict:
+                continue
+            A_dict[ID] = data
+            _, tags, _ = Q_dict[parentID]
+            for tag in tags:
+                tag_dict[tag].append(ID)
+            answer_bank[parentID].append((ID, vote))
+        else:
             continue
-
-        A_dict[A_id] = A
-        _, tags, _ = Q_dict[Q_id]
-        for tag in tags:
-            tag_dict[tag].append(A_id)
 
     # A_id -> A
     with open('arqmath-answer-dict.pkl', 'wb') as fh:
@@ -69,36 +58,16 @@ def generate_tag_bank(corpus, endat=-1):
     # tag -> [A_id, ...]
     with open('arqmath-tag-bank.pkl', 'wb') as fh:
         pickle.dump(tag_dict, fh)
-
-
-def generate_answer_bank(corpus, endat=-1):
-    with open('arqmath-question-dict.pkl', 'rb') as fh:
-        Q_dict = pickle.load(fh)
-
-    answer_bank = defaultdict(list)
-    for cnt, dirname, fname in file_iterator(corpus, endat, 'answer'):
-        path = dirname + '/' + fname
-        A = file_read(path)
-        fields = os.path.basename(path).split('.')
-        A_id = int(fields[0])
-        Q_id = int(fields[1])
-
-        if Q_id not in Q_dict:
-            continue
-
-        vote_file = f'{dirname}/{A_id}.answer_vote'
-        upvotes = int(file_read(vote_file))
-        answer_bank[Q_id].append((A_id, upvotes))
-
     # Q_id -> [(A_id, upvotes), ...]
     with open('arqmath-answer-bank.pkl', 'wb') as fh:
         pickle.dump(answer_bank, fh)
 
 
 if __name__ == '__main__':
+    import os
+    import fire
     os.environ["PAGER"] = 'cat'
     fire.Fire({
-        'question_dict': generate_qdict,
-        'tag_bank': generate_tag_bank,
-        'answer_bank': generate_answer_bank
+        'gen_question_dict': generate_qdict,
+        'gen_answer_banks': generate_answer_banks
     })

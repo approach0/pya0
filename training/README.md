@@ -53,7 +53,8 @@ wget https://vault.cs.uwaterloo.ca/s/rdRkP4ZYRqLjgiS/download -O ./datasets/Post
 
 Create data structures for later generating ARQMath-3 training data:
 ```
+rm -f arqmath-question-dict.pkl \
+    arqmath-answer-dict.pkl arqmath-tag-bank.pkl arqmath-answer-bank.pkl
 python -m pya0.arqmath-2021 gen_question_dict ./datasets/Posts.V1.3.xml
-python -m pya0.arqmath-2021 gen_answer_dict_and_tag_bank ./datasets/Posts.V1.3.xml
-python -m pya0.arqmath-2021 gen_answer_bank ./datasets/Posts.V1.3.xml
+python -m pya0.arqmath-2021 gen_answer_banks ./datasets/Posts.V1.3.xml
 ```
