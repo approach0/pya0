@@ -39,6 +39,34 @@ case $TRAINER-${SETUP} in
     TRAINER_ARGS="--architecture standard --warmup-epochs 1 --lr 1e-4"
     ;;
 
+   pretrain-condenser-a6000)
+    DEV_BSIZE=16
+    SAVE_FOLD=1
+
+    DATA_VER=FaMd9n9FN4rMzwR
+    START_POINT=bert-base-uncased
+    TOK_CKPOINT=math-tokenizer
+    SHARDS_LIST=shards.txt
+    TEST_FILE=test.txt
+    TEST_CYCLE=100
+    CALL_ARGS=
+    TRAINER_ARGS="--architecture condenser --warmup-epochs 1 --lr 1e-4"
+    ;;
+
+   pretrain-cotmae-a6000)
+    DEV_BSIZE=16
+    SAVE_FOLD=1
+
+    DATA_VER=FaMd9n9FN4rMzwR
+    START_POINT=bert-base-uncased
+    TOK_CKPOINT=math-tokenizer
+    SHARDS_LIST=shards.txt
+    TEST_FILE=test.txt
+    TEST_CYCLE=100
+    CALL_ARGS=
+    TRAINER_ARGS="--architecture mae --warmup-epochs 1 --lr 1e-4"
+    ;;
+
    *)
     echo "[Bad args] $COMMAND"
     exit 1;
