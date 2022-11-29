@@ -102,8 +102,8 @@ $ wget https://vault.cs.uwaterloo.ca/s/FH7saKW4gdtqFmE/download -O arqmath-answe
 
 Finally, create finetune data to train retrievers:
 ```sh
-$ wget https://vault.cs.uwaterloo.ca/s/WFMrdWKdWFkAs75/download -O datasets/PostLinks.V1.2.xml
+$ wget https://vault.cs.uwaterloo.ca/s/Pkwwxrs5EQYd9Mw/download -O datasets/PostLinks.V1.3.xml
 $ mkdir -p ./data.finetune-arqmath
 $ python ../pya0/arqmath-2021-train-data.py \
-    --postlink_file=./datasets/PostLinks.V1.2.xml --out_dir=./data.finetune-arqmath
+    --postlink_file=./datasets/PostLinks.V1.3.xml --out_dir=./data.finetune-arqmath
 ```
