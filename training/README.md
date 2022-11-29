@@ -46,6 +46,12 @@ $ python -m pya0.transformer_utils pft_print ../tests/transformer_unmask.txt > d
 $ python -m pya0.transformer_utils pft_print ../tests/transformer_unmask.txt > data.pretrain-cotmae/test.txt
 ```
 
+Alternatively, download our pre-built training files:
+```sh
+$ wget https://vault.cs.uwaterloo.ca/s/5PPXXd48nDk4sWF/download -O data.pretrain-bertnsp.tar.gz
+$ wget https://vault.cs.uwaterloo.ca/s/pgWLde6NNMaAM5q/download -O data.pretrain-cotmae.tar.gz
+```
+
 ### Create math-aware tokenizer
 ```
 $ python -m pya0.transformer_utils create_math_tokenizer ./mse-aops-2021-vocab-v3.pkl
@@ -71,4 +77,12 @@ $ rm -f arqmath-question-dict.pkl \
     arqmath-answer-dict.pkl arqmath-tag-bank.pkl arqmath-answer-bank.pkl
 $ python -m pya0.arqmath-2021 gen_question_dict ./datasets/Posts.V1.3.xml
 $ python -m pya0.arqmath-2021 gen_answer_banks ./datasets/Posts.V1.3.xml
+```
+
+We have also prebuilt these data structures available for download:
+```
+$ wget https://vault.cs.uwaterloo.ca/s/8PtfyHnzzReErqS/download -O arqmath-question-dict.pkl
+$ wget https://vault.cs.uwaterloo.ca/s/c8STAPDnN6XeEJ2/download -O arqmath-tag-bank.pkl
+$ wget https://vault.cs.uwaterloo.ca/s/g5My6n3LyatRnMB/download -O arqmath-answer-bank.pkl
+$ wget https://vault.cs.uwaterloo.ca/s/FH7saKW4gdtqFmE/download -O arqmath-answer-dict.pkl
 ```
