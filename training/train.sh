@@ -15,6 +15,7 @@ SETUP=${2}
 DEVICES=${3-0} # only needed for local training (non-Slurm)
 
 # redirect the following to console logs (BEGIN)
+SAVE_PREFIX='./models'
 {
 
 DATE=$(date)
@@ -125,7 +126,6 @@ done
 set -x
 echo "Using TCP port ${port} ..."
 
-SAVE_PREFIX='./models'
 if which srun; then
     let TOTAL_N="$N_NODE * $N_GPUS"
     srun --unbuffered \
