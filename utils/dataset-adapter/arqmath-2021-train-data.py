@@ -119,14 +119,6 @@ def generate_contrastive_pairs(
                     print(f'Warning: neg answer #{negative_id} not found!')
                     continue
 
-                if i == 0 and aggregate_cnt % print_frq == 0:
-                    print('=' * 50)
-                    print(Q)
-                    print('-' * 50)
-                    print(positive_A)
-                    print('~' * 50)
-                    print(negative_A, end='\n\n')
-
                 positive_A = preprocess.preprocess_for_transformer(positive_A,
                     num_tokenizer_ver=num_tokenizer_ver,
                     replace_isolated_groups=replace_isolated_groups
@@ -135,6 +127,14 @@ def generate_contrastive_pairs(
                     num_tokenizer_ver=num_tokenizer_ver,
                     replace_isolated_groups=replace_isolated_groups
                 )
+
+                if i == 0 and aggregate_cnt % print_frq == 0:
+                    print('=' * 50)
+                    print(Q)
+                    print('-' * 50)
+                    print(positive_A)
+                    print('~' * 50)
+                    print(negative_A, end='\n\n')
 
                 aggregate.append((Q, all_tags, positive_A, negative_A))
                 aggregate_cnt += 1
