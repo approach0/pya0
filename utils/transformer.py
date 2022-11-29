@@ -530,6 +530,9 @@ class Trainer(BaseTrainer):
             partial_hook = partial(classifier_hook, display, 3)
             hooks.append(classifier.register_forward_hook(partial_hook))
         elif self.architecture in ['condenser', 'mae']:
+            if len(test_inputs) % 2 != 0:
+                print('skip the last test batch of size', len(test_inputs))
+                raise StopIteration
             # register encoder hook
             encoder_head = model.enc.cls
             encoder_hook = partial(classifier_hook, display, 3)
@@ -538,7 +541,6 @@ class Trainer(BaseTrainer):
             decoder_head = model.dec_pretrain_head
             decoder_hook = partial(classifier_hook, display, 3)
             hooks.append(decoder_head.register_forward_hook(decoder_hook))
-            pass
         else:
             assert NotImplementedError
 
