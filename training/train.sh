@@ -54,6 +54,20 @@ case $TRAINER-${SETUP} in
     TRAINER_ARGS="--architecture condenser --warmup-epochs 1 --lr 1e-4"
     ;;
 
+   pretrain-cocondenser-a6000)
+    DEV_BSIZE=16
+    SAVE_FOLD=1
+
+    DATA_VER=FaMd9n9FN4rMzwR
+    START_POINT=bert-base-uncased
+    TOK_CKPOINT=math-tokenizer
+    SHARDS_LIST=shards.txt
+    TEST_FILE=test.txt
+    TEST_CYCLE=100
+    CALL_ARGS=
+    TRAINER_ARGS="--architecture cocondenser --warmup-epochs 1 --lr 1e-4"
+    ;;
+
    pretrain-cotmae-a6000)
     DEV_BSIZE=16
     SAVE_FOLD=1
@@ -65,7 +79,21 @@ case $TRAINER-${SETUP} in
     TEST_FILE=test.txt
     TEST_CYCLE=100
     CALL_ARGS=
-    TRAINER_ARGS="--architecture mae --warmup-epochs 1 --lr 1e-4"
+    TRAINER_ARGS="--architecture cotmae --warmup-epochs 1 --lr 1e-4"
+    ;;
+
+   pretrain-cocomae-a6000)
+    DEV_BSIZE=16
+    SAVE_FOLD=1
+
+    DATA_VER=FaMd9n9FN4rMzwR
+    START_POINT=bert-base-uncased
+    TOK_CKPOINT=math-tokenizer
+    SHARDS_LIST=shards.txt
+    TEST_FILE=test.txt
+    TEST_CYCLE=100
+    CALL_ARGS=
+    TRAINER_ARGS="--architecture cocomae --warmup-epochs 1 --lr 1e-4"
     ;;
 
    *)
