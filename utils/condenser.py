@@ -13,7 +13,7 @@ from transformers import BertForPreTraining
 class Condenser(nn.Module):
     def __init__(self, base_model, mode='condenser',
         n_dec_layers=2, skip_from=6, **kargs):
-        assert mode in ['condenser', 'mae']
+        assert mode in ['condenser', 'cocondenser', 'cotmae', 'cocomae']
         super().__init__()
 
         # create encoder
@@ -106,7 +106,8 @@ class Condenser(nn.Module):
             enc_mlm_loss = None
 
         # before feed into the decoder, concate CLS and skip hiddens
-        if mode == 'mae':
+        if mode in ['cotmae', 'cocomae']:
+            # flip contextual inputs
             dim = cls_hiddens.shape[-1]
             cls_hiddens = cls_hiddens.view(-1, 2, dim).flip([1])
             cls_hiddens = cls_hiddens.view(-1, 1, dim).contiguous()
@@ -133,16 +134,21 @@ class Condenser(nn.Module):
         #print(dec_output_preds.shape) # [B, N, vocab_size]
         assert dec_output_preds.shape[-1] == self.vocab_size
 
-        # calculate decoder CLS loss
-        cls_emb = cls_hiddens.squeeze() # [B, 768]
-        scores = cls_emb @ cls_emb.T # [B, B]
-        B = scores.shape[0]
-        # B -> cls_labels: [0, 1, 2, 3, 4, 5] to [1, 0, 3, 2, 5, 4]
-        cls_labels = torch.arange(B, dtype=torch.long).view(-1, 2).flip([1])
-        cls_labels = cls_labels.flatten().contiguous().to(scores.device)
-        # actual loss calculation
-        scores.fill_diagonal_(float('-inf'))
-        enc_ctx_loss = F.cross_entropy(scores, cls_labels)
+        # calculate encoder CLS loss
+        if mode in ['cocondenser', 'cocomae']:
+            cls_emb = cls_hiddens.squeeze() # [B, 768]
+            cls_scores = cls_emb @ cls_emb.T # [B, B]
+            B = cls_scores.shape[0]
+            # B -> cls_labels: [0, 1, 2, 3, 4, 5] to [1, 0, 3, 2, 5, 4]
+            cls_labels = torch.arange(B, dtype=torch.long).view(-1, 2).flip([1])
+            cls_labels = cls_labels.flatten().contiguous().to(cls_scores.device)
+            # actual loss calculation
+            cls_scores.fill_diagonal_(float('-inf'))
+            enc_ctx_loss = F.cross_entropy(cls_scores, cls_labels)
+        else:
+            cls_emb = None
+            cls_scores = None
+            enc_ctx_loss = None
 
         if labels is not None:
             # calculate decoder MLM loss
@@ -153,7 +159,10 @@ class Condenser(nn.Module):
             )
 
             # final "overall loss"
-            loss = enc_mlm_loss + dec_mlm_loss + enc_ctx_loss
+            if mode in ['cocondenser', 'cocomae']:
+                loss = enc_mlm_loss + dec_mlm_loss + enc_ctx_loss
+            else:
+                loss = enc_mlm_loss + dec_mlm_loss
         else:
             loss = None
 
@@ -162,7 +171,7 @@ class Condenser(nn.Module):
             'enc_output_preds': enc_output_preds,
             'dec_output_preds': dec_output_preds,
             'cls_emb': cls_emb,
-            'cls_scores': scores, # for visualization
+            'cls_scores': cls_scores, # for visualization
             'loss': loss # for loss backprop
         })
 

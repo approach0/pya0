@@ -376,7 +376,8 @@ class Trainer(BaseTrainer):
         self.splade_reg = splade_reg
         self.splade_mask_mode = splade_mask_mode
 
-        assert architecture in ['standard', 'condenser', 'mae', 'splade']
+        assert architecture in ['standard', 'splade',
+            'condenser', 'cocondenser', 'cotmae', 'cocomae']
         self.architecture = architecture
         self.save_prefix = save_prefix
         self.debug = debug
@@ -474,7 +475,8 @@ class Trainer(BaseTrainer):
         if os.path.basename(ckpoint) == 'bert-from-scratch':
             config = BertConfig(tie_word_embeddings=True)
             self.model = BertForPreTraining(config)
-        elif self.architecture in ['condenser', 'mae']:
+        elif self.architecture in ['condenser', 'cocondenser',
+                                   'cotmae', 'cocomae']:
             if self.start_point[-1] == -1:
                 self.model = Condenser(ckpoint, mode=self.architecture)
             else:
@@ -529,7 +531,8 @@ class Trainer(BaseTrainer):
             classifier = model.cls
             partial_hook = partial(classifier_hook, display, 3)
             hooks.append(classifier.register_forward_hook(partial_hook))
-        elif self.architecture in ['condenser', 'mae']:
+        elif self.architecture in ['condenser', 'cocondenser',
+                                   'cotmae', 'cocomae']:
             if len(test_inputs) % 2 != 0:
                 print('skip the last test batch of size', len(test_inputs))
                 raise StopIteration
@@ -549,8 +552,8 @@ class Trainer(BaseTrainer):
 
         if self.architecture == 'standard':
             print('\n'.join(display))
-        elif self.architecture in ['condenser', 'mae']:
-            # in Condenser, also visualize CLS relevance predictions
+        elif self.architecture in ['cocondenser', 'cocomae']:
+            # visualize CLS relevance predictions
             scores = model_outputs.cls_scores
             argmax = scores.argmax(dim=1).cpu().numpy()
             L = len(argmax)
@@ -575,7 +578,8 @@ class Trainer(BaseTrainer):
         if self.architecture == 'standard':
             enc_inputs = self.tokenizer(pairs,
                 padding=True, truncation=True, return_tensors="pt")
-        elif self.architecture in ['condenser', 'mae']:
+        elif self.architecture in ['condenser', 'cocondenser',
+                                   'cotmae', 'cocomae']:
             # use flatten input (doubled length)
             flatten_inputs = [single for pair in pairs for single in pair]
             enc_inputs = self.tokenizer(flatten_inputs,
