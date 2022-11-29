@@ -66,26 +66,26 @@ $ (cd data.pretrain-bertnsp && du -ch `cat shards.txt`)
 ```
 
 ### Create math-aware tokenizer
-```
+```sh
 $ python -m pya0.transformer_utils create_math_tokenizer ./mse-aops-2021-vocab-v3.pkl
 Before loading new vocabulary: 30522
 After loading new vocabulary: 31523
 ```
 
 Alternatively, download our pre-built tokenizer:
-```
+```sh
 $ wget https://vault.cs.uwaterloo.ca/s/NaBLRCz4W72KKFY/download -O math-tokenizer.tar.gz
 $ tar xzf math-tokenizer.tar.gz
 ```
 
 ### Create data for finetuning
 Download ARQMath-3 corpus data:
-```
+```sh
 $ wget https://vault.cs.uwaterloo.ca/s/rdRkP4ZYRqLjgiS/download -O ./datasets/Posts.V1.3.xml
 ```
 
 Create data structures for later generating ARQMath-3 training data:
-```
+```sh
 $ rm -f arqmath-question-dict.pkl \
     arqmath-answer-dict.pkl arqmath-tag-bank.pkl arqmath-answer-bank.pkl
 $ python -m pya0.arqmath-2021 gen_question_dict ./datasets/Posts.V1.3.xml
@@ -93,9 +93,17 @@ $ python -m pya0.arqmath-2021 gen_answer_banks ./datasets/Posts.V1.3.xml
 ```
 
 We have also prebuilt these data structures available for download:
-```
+```sh
 $ wget https://vault.cs.uwaterloo.ca/s/8PtfyHnzzReErqS/download -O arqmath-question-dict.pkl
 $ wget https://vault.cs.uwaterloo.ca/s/c8STAPDnN6XeEJ2/download -O arqmath-tag-bank.pkl
 $ wget https://vault.cs.uwaterloo.ca/s/g5My6n3LyatRnMB/download -O arqmath-answer-bank.pkl
 $ wget https://vault.cs.uwaterloo.ca/s/FH7saKW4gdtqFmE/download -O arqmath-answer-dict.pkl
+```
+
+Finally, create finetune data to train retrievers:
+```sh
+$ wget https://vault.cs.uwaterloo.ca/s/WFMrdWKdWFkAs75/download -O datasets/PostLinks.V1.2.xml
+$ mkdir -p ./data.finetune-arqmath
+$ python ../pya0/arqmath-2021-train-data.py \
+    --postlink_file=./datasets/PostLinks.V1.2.xml --out_dir=./data.finetune-arqmath
 ```

@@ -17,8 +17,8 @@ def load_pickle_file(file):
         return pickle.load(fh)
 
 
-def dump_split(aggregate, aggregate_cnt, ver):
-    output_file = f'./qa-v{ver}.pairs.{aggregate_cnt}'
+def dump_split(out_dir, aggregate, aggregate_cnt, ver):
+    output_file = os.path.join(out_dir, f'qa-v{ver}.pairs.{aggregate_cnt}')
     with open(output_file, 'wb') as fh:
         L = len(aggregate)
         print(f'writing split {output_file} of length {L} ...')
@@ -55,7 +55,7 @@ def generate_contrastive_pairs(
     tag_bank_file='arqmath-tag-bank.pkl',
     answer_bank_file='arqmath-answer-bank.pkl',
     postlink_file='PostLinks.V1.2.xml',
-    replace_isolated_groups=True,
+    replace_isolated_groups=True, out_dir='.',
     num_tokenizer_ver=3, n_splits=10, limit=-1, debug=False, min_votes=7,
     random_seed=123, allow_vote_postive=True):
 
@@ -87,13 +87,15 @@ def generate_contrastive_pairs(
                 replace_isolated_groups=replace_isolated_groups
             )
 
+            positives = []
             # retrieve thread AC as postive
-            if ac not in a_dict:
-                continue
-            positives = [a_dict[ac]]
+            if ac in a_dict:
+                positives.append(a_dict[ac])
             # add highly upvoted answers as additional postives
             if allow_vote_postive:
-                answers = filter(lambda x: x[1] >= min_votes, answer_bank[qid])
+                answers = filter(
+                    lambda x: int(x[1]) >= min_votes, answer_bank[qid]
+                )
                 positives += [a_dict[a[0]] for a in answers if a[0] != ac]
 
             # any dup-thread Q&A ?
@@ -136,11 +138,11 @@ def generate_contrastive_pairs(
                 aggregate.append((Q, all_tags, positive_A, negative_A))
                 aggregate_cnt += 1
                 if aggregate_cnt % n_per_split == 0:
-                    aggregate = dump_split(
+                    aggregate = dump_split(out_dir,
                         aggregate, aggregate_cnt, num_tokenizer_ver
                     )
 
-        dump_split(
+        dump_split(out_dir,
             aggregate, aggregate_cnt, num_tokenizer_ver
         )
 
