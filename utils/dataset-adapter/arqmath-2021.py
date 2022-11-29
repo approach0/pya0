@@ -44,7 +44,11 @@ def generate_answer_banks(xml_file, maxitems=0):
         type_ = meta_data[1]
         if type_ == 'A':
             ID, _, parentID, vote = meta_data
+            assert isinstance(ID, str)
+            assert isinstance(parentID, str)
+            assert isinstance(vote, str)
             if parentID not in Q_dict:
+                print(f'{parentID} not in Q_dict.')
                 continue
             A_dict[ID] = data
             _, tags, _ = Q_dict[parentID]
