@@ -1285,6 +1285,7 @@ class Trainer(BaseTrainer):
             raise NotImplementedError
 
         print('Invoke training ...')
+        self.model.resize_token_embeddings(len(self.tokenizer))
         self.start_training(self.single_vec_train_loop)
 
     def single_vec_train_loop(self, batch, inputs, device, progress,
