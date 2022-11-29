@@ -27,7 +27,7 @@ TEST_CYCLE=100
 case $TRAINER-${SETUP} in
 
    pretrain-bertnsp-a6000)
-    DEV_BSIZE=38
+    DEV_BSIZE=32 # to be comparable to MAEs
     SAVE_FOLD=1
 
     DATA_VER=oEkdGxJgWmEESPQ
