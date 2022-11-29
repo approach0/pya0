@@ -40,8 +40,8 @@ $ python -m pya0.mse-aops-2021-train-data generate_sentpairs --docs_file ./mse-a
 
 Finally, generate text files which specify training shards and test cases:
 ```sh
-$ (cd data.pretrain-bertnsp && ls > shards.txt)
-$ (cd data.pretrain-cotmae && ls > shards.txt)
+$ (cd data.pretrain-bertnsp && ls | tee shards.txt)
+$ (cd data.pretrain-cotmae && ls | tee shards.txt)
 $ python -m pya0.transformer_utils pft_print ../tests/transformer_unmask.txt > data.pretrain-bertnsp/test.txt
 $ python -m pya0.transformer_utils pft_print ../tests/transformer_unmask.txt > data.pretrain-cotmae/test.txt
 ```
