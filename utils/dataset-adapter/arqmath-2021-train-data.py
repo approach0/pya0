@@ -40,7 +40,7 @@ def read_linked_posts(postlink_file):
 
 def sample_hard_negative(tags, tag_bank, a_dict):
     if len(tags) == 0:
-        tag = random.choice(tag_bank.items())
+        tag = random.choice(list(tag_bank.keys()))
     else:
         tag = random.choice(tags)
     negative_id = random.choice(tag_bank[tag])
@@ -55,8 +55,8 @@ def generate_contrastive_pairs(
     tag_bank_file='arqmath-tag-bank.pkl',
     answer_bank_file='arqmath-answer-bank.pkl',
     postlink_file='PostLinks.V1.2.xml',
-    replace_isolated_groups=True, out_dir='.',
-    num_tokenizer_ver=3, n_splits=10, limit=-1, debug=False, min_votes=7,
+    replace_isolated_groups=True, out_dir='.', print_frq=10_000,
+    num_tokenizer_ver=3, n_splits=10, limit=-1, min_votes=7,
     random_seed=123, allow_vote_postive=True):
 
     print(f'Reading {postlink_file} ...')
@@ -112,19 +112,20 @@ def generate_contrastive_pairs(
                     #print('sample duplicate question AC as negative')
                     positives.append(a_dict[dup_ac])
 
-            for positive_A in positives:
+            for i, positive_A in enumerate(positives):
                 all_tags = tags + dup_tags # all relevant tags
                 negative_A = sample_hard_negative(all_tags, tag_bank, a_dict)
                 if negative_A is None:
                     print(f'Warning: neg answer #{negative_id} not found!')
                     continue
 
-                if debug:
-                    print('----\n')
-                    print(Q, end='\n\n')
-                    print(positive_A, end='\n\n')
+                if i == 0 and aggregate_cnt % print_frq == 0:
+                    print('=' * 50)
+                    print(Q)
+                    print('-' * 50)
+                    print(positive_A)
+                    print('~' * 50)
                     print(negative_A, end='\n\n')
-                    quit(0)
 
                 positive_A = preprocess.preprocess_for_transformer(positive_A,
                     num_tokenizer_ver=num_tokenizer_ver,
