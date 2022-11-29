@@ -48,8 +48,21 @@ $ python -m pya0.transformer_utils pft_print ../tests/transformer_unmask.txt > d
 
 Alternatively, download our pre-built training files:
 ```sh
-$ wget https://vault.cs.uwaterloo.ca/s/5PPXXd48nDk4sWF/download -O data.pretrain-bertnsp.tar.gz
+$ wget https://vault.cs.uwaterloo.ca/s/rnaHRz4SbkopzXJ/download -O data.pretrain-bertnsp.tar.gz
 $ wget https://vault.cs.uwaterloo.ca/s/pgWLde6NNMaAM5q/download -O data.pretrain-cotmae.tar.gz
+```
+Note that we have explicitly specify to use a subset of shards in `data.pretrain-bertnsp` to make the two datasets roughly equal size:
+```
+$ (cd data.pretrain-bertnsp && du -ch `cat shards.txt`)
+713M    mse-aops-2021-data-v3.pkl.pairs.1145999
+714M    mse-aops-2021-data-v3.pkl.pairs.1527999
+713M    mse-aops-2021-data-v3.pkl.pairs.1909999
+713M    mse-aops-2021-data-v3.pkl.pairs.2291999
+712M    mse-aops-2021-data-v3.pkl.pairs.2673999
+716M    mse-aops-2021-data-v3.pkl.pairs.3055999
+712M    mse-aops-2021-data-v3.pkl.pairs.381999
+712M    mse-aops-2021-data-v3.pkl.pairs.763999
+5.6G    total
 ```
 
 ### Create math-aware tokenizer
