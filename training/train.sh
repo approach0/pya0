@@ -25,6 +25,20 @@ EPOCHS=10
 TEST_CYCLE=100
 case $TRAINER-${SETUP} in
 
+   pretrain-bertnsp-a6000)
+    DEV_BSIZE=38
+    SAVE_FOLD=1
+
+    DATA_VER=oEkdGxJgWmEESPQ
+    START_POINT=bert-base-uncased
+    TOK_CKPOINT=math-tokenizer
+    SHARDS_LIST=shards.txt
+    TEST_FILE=test.txt
+    TEST_CYCLE=100
+    CALL_ARGS=
+    TRAINER_ARGS="--architecture standard --warmup-epochs 1 --lr 1e-4"
+    ;;
+
    *)
     echo "[Bad args] $COMMAND"
     exit 1;
@@ -83,31 +97,34 @@ done
 set -x
 echo "Using TCP port ${port} ..."
 
+SAVE_PREFIX='./models'
 if which srun; then
     let TOTAL_N="$N_NODE * $N_GPUS"
     srun --unbuffered \
-        python ./pya0/utils/transformer.py $TRAINER \
-        $DATA_DIR/$START_POINT $DATA_DIR/$TOK_CKPOINT $CALL_ARGS \
+        python ../utils/transformer.py $TRAINER \
+        $START_POINT $TOK_CKPOINT $CALL_ARGS \
         --test_file $DATA_DIR/$TEST_FILE --test_cycle $TEST_CYCLE \
         --shards_list $DATA_DIR/$SHARDS_LIST \
         --cluster tcp://$(hostname):${port} \
         --batch_size $(($TOTAL_N * $DEV_BSIZE)) \
-        --save_fold $SAVE_FOLD --epochs $EPOCHS $TRAINER_ARGS
+        --save_fold $SAVE_FOLD --epochs $EPOCHS \
+        --save_prefix $SAVE_PREFIX $TRAINER_ARGS
 else
     TOTAL_N=$(echo $DEVICES | awk -F',' '{print NF}')
     export SLURM_JOB_ID=$TRAINER-${SETUP}
-    python ./pya0/utils/transformer.py $TRAINER \
-        $DATA_DIR/$START_POINT $DATA_DIR/$TOK_CKPOINT $CALL_ARGS \
+    python ../utils/transformer.py $TRAINER \
+        $START_POINT $TOK_CKPOINT $CALL_ARGS \
         --test_file $DATA_DIR/$TEST_FILE --test_cycle $TEST_CYCLE \
         --shards_list $DATA_DIR/$SHARDS_LIST \
         --cluster tcp://$(hostname):${port} \
         --batch_size $(($TOTAL_N * $DEV_BSIZE)) \
-        --save_fold $SAVE_FOLD --epochs $EPOCHS $TRAINER_ARGS \
+        --save_fold $SAVE_FOLD --epochs $EPOCHS \
+        --save_prefix $SAVE_PREFIX $TRAINER_ARGS \
         --dev_map $DEVICES
 fi;
 
 # redirect the following to console logs (END)
-} 2>&1 | tee job-$TRAINER-$SETUP.console.log
+} 2>&1 | tee $SAVE_PREFIX/job-$TRAINER-$SETUP.console.log
 
 # Other example usages
 #salloc --nodes=1 --gres=gpu:1 --cpus-per-task=2 --time=0-01:10 --mem=32gb

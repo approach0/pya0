@@ -357,7 +357,8 @@ class SpladeMaxEncoder(nn.Module):
 class Trainer(BaseTrainer):
 
     def __init__(self, lr='1e-4', debug=False, math_keywords_file=None,
-        splade_reg=1e-3, splade_mask_mode='all', architecture='standard', **args):
+        splade_reg=1e-3, splade_mask_mode='all', architecture='standard',
+        save_prefix='.', **args):
         super().__init__(**args)
         if math_keywords_file is not None:
             print('Enable extracting keywords ...')
@@ -377,6 +378,7 @@ class Trainer(BaseTrainer):
 
         assert architecture in ['standard', 'condenser', 'mae', 'splade']
         self.architecture = architecture
+        self.save_prefix = save_prefix
         self.debug = debug
         self.logger = None
         self.lr=float(lr)
@@ -409,14 +411,14 @@ class Trainer(BaseTrainer):
         if glob_rank == 0:
             self.acc_loss = [0.0] * self.epochs
             self.ep_iters = [0] * self.epochs
-            self.logger = TensorBoardWriter(log_dir=f'job-{job_id}-logs')
+            path = os.path.join(self.save_prefix, f'job-{job_id}-logs')
+            self.logger = TensorBoardWriter(log_dir=path)
         self.glob_rank = glob_rank
 
     def save_model(self, model, save_funct, save_name, job_id):
-        model.save_pretrained(
-            f"./job-{job_id}-{self.caller}/{save_name}",
-            save_function=save_funct
-        )
+        path = f"./job-{job_id}-{self.caller}/{save_name}"
+        path = os.path.join(self.save_prefix, path)
+        model.save_pretrained(path, save_function=save_funct)
 
     def extract_keywords(self, psg):
         tokens = psg.split()

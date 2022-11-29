@@ -98,3 +98,14 @@ $ mkdir -p ./data.finetune-arqmath
 $ python ../pya0/arqmath-2021-train-data.py \
     --postlink_file=./datasets/PostLinks.V1.3.xml --out_dir=./data.finetune-arqmath
 ```
+
+## Training
+Examine all available training options in `train.sh`.
+Double check the `DATA_VER` variable and make sure it points to the desired Vault HASH,
+so that it downloads the correct data for training.
+
+Then issue training command, for example:
+```sh
+$ sh train.sh pretrain bertnsp-a6000 1,2,3
+```
+(pretrain bertnsp on A6000 GPUs of cuda device number 1, 2, and 3)
