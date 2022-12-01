@@ -13,25 +13,27 @@ from transformers import BertForPreTraining
 class Condenser(nn.Module):
     def __init__(self, base_model, mode='condenser',
         n_dec_layers=2, skip_from=6, **kargs):
-        assert mode in ['condenser', 'cocondenser', 'cotmae', 'cocomae']
+        assert mode in ['cotbert',
+            'condenser', 'cocondenser', 'cotmae', 'cocomae']
         super().__init__()
-
-        # create encoder
-        self.enc = BertForPreTraining.from_pretrained(base_model, **kargs)
-        self.disable_unused_parameter_for_producing_loss()
-
-        # create decoder
-        self.dec = None
-        self.dec_pretrain_head = None
-        self.create_decoder_using_curr_encoder_settings(n_dec_layers)
-        # initialize a set of good weights for the decoder head
-        self.copy_weights(self.dec_pretrain_head, self.enc.cls)
 
         # save parameters
         self.mode = mode
         self.n_dec_layers = n_dec_layers
         self.skip_from = skip_from
+
+        # create encoder
+        self.enc = BertForPreTraining.from_pretrained(base_model, **kargs)
+        self.disable_unused_parameter_for_producing_loss()
         self.config = self.enc.config # expose to outsider
+
+        if mode != 'cotbert':
+            # create decoder
+            self.dec = None
+            self.dec_pretrain_head = None
+            self.create_decoder_using_curr_encoder_settings(n_dec_layers)
+            # initialize a set of good weights for the decoder head
+            self.copy_weights(self.dec_pretrain_head, self.enc.cls)
 
     def disable_unused_parameter_for_producing_loss(self):
         # remove unused parameters that confuse DDP
@@ -58,12 +60,15 @@ class Condenser(nn.Module):
         else:
             self.enc.config.vocab_size = length
             self.enc.resize_token_embeddings(length)
+            self.config = self.enc.config # expose to outsider
         print('Condenser resize vocab to', length)
-        # resize for decoder
-        self.vocab_size = length
-        self.dec_pretrain_head = BertOnlyMLMHead(self.enc.config)
-        self.dec_pretrain_head.apply(self.enc._init_weights) # initialize random weights
-        self.dec_pretrain_head = BertOnlyMLMHead(self.enc.config)
+        if self.mode != 'cotbert':
+            # resize for decoder
+            self.vocab_size = length
+            self.dec_pretrain_head = BertOnlyMLMHead(self.enc.config)
+            # initialize random weights
+            self.dec_pretrain_head.apply(self.enc._init_weights)
+            self.dec_pretrain_head = BertOnlyMLMHead(self.enc.config)
 
     def create_decoder_using_curr_encoder_settings(self, n_dec_layers):
         self.dec = nn.ModuleList(
@@ -105,37 +110,40 @@ class Condenser(nn.Module):
         else:
             enc_mlm_loss = None
 
-        # before feed into the decoder, concate CLS and skip hiddens
         if mode in ['cotmae', 'cocomae']:
             # flip contextual inputs
             dim = cls_hiddens.shape[-1]
             cls_hiddens = cls_hiddens.view(-1, 2, dim).flip([1])
             cls_hiddens = cls_hiddens.view(-1, 1, dim).contiguous()
-        elif mode == 'condenser':
+        elif mode in ['cotbert', 'condenser', 'cocondenser']:
             pass
         else:
             raise NotImplementedError
-        hiddens = torch.cat([cls_hiddens, skip_hiddens], dim=1)
 
         # decoder pass
-        attention_mask = self.enc.get_extended_attention_mask(
-            attention_mask, attention_mask.shape, attention_mask.device
-        )
-        for layer in self.dec:
-            layer_out = layer(
-                hiddens,
-                attention_mask,
+        if condenser.mode != 'cotbert':
+            attention_mask = self.enc.get_extended_attention_mask(
+                attention_mask, attention_mask.shape, attention_mask.device
             )
-            #layer_out == (layer_out,) + attention_weights
-            hiddens = layer_out[0]
-        sequence_output = hiddens
+            # before feed into the decoder, concate CLS and skip hiddens
+            hiddens = torch.cat([cls_hiddens, skip_hiddens], dim=1)
+            for layer in self.dec:
+                layer_out = layer(
+                    hiddens,
+                    attention_mask,
+                )
+                #layer_out == (layer_out,) + attention_weights
+                hiddens = layer_out[0]
+            sequence_output = hiddens
 
-        dec_output_preds = self.dec_pretrain_head(sequence_output)
-        #print(dec_output_preds.shape) # [B, N, vocab_size]
-        assert dec_output_preds.shape[-1] == self.vocab_size
+            dec_output_preds = self.dec_pretrain_head(sequence_output)
+            #print(dec_output_preds.shape) # [B, N, vocab_size]
+            assert dec_output_preds.shape[-1] == self.vocab_size
+        else:
+            dec_output_preds = None
 
         # calculate encoder CLS loss
-        if mode in ['cocondenser', 'cocomae']:
+        if mode in ['cotbert', 'cocondenser', 'cocomae']:
             cls_emb = cls_hiddens.squeeze() # [B, 768]
             cls_scores = cls_emb @ cls_emb.T # [B, B]
             B = cls_scores.shape[0]
@@ -151,18 +159,23 @@ class Condenser(nn.Module):
             enc_ctx_loss = None
 
         if labels is not None:
-            # calculate decoder MLM loss
-            mlm_loss_func = nn.CrossEntropyLoss()
-            dec_mlm_loss = mlm_loss_func(
-                dec_output_preds.view(-1, self.vocab_size),
-                labels.view(-1)
-            )
+            if mode != 'cotbert':
+                # calculate decoder MLM loss
+                mlm_loss_func = nn.CrossEntropyLoss()
+                dec_mlm_loss = mlm_loss_func(
+                    dec_output_preds.view(-1, self.vocab_size),
+                    labels.view(-1)
+                )
 
             # final "overall loss"
             if mode in ['cocondenser', 'cocomae']:
                 loss = enc_mlm_loss + dec_mlm_loss + enc_ctx_loss
-            else:
+            elif mode in ['condenser', 'cotmae']:
                 loss = enc_mlm_loss + dec_mlm_loss
+            elif mode == 'cotbert':
+                loss = enc_mlm_loss + enc_ctx_loss
+            else:
+                raise NotImplementedError
         else:
             loss = None
 
@@ -178,14 +191,15 @@ class Condenser(nn.Module):
     def save_pretrained(self, path, save_function=None):
         # save encoder
         self.enc.save_pretrained(os.path.join(path, 'encoder.ckpt'))
-        # extract decoder state as a dictionary
-        all_state_dict = self.state_dict()
-        dec_state_dict = {}
-        for key in all_state_dict.keys():
-            if key.startswith('dec'):
-                dec_state_dict[key] = all_state_dict[key]
-        # save decoder
-        torch.save(dec_state_dict, os.path.join(path, 'decoder.ckpt'))
+        if condenser.mode != 'cotbert':
+            # extract decoder state as a dictionary
+            all_state_dict = self.state_dict()
+            dec_state_dict = {}
+            for key in all_state_dict.keys():
+                if key.startswith('dec'):
+                    dec_state_dict[key] = all_state_dict[key]
+            # save decoder
+            torch.save(dec_state_dict, os.path.join(path, 'decoder.ckpt'))
         # save module args
         params = [self.mode, self.n_dec_layers, self.skip_from]
         with open(os.path.join(path, 'params.json'), 'w') as fh:
@@ -205,13 +219,14 @@ class Condenser(nn.Module):
         enc = BertForPreTraining.from_pretrained(enc_path, *args, **kargs)
         condenser.enc = enc
         condenser.disable_unused_parameter_for_producing_loss()
-        # create decoder
-        condenser.create_decoder_using_curr_encoder_settings(
-            condenser.n_dec_layers
-        )
-        # load decoder
-        state_dict = torch.load(os.path.join(path, 'decoder.ckpt'))
-        condenser.load_state_dict(state_dict, strict=False)
+        if condenser.mode != 'cotbert':
+            # create decoder
+            condenser.create_decoder_using_curr_encoder_settings(
+                condenser.n_dec_layers
+            )
+            # load decoder
+            state_dict = torch.load(os.path.join(path, 'decoder.ckpt'))
+            condenser.load_state_dict(state_dict, strict=False)
         return condenser
 
 
@@ -220,7 +235,7 @@ def compare_models(model_1, model_2):
     model_2 = model_2.state_dict()
     keys_1 = model_1.keys()
     for key in keys_1:
-        print(key)
+        #print(key)
         value_1 = model_1[key]
         value_2 = model_2[key]
         if torch.equal(value_1, value_2):
@@ -234,7 +249,8 @@ def compare_models(model_1, model_2):
 if __name__ == '__main__':
     #import transformers
     #print(transformers.__file__)
-    #quit()
+
+    modes = ['cotbert', 'condenser', 'cocondenser', 'cotmae', 'cocomae']
 
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     inputs = tokenizer(
@@ -242,16 +258,22 @@ if __name__ == '__main__':
         padding=True, return_tensors="pt"
     )
 
-    condenser = Condenser('bert-base-uncased')
-    condenser.resize_token_embeddings(31_000)
-    outputs = condenser(**inputs)
-    print(outputs.enc_output_preds)
-    print(outputs.dec_output_preds)
-    condenser.save_pretrained('./test-condenser')
+    def pr(tensor):
+        print(None if tensor is None else tensor[0][:3])
 
-    condenser_ckpt = Condenser.from_pretrained('./test-condenser')
-    outputs = condenser_ckpt(**inputs)
-    print(outputs.enc_output_preds)
-    print(outputs.dec_output_preds)
+    for mode in modes:
+        print('Mode:', mode)
 
-    #compare_models(condenser_ckpt, condenser)
+        condenser = Condenser('bert-base-uncased', mode=mode)
+        condenser.resize_token_embeddings(31_000)
+        outputs = condenser(**inputs)
+        pr(outputs.enc_output_preds)
+        pr(outputs.dec_output_preds)
+        condenser.save_pretrained('./test-condenser')
+
+        condenser_ckpt = Condenser.from_pretrained('./test-condenser')
+        outputs = condenser_ckpt(**inputs)
+        pr(outputs.enc_output_preds)
+        pr(outputs.dec_output_preds)
+
+        compare_models(condenser_ckpt, condenser)

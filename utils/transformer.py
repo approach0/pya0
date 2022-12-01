@@ -376,7 +376,7 @@ class Trainer(BaseTrainer):
         self.splade_reg = splade_reg
         self.splade_mask_mode = splade_mask_mode
 
-        assert architecture in ['standard', 'splade',
+        assert architecture in ['standard', 'splade', 'cotbert',
             'condenser', 'cocondenser', 'cotmae', 'cocomae']
         self.architecture = architecture
         self.save_prefix = save_prefix
@@ -475,8 +475,8 @@ class Trainer(BaseTrainer):
         if os.path.basename(ckpoint) == 'bert-from-scratch':
             config = BertConfig(tie_word_embeddings=True)
             self.model = BertForPreTraining(config)
-        elif self.architecture in ['condenser', 'cocondenser',
-                                   'cotmae', 'cocomae']:
+        elif self.architecture in ['cotbert',
+            'condenser', 'cocondenser', 'cotmae', 'cocomae']:
             if self.start_point[-1] == -1:
                 self.model = Condenser(ckpoint, mode=self.architecture)
             else:
@@ -531,8 +531,8 @@ class Trainer(BaseTrainer):
             classifier = model.cls
             partial_hook = partial(classifier_hook, display, 3)
             hooks.append(classifier.register_forward_hook(partial_hook))
-        elif self.architecture in ['condenser', 'cocondenser',
-                                   'cotmae', 'cocomae']:
+        elif self.architecture in ['cotbert',
+            'condenser', 'cocondenser', 'cotmae', 'cocomae']:
             if len(test_inputs) % 2 != 0:
                 print('skip the last test batch of size', len(test_inputs))
                 raise StopIteration
@@ -540,10 +540,11 @@ class Trainer(BaseTrainer):
             encoder_head = model.enc.cls
             encoder_hook = partial(classifier_hook, display, 3)
             hooks.append(encoder_head.register_forward_hook(encoder_hook))
-            # register decoder hook
-            decoder_head = model.dec_pretrain_head
-            decoder_hook = partial(classifier_hook, display, 3)
-            hooks.append(decoder_head.register_forward_hook(decoder_hook))
+            if self.architecture != 'cotbert':
+                # register decoder hook
+                decoder_head = model.dec_pretrain_head
+                decoder_hook = partial(classifier_hook, display, 3)
+                hooks.append(decoder_head.register_forward_hook(decoder_hook))
         else:
             assert NotImplementedError
 
@@ -552,7 +553,7 @@ class Trainer(BaseTrainer):
 
         if self.architecture == 'standard':
             print('\n'.join(display))
-        elif self.architecture in ['cocondenser', 'cocomae']:
+        elif self.architecture in ['cotbert', 'cocondenser', 'cocomae']:
             # visualize CLS relevance predictions
             scores = model_outputs.cls_scores
             argmax = scores.argmax(dim=1).cpu().numpy()
@@ -578,8 +579,8 @@ class Trainer(BaseTrainer):
         if self.architecture == 'standard':
             enc_inputs = self.tokenizer(pairs,
                 padding=True, truncation=True, return_tensors="pt")
-        elif self.architecture in ['condenser', 'cocondenser',
-                                   'cotmae', 'cocomae']:
+        elif self.architecture in ['cotbert',
+            'condenser', 'cocondenser', 'cotmae', 'cocomae']:
             # use flatten input (doubled length)
             flatten_inputs = [single for pair in pairs for single in pair]
             enc_inputs = self.tokenizer(flatten_inputs,
