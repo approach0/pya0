@@ -26,6 +26,7 @@ class Condenser(nn.Module):
         self.enc = BertForPreTraining.from_pretrained(base_model, **kargs)
         self.disable_unused_parameter_for_producing_loss()
         self.config = self.enc.config # expose to outsider
+        self.vocab_size = self.config.vocab_size
 
         if mode != 'cotbert':
             # create decoder
@@ -64,11 +65,12 @@ class Condenser(nn.Module):
         print('Condenser resize vocab to', length)
         if self.mode != 'cotbert':
             # resize for decoder
-            self.vocab_size = length
             self.dec_pretrain_head = BertOnlyMLMHead(self.enc.config)
             # initialize random weights
             self.dec_pretrain_head.apply(self.enc._init_weights)
             self.dec_pretrain_head = BertOnlyMLMHead(self.enc.config)
+        # update vocab_size
+        self.vocab_size = length
 
     def create_decoder_using_curr_encoder_settings(self, n_dec_layers):
         self.dec = nn.ModuleList(
@@ -121,7 +123,7 @@ class Condenser(nn.Module):
             raise NotImplementedError
 
         # decoder pass
-        if condenser.mode != 'cotbert':
+        if mode != 'cotbert':
             attention_mask = self.enc.get_extended_attention_mask(
                 attention_mask, attention_mask.shape, attention_mask.device
             )
@@ -191,7 +193,7 @@ class Condenser(nn.Module):
     def save_pretrained(self, path, save_function=None):
         # save encoder
         self.enc.save_pretrained(os.path.join(path, 'encoder.ckpt'))
-        if condenser.mode != 'cotbert':
+        if self.mode != 'cotbert':
             # extract decoder state as a dictionary
             all_state_dict = self.state_dict()
             dec_state_dict = {}
