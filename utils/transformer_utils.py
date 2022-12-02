@@ -344,6 +344,7 @@ def unmask_input_print(passage_file, num_tokenizer_ver=3):
             maskpos = list(map(int, fields[0].split(',')))
             sentence = preprocess_for_transformer(fields[1],
                 num_tokenizer_ver=num_tokenizer_ver)
+            sentence = sentence.replace('[mask]', '[MASK]')
             tokens = sentence.split()
             for pos in filter(lambda x: x!=0, maskpos):
                 if pos - 1 < len(tokens):
