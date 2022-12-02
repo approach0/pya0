@@ -57,9 +57,9 @@ Finally, generate text files which specify training shards and test cases:
 ```sh
 $ (cd data.pretrain-bertnsp && ls | tee shards.txt)
 $ (cd data.pretrain-cotmae && ls | tee shards.txt)
-$ python -m pya0.transformer_utils pft_print \
+$ python -m pya0.transformer_utils unmask_input_print \
      ../tests/transformer_unmask.txt > data.pretrain-bertnsp/test.txt
-$ python -m pya0.transformer_utils pft_print \
+$ python -m pya0.transformer_utils unmask_input_print \
      ../tests/transformer_unmask.txt > data.pretrain-cotmae/test.txt
 ```
 

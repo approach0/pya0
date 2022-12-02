@@ -336,7 +336,7 @@ def splade_visualize(tokenizer_path, model_path,
     visualize_splade_scores(inv_vocab, enc_psg['input_ids'][0], out_psg[2])
 
 
-def pft_print(passage_file, num_tokenizer_ver=3):
+def unmask_input_print(passage_file, num_tokenizer_ver=3):
     with open(passage_file, 'r') as fh:
         for line in fh:
             line = line.rstrip()
@@ -406,9 +406,10 @@ def create_math_tokenizer(vocab_file, base_tokenizer='bert-base-uncased'):
     tokenizer.save_pretrained(f"./math-tokenizer")
 
 
-def test_math_tokenizer(tokenizer_path, test_psg):
+def test_math_tokenizer(tokenizer_path, test_psg, padding='do_not_pad'):
     tokenizer = BertTokenizer.from_pretrained(tokenizer_path)
-    tokens = tokenizer(test_psg, return_tensors="pt")
+    #print(tokenizer.get_vocab())
+    tokens = tokenizer(test_psg, padding=padding, return_tensors="pt")
     token_ids = tokens['input_ids'][0]
     dec_tokens = [tokenizer.decode([id_]) for id_ in token_ids]
     print(dec_tokens)
@@ -422,7 +423,7 @@ if __name__ == '__main__':
         "unmasking": unmasking_visualize,
         "colbert_visualize": colbert_visualize,
         "splade_visualize": splade_visualize,
-        "pft_print": pft_print,
+        "unmask_input_print": unmask_input_print,
         "pickle_print": pickle_print,
         "test_determinisity": test_determinisity,
         "eval_trained_ckpts": eval_trained_ckpts,
