@@ -4,7 +4,7 @@ Set Python path to pya0 root directory
 $ export PYTHONPATH="$(cd .. && pwd)"
 ```
 
-## Prepare
+## Prepare Data
 For all the intermediate files generated in this section, we have prebuilt them and made them available off-the-shelf:
 
 https://vault.cs.uwaterloo.ca/s/KENQpHw5qbioNga
@@ -97,6 +97,19 @@ $ wget https://vault.cs.uwaterloo.ca/s/Pkwwxrs5EQYd9Mw/download -O datasets/Post
 $ mkdir -p ./data.finetune-arqmath
 $ python ../pya0/arqmath-2021-train-data.py \
     --postlink_file=./datasets/PostLinks.V1.3.xml --out_dir=./data.finetune-arqmath
+```
+
+### Download additional data for inference
+To download NTCIR-12 Wiki Formula dataset:
+```sh
+$ wget https://vault.cs.uwaterloo.ca/s/JNbaS75N6gPzEF5/download -O datasets/NTCIR12_latex_expressions.zip
+$ (cd datasets && unzip NTCIR12_latex_expressions.zip)
+```
+
+To download ARQMath-3 Task 2 (in-context formula retrieval) dataset:
+```sh
+$ wget https://vault.cs.uwaterloo.ca/s/TpSPrZY4xxRYGS2/download -O datasets/latex_representation_v3.zip
+$ (cd datasets && unzip latex_representation_v3.zip)
 ```
 
 ## Training
