@@ -129,7 +129,7 @@ case $TRAINER-${SETUP} in
     SAVE_FOLD=1
 
     DATA_VER=yfEdE6sensBpCxT
-    START_POINT=models/job-pretrain-cocomae-a6000-pretrain/6-0-0
+    START_POINT=models/job-pretrain-cocomae-a6000-pretrain/6-0-0/encoder.ckpt
     TOK_CKPOINT=math-tokenizer
     SHARDS_LIST=shards.txt
     TEST_FILE=test.txt
