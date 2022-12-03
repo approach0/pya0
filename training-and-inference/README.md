@@ -122,3 +122,9 @@ Then issue training command, for example:
 $ sh train.sh pretrain bertnsp-a6000 1,2,3
 ```
 (pretrain bertnsp on A6000 GPUs of cuda device number 1, 2, and 3)
+
+## Inference
+Here are some examples for indexing and generating run files:
+```sh
+$ python -m pya0.transformer_eval index inference.ini index_ntcir12_cocomae --device a6000_7:40 
+```
