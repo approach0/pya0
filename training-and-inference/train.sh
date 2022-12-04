@@ -152,6 +152,21 @@ case $TRAINER-${SETUP} in
     TRAINER_ARGS="--warmup-epochs 1 --lr 2e-5"
     ;;
 
+   ColBERT-a6000-using-bertnsp)
+    EPOCHS=8
+    DEV_BSIZE=16 # actually 32
+    SAVE_FOLD=1
+
+    DATA_VER=yfEdE6sensBpCxT
+    START_POINT=models/job-pretrain-bertnsp-a6000-pretrain/6-0-0
+    TOK_CKPOINT=math-tokenizer
+    SHARDS_LIST=shards.txt
+    TEST_FILE=test.txt
+    TEST_CYCLE=300
+    CALL_ARGS="512" # qmax
+    TRAINER_ARGS="--warmup-epochs 1 --lr 2e-5 --active_fp16"
+    ;;
+
    *)
     echo "[Bad args] $COMMAND"
     exit 1;
