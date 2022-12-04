@@ -124,6 +124,20 @@ case $TRAINER-${SETUP} in
     TRAINER_ARGS="--warmup-epochs 1 --lr 2e-5"
     ;;
 
+   single_vec_retriever-a6000-using-cotbert)
+    DEV_BSIZE=18
+    SAVE_FOLD=1
+
+    DATA_VER=yfEdE6sensBpCxT
+    START_POINT=models/job-pretrain-cotbert-a6000-pretrain/6-0-0/encoder.ckpt
+    TOK_CKPOINT=math-tokenizer
+    SHARDS_LIST=shards.txt
+    TEST_FILE=test.txt
+    TEST_CYCLE=0 # 300
+    CALL_ARGS=
+    TRAINER_ARGS="--warmup-epochs 1 --lr 2e-5"
+    ;;
+
    single_vec_retriever-a6000-using-cocomae)
     DEV_BSIZE=18
     SAVE_FOLD=1
