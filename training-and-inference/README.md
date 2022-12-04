@@ -126,8 +126,8 @@ $ sh train.sh pretrain bertnsp-a6000 1,2,3
 ## Inference
 Here are some examples for indexing and generating run files:
 ```sh
-$ python -m pya0.transformer_eval index inference.ini index_arqmath3_cocomae --device a6000_7
-$ python -m pya0.transformer_eval index inference.ini index_ntcir12_cocomae --device a6000_7:40 
-$ python -m pya0.transformer_eval search inference.ini search_ntcir12_cocomae
-$ python -m pya0.transformer_eval search inference.ini search_ntcir12_cocomae --topk=5000
+$ python -m pya0.transformer_eval index inference.ini index_arqmath3_single_vec --device a6000_7
+$ python -m pya0.transformer_eval index inference.ini index_ntcir12_single_vec --device a6000_7:40 --model cotmae --ckpt 1-0-0
+$ python -m pya0.transformer_eval search inference.ini search_ntcir12_single_vec
+$ python -m pya0.transformer_eval search inference.ini search_ntcir12_single_vec --topk=5000 --model condenser --ckpt 6-0-0
 ```
