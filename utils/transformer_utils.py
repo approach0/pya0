@@ -373,7 +373,8 @@ def test_determinisity(path, tokenizer_path='math-dpr/bert-tokenizer-for-math'):
         print(outputs.sum())
 
 
-def eval_trained_ckpts(cfg_section, tokenizer_path, model_ckpt_dir):
+def eval_trained_ckpts(cfg_path, cfg_section,
+    tokenizer_path, device_name, model_ckpt_dir, rounded_ep=True):
     import time
     from transformer_eval import pipeline
     ckpt_dirs = [d for d in os.listdir(model_ckpt_dir)]
@@ -383,15 +384,21 @@ def eval_trained_ckpts(cfg_section, tokenizer_path, model_ckpt_dir):
     ckpt_dirs = sorted(ckpt_dirs, key=key2tuple)
     history = []
     for ckpt_dir in ckpt_dirs:
+        m = re.match(r'([1-9]+)-0-0', ckpt_dir)
+        if rounded_ep and m is None:
+            continue
         model_path = os.path.join(model_ckpt_dir, ckpt_dir)
         injects = {
             'var_tokenizer': tokenizer_path,
-            'var_model': model_path
+            'var_model': model_path,
+            'device_name': device_name
         }
-        metrics = pipeline('utils/transformer_eval.ini', cfg_section, **injects)
+        metrics = pipeline(cfg_path, cfg_section, **injects)
         history.append((ckpt_dir, metrics))
         for c, m in history: print(c, m)
         time.sleep(3)
+    with open('eval_trained_ckpts.pkl', 'wb') as fh:
+        pickle.dump(history, fh)
 
 
 def create_math_tokenizer(vocab_file, base_tokenizer='bert-base-uncased'):
