@@ -133,3 +133,8 @@ $ python -m pya0.transformer_eval search inference.ini search_ntcir12_single_vec
 $ python -m pya0.transformer_eval search inference.ini search_ntcir12_single_vec \
     --topk=5000 --model condenser --ckpt 6-0-0
 ```
+
+An example to quickly evaluate a checkpoint effectiveness by reranking the judged docuemnt set:
+```sh
+$ python -m pya0.transformer_eval pipeline inference.ini pipeline__eval_arqmath3_single_vec --model models/job-single_vec_retriever-a6000-using-cotbert-single_vec_retriever/1-0-0/
+```

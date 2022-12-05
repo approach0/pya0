@@ -1,5 +1,5 @@
 DIR=$(dirname $0)
-QREL='topics-and-qrels/qrels.arqmath-2021-task1-official.txt'
+QREL="${DIR}/../topics-and-qrels/qrels.arqmath-2021-task1-official.txt"
 
 for arg in "$@"; do
     case $arg in

@@ -3,11 +3,11 @@ DIR=$(dirname $0)
 
 # Guess QREL!
 if [[ $0 == *"arqmath1"* ]]; then
-    QREL="topics-and-qrels/qrels.arqmath-2020-task2-visual_ids.v3.txt"
+    QREL="${DIR}/../topics-and-qrels/qrels.arqmath-2020-task2-visual_ids.v3.txt"
 elif [[ $0 == *"arqmath2"* ]]; then
-    QREL="topics-and-qrels/qrels.arqmath-2021-task2-official.v3.txt"
+    QREL="${DIR}/../topics-and-qrels/qrels.arqmath-2021-task2-official.v3.txt"
 elif [[ $0 == *"arqmath3"* ]]; then
-    QREL="topics-and-qrels/qrels.arqmath-2022-task2-official.v3.txt"
+    QREL="${DIR}/../topics-and-qrels/qrels.arqmath-2022-task2-official.v3.txt"
 else
     echo "Failed to guess QREL file, you must specify --qrels!!!"
 fi
