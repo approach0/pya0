@@ -391,7 +391,7 @@ def eval_trained_ckpts(cfg_path, cfg_section,
         injects = {
             'var_tokenizer': tokenizer_path,
             'var_model': model_path,
-            'device_name': device_name
+            'var_device': device_name
         }
         metrics = pipeline(cfg_path, cfg_section, **injects)
         history.append((ckpt_dir, metrics))
