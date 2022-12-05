@@ -136,6 +136,8 @@ $ python -m pya0.transformer_eval search inference.ini search_ntcir12_single_vec
 
 An example to quickly evaluate the effectiveness of a single checkpoint or a history of checkpoints by reranking the judged docuemnt set:
 ```sh
-$ python -m pya0.transformer_eval pipeline inference.ini pipeline__eval_arqmath3_single_vec --var_model models/path/to/ckpt --device a6000_0
-$ python -m pya0.transformer_utils eval_trained_ckpts inference.ini pipeline__eval_arqmath3_single_vec ./math-tokenizer/ a6000_0 models/path/to/ckpt
+$ python -m pya0.transformer_eval pipeline inference.ini pipeline__eval_arqmath3_single_vec \
+    --var_model models/path/to/ckpt --device a6000_0
+$ python -m pya0.transformer_utils eval_trained_ckpts inference.ini pipeline__eval_arqmath3_single_vec \
+    ./math-tokenizer/ a6000_0 models/path/to/ckpt
 ```
