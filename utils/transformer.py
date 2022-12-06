@@ -536,6 +536,7 @@ class Trainer(BaseTrainer):
             if len(test_inputs) % 2 != 0:
                 print('skip the last test batch of size', len(test_inputs))
                 raise StopIteration
+            L = len(test_inputs) // 2
             # register encoder hook
             encoder_head = model.enc.cls
             encoder_hook = partial(classifier_hook, display, 3)
@@ -551,13 +552,18 @@ class Trainer(BaseTrainer):
         model_outputs = self.model(**enc_inputs)
         for hook in hooks: hook.remove()
 
-        if self.architecture == 'standard':
+        if self.architecture in 'standard':
             print('\n'.join(display))
+        elif self.architecture in ['condenser', 'cotmae']:
+            for i, curr_str in enumerate(display):
+                j = i % L
+                location = 'encoder' if i < L else 'decoder'
+                print(f'{location}[{j}] ', curr_str)
+            print('=' * 50)
         elif self.architecture in ['cotbert', 'cocondenser', 'cocomae']:
             # visualize CLS relevance predictions
             scores = model_outputs.cls_scores
             argmax = scores.argmax(dim=1).cpu().numpy()
-            L = len(argmax)
             double_argmax = [*argmax, *argmax]
             for i, (match_idx, curr_str) in enumerate(
                 zip(double_argmax, display)
