@@ -180,7 +180,7 @@ case $TRAINER-${SETUP} in
     TRAINER_ARGS="--warmup-epochs 1 --lr 2e-5"
     ;;
 
-   ColBERT-a6000-using-bertnsp)
+   colbert-a6000-using-bertnsp)
     EPOCHS=8
     DEV_BSIZE=16 # actually 32
     SAVE_FOLD=1

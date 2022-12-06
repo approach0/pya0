@@ -208,20 +208,25 @@ class ColBERT(BertPreTrainedModel):
         lengths = inputs['attention_mask'].sum(1).cpu().numpy()
         return torch.nn.functional.normalize(D, p=2, dim=2), lengths
 
-    def score(self, Q, D, mask):
-        # (B, Ld, dim) x (B, dim, Lq) -> (B, Ld, Lq)
-        cmp_matrix = D @ Q.permute(0, 2, 1)
+    def score(self, Q, D, mask, in_batch_negs):
+        Q = Q.permute(0, 2, 1)
+        if in_batch_negs:
+            D = D.unsqueeze(1)
+            mask = mask.unsqueeze(1)
+        # inference: (B, Ld, dim) x (B, dim, Lq) -> (B, Ld, Lq)
+        # in-batch negs: (B, 1, Ld, dim) x (B/2, dim, Lq) -> (B, B/2, Ld, Lq)
+        cmp_matrix = D @ Q
         # only mask doc dim, query dim will be filled with [MASK]s
-        cmp_matrix = cmp_matrix * mask # [B, Ld, Lq]
-        best_match = cmp_matrix.max(1).values # best match per query
+        cmp_matrix = cmp_matrix * mask
+        best_match = cmp_matrix.max(-2).values # best match per query
         scores = best_match.sum(-1) # sum score over each query
         return scores, cmp_matrix
 
-    def forward(self, Q, D):
+    def forward(self, Q, D, in_batch_negs=False):
         q_reps, _ = self.query(Q)
         d_reps, _ = self.doc(D)
-        d_mask = D['attention_mask'].unsqueeze(-1)
-        return self.score(q_reps, d_reps, d_mask)
+        d_mask = D['attention_mask'].unsqueeze(-1) # [B, Ld, 1]
+        return self.score(q_reps, d_reps, d_mask, in_batch_negs=in_batch_negs)
 
 
 class BertForTagsPrediction(BertPreTrainedModel):
@@ -358,7 +363,7 @@ class Trainer(BaseTrainer):
 
     def __init__(self, lr='1e-4', debug=False, math_keywords_file=None,
         splade_reg=1e-3, splade_mask_mode='all', architecture='standard',
-        save_prefix='.', **args):
+        colbert_inbatch_neg=True, save_prefix='.', **args):
         super().__init__(**args)
         if math_keywords_file is not None:
             print('Enable extracting keywords ...')
@@ -375,6 +380,8 @@ class Trainer(BaseTrainer):
         # splade args
         self.splade_reg = splade_reg
         self.splade_mask_mode = splade_mask_mode
+        # colbert args
+        self.colbert_inbatch_neg = colbert_inbatch_neg
 
         assert architecture in ['standard', 'splade', 'cotbert',
             'condenser', 'cocondenser', 'cotmae', 'cocomae']
@@ -857,8 +864,13 @@ class Trainer(BaseTrainer):
 
         # each (2*B, L), where each query contains two copies,
         # and passages contains positive and negative samples.
-        queries = queries + queries
-        passages = positives + negatives
+
+        if self.colbert_inbatch_neg:
+            queries = queries
+            passages = positives + negatives
+        else:
+            queries = queries + queries
+            passages = positives + negatives
 
         # prepend ColBERT special tokens
         prepend_q, prepend_d = self.prepend_tokens
@@ -887,23 +899,29 @@ class Trainer(BaseTrainer):
 
         # each input: (2*B, L) -> (2*B)
         self.optimizer.zero_grad()
-        scores, _ = self.model(enc_queries, enc_passages)
+        scores, _ = self.model(enc_queries, enc_passages,
+            in_batch_negs=self.colbert_inbatch_neg)
 
-        # for B=3, +   +   +   -   -   -
-        # tensor([ 1,  2,  3, -1, -2, -3])
-        #
-        # tensor([[ 1,  2,  3],
-        #         [-1, -2, -3]])
-        #
-        # tensor([[ 1, -1],
-        #         [ 2, -2],
-        #         [ 3, -3]])
-        scores = scores.view(2, -1).permute(1, 0) # (B, 2)
+        if self.colbert_inbatch_neg:
+            # for B=3, scores.shape = [6, 3]
+            labels = torch.arange(len(queries), device=device) # [3]
+            loss = self.criterion(scores.T, labels)
+        else:
+            # for B=3, +   +   +   -   -   -
+            # tensor([ 1,  2,  3, -1, -2, -3])
+            #
+            # tensor([[ 1,  2,  3],
+            #         [-1, -2, -3]])
+            #
+            # tensor([[ 1, -1],
+            #         [ 2, -2],
+            #         [ 3, -3]])
+            scores = scores.view(2, -1).permute(1, 0) # (B, 2)
 
-        labels = torch.zeros(self.batch_size,
-            dtype=torch.long, device=device)
-        B = scores.shape[0]
-        loss = self.criterion(scores, labels[:B])
+            labels = torch.zeros(self.batch_size,
+                dtype=torch.long, device=device)
+            B = scores.shape[0]
+            loss = self.criterion(scores, labels[:B])
 
         def pr(*args, **kwargs):
             if self.glob_rank != 0: return
@@ -967,7 +985,9 @@ class Trainer(BaseTrainer):
             self.test_succ_cnt = 0
             self.test_loss_cnt = 0
             ellipsis = [None] * 7
-            if self.do_testing(self.colbert_loop, device, *ellipsis, True):
+            if self.colbert_inbatch_neg:
+                return
+            elif self.do_testing(self.colbert_loop, device, *ellipsis, True):
                 test_loss = round(self.test_loss_sum / self.test_loss_cnt, 3)
                 test_accu = round(self.test_succ_cnt / (B * self.test_loss_cnt), 3)
                 pr()
