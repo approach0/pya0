@@ -182,7 +182,7 @@ case $TRAINER-${SETUP} in
 
    colbert-a6000-using-bertnsp)
     EPOCHS=8
-    DEV_BSIZE=16 # actually 32
+    DEV_BSIZE=18 # 20 is still ok, but just to match the DPRs...
     SAVE_FOLD=1
 
     DATA_VER=yfEdE6sensBpCxT
