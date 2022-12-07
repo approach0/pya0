@@ -1,4 +1,4 @@
-set -xe
+set -e
 
 prefix=training-and-inference/runs
 runlst=(
@@ -27,14 +27,15 @@ CV='python utils/crossvalidate.py cross_validate_tsv kfold.tsv --verbose False'
 for i in "${!runlst[@]}"; do
     run1=$prefix/${runlst[$i]}
     name1=${namelst[$i]}
-    rm -rf $kfold_dir
-    mkdir -p $kfold_dir
     for j in "${!runlst[@]}"; do
+        if [ $i -eq $j ]; then continue; fi;
         run2=$prefix/${runlst[$j]}
         name2=${namelst[$j]}
         fusion_list=($run1 $run2)
 
-        echo "[FUSION]" ${fusion_list[@]}
+        rm -rf $kfold_dir
+        mkdir -p $kfold_dir
+        echo "[FUSION] [$i] $name1 [$j] $name2"
         python utils/mergerun.py merge_run_files_gridsearch \
             --out_prefix $kfold_dir --step 0.1 ${fusion_list[@]}
         python utils/crossvalidate.py split_run_files \
