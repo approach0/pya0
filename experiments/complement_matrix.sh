@@ -1,3 +1,5 @@
+set -xe
+
 prefix=training-and-inference/runs
 runlst=(
     arqmath3-bertnsp-2-2-0-top1000.run
@@ -15,6 +17,7 @@ namelst=(
     struct+bm25
     ColBERT
 )
+
 kfold_dir=runs.kfold
 kfold=5
 eval_prefix=./eval-arqmath3/task1
@@ -23,12 +26,12 @@ CV='python utils/crossvalidate.py cross_validate_tsv kfold.tsv --verbose False'
 > kfold.result
 for i in "${!runlst[@]}"; do
     run1=$prefix/${runlst[$i]}
-    name1=$prefix/${namelst[$i]}
+    name1=${namelst[$i]}
     rm -rf $kfold_dir
     mkdir -p $kfold_dir
     for j in "${!runlst[@]}"; do
         run2=$prefix/${runlst[$j]}
-        name2=$prefix/${namelst[$j]}
+        name2=${namelst[$j]}
         fusion_list=($run1 $run2)
 
         echo "[FUSION]" ${fusion_list[@]}
