@@ -1,6 +1,7 @@
 #!/bin/bash
 set -xe
 export PYTHONPATH="$(cd .. && pwd)"
+ARQMathVER=V1.2
 
 wget https://vault.cs.uwaterloo.ca/s/8ipWsPbPMQ3qFZS/download -O mse-aops-2021.tar.gz
 tar xzf mse-aops-2021.tar.gz
@@ -22,12 +23,12 @@ python -m pya0.mse-aops-2021-train-data generate_sentpairs \
 python -m pya0.transformer_utils pft_print ../tests/transformer_unmask.txt > data.pretrain-bertnsp/test.txt
 python -m pya0.transformer_utils pft_print ../tests/transformer_unmask.txt > data.pretrain-cotmae/test.txt
 
-wget https://vault.cs.uwaterloo.ca/s/rdRkP4ZYRqLjgiS/download -O ./datasets/Posts.V1.3.xml
-python -m pya0.arqmath-2021 gen_question_dict ./datasets/Posts.V1.3.xml
-python -m pya0.arqmath-2021 gen_answer_banks ./datasets/Posts.V1.3.xml
+wget https://vault.cs.uwaterloo.ca/s/rdRkP4ZYRqLjgiS/download -O ./datasets/Posts.${ARQMathVER}.xml
+python -m pya0.arqmath-2021 gen_question_dict ./datasets/Posts.${ARQMathVER}.xml
+python -m pya0.arqmath-2021 gen_answer_banks ./datasets/Posts.${ARQMathVER}.xml
 
-wget https://vault.cs.uwaterloo.ca/s/Pkwwxrs5EQYd9Mw/download -O datasets/PostLinks.V1.3.xml
+wget https://vault.cs.uwaterloo.ca/s/Pkwwxrs5EQYd9Mw/download -O datasets/PostLinks.${ARQMathVER}.xml
 mkdir -p ./data.finetune-arqmath
 python ../pya0/arqmath-2021-train-data.py \
-    --postlink_file=./datasets/PostLinks.V1.3.xml \
+    --postlink_file=./datasets/PostLinks.${ARQMathVER}.xml \
 	--out_dir=./data.finetune-arqmath
