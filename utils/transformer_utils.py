@@ -423,6 +423,23 @@ def test_math_tokenizer(tokenizer_path, test_psg, padding='do_not_pad'):
     print(dec_tokens)
 
 
+def pickle_shard_filter(path, field_idx, threshold):
+    with open(path, 'rb') as fh:
+        cnt = 0
+        data = pickle.load(fh)
+        for item in tqdm(data):
+            if len(item[field_idx]) < threshold:
+                for i, field in enumerate(item):
+                    if isinstance(field, str):
+                        print(f'[{i}]', str.encode(field,
+                            encoding='UTF-8',errors ='ignore'))
+                    else:
+                        print(f'[{i}]', field)
+                    print('=' * 10 + '\n')
+                    cnt += 1
+        print('cnt:', cnt)
+
+
 if __name__ == '__main__':
     transformer_logging.set_verbosity_warning()
     os.environ["PAGER"] = 'cat'
@@ -436,5 +453,6 @@ if __name__ == '__main__':
         "test_determinisity": test_determinisity,
         "eval_trained_ckpts": eval_trained_ckpts,
         'create_math_tokenizer': create_math_tokenizer,
-        'test_math_tokenizer': test_math_tokenizer
+        'test_math_tokenizer': test_math_tokenizer,
+        'pickle_shard_filter': pickle_shard_filter
     })
