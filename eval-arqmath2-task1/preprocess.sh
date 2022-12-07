@@ -13,6 +13,8 @@ for INPUT in "${INPUTS[@]}"; do
         continue
     elif [[ "$INPUT" == "filter3" ]]; then
         continue
+    elif [[ "$INPUT" == "filter3_Dependency" ]]; then
+        continue
     fi
 
     echo $INPUT
@@ -53,5 +55,10 @@ for INPUT in "${INPUTS[@]}"; do
         python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Category Proof
         python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Category Concept
         python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Category Computation
+    elif [[ " $INPUTS " =~ " filter3_Dependency " ]]; then
+        csv=$DIR/Task1_ARQMath3_Topic_Information.csv
+        python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Dependency Both
+        python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Dependency Formula
+        python3 $DIR/topic_filter.py $csv $DIR/input/$dest_name Dependency Text
     fi
 done

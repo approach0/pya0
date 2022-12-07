@@ -46,7 +46,8 @@ def split_run_files(*all_run_files, kfold=5, seed=123):
                         print(line, file=train_fh)
 
 
-def cross_validate_tsv(tsv_file, name_field=0, score_field=1, verbose=True):
+def cross_validate_tsv(tsv_file, name_field=0, score_field=1,
+    verbose=True, postfix=None):
     """
     Given a tsv file with the following fields:
 
@@ -76,7 +77,13 @@ def cross_validate_tsv(tsv_file, name_field=0, score_field=1, verbose=True):
                 #if verbose:
                 #    print('skip this line:', line)
                 continue
-            m = re.match(r'(.*)fold([0-9]+)(train|test)$', name)
+            if postfix is None:
+                m = re.match(r'(.*)fold([0-9]+)(train|test)$', name)
+            else:
+                m = re.match(
+                    r'(.*)fold([0-9]+)(train|test)' + postfix + '$', name)
+            if m is None:
+                continue
             params, k, kind = m.group(1), m.group(2), m.group(3)
             if kind == 'test': # test score
                 scores[k]['__test__' + params] = score
@@ -84,6 +91,7 @@ def cross_validate_tsv(tsv_file, name_field=0, score_field=1, verbose=True):
                 scores[k][params] = score
             else:
                 assert 0, f"unexpected: {kind}"
+    assert len(scores) != 0
 
     test_scores = []
     best_params_set = defaultdict(int)
