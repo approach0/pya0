@@ -673,7 +673,6 @@ class Trainer(BaseTrainer):
         with open(tag_ids_file, 'rb') as fh:
             self.tag_ids = pickle.load(fh)
 
-        self.start_point = self.infer_start_point(ckpoint)
         self.dataset_cls = partial(TaggedPassagesShard, self.tag_ids)
         self.test_data_cls = partial(TaggedPassagesShard, self.tag_ids)
         with open(self.test_file, 'r') as fh:
@@ -819,7 +818,6 @@ class Trainer(BaseTrainer):
                 )
 
     def colbert(self, ckpoint, tok_ckpoint, max_ql=512, max_dl=512):
-        self.start_point = self.infer_start_point(ckpoint)
         print(f'max_ql={max_ql}, max_dl={max_dl}')
         self.dataset_cls = ContrastiveQAShard
         self.test_data_cls = ContrastiveQAShard
@@ -1013,7 +1011,6 @@ class Trainer(BaseTrainer):
             self.tag_ids = pickle.load(fh)
         print(f'Number of tags: {len(self.tag_ids)}')
 
-        #self.start_point = self.infer_start_point(ckpoint)
         self.dataset_cls = partial(PsgWithTagLabelsShard, self.tag_ids)
         self.test_data_cls = partial(PsgWithTagLabelsShard, self.tag_ids)
         with open(self.test_file, 'r') as fh:
