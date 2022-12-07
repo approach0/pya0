@@ -335,7 +335,7 @@ def merge_run_files_gridsearch(*inputs, step=0.1, enforce_sum1=True, **kargs):
         weights = map(lambda v: round(v, 5), weights) # avoid tiny decimals
         weights = list(weights)
         if enforce_sum1:
-            if sum(weights) > 1 - 1e-5:
+            if sum(weights) > 1:
                 continue
             else:
                 weights[-1] = round(1 - sum(weights[:-1]), 5)
