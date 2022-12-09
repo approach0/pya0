@@ -349,6 +349,9 @@ class SpladeMaxEncoder(nn.Module):
     def flops(self, w):
         return torch.sum(torch.mean(torch.abs(w), dim=0) ** 2)
 
+    def resize_token_embeddings(self, n):
+        return self.m_bert.resize_token_embeddings(n)
+
     def forward(self, inputs):
         outputs = self.m_bert(**inputs)
         W = outputs.prediction_logits
