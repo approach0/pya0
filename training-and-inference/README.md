@@ -134,6 +134,12 @@ $ python -m pya0.transformer_eval search inference.ini search_ntcir12_single_vec
     --topk=5000 --backbone condenser --ckpt 6-0-0
 ```
 
+For SPLADE models, use pya0 to first generate sparse representations of topics and corpus:
+```sh
+python -m pya0.transformer_eval index inference.ini index_arqmath3_splade_qry --mode=somemath
+python -m pya0.transformer_eval index inference.ini index_arqmath3_splade_doc --mode=somemath --device=a6000_5
+```
+
 An example to quickly evaluate the effectiveness of a single checkpoint or a history of checkpoints by reranking the judged docuemnt set:
 ```sh
 $ python -m pya0.transformer_eval pipeline inference.ini pipeline__eval_arqmath3_single_vec \
