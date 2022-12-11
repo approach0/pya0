@@ -1,10 +1,10 @@
 set -e
 INFERENCE_PATH="$(pwd)"
-ANSERINI_PATH=$1
-CKPT="$(cd $2 && pwd)"
+ANSERINI_PATH="$1"
+CKPT="$INFERENCE_PATH/$2"
 TOPK=${3-1000}
 
-cd $ANSERINI_PATH
+cd "$ANSERINI_PATH"
 sh ./target/appassembler/bin/IndexCollection -collection JsonVectorCollection \
  -input $CKPT-doc \
  -index $INFERENCE_PATH/indexes/$CKPT \

@@ -136,8 +136,12 @@ $ python -m pya0.transformer_eval search inference.ini search_ntcir12_single_vec
 
 For SPLADE models, use pya0 to first generate sparse representations of topics and corpus:
 ```sh
-python -m pya0.transformer_eval index inference.ini index_arqmath3_splade_qry --mode=somemath
-python -m pya0.transformer_eval index inference.ini index_arqmath3_splade_doc --mode=somemath --device=a6000_5
+$ python -m pya0.transformer_eval index inference.ini index_arqmath3_splade_qry --mode=somemath
+$ python -m pya0.transformer_eval index inference.ini index_arqmath3_splade_doc --mode=somemath --device=a6000_5
+```
+and then evaluate them using [Anserini](https://github.com/castorini/anserini/tree/505594b6573294a9a4c72a8feee3416f8a9bd2d9):
+```sh
+$ ./splade_inference.sh /path/to/anserini ./indexes/arqmath3-SPLADE-all-bertnsp-2-2-0
 ```
 
 An example to quickly evaluate the effectiveness of a single checkpoint or a history of checkpoints by reranking the judged docuemnt set:
