@@ -1,12 +1,12 @@
 set -e
 INFERENCE_PATH="$(pwd)"
 ANSERINI_PATH="$1"
-CKPT="$INFERENCE_PATH/$2"
+CKPT="$2"
 TOPK=${3-1000}
 
 cd "$ANSERINI_PATH"
 sh ./target/appassembler/bin/IndexCollection -collection JsonVectorCollection \
- -input $CKPT-doc \
+ -input $INFERENCE_PATH/indexes/$CKPT-doc \
  -index $INFERENCE_PATH/indexes/$CKPT \
  -generator DefaultLuceneDocumentGenerator -impact -pretokenized \
  -threads 10
@@ -14,7 +14,7 @@ sh ./target/appassembler/bin/IndexCollection -collection JsonVectorCollection \
 tmpfile=$(mktemp)
 sh ./target/appassembler/bin/SearchCollection -hits $TOPK -parallelism 32 \
  -index $INFERENCE_PATH/indexes/$CKPT \
- -topicreader TsvInt -topics $CKPT-qry/output.tsv  \
+ -topicreader TsvInt -topics $INFERENCE_PATH/indexes/$CKPT-qry/output.tsv  \
  -output $tmpfile -format trec \
  -impact -pretokenized
 

@@ -141,9 +141,9 @@ $ python -m pya0.transformer_eval index inference.ini index_arqmath3_splade_doc 
 ```
 and then evaluate them using [Anserini](https://github.com/castorini/anserini/tree/505594b6573294a9a4c72a8feee3416f8a9bd2d9):
 ```sh
-$ ./splade_inference.sh /path/to/anserini ./indexes/arqmath3-SPLADE-all-bertnsp-2-2-0
-$ ./splade_inference.sh /path/to/anserini ./indexes/arqmath3-SPLADE-nomath-bertnsp-2-2-0
-$ ./splade_inference.sh /path/to/anserini ./indexes/arqmath3-SPLADE-somemath-bertnsp-2-2-0
+$ ./splade_inference.sh /path/to/anserini arqmath3-SPLADE-all-bertnsp-2-2-0
+$ ./splade_inference.sh /path/to/anserini arqmath3-SPLADE-nomath-bertnsp-2-2-0
+$ ./splade_inference.sh /path/to/anserini arqmath3-SPLADE-somemath-bertnsp-2-2-0
 ```
 
 Finally, there is an utility to quickly evaluate the effectiveness of a single checkpoint or a history of checkpoints by reranking the judged docuemnt set:
