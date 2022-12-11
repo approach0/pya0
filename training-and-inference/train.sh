@@ -209,6 +209,21 @@ case $TRAINER-${SETUP} in
     TRAINER_ARGS="--warmup-epochs 1 --lr 2e-5 --active_fp16"
     ;;
 
+   colbert-a6000-using-cotmae)
+    EPOCHS=8
+    DEV_BSIZE=18 # 20 is still ok, but just to match the DPRs...
+    SAVE_FOLD=1
+
+    DATA_VER=yfEdE6sensBpCxT
+    START_POINT=models/job-pretrain-cocomae-a6000-pretrain/6-0-0/encoder.ckpt
+    TOK_CKPOINT=math-tokenizer
+    SHARDS_LIST=shards.txt
+    TEST_FILE=test.txt
+    TEST_CYCLE=0 # 300
+    CALL_ARGS="512" # qmax
+    TRAINER_ARGS="--warmup-epochs 1 --lr 2e-5 --active_fp16"
+    ;;
+
    single_vec_retriever-splade_all-a6000-using-bertnsp)
     DEV_BSIZE=12
     SAVE_FOLD=1
@@ -243,6 +258,48 @@ case $TRAINER-${SETUP} in
 
     DATA_VER=yfEdE6sensBpCxT
     START_POINT=models/job-pretrain-bertnsp-a6000-pretrain/6-0-0
+    TOK_CKPOINT=math-tokenizer
+    SHARDS_LIST=shards.txt
+    TEST_FILE=test.txt
+    TEST_CYCLE=0 # 300
+    CALL_ARGS=
+    TRAINER_ARGS="--architecture splade --splade_reg 1e-4 --splade_mask_mode nomath --warmup-epochs 1 --lr 2e-5"
+    ;;
+
+   single_vec_retriever-splade_all-a6000-using-cotmae)
+    DEV_BSIZE=12
+    SAVE_FOLD=1
+
+    DATA_VER=yfEdE6sensBpCxT
+    START_POINT=models/job-pretrain-cocomae-a6000-pretrain/6-0-0/encoder.ckpt
+    TOK_CKPOINT=math-tokenizer
+    SHARDS_LIST=shards.txt
+    TEST_FILE=test.txt
+    TEST_CYCLE=0 # 300
+    CALL_ARGS=
+    TRAINER_ARGS="--architecture splade --splade_reg 1e-4 --splade_mask_mode all --warmup-epochs 1 --lr 2e-5"
+    ;;
+
+   single_vec_retriever-splade_somemath-a6000-using-cotmae)
+    DEV_BSIZE=12
+    SAVE_FOLD=1
+
+    DATA_VER=yfEdE6sensBpCxT
+    START_POINT=models/job-pretrain-cocomae-a6000-pretrain/6-0-0/encoder.ckpt
+    TOK_CKPOINT=math-tokenizer
+    SHARDS_LIST=shards.txt
+    TEST_FILE=test.txt
+    TEST_CYCLE=0 # 300
+    CALL_ARGS=
+    TRAINER_ARGS="--architecture splade --splade_reg 1e-4 --splade_mask_mode somemath --warmup-epochs 1 --lr 2e-5"
+    ;;
+
+   single_vec_retriever-splade_nomath-a6000-using-cotmae)
+    DEV_BSIZE=12
+    SAVE_FOLD=1
+
+    DATA_VER=yfEdE6sensBpCxT
+    START_POINT=models/job-pretrain-cocomae-a6000-pretrain/6-0-0/encoder.ckpt
     TOK_CKPOINT=math-tokenizer
     SHARDS_LIST=shards.txt
     TEST_FILE=test.txt
