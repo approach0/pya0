@@ -1,4 +1,4 @@
-set -e
+set -ex
 INFERENCE_PATH="$(pwd)"
 ANSERINI_PATH="$1"
 CKPT="$2"
