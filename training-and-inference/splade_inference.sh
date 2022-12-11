@@ -5,11 +5,13 @@ CKPT="$2"
 TOPK=${3-1000}
 
 cd "$ANSERINI_PATH"
+if [ ! -e $INFERENCE_PATH/indexes/$CKPT ]; then
 sh ./target/appassembler/bin/IndexCollection -collection JsonVectorCollection \
  -input $INFERENCE_PATH/indexes/$CKPT-doc \
  -index $INFERENCE_PATH/indexes/$CKPT \
  -generator DefaultLuceneDocumentGenerator -impact -pretokenized \
  -threads 10
+fi
 
 tmpfile=$(mktemp)
 sh ./target/appassembler/bin/SearchCollection -hits $TOPK -parallelism 32 \
