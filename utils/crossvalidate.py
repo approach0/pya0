@@ -32,10 +32,9 @@ def split_run_files(*all_run_files, kfold=5, seed=123):
             print(f'fold{k}, runfile: {run_file}')
             train_file = f'{run_file}.fold{k}train'
             test_file = f'{run_file}.fold{k}test'
-            with (
-                open(run_file, 'r') as fh,
-                open(train_file, 'w') as train_fh,
-                open(test_file, 'w') as test_fh):
+            with open(run_file, 'r') as fh, \
+                open(train_file, 'w') as train_fh, \
+                open(test_file, 'w') as test_fh:
                 for line in fh:
                     line = line.rstrip()
                     fields = line.split()

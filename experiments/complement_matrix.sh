@@ -5,18 +5,19 @@ prefix=training-and-inference/runs
 runlst=(
     arqmath3-bertnsp-2-2-0-top1000.run
     arqmath3-cocomae-2-2-0-top1000.run
-    older/anserini_arqmath3_arqmath3-by-splade__bigbatch.run
-    older/anserini_somemathtrain-1e6-210_top1000.run
+    arqmath3-colbert-bertnsp-6-0-0-top1000.run
+    baselines/arqmath3-a0-porterstemmer.run
+    arqmath3-SPLADE-all-bertnsp-2-2-0-top1000.run
+    arqmath3-SPLADE-somemath-bertnsp-2-2-0-top1000.run
     older/pya0-porterstemmer-task1.run
-    older/search_arqmath3_colbert.run
 )
 namelst=(
-    BERT
-    Coco-MAE
-    Splade-full
-    Splade-text
-    struct+bm25
+    'DPR (BERT)'
+    'DPR (Coco-MAE)'
     ColBERT
+    Struct + BM25
+    Splade-full
+    Splade-literal
 )
 
 kfold_dir=runs.kfold
