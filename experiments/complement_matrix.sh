@@ -9,15 +9,14 @@ runlst=(
     baselines/arqmath3-a0-porterstemmer.run
     arqmath3-SPLADE-all-bertnsp-2-2-0-top1000.run
     arqmath3-SPLADE-somemath-bertnsp-2-2-0-top1000.run
-    older/pya0-porterstemmer-task1.run
 )
 namelst=(
-    'DPR (BERT)'
-    'DPR (Coco-MAE)'
-    ColBERT
-    Struct + BM25
-    Splade-full
-    Splade-literal
+    'DPR_(BERT)'
+    'DPR_(Coco-MAE)'
+    'ColBERT'
+    'Struct_+_BM25'
+    'Splade-full'
+    'Splade-literal'
 )
 
 kfold_dir=runs.kfold
@@ -26,11 +25,12 @@ eval_prefix=./eval-arqmath3/task1
 CV='python utils/crossvalidate.py cross_validate_tsv kfold.tsv --verbose False'
 
 > kfold.result
+
 for i in "${!runlst[@]}"; do
     run1=$prefix/${runlst[$i]}
     name1=${namelst[$i]}
     for j in "${!runlst[@]}"; do
-        if [ $i -le $j ]; then continue; fi;
+        if [ $i -lt $j ]; then continue; fi;
         run2=$prefix/${runlst[$j]}
         name2=${namelst[$j]}
         fusion_list=($run1 $run2)
@@ -38,8 +38,13 @@ for i in "${!runlst[@]}"; do
         rm -rf $kfold_dir
         mkdir -p $kfold_dir
         echo "[FUSION] [$i] $name1 [$j] $name2"
-        python utils/mergerun.py merge_run_files_gridsearch \
-            --out_prefix $kfold_dir --step 0.1 ${fusion_list[@]}
+        if [ $i -eq $j ]; then
+            python utils/mergerun.py merge_run_files \
+                --out_prefix $kfold_dir $run1:1
+        else
+            python utils/mergerun.py merge_run_files_gridsearch \
+                --out_prefix $kfold_dir --step 0.1 ${fusion_list[@]}
+        fi
         python utils/crossvalidate.py split_run_files \
             --kfold $kfold $kfold_dir/* --seed 1234
 
