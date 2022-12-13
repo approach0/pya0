@@ -94,9 +94,16 @@ def fusion_analysis(*run_files, labels=None, topic_filter=None,
                 color=[x[2] for x in scatters[0]],
                 marker='.', label='Unknown'
             )
+        # plot a separate line for best ratio
+        #b=0.4
+        #wx = 0.4
+        #wy = 0.6
+        #plt.plot([0, b/wx], [b/wy, 0], linewidth=3, color='yellow')
+
         plt.legend(loc='lower left')
-        plt.xlabel(labels[0])
-        plt.ylabel(labels[1])
+        if labels:
+            plt.xlabel(labels[0])
+            plt.ylabel(labels[1])
     else:
         raise NotImplemented
     plt.show()
