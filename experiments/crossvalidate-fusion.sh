@@ -1,18 +1,20 @@
 set -e
 task=1
+ver=3
 kfold=5
 topk=1000
 step=0.1
 seed=1234
 kfold_dir=runs.kfold
-#eval_prefix=./eval-arqmath2-task${task}/
-eval_prefix=./eval-arqmath3/task${task}/
 latex_corpus=/store/scratch/w32zhong/arqmath3/collections/latex_representation_v2
 fusion_list=(
-    ./runs/pya0-porterstemmer-task1.run
-    ./runs/anserini_somemathtrain-1e4-210_top5000.run
-    ./runs/search_arqmath3_cotmae_dpr_top5000.run
+    ./training-and-inference/runs/baselines/arqmath${ver}-a0-porterstemmer.run
+    ./training-and-inference/runs/arqmath${ver}-cocomae-6-0-0-top1000.run
+    ./training-and-inference/runs/arqmath${ver}-SPLADE-all-bertnsp-2-2-0-top1000.run
 )
+#./training-and-inference/runs/arqmath${ver}-mathonly-cocomae-6-0-0-top1000.run
+
+echo ${fusion_list[@]}
 
 rm -rf $kfold_dir
 mkdir -p $kfold_dir
@@ -22,6 +24,14 @@ python utils/mergerun.py merge_run_files_gridsearch \
 
 python utils/crossvalidate.py split_run_files \
     --kfold $kfold $kfold_dir/* --seed $seed
+
+if [ $ver -eq 3 ]; then
+    eval_prefix=./eval-arqmath3/task${task}/
+elif [ $ver -eq 2 ]; then
+    eval_prefix=./eval-arqmath2-task${task}/
+else
+    exit 1
+fi
 
 if [ $task -eq 1 ]; then
     $eval_prefix/preprocess.sh cleanup
