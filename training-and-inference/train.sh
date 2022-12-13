@@ -266,7 +266,7 @@ case $TRAINER-${SETUP} in
     TRAINER_ARGS="--architecture splade --splade_reg 1e-4 --splade_mask_mode nomath --warmup-epochs 1 --lr 2e-5"
     ;;
 
-   single_vec_retriever-splade_all-a6000-using-cotmae)
+   single_vec_retriever-splade_all-a6000-using-cocomae)
     DEV_BSIZE=12
     SAVE_FOLD=1
 
@@ -280,7 +280,7 @@ case $TRAINER-${SETUP} in
     TRAINER_ARGS="--architecture splade --splade_reg 1e-4 --splade_mask_mode all --warmup-epochs 1 --lr 2e-5"
     ;;
 
-   single_vec_retriever-splade_somemath-a6000-using-cotmae)
+   single_vec_retriever-splade_somemath-a6000-using-cocomae)
     DEV_BSIZE=12
     SAVE_FOLD=1
 
@@ -294,7 +294,7 @@ case $TRAINER-${SETUP} in
     TRAINER_ARGS="--architecture splade --splade_reg 1e-4 --splade_mask_mode somemath --warmup-epochs 1 --lr 2e-5"
     ;;
 
-   single_vec_retriever-splade_nomath-a6000-using-cotmae)
+   single_vec_retriever-splade_nomath-a6000-using-cocomae)
     DEV_BSIZE=12
     SAVE_FOLD=1
 
