@@ -57,34 +57,46 @@ def fusion_analysis(*run_files, labels=None, topic_filter=None,
             data = row[['score_x', 'score_y']].values
             key = row[['topic', 'docid']].values
             condition = f'topic == "{key[0]}" & docid == {key[1]}'
-            if qrels is not None:
+            if qrels_file is not None:
                 found = qrels.query(condition)
                 #if len(found) > 0: print(found)
                 rele = found['relevance'].values[0] if len(found) > 0 else -1
             else:
                 rele = -1
-            colors = colormaps['hot']
-            color_map = [
-                colors(0.0),
-                colors(0.2),
-                colors(0.2),
-                colors(0.6),
-                colors(0.6)
-            ]
-            scatters[1 + rele].append((*data, color_map[1 + rele]))
-        plt.scatter(
-            [x[0] for x in scatters[1] + scatters[2]],
-            [x[1] for x in scatters[1] + scatters[2]],
-            color=[x[2] for x in scatters[1] + scatters[2]],
-            marker='.', label='Irrelevant'
-        )
-        plt.scatter(
-            [x[0] for x in scatters[3] + scatters[4]],
-            [x[1] for x in scatters[3] + scatters[4]],
-            color=[x[2] for x in scatters[3] + scatters[4]],
-            marker='.', label='Relevant'
-        )
-        plt.legend()
+            #colors = colormaps['hot']
+            #color_map = [
+            #    colors(0.0),
+            #    colors(0.2),
+            #    colors(0.2),
+            #    colors(0.6),
+            #    colors(0.6)
+            #]
+            color_map = ['black', 'grey', 'grey', 'red', 'red']
+            data = (*data, color_map[1 + rele])
+            scatters[1 + rele].append(data)
+        if qrels_file:
+            plt.scatter(
+                [x[0] for x in scatters[1] + scatters[2]],
+                [x[1] for x in scatters[1] + scatters[2]],
+                color=[x[2] for x in scatters[1] + scatters[2]],
+                marker='.', label='Irrelevant'
+            )
+            plt.scatter(
+                [x[0] for x in scatters[3] + scatters[4]],
+                [x[1] for x in scatters[3] + scatters[4]],
+                color=[x[2] for x in scatters[3] + scatters[4]],
+                marker='.', label='Relevant'
+            )
+        else:
+            plt.scatter(
+                [x[0] for x in scatters[0]],
+                [x[1] for x in scatters[0]],
+                color=[x[2] for x in scatters[0]],
+                marker='.', label='Unknown'
+            )
+        plt.legend(loc='lower left')
+        plt.xlabel(labels[0])
+        plt.ylabel(labels[1])
     else:
         raise NotImplemented
     plt.show()
