@@ -153,3 +153,5 @@ $ python -m pya0.transformer_eval pipeline inference.ini pipeline__eval_arqmath3
 $ python -m pya0.transformer_utils eval_trained_ckpts inference.ini pipeline__eval_arqmath3_single_vec \
     ./math-tokenizer/ a6000_0 models/path/to/ckpt
 ```
+
+More examples can be found in the evaluation script [../experiments/mabowdor.sh](../experiments/mabowdor.sh)
