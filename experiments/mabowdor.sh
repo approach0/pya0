@@ -42,21 +42,18 @@ for bkb in bertnsp cocomae; do
 done
 
 # SPLADE inference
-for bkb in bertnsp cocomae; do
-    python -m pya0.transformer_eval index inference.ini \
-        index_arqmath3_splade_doc --backbone $bkb --device $GPU
+for mode in all somemath nomath; do
+    for bkb in bertnsp cocomae; do
+        python -m pya0.transformer_eval index inference.ini \
+            index_arqmath3_splade_doc --mode $mode --backbone $bkb \
+            --device $GPU
 
-    python -m pya0.transformer_eval index inference.ini \
-        index_arqmath3_splade_qry --backbone $bkb
+        python -m pya0.transformer_eval index inference.ini \
+            index_arqmath3_splade_qry --mode $mode --backbone $bkb
+        ./splade_inference.sh $ANSERINI arqmath3-SPLADE-$mode-$bkb-2-2-0
 
-    ./splade_inference.sh $ANSERINI arqmath3-SPLADE-all-$bkb-2-2-0
-    ./splade_inference.sh $ANSERINI arqmath3-SPLADE-nomath-$bkb-2-2-0
-    ./splade_inference.sh $ANSERINI arqmath3-SPLADE-somemath-$bkb-2-2-0
-
-    python -m pya0.transformer_eval index inference.ini \
-        index_arqmath2_splade_qry --backbone $bkb
-
-    ./splade_inference.sh $ANSERINI arqmath2-SPLADE-all-$bkb-2-2-0
-    ./splade_inference.sh $ANSERINI arqmath2-SPLADE-nomath-$bkb-2-2-0
-    ./splade_inference.sh $ANSERINI arqmath2-SPLADE-somemath-$bkb-2-2-0
+        python -m pya0.transformer_eval index inference.ini \
+            index_arqmath2_splade_qry --mode $mode --backbone $bkb
+        ./splade_inference.sh $ANSERINI arqmath2-SPLADE-$mode-$bkb-2-2-0
+    done
 done
