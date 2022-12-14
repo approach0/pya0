@@ -24,7 +24,7 @@ def hist_axis(runs, axis, axis_hist_rescale, bin_width, qrels, positive=True):
 
 
 def fusion_analysis(*run_files, labels=None, topic_filter=None,
-    bin_width=0.02, alpha=0.4, qrels_file=None, axis_hist_rescale=0.002):
+    bin_width=0.02, alpha=0.2, qrels_file=None, axis_hist_rescale=0.002):
     # read in data
     def read_run_func(path):
         return pd.read_csv(path, header=None, sep="\s+",
@@ -110,14 +110,14 @@ def fusion_analysis(*run_files, labels=None, topic_filter=None,
     if axis_hist_rescale > 0:
         bins, counts = hist_axis(runs, 0, axis_hist_rescale, bin_width, qrels)
         plt.hist(bins[:-1], bins=bins, weights=counts,
-            alpha=1.0, label='T/P')
+            alpha=0.9, label='T/P')
         bins, counts = hist_axis(runs, 0, axis_hist_rescale, bin_width, qrels, False)
         plt.hist(bins[:-1], bins=bins, weights=counts,
             alpha=alpha, label='F/P')
 
         bins, counts = hist_axis(runs, 1, axis_hist_rescale, bin_width, qrels)
         plt.hist(bins[:-1], bins=bins, weights=counts,
-            alpha=1.0, orientation='horizontal', label='T/P')
+            alpha=0.9, orientation='horizontal', label='T/P')
         bins, counts = hist_axis(runs, 1, axis_hist_rescale, bin_width, qrels, False)
         plt.hist(bins[:-1], bins=bins, weights=counts,
             alpha=alpha, orientation='horizontal', label='F/P')
