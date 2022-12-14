@@ -161,9 +161,90 @@ def score_change(*scores_files, topk=10, increase=True):
         print(smallest_rows.to_string(index=False, header=None))
 
 
+def test(labels=['Struct+BM25', 'Dense']):
+    import numpy as np
+    import matplotlib.pyplot as plt
+    plt.rcParams["font.weight"] = "bold"
+    plt.rcParams["axes.labelweight"] = "bold"
+    plt.rcParams["axes.titleweight"] = "bold"
+
+    pos_x = np.random.randn(100)
+    pos_y = np.random.randn(100)
+    neg_x = np.random.randn(100)
+    neg_y = np.random.randn(100)
+
+    pos_onlyon_x = np.random.randn(50)
+    neg_onlyon_x = np.random.randn(50)
+    pos_onlyon_y = np.random.randn(50)
+    neg_onlyon_y = np.random.randn(50)
+
+    scatter_axes = plt.subplot2grid(
+        shape=(3, 3), loc=(1, 0), rowspan=2, colspan=2
+        # the shape is the size of the entire figure.
+    )
+    scatter_axes.set_xlabel(labels[0])
+    scatter_axes.set_ylabel(labels[1])
+
+    x_inner_hist_axes = scatter_axes.twinx()
+    y_inner_hist_axes = scatter_axes.twiny()
+
+    x_inner_hist_axes.set_ylim([0, 70])
+    y_inner_hist_axes.set_xlim([0, 70])
+
+    x_outer_hist_axes = plt.subplot2grid(
+        (3, 3), (0, 0), colspan=2, sharex=scatter_axes
+    )
+    x_outer_hist_axes.set_title(f'Returned only by {labels[0]}')
+    y_outer_hist_axes = plt.subplot2grid(
+        (3, 3), (1, 2), rowspan=2, sharey=scatter_axes
+    )
+    y_outer_hist_axes.set_title(f'Returned only by {labels[1]}')
+
+    scatter_axes.scatter(pos_x, pos_y, color='red', label='Relevant')
+    scatter_axes.scatter(neg_x, neg_y, color='grey', label='Irrelevant')
+
+    bin_width = 0.5
+    bins = np.arange(-3, 3 + bin_width, bin_width)
+
+    ###
+    counts, bins = np.histogram(pos_x, bins=bins)
+    x_outer_hist_axes.stairs(counts, bins, label='T/P')
+
+    counts, bins = np.histogram(neg_x, bins=bins)
+    x_outer_hist_axes.stairs(counts, bins, label='F/P')
+
+    ###
+    counts, bins = np.histogram(pos_y, bins=bins)
+    y_outer_hist_axes.stairs(counts, bins, label='T/P', orientation='horizontal')
+
+    counts, bins = np.histogram(neg_y, bins=bins)
+    y_outer_hist_axes.stairs(counts, bins, label='F/P', orientation='horizontal')
+
+    ###
+    counts, bins = np.histogram(pos_onlyon_x, bins=bins)
+    x_inner_hist_axes.stairs(counts, bins, label='T/P')
+
+    counts, bins = np.histogram(neg_onlyon_x, bins=bins)
+    x_inner_hist_axes.stairs(counts, bins, label='F/P')
+
+    ###
+    counts, bins = np.histogram(pos_onlyon_y, bins=bins)
+    y_inner_hist_axes.stairs(counts, bins, label='T/P', orientation='horizontal')
+
+    counts, bins = np.histogram(neg_onlyon_y, bins=bins)
+    y_inner_hist_axes.stairs(counts, bins, label='F/P', orientation='horizontal')
+
+    x_outer_hist_axes.legend()
+    y_outer_hist_axes.legend()
+    scatter_axes.legend()
+    plt.tight_layout()
+    plt.show()
+
+
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
     fire.Fire({
+        'test': test,
         'scatters': scatters,
         'score_change': score_change,
     })
