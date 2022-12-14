@@ -23,7 +23,7 @@ def hist_axis(runs, axis, axis_hist_rescale, bin_width, qrels, positive=True):
     return bins, counts * axis_hist_rescale
 
 
-def fusion_analysis(*run_files, labels=None, topic_filter=None,
+def scatters(*run_files, labels=None, topic_filter=None, golden_line=None,
     bin_width=0.02, alpha=0.2, qrels_file=None, axis_hist_rescale=0.002):
     # read in data
     def read_run_func(path):
@@ -42,8 +42,13 @@ def fusion_analysis(*run_files, labels=None, topic_filter=None,
 
     # filter topics
     if topic_filter is not None:
-        topics = list(topic_filter) if isinstance(topic_filter, tuple) \
-            else topic_filter.split(',')
+        if os.path.exists(topic_filter):
+            topics = pd.read_csv(topic_filter, header=None, sep="\s+",
+                names=['topic'], usecols=[0]
+            ).values.reshape(-1).tolist()
+        else:
+            topics = list(topic_filter) if isinstance(topic_filter, tuple) \
+                else topic_filter.split(',')
         runs = list(map(lambda df: df[df['topic'].isin(topics)], runs))
 
     # listify --labels
@@ -60,6 +65,7 @@ def fusion_analysis(*run_files, labels=None, topic_filter=None,
 
     import matplotlib.pyplot as plt
     from matplotlib import colormaps
+    plt.subplot(121)
     plt.rcParams["font.weight"] = "bold"
     plt.rcParams["axes.labelweight"] = "bold"
     assert len(runs) == 2
@@ -127,18 +133,17 @@ def fusion_analysis(*run_files, labels=None, topic_filter=None,
         plt.ylabel(labels[1])
 
     # plot a separate line for best ratio
-    #b=0.35
-    #wx = 0.6
-    #wy = 0.4
-    #plt.plot([0, b/wx], [b/wy, 0], linewidth=3, color='yellow')
+    if golden_line is not None:
+        wx, wy, b = golden_line
+        plt.plot([0, b/wx], [b/wy, 0], linewidth=3, color='yellow')
 
-    plt.legend(loc="lower left")
+    plt.legend(bbox_to_anchor=(1.04, 1), loc='upper left', ncol=1)
     plt.xlim((0, 1.02))
     plt.ylim((0, 1.02))
     plt.show()
 
 
-def score_change(*scores_files, topk=10):
+def score_change(*scores_files, topk=10, increase=True):
     # read in data
     def read_scores_func(path):
         return pd.read_csv(path, header=None, sep="\s+",
@@ -148,15 +153,17 @@ def score_change(*scores_files, topk=10):
     scores = list(map(read_scores_func, scores_files))
     merged = pd.merge(*scores, on=['topic'], how='inner').dropna()
     merged['score_change'] = merged['score_y'] - merged['score_x']
-    largest_rows = merged.nlargest(topk, 'score_change')
-    smallest_rows = merged.nsmallest(topk, 'score_change')
-    print(largest_rows)
-    print(smallest_rows)
+    if increase:
+        largest_rows = merged.nlargest(topk, 'score_change')
+        print(largest_rows.to_string(index=False, header=None))
+    else:
+        smallest_rows = merged.nsmallest(topk, 'score_change')
+        print(smallest_rows.to_string(index=False, header=None))
 
 
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
     fire.Fire({
-        'fusion_analysis': fusion_analysis,
+        'scatters': scatters,
         'score_change': score_change,
     })
