@@ -1,17 +1,20 @@
 set -ex
 export PYTHONPATH="$(cd .. && pwd)"
-GPU=a6000_6
+ANSERINI=/store2/scratch/w32zhong/math-dense-retrievers.verynew/code/anserini
+#GPU=a6000_0:32
+GPU=a6000_7
 
-# Index
-for bkb in bertnsp cotbert cocondenser cocomae cotmae; do
+# DPR Index
+for bkb in vanilla-bert bertnsp cotbert cocondenser cocomae cotmae; do
 	python -m pya0.transformer_eval index inference.ini index_arqmath3_single_vec --device $GPU --backbone ${bkb} --ckpt 0-2-0
 	python -m pya0.transformer_eval index inference.ini index_arqmath3_single_vec --device $GPU --backbone ${bkb} --ckpt 1-2-0
+	python -m pya0.transformer_eval index inference.ini index_arqmath3_single_vec --device $GPU --backbone ${bkb} --ckpt 2-2-0
 	python -m pya0.transformer_eval index inference.ini index_arqmath3_single_vec --device $GPU --backbone ${bkb} --ckpt 3-2-0
 	python -m pya0.transformer_eval index inference.ini index_arqmath3_single_vec --device $GPU --backbone ${bkb} --ckpt 6-0-0
 done
 
-# Search arqmath3
-for bkb in bertnsp cotbert cocondenser cocomae cotmae; do
+# DPR Search arqmath3
+for bkb in vanilla-bert bertnsp cotbert cocondenser cocomae cotmae; do
 	python -m pya0.transformer_eval search inference.ini search_arqmath3_single_vec --backbone ${bkb} --ckpt 0-2-0
 	python -m pya0.transformer_eval search inference.ini search_arqmath3_single_vec --backbone ${bkb} --ckpt 1-2-0
 	python -m pya0.transformer_eval search inference.ini search_arqmath3_single_vec --backbone ${bkb} --ckpt 2-2-0
@@ -19,8 +22,8 @@ for bkb in bertnsp cotbert cocondenser cocomae cotmae; do
 	python -m pya0.transformer_eval search inference.ini search_arqmath3_single_vec --backbone ${bkb} --ckpt 6-0-0
 done
 
-# Search arqmath2
-for bkb in bertnsp cotbert cocondenser cocomae cotmae; do
+# DPR Search arqmath2
+for bkb in vanilla-bert bertnsp cotbert cocondenser cocomae cotmae; do
 	python -m pya0.transformer_eval search inference.ini search_arqmath2_single_vec --backbone $bkb --ckpt 0-2-0
 	python -m pya0.transformer_eval search inference.ini search_arqmath2_single_vec --backbone $bkb --ckpt 1-2-0
 	python -m pya0.transformer_eval search inference.ini search_arqmath2_single_vec --backbone $bkb --ckpt 2-2-0
@@ -28,11 +31,32 @@ for bkb in bertnsp cotbert cocondenser cocomae cotmae; do
 	python -m pya0.transformer_eval search inference.ini search_arqmath2_single_vec --backbone $bkb --ckpt 6-0-0
 done
 
-# SPLADE inference
-./splade_inference.sh /store2/scratch/w32zhong/math-dense-retrievers.verynew/code/anserini/ arqmath3-SPLADE-all-bertnsp-2-2-0
-./splade_inference.sh /store2/scratch/w32zhong/math-dense-retrievers.verynew/code/anserini/ arqmath3-SPLADE-nomath-bertnsp-2-2-0
-./splade_inference.sh /store2/scratch/w32zhong/math-dense-retrievers.verynew/code/anserini/ arqmath3-SPLADE-somemath-bertnsp-2-2-0
+# ColBERT inference
+for bkb in bertnsp cocomae; do
+    python -m pya0.transformer_eval index inference.ini \
+        index_arqmath3_colbert --backbone $bkb --device $GPU
+    python -m pya0.transformer_eval search inference.ini \
+        search_arqmath2_colbert --backbone $bkb --device $GPU
+    python -m pya0.transformer_eval search inference.ini \
+        search_arqmath3_colbert --backbone $bkb --device $GPU
+done
 
-./splade_inference.sh /store2/scratch/w32zhong/math-dense-retrievers.verynew/code/anserini/ arqmath2-SPLADE-all-bertnsp-2-2-0
-./splade_inference.sh /store2/scratch/w32zhong/math-dense-retrievers.verynew/code/anserini/ arqmath2-SPLADE-nomath-bertnsp-2-2-0
-./splade_inference.sh /store2/scratch/w32zhong/math-dense-retrievers.verynew/code/anserini/ arqmath2-SPLADE-somemath-bertnsp-2-2-0
+# SPLADE inference
+for bkb in bertnsp cocomae; do
+    python -m pya0.transformer_eval index inference.ini \
+        index_arqmath3_splade_doc --backbone $bkb --device $GPU
+
+    python -m pya0.transformer_eval index inference.ini \
+        index_arqmath3_splade_qry --backbone $bkb
+
+    ./splade_inference.sh $ANSERINI arqmath3-SPLADE-all-$bkb-2-2-0
+    ./splade_inference.sh $ANSERINI arqmath3-SPLADE-nomath-$bkb-2-2-0
+    ./splade_inference.sh $ANSERINI arqmath3-SPLADE-somemath-$bkb-2-2-0
+
+    python -m pya0.transformer_eval index inference.ini \
+        index_arqmath2_splade_qry --backbone $bkb
+
+    ./splade_inference.sh $ANSERINI arqmath2-SPLADE-all-$bkb-2-2-0
+    ./splade_inference.sh $ANSERINI arqmath2-SPLADE-nomath-$bkb-2-2-0
+    ./splade_inference.sh $ANSERINI arqmath2-SPLADE-somemath-$bkb-2-2-0
+done
