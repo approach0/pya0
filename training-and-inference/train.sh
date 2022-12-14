@@ -209,7 +209,7 @@ case $TRAINER-${SETUP} in
     TRAINER_ARGS="--warmup-epochs 1 --lr 2e-5 --active_fp16"
     ;;
 
-   colbert-a6000-using-cotmae)
+   colbert-a6000-using-cocomae)
     EPOCHS=8
     DEV_BSIZE=18 # 20 is still ok, but just to match the DPRs...
     SAVE_FOLD=1
