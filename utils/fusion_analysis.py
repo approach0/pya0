@@ -138,6 +138,25 @@ def fusion_analysis(*run_files, labels=None, topic_filter=None,
     plt.show()
 
 
+def score_change(*scores_files, topk=10):
+    # read in data
+    def read_scores_func(path):
+        return pd.read_csv(path, header=None, sep="\s+",
+            names=['topic', 'score'],
+            usecols=[1, 2]
+        )
+    scores = list(map(read_scores_func, scores_files))
+    merged = pd.merge(*scores, on=['topic'], how='inner').dropna()
+    merged['score_change'] = merged['score_y'] - merged['score_x']
+    largest_rows = merged.nlargest(topk, 'score_change')
+    smallest_rows = merged.nsmallest(topk, 'score_change')
+    print(largest_rows)
+    print(smallest_rows)
+
+
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
-    fire.Fire(fusion_analysis)
+    fire.Fire({
+        'fusion_analysis': fusion_analysis,
+        'score_change': score_change,
+    })
