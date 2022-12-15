@@ -5,33 +5,116 @@ import pandas as pd
 from tqdm import tqdm
 
 
-def hist_axis(runs, axis, axis_hist_rescale, bin_width, qrels, positive=True):
-    how = ['left', 'right']
-    name = ['score_x', 'score_y']
-    run = pd.merge(*runs, on=['topic', 'docid'], how=how[axis])
-    run = run[run[name[::-1][axis]].isnull()]
-    if qrels is not None:
-        if positive:
-            qrels = qrels[qrels['relevance'] >= 2]
-        else:
-            qrels = qrels[qrels['relevance'] < 2]
-        run = pd.merge(run, qrels, on=['topic', 'docid'], how='inner')
-    data = run[name[axis]]
+def draw_hist_scatters(labels=['system_x', 'system_y'],
+    hist_lim=[70, 70], bin_width=0.05, golden_line=None, **kwargs):
+    import numpy as np
+    import matplotlib.pyplot as plt
+    plt.rcParams["font.weight"] = "bold"
+    plt.rcParams["axes.labelweight"] = "bold"
+    plt.rcParams["axes.titleweight"] = "bold"
+
+    if len(kwargs) == 0:
+        pos_x = np.random.rand(100)
+        pos_y = np.random.rand(100)
+        neg_x = np.random.rand(100)
+        neg_y = np.random.rand(100)
+        pos_onlyon_x = np.random.rand(50)
+        neg_onlyon_x = np.random.rand(50)
+        pos_onlyon_y = np.random.rand(50)
+        neg_onlyon_y = np.random.rand(50)
+    else:
+        pos_x = kwargs['pos_x']
+        pos_y = kwargs['pos_y']
+        neg_x = kwargs['neg_x']
+        neg_y = kwargs['neg_y']
+        pos_onlyon_x = kwargs['pos_onlyon_x']
+        neg_onlyon_x = kwargs['neg_onlyon_x']
+        pos_onlyon_y = kwargs['pos_onlyon_y']
+        neg_onlyon_y = kwargs['neg_onlyon_y']
+
+    scatter_axes = plt.subplot2grid(
+        shape=(3, 3), loc=(1, 0), rowspan=2, colspan=2
+        # the shape is the size of the entire figure.
+    )
+    scatter_axes.set_xlabel(labels[0])
+    scatter_axes.set_ylabel(labels[1])
+
+    x_inner_hist_axes = scatter_axes.twinx()
+    y_inner_hist_axes = scatter_axes.twiny()
+
+    x_inner_hist_axes.set_ylim([0, hist_lim[0]])
+    y_inner_hist_axes.set_xlim([0, hist_lim[1]])
+
+    x_outer_hist_axes = plt.subplot2grid(
+        (3, 3), (0, 0), colspan=2, sharex=scatter_axes
+    )
+    x_outer_hist_axes.set_title(f'Returned only by {labels[0]}')
+    y_outer_hist_axes = plt.subplot2grid(
+        (3, 3), (1, 2), rowspan=2, sharey=scatter_axes
+    )
+    y_outer_hist_axes.set_title(f'Returned only by {labels[1]}')
+
+    scatter_axes.scatter(pos_x, pos_y,
+        color='red', label='Relevant', marker='.')
+    scatter_axes.scatter(neg_x, neg_y,
+        color='grey', label='Irrelevant', marker='.')
+
+    # plot a separate line for best ratio
+    if golden_line is not None:
+        wx, wy, b = golden_line
+        scatter_axes.plot([0, b/wx], [b/wy, 0], linewidth=3, color='yellow')
+
     bins = np.arange(0, 1.0 + bin_width, bin_width)
-    (counts, _) = np.histogram(data, bins=bins)
-    print(0.2 / max(counts))
-    return bins, counts * axis_hist_rescale
+
+    ###
+    counts, bins = np.histogram(pos_onlyon_x, bins=bins)
+    x_outer_hist_axes.stairs(counts, bins, label='T/P')
+
+    counts, bins = np.histogram(neg_onlyon_x, bins=bins)
+    x_outer_hist_axes.stairs(counts, bins, label='F/P')
+
+    ###
+    counts, bins = np.histogram(pos_onlyon_y, bins=bins)
+    y_outer_hist_axes.stairs(counts, bins, label='T/P', orientation='horizontal')
+
+    counts, bins = np.histogram(neg_onlyon_y, bins=bins)
+    y_outer_hist_axes.stairs(counts, bins, label='F/P', orientation='horizontal')
+
+    ###
+    counts, bins = np.histogram(pos_x, bins=bins)
+    x_inner_hist_axes.stairs(counts, bins, label='T/P')
+
+    counts, bins = np.histogram(neg_x, bins=bins)
+    x_inner_hist_axes.hist(bins[:-1], bins=bins, weights=counts,
+        alpha=0.3, label='F/P')
+
+    ###
+    counts, bins = np.histogram(pos_y, bins=bins)
+    y_inner_hist_axes.stairs(counts, bins, label='T/P', orientation='horizontal')
+
+    counts, bins = np.histogram(neg_y, bins=bins)
+    y_inner_hist_axes.hist(bins[:-1], bins=bins, weights=counts,
+        alpha=0.3, label='F/P', orientation='horizontal')
+
+    x_outer_hist_axes.legend()
+    y_outer_hist_axes.legend()
+    #scatter_axes.legend(loc='upper right')
+    plt.tight_layout()
+    plt.show()
 
 
-def scatters(*run_files, labels=None, topic_filter=None, golden_line=None,
-    bin_width=0.02, alpha=0.2, qrels_file=None, axis_hist_rescale=0.002):
-    # read in data
+def scatters(*run_files, labels=None, topic_filter=None,
+    golden_line=None, bin_width=0.05, qrels_file=None, hist_top=70):
+    # read in run data
     def read_run_func(path):
         return pd.read_csv(path, header=None, sep="\s+",
             names=['topic', 'docid', 'rank', 'score'],
             usecols=[0, 2, 3, 4]
         )
     runs = list(map(read_run_func, run_files))
+    assert len(runs) == 2
+
+    # read in qrels file
     if qrels_file:
         qrels = pd.read_csv(qrels_file, header=None, sep="\s+",
             names=['topic', 'docid', 'relevance'],
@@ -63,84 +146,44 @@ def scatters(*run_files, labels=None, topic_filter=None, golden_line=None,
         )
         df['score'] = normalized_scores
 
-    import matplotlib.pyplot as plt
-    from matplotlib import colormaps
-    plt.subplot(121)
-    plt.rcParams["font.weight"] = "bold"
-    plt.rcParams["axes.labelweight"] = "bold"
-    assert len(runs) == 2
-    inner_run = pd.merge(runs[0], runs[1], on=['topic', 'docid'], how='inner')
-    scatters = [[] for _ in range(5)]
-    iter_list=list(inner_run.iterrows())
-    for _, row in tqdm(iter_list, total=len(iter_list)):
-        data = row[['score_x', 'score_y']].values
-        key = row[['topic', 'docid']].values
-        condition = f'topic == "{key[0]}" & docid == {key[1]}'
-        if qrels is not None:
-            found = qrels.query(condition)
-            rele = found['relevance'].values[0] if len(found) > 0 else -1
-        else:
-            rele = -1
-        #colors = colormaps['hot']
-        #color_map = [
-        #    colors(0.0),
-        #    colors(0.2),
-        #    colors(0.2),
-        #    colors(0.6),
-        #    colors(0.6)
-        #]
-        color_map = ['black', 'grey', 'grey', 'red', 'red']
-        data = (*data, color_map[1 + rele])
-        scatters[1 + rele].append(data)
+    # filter samples
+    both_xy = pd.merge(*runs, on=['topic', 'docid'], how='inner')
+
+    onlyon_x = pd.merge(*runs, on=['topic', 'docid'], how='left')
+    onlyon_x = onlyon_x[onlyon_x['score_y'].isnull()]
+    onlyon_y = pd.merge(*runs, on=['topic', 'docid'], how='right')
+    onlyon_y = onlyon_y[onlyon_y['score_x'].isnull()]
+
     if qrels is not None:
-        plt.scatter(
-            [x[0] for x in scatters[1] + scatters[2]],
-            [x[1] for x in scatters[1] + scatters[2]],
-            color=[x[2] for x in scatters[1] + scatters[2]],
-            marker='.', label='Irrelevant'
-        )
-        plt.scatter(
-            [x[0] for x in scatters[3] + scatters[4]],
-            [x[1] for x in scatters[3] + scatters[4]],
-            color=[x[2] for x in scatters[3] + scatters[4]],
-            marker='.', label='Relevant'
-        )
+        judged = pd.merge(both_xy, qrels, on=['topic', 'docid'], how='inner')
+        pos_x = judged[judged['relevance'] >= 2]['score_x']
+        pos_y = judged[judged['relevance'] >= 2]['score_y']
+        neg_x = judged[judged['relevance'] < 2]['score_x']
+        neg_y = judged[judged['relevance'] < 2]['score_y']
+        ###
+        judged = pd.merge(onlyon_x, qrels, on=['topic', 'docid'], how='inner')
+        pos_onlyon_x = judged[judged['relevance'] >= 2]['score_x']
+        neg_onlyon_x = judged[judged['relevance'] < 2]['score_x']
+        judged = pd.merge(onlyon_y, qrels, on=['topic', 'docid'], how='inner')
+        pos_onlyon_y = judged[judged['relevance'] >= 2]['score_y']
+        neg_onlyon_y = judged[judged['relevance'] < 2]['score_y']
     else:
-        plt.scatter(
-            [x[0] for x in scatters[0]],
-            [x[1] for x in scatters[0]],
-            color=[x[2] for x in scatters[0]],
-            marker='.', label='Unknown'
-        )
+        pos_x = []
+        pos_y = []
+        neg_x = both_xy['score_x']
+        neg_y = both_xy['score_y']
+        ###
+        pos_onlyon_x = []
+        pos_onlyon_y = []
+        neg_onlyon_x = onlyon_x['score_x']
+        neg_onlyon_y = onlyon_y['score_y']
 
-    if axis_hist_rescale > 0:
-        bins, counts = hist_axis(runs, 0, axis_hist_rescale, bin_width, qrels)
-        plt.hist(bins[:-1], bins=bins, weights=counts,
-            alpha=0.9, label='T/P')
-        bins, counts = hist_axis(runs, 0, axis_hist_rescale, bin_width, qrels, False)
-        plt.hist(bins[:-1], bins=bins, weights=counts,
-            alpha=alpha, label='F/P')
-
-        bins, counts = hist_axis(runs, 1, axis_hist_rescale, bin_width, qrels)
-        plt.hist(bins[:-1], bins=bins, weights=counts,
-            alpha=0.9, orientation='horizontal', label='T/P')
-        bins, counts = hist_axis(runs, 1, axis_hist_rescale, bin_width, qrels, False)
-        plt.hist(bins[:-1], bins=bins, weights=counts,
-            alpha=alpha, orientation='horizontal', label='F/P')
-
-    if labels:
-        plt.xlabel(labels[0])
-        plt.ylabel(labels[1])
-
-    # plot a separate line for best ratio
-    if golden_line is not None:
-        wx, wy, b = golden_line
-        plt.plot([0, b/wx], [b/wy, 0], linewidth=3, color='yellow')
-
-    plt.legend(bbox_to_anchor=(1.04, 1), loc='upper left', ncol=1)
-    plt.xlim((0, 1.02))
-    plt.ylim((0, 1.02))
-    plt.show()
+    draw_hist_scatters(golden_line=golden_line,
+        labels=labels, hist_lim=[hist_top, hist_top], bin_width=bin_width,
+        pos_x=pos_x, pos_y=pos_y, neg_x=neg_x, neg_y=neg_y,
+        pos_onlyon_x=pos_onlyon_x, pos_onlyon_y=pos_onlyon_y,
+        neg_onlyon_x=neg_onlyon_x, neg_onlyon_y=neg_onlyon_y
+    )
 
 
 def score_change(*scores_files, topk=10, increase=True):
@@ -161,90 +204,10 @@ def score_change(*scores_files, topk=10, increase=True):
         print(smallest_rows.to_string(index=False, header=None))
 
 
-def test(labels=['Struct+BM25', 'Dense']):
-    import numpy as np
-    import matplotlib.pyplot as plt
-    plt.rcParams["font.weight"] = "bold"
-    plt.rcParams["axes.labelweight"] = "bold"
-    plt.rcParams["axes.titleweight"] = "bold"
-
-    pos_x = np.random.randn(100)
-    pos_y = np.random.randn(100)
-    neg_x = np.random.randn(100)
-    neg_y = np.random.randn(100)
-
-    pos_onlyon_x = np.random.randn(50)
-    neg_onlyon_x = np.random.randn(50)
-    pos_onlyon_y = np.random.randn(50)
-    neg_onlyon_y = np.random.randn(50)
-
-    scatter_axes = plt.subplot2grid(
-        shape=(3, 3), loc=(1, 0), rowspan=2, colspan=2
-        # the shape is the size of the entire figure.
-    )
-    scatter_axes.set_xlabel(labels[0])
-    scatter_axes.set_ylabel(labels[1])
-
-    x_inner_hist_axes = scatter_axes.twinx()
-    y_inner_hist_axes = scatter_axes.twiny()
-
-    x_inner_hist_axes.set_ylim([0, 70])
-    y_inner_hist_axes.set_xlim([0, 70])
-
-    x_outer_hist_axes = plt.subplot2grid(
-        (3, 3), (0, 0), colspan=2, sharex=scatter_axes
-    )
-    x_outer_hist_axes.set_title(f'Returned only by {labels[0]}')
-    y_outer_hist_axes = plt.subplot2grid(
-        (3, 3), (1, 2), rowspan=2, sharey=scatter_axes
-    )
-    y_outer_hist_axes.set_title(f'Returned only by {labels[1]}')
-
-    scatter_axes.scatter(pos_x, pos_y, color='red', label='Relevant')
-    scatter_axes.scatter(neg_x, neg_y, color='grey', label='Irrelevant')
-
-    bin_width = 0.5
-    bins = np.arange(-3, 3 + bin_width, bin_width)
-
-    ###
-    counts, bins = np.histogram(pos_x, bins=bins)
-    x_outer_hist_axes.stairs(counts, bins, label='T/P')
-
-    counts, bins = np.histogram(neg_x, bins=bins)
-    x_outer_hist_axes.stairs(counts, bins, label='F/P')
-
-    ###
-    counts, bins = np.histogram(pos_y, bins=bins)
-    y_outer_hist_axes.stairs(counts, bins, label='T/P', orientation='horizontal')
-
-    counts, bins = np.histogram(neg_y, bins=bins)
-    y_outer_hist_axes.stairs(counts, bins, label='F/P', orientation='horizontal')
-
-    ###
-    counts, bins = np.histogram(pos_onlyon_x, bins=bins)
-    x_inner_hist_axes.stairs(counts, bins, label='T/P')
-
-    counts, bins = np.histogram(neg_onlyon_x, bins=bins)
-    x_inner_hist_axes.stairs(counts, bins, label='F/P')
-
-    ###
-    counts, bins = np.histogram(pos_onlyon_y, bins=bins)
-    y_inner_hist_axes.stairs(counts, bins, label='T/P', orientation='horizontal')
-
-    counts, bins = np.histogram(neg_onlyon_y, bins=bins)
-    y_inner_hist_axes.stairs(counts, bins, label='F/P', orientation='horizontal')
-
-    x_outer_hist_axes.legend()
-    y_outer_hist_axes.legend()
-    scatter_axes.legend()
-    plt.tight_layout()
-    plt.show()
-
-
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
     fire.Fire({
-        'test': test,
+        'test': draw_hist_scatters,
         'scatters': scatters,
         'score_change': score_change,
     })
