@@ -155,3 +155,15 @@ $ python -m pya0.transformer_utils eval_trained_ckpts inference.ini pipeline__ev
 ```
 
 More examples can be found in the evaluation script [../experiments/mabowdor.sh](../experiments/mabowdor.sh)
+
+## Visualization
+```sh
+$ python utils/fusion_analysis.py score_change ./struct.scores ./fusion.scores > tmp.list
+$ python utils/fusion_analysis.py score_change ./cocomae.scores ./fusion.scores >> tmp.list
+$ python utils/fusion_analysis.py scatters \
+	./training-and-inference/runs/baselines/arqmath3-a0-porterstemmer.run \
+	./training-and-inference/runs/arqmath3-cocomae-6-0-0-top1000.run \
+	--qrels_file ./topics-and-qrels/qrels.arqmath-2022-task1-manual.txt \
+	--labels Struct+BM25,Coco-MAE --topic_filter tmp.list \
+	--golden_line 0.4,0.6,0.45  --hist_top 120
+```
