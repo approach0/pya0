@@ -63,7 +63,7 @@ $ python -m pya0.transformer_utils unmask_input_print \
      ../tests/transformer_unmask.txt > data.pretrain-cotmae/test.txt
 ```
 
-Note that we have **manually** specify to use a subset of shards in `data.pretrain-bertnsp` to make the two datasets roughly equal size:
+Note that we intensionally only use a subset of shards in `data.pretrain-bertnsp` so that the two pretraining datasets are roughly equal in size, for a fair comparison:
 ```
 $ (cd data.pretrain-bertnsp && du -ch `cat shards.txt`)
 713M    mse-aops-2021-data-v3.pkl.pairs.1145999
@@ -157,6 +157,7 @@ $ python -m pya0.transformer_utils eval_trained_ckpts inference.ini pipeline__ev
 More examples can be found in the evaluation script [../experiments/mabowdor.sh](../experiments/mabowdor.sh)
 
 ## Visualization
+To create a fusion scatter graph:
 ```sh
 $ python utils/fusion_analysis.py score_change ./struct.scores ./fusion.scores > tmp.list
 $ python utils/fusion_analysis.py score_change ./cocomae.scores ./fusion.scores >> tmp.list
