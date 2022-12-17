@@ -55,30 +55,34 @@ def draw_hist_scatters(labels=['system_x', 'system_y'],
     y_outer_hist_axes.set_title(f'Returned only by {labels[1]}')
 
     scatter_axes.scatter(pos_x, pos_y,
-        color='red', label='Relevant', marker='.')
+        color='red', label='Relevant hits', marker='.')
     scatter_axes.scatter(neg_x, neg_y,
-        color='grey', label='Irrelevant', marker='.')
+        color='grey', label='Irrelevant hits', marker='.')
+    scatter_axes.set_title(f'Returned by both')
 
     # plot a separate line for best ratio
     if golden_line is not None:
         wx, wy, b = golden_line
-        scatter_axes.plot([0, b/wx], [b/wy, 0], linewidth=3, color='yellow')
+        scatter_axes.plot([0, b/wx], [b/wy, 0],
+            linewidth=3, color='yellow', label='Best interpolation ratio')
 
     bins = np.arange(0, 1.0 + bin_width, bin_width)
 
     ###
     counts, bins = np.histogram(pos_onlyon_x, bins=bins)
-    x_outer_hist_axes.stairs(counts, bins, label='T/P')
+    x_outer_hist_axes.stairs(counts, bins, label='True Positives')
 
     counts, bins = np.histogram(neg_onlyon_x, bins=bins)
-    x_outer_hist_axes.stairs(counts, bins, label='F/P')
+    x_outer_hist_axes.hist(bins[:-1], bins=bins, weights=counts,
+        alpha=0.3, label='False Positives')
 
     ###
     counts, bins = np.histogram(pos_onlyon_y, bins=bins)
-    y_outer_hist_axes.stairs(counts, bins, label='T/P', orientation='horizontal')
+    y_outer_hist_axes.stairs(counts, bins, label='True Positives', orientation='horizontal')
 
     counts, bins = np.histogram(neg_onlyon_y, bins=bins)
-    y_outer_hist_axes.stairs(counts, bins, label='F/P', orientation='horizontal')
+    y_outer_hist_axes.hist(bins[:-1], bins=bins, weights=counts,
+        alpha=0.3, label='False Positives', orientation='horizontal')
 
     ###
     counts, bins = np.histogram(pos_x, bins=bins)
@@ -98,8 +102,9 @@ def draw_hist_scatters(labels=['system_x', 'system_y'],
 
     x_outer_hist_axes.legend()
     y_outer_hist_axes.legend()
-    #scatter_axes.legend(loc='upper right')
-    plt.tight_layout()
+    scatter_axes.legend(loc='upper right', bbox_to_anchor=(1.7, 1.6))
+    #plt.tight_layout()
+    plt.subplots_adjust(wspace=0.8, hspace=0.8)
     plt.show()
 
 
