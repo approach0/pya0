@@ -9,8 +9,8 @@ kfold_dir=runs.kfold
 latex_corpus=/store/scratch/w32zhong/arqmath3/collections/latex_representation_v2
 fusion_list=(
     ./training-and-inference/runs/baselines/arqmath${ver}-a0-porterstemmer.run
-    ./training-and-inference/runs/arqmath${ver}-cocomae-6-0-0-top1000.run
-    ./training-and-inference/runs/arqmath${ver}-SPLADE-all-bertnsp-2-2-0-top1000.run
+    ./training-and-inference/runs/arqmath${ver}-cocomae-2-2-0-top1000.run
+    ./training-and-inference/runs/arqmath${ver}-SPLADE-nomath-cocomae-2-2-0-top1000.run
 )
 #./training-and-inference/runs/arqmath${ver}-mathonly-cocomae-6-0-0-top1000.run
 
