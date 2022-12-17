@@ -156,11 +156,42 @@ $ python -m pya0.transformer_utils eval_trained_ckpts inference.ini pipeline__ev
 
 More examples can be found in the evaluation script [../experiments/mabowdor.sh](../experiments/mabowdor.sh)
 
+## Evaluation
+To generate the main results we report, first merge some run files:
+```sh
+$ python utils/mergerun.py merge_run_files \
+	./training-and-inference/runs/baselines/arqmath3-a0-porterstemmer.run:0.4 \
+	./training-and-inference/runs/arqmath3-cocomae-2-2-0-top1000.run:0.6
+	
+$ python utils/mergerun.py merge_run_files \
+	./training-and-inference/runs/baselines/arqmath3-a0-porterstemmer.run:0.4 \
+	./training-and-inference/runs/arqmath3-cocomae-2-2-0-top1000.run:0.4 \
+	./training-and-inference/runs/arqmath3-SPLADE-nomath-cocomae-2-2-0-top1000.run:0.2
+```
+then evaluate on ARQMath-3 for example:
+```sh
+$ ./eval-arqmath3/task1/preprocess.sh cleanup
+$ ./eval-arqmath3/task1/preprocess.sh ./training-and-inference/runs/baselines/arqmath3-a0-porterstemmer.run
+$ ./eval-arqmath3/task1/preprocess.sh ./training-and-inference/runs/arqmath3-cocomae-2-2-0-top1000.run
+$ ./eval-arqmath3/task1/preprocess.sh mergerun--*.run
+$ ./eval-arqmath3/task1/eval.sh --nojudge
+arqmath3-a0-porterstemmer_run 0.3971 0.1593 0.2705 0.1640 0.0
+arqmath3-cocomae-2-2-0-top1000_run 0.4637 0.1918 0.3244 0.1917 0.0
+mergerun--0_4W_arqmath3-a0-porterstemmer_run--0_6W_arqmath3-cocomae-2-2-0-top1000_run 0.5341 0.2386 0.3808 0.2264 0.0
+mergerun--0_4W_arqmath3-a0-porterstemmer_run--0_4W_arqmath3-cocomae-2-2-0-top1000_run--0_2W_arqmath3-SPLADE-nomath-cocomae-2-2-0-top1000_run 0.5530 0.2463 0.3859 0.2300 0.0
+```
+
 ## Visualization
 To create a fusion scatter graph:
 ```sh
+$ trec_eval ./eval-arqmath3/task1/../../topics-and-qrels/qrels.arqmath-2022-task1-official.txt \
+	./eval-arqmath3/task1/prime-output/prime_arqmath3-a0-porterstemmer_run -l2 -m map -q > struct.scores
+$ trec_eval ./eval-arqmath3/task1/../../topics-and-qrels/qrels.arqmath-2022-task1-official.txt \
+	./eval-arqmath3/task1/prime-output/prime_arqmath3-cocomae-2-2-0-top1000_run -l2 -m map -q > dense.scores
+$ trec_eval ./eval-arqmath3/task1/../../topics-and-qrels/qrels.arqmath-2022-task1-official.txt \
+	./eval-arqmath3/task1/prime-output/prime_mergerun--0_4W_arqmath3-a0-porterstemmer_run--0_6W_arqmath3-cocomae-2-2-0-top1000_run -l2 -m map -q > fusion.scores
 $ python utils/fusion_analysis.py score_change ./struct.scores ./fusion.scores > tmp.list
-$ python utils/fusion_analysis.py score_change ./cocomae.scores ./fusion.scores >> tmp.list
+$ python utils/fusion_analysis.py score_change ./dense.scores ./fusion.scores >> tmp.list
 $ python utils/fusion_analysis.py scatters \
 	./training-and-inference/runs/baselines/arqmath3-a0-porterstemmer.run \
 	./training-and-inference/runs/arqmath3-cocomae-6-0-0-top1000.run \
