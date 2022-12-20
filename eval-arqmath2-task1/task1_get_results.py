@@ -45,11 +45,11 @@ def calculated_map(res_directory, trec_eval_tool, qre_file_path):
 def calculated_p_at_10(res_directory, trec_eval_tool, qre_file_path):
     result = {}
     for file in os.listdir(res_directory):
-        cmd = [trec_eval_tool, qre_file_path, res_directory + file, "-l2", "-m", "P"]
+        cmd = [trec_eval_tool, qre_file_path, res_directory + file, "-l2", "-m", "P.10"]
         print(' '.join(cmd))
         if byquery: gen_byquery_result(cmd, file, 'p10')
         output = check_output(cmd)
-        output = output.decode('utf-8').split("\n")[1]
+        output = output.decode('utf-8')
         score = output.split("\t")[2].strip()
         submission = file.split(".")[0].split("prime_")[1]
         result[submission] = score
