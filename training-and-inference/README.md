@@ -199,3 +199,10 @@ $ python utils/fusion_analysis.py scatters \
 	--labels Struct+BM25,Coco-MAE --topic_filter tmp.list \
 	--golden_line 0.4,0.6,0.45  --hist_top 120
 ```
+
+To visualize a run file:
+```sh
+$ python -m pya0.visualize visualize_file \
+	./utils/visualize.ini arqmath3_flat__colbert \
+	./visualization/runs/arqmath3-colbert-cocomae-6-0-0-top1000.run
+```
