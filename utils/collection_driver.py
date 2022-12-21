@@ -101,7 +101,7 @@ def TREC_preprocess(collection, index, hits):
 
 
 def TREC_reverse(collection, index, hits):
-    if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1', 'arqmath-2021-task1-refined', 'arqmath-2021-task1-official', 'arqmath-2022-task1-manual', 'arqmath-2022-task1-or-task3-origin']:
+    if collection in ['test', 'arqmath-2020-task1', 'arqmath-2021-task1', 'arqmath-2021-task1-refined', 'arqmath-2021-task1-official', 'arqmath-2021-task1-origin', 'arqmath-2022-task1-manual', 'arqmath-2022-task1-or-task3-origin']:
         for hit in hits:
             trec_docid = hit['docid']
             hit['trec_docid'] = trec_docid
