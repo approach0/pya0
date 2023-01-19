@@ -5,7 +5,7 @@ prefix=training-and-inference/runs
 runlst=(
     arqmath3-bertnsp-2-2-0-top1000.run
     arqmath3-cocomae-2-2-0-top1000.run
-    arqmath3-colbert-bertnsp-6-0-0-top1000.run
+    arqmath3-colbert-cocomae-6-0-0-top1000.run
     baselines/arqmath3-a0-porterstemmer.run
     arqmath3-SPLADE-all-cocomae-2-2-0-top1000.run
     arqmath3-SPLADE-nomath-cocomae-2-2-0-top1000.run
