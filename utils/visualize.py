@@ -343,7 +343,7 @@ def generator__splade(tokenizer_path, model_path, dim, config):
     return mapper
 
 
-def visualize_file(config_file, section, input_file):
+def visualize_file(config_file, section, input_file, filter_df=None):
     import configparser
     config = configparser.ConfigParser()
     config.read(config_file)
@@ -405,8 +405,18 @@ def visualize_file(config_file, section, input_file):
     for qid, query in gen_topic:
         if len(filter_topics) > 0 and qid not in filter_topics:
             continue
-        print(qid, query)
+        elif filter_df is not None:
+            docs_df = filter_df[filter_df['topic'] == qid]
+            filter_docs = docs_df['docid'].tolist()
+        else:
+            filter_docs = None
+        print(qid, query, filter_docs)
         topic_hits = hits_per_topic[qid] if qid in hits_per_topic else []
+        if filter_docs:
+            topic_hits = filter(
+                lambda x: int(x['docid']) in filter_docs,
+                topic_hits
+            )
         # fix ranks based on score (just like trec_eval does)
         topic_hits = sorted(topic_hits,
             key=lambda x: (x['score'], x['docid']), reverse=True)
@@ -535,10 +545,44 @@ def visualize_score_files_in_bar_graph(score_files):
     #plt.show()
 
 
+def visualize_common_hits(config_file, *section_and_runfiles,
+    qrels_file=None, min_relev=2):
+    import pandas as pd
+
+    lst = [item.split(':') for item in section_and_runfiles]
+    runfiles = [item[0] for item in lst]
+    runs = list(map(lambda runfile:
+        pd.read_csv(runfile, header=None, sep="\s+",
+            names=['topic', 'docid'],
+            usecols=[0, 2]
+        ), runfiles))
+
+    for i in range(1, len(runs)):
+        df = pd.merge(runs[i - 1], runs[i], on=['topic', 'docid'], how='inner')
+        df = df.dropna(0)
+        runs[i] = df
+    merged_run = runs[-1]
+
+    # read in qrels file
+    if qrels_file:
+        qrels = pd.read_csv(qrels_file, header=None, sep="\s+",
+            names=['topic', 'docid', 'relevance'],
+            usecols=[0, 2, 3]
+        )
+        merged_run = pd.merge(qrels, merged_run,
+            on=['topic', 'docid'], how='inner')
+        merged_run = merged_run[merged_run['relevance'] >= min_relev]
+
+    print(merged_run)
+    for runfile, section in lst:
+        visualize_file(config_file, section, runfile, filter_df=merged_run)
+
+
 if __name__ == '__main__':
     import fire
     os.environ["PAGER"] = 'cat'
     fire.Fire({
         'visualize_file': visualize_file,
+        'visualize_common_hits': visualize_common_hits,
         'visualize_score_files_in_bar_graph': visualize_score_files_in_bar_graph
     })
