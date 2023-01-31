@@ -278,6 +278,43 @@ def indexer__docid_vec_pq_faiss(outdir,
     return trainer_and_indexer, finalize
 
 
+def indexer__docid_vec_hnsw_faiss(outdir, M, efC, dim, display_frq):
+    os.makedirs(outdir, exist_ok=False)
+    import pickle
+    import faiss
+    # M: This parameter controls the maximum number of neighbors
+    # for each layer. Increasing the values of this parameters
+    # leads to better recall and shorter retrieval times (at the
+    # expense of longer indexing time).
+    # Reasonable range for this parameter is 5-100.
+    faiss_index = faiss.IndexHNSWFlat(dim, M, faiss.METRIC_INNER_PRODUCT)
+    # efConstruction: Increasing this value improves the quality of the
+    # constructed graph and leads to a higher search accuracy, at the cost
+    # of longer indexing time. The same idea applies to the ef or efSearch
+    # parameter that we can pass to query_params.
+    # Reasonable range for this parameter is 100-2000.
+    faiss_index.hnsw.efConstruction = efC
+    doclist = []
+
+    def indexer(i, docs, encoder):
+        nonlocal doclist
+        # docs is of [((docid, *doc_props), doc_content), ...]
+        passages = [psg for docid, psg in docs]
+        embs = encoder(passages, debug=(i % display_frq == 0))
+        print(embs.shape)
+        faiss_index.add(embs)
+        doclist += docs
+        return docs[-1][0][0]
+
+    def finalize():
+        with open(os.path.join(outdir, 'doclist.pkl'), 'wb') as fh:
+            pickle.dump(doclist, fh)
+        faiss.write_index(faiss_index, os.path.join(outdir, 'index.faiss'))
+        print('Done!')
+
+    return indexer, finalize
+
+
 def indexer__inverted_index_feed(outdir, rescaler, tok_ckpt, mode, dim, _):
     import numpy as np
     from transformers import BertTokenizer
