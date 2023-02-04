@@ -133,7 +133,7 @@ RERANK='python -m pya0.transformer_eval maprun ./utils/transformer_eval.ini'
 $RERANK maprun_arqmath3_to_colbert /path/to/your/pya0-porterstemmer-task1.run --device a6000_3
 ```
 
-The final run files will be placed at `math-dense-retrievers.clone/experiments/runs`.
+The final run files will be placed at `math-dense-retrievers/experiments/runs`.
 
 Similar to the Approach Zero pass, use pya0 scripts to evaluate them. For example:
 ```sh
