@@ -203,3 +203,23 @@ Archive:  wheelhouse/pya0-0.1.7-py3-none-manylinux_2_24_x86_64.whl
 ---------                     -------
 112906295                     20 files
 ```
+
+## Example Usage
+Generate NTCIR-12 run:
+```sh
+python -m pya0 --use-fallback-parser --index ../../indexes/mnt-ntcir12_wfb.img/ --collection ntcir12-math-browsing-concrete --trec-output runs/ntcir12_wfb.run
+```
+
+Generate ARQMath (2022) runs:
+```sh
+# task 1
+python -m pya0 --stemmer porter --index ../../indexes/mnt-arqmath-task1.img/ --collection arqmath-2022-task1-manual --trec-output runs/arqmath_task1.run
+
+# task 2
+python -m pya0 --index ../../indexes/mnt-arqmath-task2.img/ --collection arqmath-2022-task2-refined --trec-output runs/arqmath_task2.run
+```
+
+Evaluate a run:
+```sh
+./eval-arqmath3/task2/eval.sh --tsv=../../datasets/slt_representation_v3/ --nojudge
+```
