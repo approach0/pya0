@@ -81,7 +81,7 @@ def msearch(index, query, verbose=False, topk=1000, log=None, fork_search=False,
             )
             timer_end()
             results = json.loads(result_JSON)
-        except UnicodeDecodeError:
+        except (json.decoder.JSONDecodeError, UnicodeDecodeError):
             return {
                 "ret_code": 1000,
                 "ret_str": 'UnicodeDecodeError'
