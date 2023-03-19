@@ -56,7 +56,7 @@ def tsv_product(input_tsv):
             if values[0] ==  '<range>':
                 start, end, step = map(lambda x: float(x), values[1:])
                 values = np.arange(start, end, step).tolist()
-                values = map(lambda x: str(x), values)
+                values = map(lambda x: str(round(x, 3)), values)
             entries.append(entry)
             matrix.append(values)
         prods = list(itertools.product(*matrix))
@@ -85,7 +85,8 @@ def tsv_eval_read(input_tsv):
 def tsv_eval_do(header, rows, each_do, prefix=''):
     tot_rows = len(rows)
     for idx, row in enumerate(rows):
-        run_name = prefix + ','.join([f'{k}={v}' for k,v in zip(header, row)])
+        run_name = ','.join([f'{k}={v}' for k,v in zip(header, row)])
+        run_name = prefix + run_name + '.run'
         print('[row %u / %u] %s' % (idx + 1, tot_rows, run_name))
         replaces = {}
         for k, v in zip(header, row):
