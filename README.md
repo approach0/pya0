@@ -219,6 +219,11 @@ python -m pya0 --stemmer porter --index ../../indexes/mnt-arqmath-task1.img/ --c
 python -m pya0 --index ../../indexes/mnt-arqmath-task2.img/ --collection arqmath-2022-task2-refined --trec-output runs/arqmath_task2.run
 ```
 
+Generate grid-search runs:
+```sh
+python -m pya0 --use-fallback-parser --index ../../indexes/mnt-ntcir12_wfb.img/ --collection ntcir12-math-browsing-concrete --auto-eval ./experiments/auto_eval--symbol-scores.tsv
+```
+
 Evaluate a run:
 ```sh
 ./eval-arqmath3/task2/eval.sh --tsv=../../datasets/slt_representation_v3/ --nojudge

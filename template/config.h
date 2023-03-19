@@ -31,12 +31,14 @@
   #define MATH_PRUNING_STRATEGY_GBP_LEN
 
 //#define MATH_PRUNING_INIT_THRESHOLD_FACTOR .30f /* aggressive */
-  #define MATH_PRUNING_INIT_THRESHOLD_FACTOR {{init_threshold}} /* conservative */
+  #define MATH_PRUNING_INIT_THRESHOLD_FACTOR .20f /* conservative */
 //#define MATH_PRUNING_INIT_THRESHOLD_FACTOR .00f /* rank-safe */
 
-#define MATH_SCORE_ETA {{math_eta}} /* larger: slow */
+#define MATH_PRUNING_NOTCLAUSE_THRESHOLD_FACTOR .60f /* for NOT clause */
 
-#define MATH_BASE_WEIGHT {{math_base_w}}
+#define MATH_SCORE_ETA 0.30f /* larger: slow */
+
+#define MATH_BASE_WEIGHT 2.5f
 #define MATH_REWARD_WEIGHT  (MATH_BASE_WEIGHT * 0.98f)
 #define MATH_PENALTY_WEIGHT (MATH_BASE_WEIGHT * 0.02f)
 
@@ -61,12 +63,13 @@
 #define MAX_K_TOP_RESULTS   1000
 #define DEFAULT_RES_PER_PAGE  10
 
+{{SYMBOL_SCORING_ENABLE}} SYMBOL_SCORING_ENABLE
 #define SYMBOL_SUBSCORE_FULL 1.00f /* leaf and fingerprint match */
-#define SYMBOL_SUBSCORE_LEAF 0.94f /* only leaf match */
-#define SYMBOL_SUBSCORE_BASE 0.90f /* base score */
+#define SYMBOL_SUBSCORE_LEAF {{SYMBOL_SUBSCORE_LEAF}} /* only leaf match */
+#define SYMBOL_SUBSCORE_BASE {{SYMBOL_SUBSCORE_BASE}} /* base score */
 
-#define BM25_DEFAULT_B  {{bm25_b}}
-#define BM25_DEFAULT_K1 {{bm25_k1}} /* lower TF upperbound, less rewards to TF */
+#define BM25_DEFAULT_B  0.75f
+#define BM25_DEFAULT_K1 2.0f
 
 #define MAX_QUERY_BYTES     (MAX_TXT_SEG_BYTES * 32)
 #define MAX_QUERY_WSTR_LEN  (MAX_TXT_SEG_LEN * 32)
@@ -75,6 +78,7 @@
 
 #define PRINT_MERGE_TIME
 
-#define SEARCH_MERGER maxscore
+#define SEARCH_MERGER__USE_MAXSCORE
+//#define SEARCH_MERGER__USE_WAND
 
 #define UNLIMIT_FILENO

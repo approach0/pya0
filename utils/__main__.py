@@ -8,7 +8,7 @@ import time
 import pickle
 import pya0
 from .mindex_info import list_indexes
-from .eval import run_topics, evaluate_run, evaluate_log
+from .eval import run_topics
 from .msearch import cascade_run, msearch
 from .mergerun import concatenate_run_files, merge_run_files
 from .l2r import L2R_gen_train_data, L2R_train
@@ -34,8 +34,6 @@ if __name__ == '__main__':
         help="Mixed type of keywords, math keywords are written in TeX and wrapped up in dollars")
     parser.add_argument('--stemmer', type=str, required=False,
         help="Specified stemmer name. E.g., lancaster")
-    parser.add_argument('--direct-search', type=str, required=False,
-        help="Issue direct search query in pickle, and output JSON results")
     parser.add_argument('--select-topic', type=str, required=False,
         help="Select specific topic to run for evaluation")
     parser.add_argument('--filter', type=str, required=False,
@@ -80,9 +78,7 @@ if __name__ == '__main__':
     parser.add_argument('--kfold', type=int, required=False,
         help="Sample input topics with k-fold validation.")
     parser.add_argument('--auto-eval', type=str, required=False,
-        help="Automatically evaluate multiple experiments specified by TSV file. E.g., '--auto-eval <name>'")
-    parser.add_argument('--auto-eval-summary', type=str, required=False,
-        help="Print automatic evaluation summary in TSV. E.g., '--auto-eval <name>'")
+        help="Automatically evaluate multiple experiments specified by TSV file. E.g., '--auto-eval <tsv_file>'")
 
     args = parser.parse_args()
 
@@ -132,30 +128,6 @@ if __name__ == '__main__':
         list_indexes()
         exit(0)
 
-    # print auto-eval summary?
-    elif args.auto_eval_summary:
-        abort_on_empty_collection(args.collection)
-        name = args.auto_eval_summary
-        header, rows = auto_eval.tsv_eval_read('product.tsv')
-        def wrap_summary(idx, run_name, _):
-            global header
-            run_path=f'tmp/{run_name}.run'
-            log_path=f'tmp/{run_name}.log'
-            if os.path.exists(f'tmp/{run_name}.done'):
-                run_header, run_row = evaluate_run(args.collection, run_path)
-                log_header, log_row = evaluate_log(args.collection, log_path)
-                if idx == 0:
-                    header = header + run_header + log_header
-                rows[idx] += run_row + log_row
-            else:
-                print('skip this row')
-        auto_eval.tsv_eval_do(header, rows, wrap_summary, prefix=name+'-')
-        with open(f'summary-{name}.tsv', 'w') as fh:
-            print('#' + '\t'.join(header), file=fh)
-            for row in rows:
-                print('\t'.join(row), file=fh)
-        quit(0)
-
     # concatenate run files?
     elif args.concate_runs:
         A, B, n = args.concate_runs.split(',')
@@ -174,7 +146,6 @@ if __name__ == '__main__':
         method, params = fields[0], fields[1:] if len(fields) > 1 else []
         L2R_train(method, params, output_file=args.trec_output)
         quit(0)
-
 
 
     # open index from specified index path or prebuilt index
@@ -201,19 +172,8 @@ if __name__ == '__main__':
 
 
 
-    # direct search
-    if args.direct_search:
-        with open(args.direct_search, 'rb') as fh:
-            query, topk, log = pickle.load(fh)
-            print(query, topk, log, file=sys.stderr)
-            sys.stderr.flush()
-            res = msearch(index, query, topk=topk, log=log)
-            print(json.dumps(res, indent=4))
-        pya0.index_close(index)
-        quit(0)
-
     # generate l2r training data
-    elif args.training_data_from_run:
+    if args.training_data_from_run:
         abort_on_non_a0_index(index)
         abort_on_empty_collection(args.collection)
         L2R_gen_train_data(args.collection, index, args.training_data_from_run)
@@ -229,39 +189,39 @@ if __name__ == '__main__':
     # auto evaluation?
     elif args.auto_eval:
         abort_on_empty_collection(args.collection)
-        name = args.auto_eval
         print('reading auto_eval.tsv ...')
-        out_tsv_content = auto_eval.tsv_product('auto_eval.tsv')
+        out_tsv_content = auto_eval.tsv_product(args.auto_eval)
         out_tsv = 'product.tsv'
         print(f'generating {out_tsv} ...')
         with open(out_tsv, 'w') as fh:
             fh.write(out_tsv_content + '\n')
         print('starting evaluation ...')
         header, rows = auto_eval.tsv_eval_read(out_tsv)
+
+        def rm_option(argv, option):
+            if option in argv:
+                i = argv.index(option)
+                argv.pop(i) # pop the option parameter
+                argv.pop(i) # pop the following argument
+            return argv
+
         def wrap_eval(idx, run_name, replaces):
-            if os.path.exists(f'tmp/{run_name}.done'):
-                print('skip this row')
-                return
             auto_eval.replace_source_code('./template', replaces)
             print('Rebuild project in 3 seconds...')
             time.sleep(3)
             auto_eval.remake('..')
-            run_topics(index, args.collection,
-                output=f'tmp/{run_name}.run',
-                log=f'tmp/{run_name}.log',
-                topk=topk,
-                verbose=False,
-                cascades=cascades,
-                math_expansion=args.math_expansion,
-                fork_search=args.index,
-                select_topic=args.select_topic
-            )
-            with open(f'tmp/{run_name}.done', 'w') as fh:
-                pass
-        auto_eval.tsv_eval_do(header, rows, wrap_eval, prefix=name+'-')
+            auto_eval.remake('.')
+            cmd = ['python3', '-m', 'pya0'] + sys.argv[1:]
+            cmd = rm_option(cmd, '--auto-eval')
+            cmd = rm_option(cmd, '--trec-output')
+            cmd += ['--trec-output', run_name]
+            print(cmd, file=sys.stderr)
+            import subprocess
+            subprocess.run(cmd)
+
+        auto_eval.tsv_eval_do(header, rows, wrap_eval,
+            prefix=args.auto_eval + '-')
         quit(0)
-
-
 
     # actually run query
     if args.query:
@@ -324,10 +284,8 @@ if __name__ == '__main__':
             output=trec_output,
             topk=topk,
             verbose=verbose,
-            trec_eval_args=args.eval_args,
             cascades=cascades,
             math_expansion=args.math_expansion,
-            #fork_search=args.index,
             kfold=args.kfold,
             select_topic=args.select_topic
         )

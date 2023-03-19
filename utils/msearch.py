@@ -4,8 +4,6 @@ import pya0
 import json
 import pickle
 import requests
-import tempfile
-import subprocess
 from timer import timer_begin, timer_end
 from rm3 import rm3_expand_query
 from l2r import L2R_rerank, parse_svmlight_by_topic
@@ -26,23 +24,8 @@ def send_json(url, obj, verbose=False):
         exit(1)
 
 
-def msearch(index, query, verbose=False, topk=1000, log=None, fork_search=False, docid=None):
-    if fork_search:
-        pkl_file = tempfile.mktemp() + '-fork-search.pkl'
-        results = {'ret_code': 0, 'ret_str': 'successful', 'hits': []}
-        with open(pkl_file, 'wb') as fh:
-            pickle.dump((query, topk, log), fh)
-            fh.flush()
-            cmd = ['python3', '-m', 'pya0', '--index', fork_search, '--direct-search', pkl_file]
-            print(cmd, file=sys.stderr)
-            timer_begin()
-            process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            timer_end()
-            output = process.stdout
-            print(process.stderr.decode("utf-8"), file=sys.stderr) # debug
-            results = json.loads(output)
-
-    elif isinstance(index, tuple) and index[0] == 'tcp':
+def msearch(index, query, verbose=False, topk=1000, docid=None):
+    if isinstance(index, tuple) and index[0] == 'tcp':
         # for a valid query JSON, we need a few extra fields:
         # "field": "content", "op": "OR", "boost": 1.f
         for i in range(len(query)):
@@ -68,7 +51,7 @@ def msearch(index, query, verbose=False, topk=1000, log=None, fork_search=False,
     elif docid:
         timer_begin()
         result_JSON = pya0.search(
-            index, query, verbose=verbose, topk=topk, log=log, docid=docid
+            index, query, verbose=verbose, topk=topk, docid=docid
         )
         timer_end()
         results = json.loads(result_JSON)
@@ -77,7 +60,7 @@ def msearch(index, query, verbose=False, topk=1000, log=None, fork_search=False,
         try:
             timer_begin()
             result_JSON = pya0.search(
-                index, query, verbose=verbose, topk=topk, log=log
+                index, query, verbose=verbose, topk=topk
             )
             timer_end()
             results = json.loads(result_JSON)
@@ -96,7 +79,7 @@ def print_query_oneline(query):
 
 def cascade_run(index, cascades, topic_query,
     purpose='test', run_num=0, verbose=False, docid=None, output=None,
-    topk=1000, collection=None, log=None, fork_search=False, fold=0):
+    topk=1000, collection=None, fold=0):
 
     qid, query, qtags = topic_query
     hits = []
@@ -113,8 +96,7 @@ def cascade_run(index, cascades, topic_query,
             print_query_oneline(query)
             fs_args = args['first-stage-args']
             results = msearch(
-                index, query, verbose=verbose, log=log,
-                topk=topk, fork_search=fork_search, docid=docid
+                index, query, verbose=verbose, topk=topk, docid=docid
             )
 
         elif cascade == 'reader':
@@ -151,9 +133,7 @@ def cascade_run(index, cascades, topic_query,
             query = rm3_expand_query(index, query, hits,
                                      feedbackTerms=fbTerms, feedbackDocs=fbDocs)
             print_query_oneline(query)
-            results = msearch(index, query, verbose=verbose,
-                log=log, topk=topk, fork_search=fork_search
-            )
+            results = msearch(index, query, verbose=verbose, topk=topk)
 
         elif cascade == 'l2r':
             args[1] = [p.replace('__fold__', f'fold{fold}') for p in args[1]]

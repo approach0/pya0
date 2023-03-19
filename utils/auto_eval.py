@@ -7,11 +7,8 @@ import math
 
 
 def remake(root_dir):
+    print('[make]', root_dir)
     res = subprocess.run(['make'], cwd=f'{root_dir}')
-    if 0 != res.returncode:
-        print('Error: make non-zero return value!')
-        quit(1)
-    res = subprocess.run(['make'], cwd=f'{root_dir}/pya0')
     if 0 != res.returncode:
         print('Error: make non-zero return value!')
         quit(1)

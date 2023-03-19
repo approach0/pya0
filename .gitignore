@@ -9,5 +9,7 @@ tmp/
 *.model
 .build/
 *.swp
+math.xml.tmp
 product.tsv
 __pycache__/
+timer_report.json

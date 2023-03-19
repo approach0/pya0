@@ -61,41 +61,6 @@ def trec_eval(qrels: str, run: str, eval_args: str):
         print('\n\n\t Please install trec_eval: https://github.com/approach0/trec_eval', end="\n\n")
 
 
-def evaluate_run(collection, path):
-    eval_cmd = collection_driver.eval_cmd(collection, path)
-    process = subprocess.run(eval_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = process.stdout, process.stderr
-    print(stderr.decode("utf-8"), end='')
-    results = stdout.decode("utf-8").strip('\n').split('\n')
-    header = []
-    row = []
-    for line in results:
-        fields = line.split()
-        metric = fields[0]
-        topic = fields[1]
-        score = fields[2]
-        if topic == 'all':
-            header.append(metric)
-            row.append(score)
-    return header, row
-
-
-def evaluate_log(collection, path):
-    with open(path, 'r') as fh:
-        log_content = fh.read()
-    m = re.findall(r'time cost: (.*?) msec', log_content)
-    run_times = ','.join(m)
-    process = subprocess.run(['python3', 'calc-runtime-stats.py', run_times],
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = process.stdout, process.stderr
-    print(stderr.decode("utf-8"), end='')
-    json_result = stdout.decode("utf-8")
-    j = json.loads(json_result)
-    header = list(filter(lambda x: not x.startswith('_'), j.keys()))
-    row = [str(j[k]) for k in header]
-    return header, row
-
-
 def TREC_output(hits, queryID, append=False, output_file="tmp.run", name="APPROACH0"):
     if len(hits) == 0: return
     with open(output_file, 'a' if append else 'w') as fh:
@@ -141,7 +106,7 @@ def parse_qrel_file(file_path):
 
 
 def run_fold_topics(index, collection, k, fold, cascades, output, topk, purpose,
-                    math_expansion=False, verbose=False, log=None, fork_search=False):
+                    math_expansion=False, verbose=False):
     #tracemalloc.start()
     j = 0
     for topic_query_ in fold:
@@ -161,7 +126,7 @@ def run_fold_topics(index, collection, k, fold, cascades, output, topk, purpose,
         print('[cascade_run]', qid, f' ==> {output}')
         hits = cascade_run(index, cascades, topic_query, collection=collection,
             purpose=purpose, run_num=j, verbose=verbose, topk=topk, fold=k,
-            log=log, fork_search=fork_search, output=output)
+            output=output)
         print()
 
         # output TREC-format run file
@@ -177,9 +142,9 @@ def run_fold_topics(index, collection, k, fold, cascades, output, topk, purpose,
         j += 1
 
 
-def run_topics(index, collection, output, topk=1000, verbose=False, log=None,
-    trec_eval_args=[], cascades=[('first-stage', None)], training_output=None,
-    kfold=None, math_expansion=None, fork_search=False, select_topic=None):
+def run_topics(index, collection, output, topk=1000, verbose=False,
+    cascades=[('first-stage', None)], training_output=None,
+    kfold=None, math_expansion=None, select_topic=None):
     # prepare K-fold evaluation
     topic_queries = list(gen_topics_queries(collection))
     #topic_queries = list(gen_topics_queries(collection, qfilter=lambda x: x['type'] == 'tex'))
@@ -209,9 +174,9 @@ def run_topics(index, collection, output, topk=1000, verbose=False, log=None,
 
         # for training
         run_fold_topics(index, collection, k, cur_fold, cascades, outfor('train'), topk, 'train',
-            math_expansion=math_expansion, verbose=verbose, log=None, fork_search=fork_search)
+            math_expansion=math_expansion, verbose=verbose)
 
         # for testing
         run_fold_topics(index, collection, k, hold_out, cascades, outfor('test'), topk, 'test',
-            math_expansion=math_expansion, verbose=verbose, log=log, fork_search=fork_search)
+            math_expansion=math_expansion, verbose=verbose)
     timer_report()
