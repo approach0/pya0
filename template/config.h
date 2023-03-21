@@ -68,6 +68,8 @@
 #define SYMBOL_SUBSCORE_LEAF {{SYMBOL_SUBSCORE_LEAF}} /* only leaf match */
 #define SYMBOL_SUBSCORE_BASE {{SYMBOL_SUBSCORE_BASE}} /* base score */
 
+{{PATH_IDF_ENABLE}} PATH_IDF_ENABLE
+
 #define BM25_DEFAULT_B  0.75f
 #define BM25_DEFAULT_K1 2.0f
 
