@@ -9,23 +9,26 @@ with open('auto_eval--symbol-scores.result', 'r') as fh:
         leaf = match.group(1)
         match = re.search(r'SYMBOL_SUBSCORE_BASE=([\d.]+)', fname)
         base = match.group(1)
-        x.append(base)
-        y.append(leaf)
-        z1.append(f_bpref)
-        z2.append(p_bpref)
+        if float(base) <= float(leaf):
+            x.append(float(base))
+            y.append(float(leaf))
+            z1.append(float(f_bpref))
+            z2.append(float(p_bpref))
 
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Creating figure
 fig = plt.figure(figsize = (10, 7))
 ax = plt.axes(projection ="3d")
 
-# Creating plot
-ax.scatter3D(x, y, z1, color = "green")
-ax.scatter3D(x, y, z2, color = "blue")
-plt.title("simple 3D scatter plot")
+ax.scatter3D(x, y, z1, color = "green",label="Fully Relevant")
+ax.scatter3D(x, y, z2, color = "blue", label='Partially Relevant')
 
-# show plot
-#plt.show()
+ax.set_xlabel('b2 (structure only)')
+ax.set_ylabel('b1 (operand symbol)')
+ax.set_zlabel('BPref')
+
+#plt.title("Symbol scoring performance")
+plt.legend()
+plt.show()
