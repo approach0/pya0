@@ -1,0 +1,2 @@
+Run nDCG' mAP' p@10 bpref judge_rate
+arqmath_task2_run 0.6260 0.4864 0.6197 0.4872 -
