@@ -36,7 +36,7 @@
 
 #define MATH_PRUNING_NOTCLAUSE_THRESHOLD_FACTOR .60f /* for NOT clause */
 
-#define MATH_SCORE_ETA 0.30f /* larger: slow */
+#define MATH_SCORE_ETA {{MATH_SCORE_ETA}} /* larger: slow */
 
 #define MATH_BASE_WEIGHT 2.5f
 #define MATH_REWARD_WEIGHT  (MATH_BASE_WEIGHT * 0.98f)

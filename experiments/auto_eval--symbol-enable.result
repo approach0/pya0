@@ -1,2 +1,0 @@
-./experiments/auto_eval--symbol-enable.tsv-SYMBOL_SUBSCORE_LEAF=0.94,SYMBOL_SUBSCORE_BASE=0.90,SYMBOL_SCORING_ENABLE=#define.run 0.6304 0.5411
-./experiments/auto_eval--symbol-enable.tsv-SYMBOL_SUBSCORE_LEAF=0.94,SYMBOL_SUBSCORE_BASE=0.90,SYMBOL_SCORING_ENABLE=#undef.run 0.5339 0.5350
