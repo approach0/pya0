@@ -33,4 +33,5 @@ ax.set_ylabel('Metrics')
 
 #plt.title("Symbol scoring performance")
 plt.legend()
+plt.tight_layout()
 plt.show()
