@@ -6,9 +6,12 @@ import argparse
 def calculated_ndcg(res_directory, trec_eval_tool, qre_file_path):
     result = {}
     for file in os.listdir(res_directory):
-        output = check_output([trec_eval_tool, qre_file_path, res_directory+file, "-m", "ndcg"])
-        output = output.decode('utf-8')
-        score = output.split("\t")[2].strip()
+        if os.path.getsize(res_directory+file) == 0:
+            score = '0.0'
+        else:
+            output = check_output([trec_eval_tool, qre_file_path, res_directory+file, "-m", "ndcg"])
+            output = output.decode('utf-8')
+            score = output.split("\t")[2].strip()
         submission = file.split(".")[0].split("prime_")[1]
         result[submission] = score
     return result
@@ -17,9 +20,12 @@ def calculated_ndcg(res_directory, trec_eval_tool, qre_file_path):
 def calculated_map(res_directory, trec_eval_tool, qre_file_path):
     result = {}
     for file in os.listdir(res_directory):
-        output = check_output([trec_eval_tool, qre_file_path, res_directory+file, "-l2", "-m", "map"])
-        output = output.decode('utf-8')
-        score = output.split("\t")[2].strip()
+        if os.path.getsize(res_directory+file) == 0:
+            score = '0.0'
+        else:
+            output = check_output([trec_eval_tool, qre_file_path, res_directory+file, "-l2", "-m", "map"])
+            output = output.decode('utf-8')
+            score = output.split("\t")[2].strip()
         submission = file.split(".")[0].split("prime_")[1]
         result[submission] = score
     return result
@@ -28,9 +34,12 @@ def calculated_map(res_directory, trec_eval_tool, qre_file_path):
 def calculated_p_at_10(res_directory, trec_eval_tool, qre_file_path):
     result = {}
     for file in os.listdir(res_directory):
-        output = check_output([trec_eval_tool, qre_file_path, res_directory + file, "-l2", "-m", "P"])
-        output = output.decode('utf-8').split("\n")[1]
-        score = output.split("\t")[2].strip()
+        if os.path.getsize(res_directory+file) == 0:
+            score = '0.0'
+        else:
+            output = check_output([trec_eval_tool, qre_file_path, res_directory + file, "-l2", "-m", "P"])
+            output = output.decode('utf-8').split("\n")[1]
+            score = output.split("\t")[2].strip()
         submission = file.split(".")[0].split("prime_")[1]
         result[submission] = score
     return result
@@ -39,9 +48,12 @@ def calculated_p_at_10(res_directory, trec_eval_tool, qre_file_path):
 def calculated_bpref(res_directory, trec_eval_tool, qre_file_path, nojudge):
     result = {}
     for file in os.listdir(res_directory):
-        output = check_output([trec_eval_tool, qre_file_path, res_directory + file, "-l2", "-m", "bpref"])
-        output = output.decode('utf-8')
-        score = output.split("\t")[2].strip()
+        if os.path.getsize(res_directory+file) == 0:
+            score = '0.0'
+        else:
+            output = check_output([trec_eval_tool, qre_file_path, res_directory + file, "-l2", "-m", "bpref"])
+            output = output.decode('utf-8')
+            score = output.split("\t")[2].strip()
         submission = file.split(".")[0].split("prime_")[1]
         result[submission] = [score, '-']
         if not nojudge:
