@@ -38,4 +38,4 @@ def compute_roc(qrel_path, run_path, min_rel=2, docid_col=2):
 
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
-    fire.Fire()
+    fire.Fire(compute_roc)
