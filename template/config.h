@@ -31,7 +31,7 @@
   #define MATH_PRUNING_STRATEGY_GBP_LEN
 
 //#define MATH_PRUNING_INIT_THRESHOLD_FACTOR .30f /* aggressive */
-  #define MATH_PRUNING_INIT_THRESHOLD_FACTOR .20f /* conservative */
+  #define MATH_PRUNING_INIT_THRESHOLD_FACTOR {{INIT_TH}} /* conservative */
 //#define MATH_PRUNING_INIT_THRESHOLD_FACTOR .00f /* rank-safe */
 
 #define MATH_PRUNING_NOTCLAUSE_THRESHOLD_FACTOR .60f /* for NOT clause */
