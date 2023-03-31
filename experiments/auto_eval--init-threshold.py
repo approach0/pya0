@@ -57,6 +57,9 @@ ax2.set_ylabel('Run times')
 ax.legend()
 ax2.legend(loc='lower left')
 
+ax.set_rasterized(True)
+ax2.set_rasterized(True)
+
 plt.tight_layout()
 plt.show()
 fig.savefig('init-threshold.eps')
