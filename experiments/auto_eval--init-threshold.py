@@ -25,7 +25,7 @@ with open('auto_eval--init-threshold.result', 'r') as fh:
         with open(time_fname, 'r') as fh:
             time_report = json.load(fh)
         # add result
-        res[math_path_w] = (NDCG, MAP, P, BPREF, time_report['avg'])
+        res[math_path_w] = (NDCG, MAP, P, BPREF, time_report['avg'], time_report['std'])
         print(math_path_w, res[math_path_w])
 
 x = list(sorted(map(lambda x: float(x), res.keys())))
@@ -34,22 +34,29 @@ z2 = list(map(lambda x: float(res[str(x)][1]), x))
 z3 = list(map(lambda x: float(res[str(x)][2]), x))
 z4 = list(map(lambda x: float(res[str(x)][3]), x))
 z5 = list(map(lambda x: res[str(x)][4], x))
+z_max = list(map(lambda x: res[str(x)][4] + res[str(x)][5], x))
+z_min = list(map(lambda x: res[str(x)][4] - res[str(x)][5], x))
 
 import matplotlib.pyplot as plt
 
 fig = plt.figure(figsize = (10, 7))
 ax = plt.axes()
+ax2 = ax.twinx()
 
 ax.plot(x, z1, marker='*',label="NDCG'")
 ax.plot(x, z2, marker='x',label="MAP'")
 ax.plot(x, z3, marker='.',label="P@10")
 ax.plot(x, z4, marker='o',label="BPref")
-ax.plot(x, z5, marker='o',label="avg. time (secs)")
+ax2.plot(x, z5, marker='o',label="avg. time (secs)")
+ax2.fill_between(x, z_max, z_min, color='slateblue', alpha=0.4, label="± 1 stdev (secs)")
 
 ax.set_xlabel('Initial threshold')
 ax.set_ylabel('Metrics')
+ax2.set_ylabel('Run times')
 
-plt.legend()
+ax.legend()
+ax2.legend(loc='lower left')
+
 plt.tight_layout()
 plt.show()
-fig.savefig('preview.png')
+fig.savefig('init-threshold.eps')
