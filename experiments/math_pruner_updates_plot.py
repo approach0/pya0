@@ -5,6 +5,9 @@ import pandas as pd
 
 
 def plot(file_path):
+    m = re.search(r'math_pruner_updates--(\S+).log$', file_path)
+    topic = 'Unknown' if m is None else m.group(1)
+
     df = pd.read_csv(file_path, header=None, sep="\s+",
             names=['n_qnodes', 'g_th', 'pivot', 'n_iters']
         )
@@ -43,16 +46,10 @@ def plot(file_path):
     ax2.set_ylabel(r'Threshold ($\theta$)')
     ax3.set_ylabel(r'OPT nodes')
 
+    plt.title(topic)
     plt.tight_layout()
     plt.show()
-
-    m = re.search(r'math_pruner_updates--(\S+).log$', file_path)
-    if m is None:
-        fig.savefig('math_pruner_updates_plot.eps')
-    else:
-        topic = m.group(1)
-        print(topic)
-        fig.savefig(f'math_pruner_updates_plot--{topic}.eps')
+    fig.savefig(f'math_pruner_updates_plot--{topic}.eps')
 
 
 if __name__ == '__main__':
