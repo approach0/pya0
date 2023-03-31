@@ -179,4 +179,6 @@ def run_topics(index, collection, output, topk=1000, verbose=False,
         # for testing
         run_fold_topics(index, collection, k, hold_out, cascades, outfor('test'), topk, 'test',
             math_expansion=math_expansion, verbose=verbose)
-    timer_report()
+
+    if output != '/dev/null':
+        timer_report(report_filename=output + '.timer.json')

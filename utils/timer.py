@@ -29,9 +29,10 @@ def timer_report(report_filename='timer_report.json'):
         output['std'] = statistics.stdev(runtimes)
     for key in output:
         output[key] = round(output[key], 3) # to milli-seconds
-    print('timer_report:', output)
+    print('timer report:', output)
     output['_runtimes'] = runtimes
     output_json = json.dumps(output, sort_keys=True, indent=4)
+    print('time report saved:', report_filename)
     with open(report_filename, 'w') as fh:
         fh.write(output_json)
         fh.write('\n')
