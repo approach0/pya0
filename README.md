@@ -19,7 +19,7 @@ $ curl https://bootstrap.pypa.io/get-pip.py | python3
 $ sudo pip install -i https://pypi.python.org/simple/ --trusted-host pypi.org pya0
 $ python3 -c 'import pya0'
 ```
-
+### Math token lexing
 Test a simple math token scanner:
 ```py
 import pya0
@@ -32,6 +32,30 @@ Result:
 ```
 
 Refer to `tests/` directory for more complete example usages.
+
+### Download prebuilt index and search
+See what prebuilt indexes we have available:
+```sh
+python -m pya0 --list-prebuilt-indexes
+                 ntcir-wfb                                                  
+description       NTCIR-12 Wikipedia Formula Browsing                       
+image_filesystem  reiserfs                                                  
+md5               6e87fc52a8f02c05113034c4b14b3e06                          
+urls              [https://vault.cs.uwaterloo.ca/s/gySLti89gZF8xz6/download]
+...
+```
+
+One-line command to download the NTCIR-12 WFB index and evaluate its topics:
+```sh
+rm -f ntcir12_wfb.run
+python -m pya0 --use-fallback-parser --index ntcir-wfb --collection ntcir12-math-browsing-concrete --trec-output ntcir12_wfb.run
+```
+
+Now evaluate the generated run:
+```sh
+$ ./eval-ntcir12.sh tsv ./ntcir12_wfb.run
+./ntcir12_wfb.run 0.6304 0.5411
+```
 
 ## Example Usage
 Generate NTCIR-12 run:
