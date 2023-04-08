@@ -120,7 +120,7 @@ def run_fold_topics(index, collection, k, fold, cascades, output, topk, purpose,
         # process initial query
         query = preprocess_query(query,
             expansion=math_expansion,
-            query_type_filter=args.query_type_filter
+            query_type_filter=query_type_filter
         )
 
         #snapshot1 = tracemalloc.take_snapshot()

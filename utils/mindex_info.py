@@ -1,125 +1,14 @@
 import pandas as pd
 
 MINDEX_INFO = {
-    "tiny-mse": {
-        "description": "Tiny toy math Q&A corpus from Math StackExchange",
+    "ntcir-wfb": {
+        "description": "NTCIR-12 Wikipedia Formula Browsing",
         "urls": [
-            "https://www.dropbox.com/s/z8hztzdksshrayy/tiny-mse.tar.gz?dl=1"
+            "https://vault.cs.uwaterloo.ca/s/gySLti89gZF8xz6/download"
         ],
-        "md5": "cb54659c7059dff42935eb67fb953dc1",
-        "size compressed (bytes)": 703411200,
-        "documents": 68,
-        "corpus_url": "https://github.com/approach0/search-engine/tree/ecir2020/indexer/test-corpus/mse-small",
-    },
-    "mse-ecir2020": {
-        "description": "Math Q&A corpus used to evaluate efficiency in ECIR 2020",
-        "urls": [
-			"https://www.dropbox.com/s/w1qco7s49oren9y/mse-ecir2020.tar.gz?dl=1"
-        ],
-        "md5": "35bcbc0f144ff4dd8baf35d439a6cc28",
-        "size compressed (bytes)": 5654523904,
-        "documents": 1057449,
-        "corpus_url": "https://www.cs.rit.edu/~dprl/data/mse-corpus.tar.gz",
-        "image_content_size": "8.2G",
-        "image_filesystem": "reiserfs",
-    },
-    "ntcir12-math-browsing": {
-        "description": "NTCIR-12 Wikipedia dataset",
-        "urls": [
-            "https://www.dropbox.com/s/s8xr0fi3lmvtxn4/ntcir12-math-browsing.tar.gz?dl=1",
-        ],
-        "md5": "5312c919ba92cd3fbb4b6de6e43551f3",
-        "size compressed (bytes)": 163893248,
-        "documents": 591468,
-        "corpus_url": "https://drive.google.com/file/d/1kaNjozKJhDUnCevw4fsrmYdsw8Wixkn2/view?usp=sharing",
-        "image_content_size": "609M",
-        "image_filesystem": "reiserfs",
-    },
-    "arqmath-2020-task1": {
-        "description": "CLEF ARQMath 2020 task2 (posts from MSE in the years 2010 to 2018)",
-        "urls": [
-            "https://www.dropbox.com/s/ofydiw10yf2ursa/arqmath-2020-task1.tar.gz?dl=1",
-        ],
-        "md5": "6d0894f01bb40c2b06c5300f48d6fc0b",
-        "size compressed (bytes)": 10294255616,
-        "documents":  1445495, # Number of posts here, there are 1 million documents though.
-        "corpus_url": "https://drive.google.com/file/d/1q595qXOdi1eHbC5RxMULMnbtYG4ukK3C/view?usp=sharing",
-        "corpus_image_minimal_size": "3G",
-        "image_content_size": "5.6G",
-        "image_filesystem": "reiserfs",
-    },
-    "arqmath-2020-task2-part1": {
-        "description": "CLEF ARQMath 2020 task2 (math formulas from MSE in the years 2010 to 2018) [part1]",
-        "urls": [
-            "https://www.dropbox.com/s/79amy930x5cdv5p/arqmath-2020-task2-part1.tar.gz?dl=1",
-        ],
-        "md5": "f140d94178dad084955ebd646a831a7e",
-        "size compressed (bytes)": 2071553043,
-        "documents": 28320920, # 22980699 multi-token formulas
-        "corpus_url": "https://drive.google.com/file/d/1rtINvwODOK-YH79OleoVYH90X9W3m1Q_/view?usp=sharing",
-        "corpus_image_minimal_size": "4.9G",
-        "image_content_size": "3.0G",
-        "image_filesystem": "reiserfs",
-    },
-    "arqmath-2020-task2-part2": {
-        "description": "CLEF ARQMath 2020 task2 (math formulas from MSE in the years 2010 to 2018) [part2]",
-        "urls": [
-            "https://www.dropbox.com/s/8loo9cwmjrua94k/arqmath-2020-task2-part2.tar.gz?dl=1",
-        ],
-        "md5": "05618cddb0131716ee94c26f8419e534",
-        "size compressed (bytes)": 2069404794,
-        "documents": 28320920, # 22980699 multi-token formulas
-        "corpus_url": "https://drive.google.com/file/d/1rtINvwODOK-YH79OleoVYH90X9W3m1Q_/view?usp=sharing",
-        "corpus_image_minimal_size": "4.9G",
-        "image_content_size": "3.0G",
-        "image_filesystem": "reiserfs",
-    },
-    "arqmath-2020-task2-part3": {
-        "description": "CLEF ARQMath 2020 task2 (math formulas from MSE in the years 2010 to 2018) [part3]",
-        "urls": [
-            "https://www.dropbox.com/s/ky5j2v75melz0ks/arqmath-2020-task2-part3.tar.gz?dl=1",
-        ],
-        "md5": "e155d89feeca5bf7b4b90d1d5844ec26",
-        "size compressed (bytes)": 2050106292,
-        "documents": 28320920, # 22980699 multi-token formulas
-        "corpus_url": "https://drive.google.com/file/d/1rtINvwODOK-YH79OleoVYH90X9W3m1Q_/view?usp=sharing",
-        "corpus_image_minimal_size": "4.9G",
-        "image_content_size": "3.0G",
-        "image_filesystem": "reiserfs",
-    },
-    "arqmath-2020-task2-part4": {
-        "description": "CLEF ARQMath 2020 task2 (math formulas from MSE in the years 2010 to 2018) [part4]",
-        "urls": [
-            "https://www.dropbox.com/s/d1pxlabjdbojdp0/arqmath-2020-task2-part4.tar.gz?dl=1",
-        ],
-        "md5": "c7d84f05342097b4db28149af4cd1f76",
-        "size compressed (bytes)": 2075163474,
-        "documents": 28320920, # 22980699 multi-token formulas
-        "corpus_url": "https://drive.google.com/file/d/1rtINvwODOK-YH79OleoVYH90X9W3m1Q_/view?usp=sharing",
-        "corpus_image_minimal_size": "4.9G",
-        "image_content_size": "3.0G",
-        "image_filesystem": "reiserfs",
-    },
-    "index-task1-2021": {
-        "description": "To reproduce our submission at ARQMath 2021 for task 1",
-        "urls": [
-            "https://drive.google.com/uc?id=1DQ-5-d72TocRd0kYvwOS1pFJixV1zsCi",
-        ],
-        "md5": "891e0feaec448e8b188428578a7d4bf8",
-        "size compressed (bytes)": 5606600,
-        "image_content_size": "11G",
-        "image_filesystem": "reiserfs",
-	},
-    "index-task2-2021": {
-        "description": "To reproduce our submission at ARQMath 2021 for task 2",
-        "urls": [
-            "https://drive.google.com/uc?id=1nYFSKRBBdI-MLfeSIas2_U6RskJVyj3d",
-        ],
-        "md5": "82f902d1209fcb68730941fc0ab429fc",
-        "size compressed (bytes)": 4662947,
-        "image_content_size": "14G",
-        "image_filesystem": "reiserfs",
-	},
+        "md5": "6e87fc52a8f02c05113034c4b14b3e06",
+        "image_filesystem": "reiserfs"
+    }
 }
 
 def list_indexes():

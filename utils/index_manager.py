@@ -60,66 +60,54 @@ def download_url(url, dest, md5=None, force=False, verbose=True):
             print(f'force=True, removing {dest}; fetching fresh copy...')
         os.remove(dest)
 
-    cookies = {}
-    if url.find('drive.google.com') >= 0:
-        import gdown
-        gdown.download(url, dest, quiet=False)
-    else:
-        with TqdmUpTo(unit='B', unit_scale=True, unit_divisor=1024, miniters=1) as t:
-            urlretrieve(url, dest, reporthook=t.update_to)
-
+    with TqdmUpTo(unit='B', unit_scale=True, unit_divisor=1024) as t:
+        urlretrieve(url, dest, reporthook=t.update_to)
     if md5:
         md5_computed = compute_md5(dest)
         assert md5_computed == md5, f'{dest} does not match checksum! Expecting {md5} got {md5_computed}.'
+        if verbose: print('MD5 passed:', md5)
 
     return dest
 
 
-def download_and_unpack_index(url, index_name, index_directory='indexes', force=False, verbose=True, prebuilt=False, md5=None):
-    if prebuilt:
-        index_directory = os.path.join(get_cache_home(), index_directory)
-        index_path = os.path.join(index_directory, f'{index_name}.{md5}')
+def download_and_unpack_index(url, index_name, index_directory='a0_indexes',
+    verbose=True, md5=None):
 
-        if not os.path.exists(index_directory):
-            os.makedirs(index_directory)
+    index_directory = os.path.join(get_cache_home(), index_directory)
 
-        local_tarball = os.path.join(index_directory, f'{index_name}.tar.gz')
-        # If there's a local tarball, it's likely corrupted, because we remove the local tarball on success (below).
-        # So, we want to remove.
-        if os.path.exists(local_tarball):
-            os.remove(local_tarball)
-    else:
-        local_tarball = os.path.join(index_directory, f'{index_name}.tar.gz')
-        index_path = os.path.join(index_directory, f'{index_name}')
+    if not os.path.exists(index_directory):
+        os.makedirs(index_directory)
 
-    # Check to see if index already exists, if so, simply return (quietly) unless force=True, in which case we remove
+    local_tarball = os.path.join(index_directory, f'{index_name}.tar.gz')
+    # If there's a local tarball, it's likely corrupted,
+    # because we remove the local tarball on success.
+    if os.path.exists(local_tarball):
+        os.remove(local_tarball)
+
     # index and download fresh copy.
+    index_path = os.path.join(index_directory, f'{index_name}.{md5}')
     if os.path.exists(index_path):
-        if not force:
-            if verbose:
-                print(f'{index_path} already exists, skipping download.')
-            return index_path
         if verbose:
-            print(f'{index_path} already exists, but force=True, removing {index_path} and fetching fresh copy...')
-        shutil.rmtree(index_path)
+            print(f'{index_path} already exists, skipping download.')
+        return index_path
 
-    dest = os.path.join(index_directory, f'{index_name}.tar.gz')
-    download_url(url, dest, verbose=verbose, md5=md5)
+    download_url(url, local_tarball, verbose=verbose, md5=md5)
 
     if verbose:
-        print(f'Extracting {local_tarball} into {index_path}...')
+        print(f'{local_tarball} -> {index_path}')
     tarball = tarfile.open(local_tarball)
+    tarball_names = tarball.getnames()
+    assert len(tarball_names) == 1
     tarball.extractall(index_directory)
     tarball.close()
     os.remove(local_tarball)
 
-    if prebuilt:
-        os.rename(os.path.join(index_directory, f'{index_name}'), index_path)
-
+    extracted_img = os.path.join(index_directory, tarball_names[0])
+    os.rename(extracted_img, index_path)
     return index_path
 
 
-def download_prebuilt_index(index_name, force=False, verbose=True, mirror=None):
+def download_prebuilt_index(index_name, verbose=False):
     if index_name not in MINDEX_INFO:
         raise ValueError(f'Unrecognized index name {index_name}')
     else:
@@ -128,7 +116,8 @@ def download_prebuilt_index(index_name, force=False, verbose=True, mirror=None):
     index_md5 = target_index['md5']
     for url in target_index['urls']:
         try:
-            return download_and_unpack_index(url, index_name, prebuilt=True, md5=index_md5, verbose=verbose)
+            return download_and_unpack_index(url, index_name,
+                md5=index_md5, verbose=verbose)
         except Exception as e:
             print(str(e), file=sys.stderr)
             print(f'Unable to download pre-built index at {url}, trying next URL...', file=sys.stderr)
@@ -139,6 +128,7 @@ def mount_image_index(image_path, image_fs):
     mount_dir = os.path.dirname(image_path) + '/mnt-' + os.path.basename(image_path)
     os.makedirs(mount_dir, exist_ok=True)
     if not os.path.ismount(mount_dir):
+        print('Please grant permission to mount this index image.')
         subprocess.run(["sudo", "umount", mount_dir])
         subprocess.run(["sudo", "mount", "-t", image_fs, image_path, mount_dir])
     return mount_dir
