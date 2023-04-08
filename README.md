@@ -6,8 +6,6 @@ A [PyPI package](https://pypi.org/project/pya0/) is available, try it out!
 
 However, in order to build this Python module, you will need to have this repository fetched as a git submodule from its parent [repository](https://github.com/approach0/search-engine/tree/pya0).
 
-There is a [specific branch](https://github.com/approach0/pya0/tree/sigir2021) for a saved snapshot of our SIGIR 2021 paper, please find a Colab link there for illustrating the usage of PyA0 from that version.
-
 ## Quick Start
 Install `pya0` using pip
 ```sh
@@ -35,32 +33,29 @@ Result:
 
 Refer to `tests/` directory for more complete example usages.
 
-## Supported Interfaces
-* `lex(TeX: str) -> list[tuple(tokID, token, symbol)]`
-* `parse(TeX: str, insert_rank_node: Option[bool]) -> tuple(str, OPT)`
-* `index_open(index_path: str, option: str, segment_dict: str) -> index_handler`
-* `index_close(ix: index_handler) -> None`
-* `index_memcache(ix: index_handler, term_cache: int, math_cache: int) -> None`
-* `index_print_summary(ix: index_handler) -> None`
-* `index_lookup_doc(ix: index_handler, docid: int) -> tuple(str, str)`
-* `index_writer(ix: index_handler) -> index_writer`
-* `writer_close(writer: index_writer) -> None`
-* `writer_maintain(writer: index_writer, force: bool) -> bool`
-* `writer_flush(writer: index_writer) -> None`
-* `writer_add_doc(writer: index_writer, content: str, url: str) -> int`
-* `search(ix: index_handler, keywords: list[dict[str, str]], verbose: bool, topk: int, trec_output: str) -> str`
-
-(`lex` function can be useful to train a RNN and predict TeX tokens)
-
-## Run Test Code
-Ensure to include and prioritize local dist:
-```py
-import sys
-sys.path.insert(0, './lib')
-```
-then run some test case, for example:
+## Example Usage
+Generate NTCIR-12 run:
 ```sh
-$ python3 tests/test-lexer.py
+python -m pya0 --use-fallback-parser --index ../../indexes/mnt-ntcir12_wfb.img/ --collection ntcir12-math-browsing-concrete --trec-output runs/ntcir12_wfb.run
+```
+
+Generate ARQMath (2022) runs:
+```sh
+# task 1
+python -m pya0 --stemmer porter --index ../../indexes/mnt-arqmath-task1.img/ --collection arqmath-2022-task1-manual --trec-output runs/arqmath_task1.run
+
+# task 2
+python -m pya0 --index ../../indexes/mnt-arqmath-task2.img/ --collection arqmath-2022-task2-refined --trec-output runs/arqmath_task2.run
+```
+
+Generate grid-search runs:
+```sh
+python -m pya0 --use-fallback-parser --index ../../indexes/mnt-ntcir12_wfb.img/ --collection ntcir12-math-browsing-concrete --auto-eval ./experiments/auto_eval--symbol-scores.tsv
+```
+
+Evaluate a run:
+```sh
+./eval-arqmath3/task2/eval.sh --tsv=../../datasets/slt_representation_v3/ --nojudge
 ```
 
 ## Build for Local Package
@@ -204,27 +199,42 @@ Archive:  wheelhouse/pya0-0.1.7-py3-none-manylinux_2_24_x86_64.whl
 112906295                     20 files
 ```
 
-## Example Usage
-Generate NTCIR-12 run:
+## Making Search Index (optional)
+First, use [utils/corpus_converter.py](utils/corpus_converter.py) to convert raw dataset files to `jsonl` file, the latter can be fed to [approach0 indexerd](https://github.com/approach0/a0-engine) using [a0-crawlers feeder](https://github.com/approach0/a0-crawlers/feeder).
+
+Datasets can be found here: https://vault.cs.uwaterloo.ca/s/RTJ27g9Ek2kanRe
+
+We have made pre-processed jsonl files available, download them using:
 ```sh
-python -m pya0 --use-fallback-parser --index ../../indexes/mnt-ntcir12_wfb.img/ --collection ntcir12-math-browsing-concrete --trec-output runs/ntcir12_wfb.run
+wget https://vault.cs.uwaterloo.ca/s/s2bcWssfAHHyeTF/download -O ntcir12_wfb.jsonl
+wget https://vault.cs.uwaterloo.ca/s/ANg5XQyGLsZPXLL/download -O arqmath3_task1.jsonl
+wget https://vault.cs.uwaterloo.ca/s/tY5SfDgErgkBr28/download -O arqmath3_task2.jsonl
 ```
 
-Generate ARQMath (2022) runs:
-```sh
-# task 1
-python -m pya0 --stemmer porter --index ../../indexes/mnt-arqmath-task1.img/ --collection arqmath-2022-task1-manual --trec-output runs/arqmath_task1.run
-
-# task 2
-python -m pya0 --index ../../indexes/mnt-arqmath-task2.img/ --collection arqmath-2022-task2-refined --trec-output runs/arqmath_task2.run
+Second, create index images and mount them as loop devices
+```
+cd a0-engine
+sudo ./indexerd/scripts/vdisk-setup.sh
+vdisk-creat.sh reiserfs 1K
+vdisk-mount.sh reiserfs vdisk.img
 ```
 
-Generate grid-search runs:
-```sh
-python -m pya0 --use-fallback-parser --index ../../indexes/mnt-ntcir12_wfb.img/ --collection ntcir12-math-browsing-concrete --auto-eval ./experiments/auto_eval--symbol-scores.tsv
+To make enough space for common datasets, consider these examples
+```
+df -h
+/dev/loop6       12G  8.2G  3.9G  68% /home/w32zhong/indexes/mnt-arqmath-task1.img
+/dev/loop8       12G  9.0G  3.1G  75% /home/w32zhong/indexes/mnt-arqmath-task2.img
+/dev/loop9      5.0G  609M  4.5G  12% /home/w32zhong/indexes/mnt-ntcir12_wfb.img
 ```
 
-Evaluate a run:
+Thrid, run indexerd daemon to create index for NTCIR-12 WFB:
 ```sh
-./eval-arqmath3/task2/eval.sh --tsv=../../datasets/slt_representation_v3/ --nojudge
+cd a0-engine/indexerd
+./run/indexerd.out -o ~/indexes/mnt-ntcir12_wfb.img/ -p 8935 -e
+```
+
+then, run feeder to feed jsonl file to indexerd:
+```sh
+cd a0-crawlers/feeder
+python feeder.py --indexd-url http://localhost:8935/index --bye --corpus ntcir12_wfb ./feeder.ini ~/corpus/ntcir12_wfb.jsonl
 ```
