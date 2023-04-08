@@ -238,3 +238,5 @@ then, run feeder to feed jsonl file to indexerd:
 cd a0-crawlers/feeder
 python feeder.py --indexd-url http://localhost:8935/index --bye --corpus ntcir12_wfb ./feeder.ini ~/corpus/ntcir12_wfb.jsonl
 ```
+
+For the ARQMath datasets, use `arqmath_task1_default__use_porter_stemmer` and `arqmath_task2_v3` as corpus names.
