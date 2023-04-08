@@ -58,6 +58,54 @@ Evaluate a run:
 ./eval-arqmath3/task2/eval.sh --tsv=../../datasets/slt_representation_v3/ --nojudge
 ```
 
+## Transformer Models
+Please check out [./training-and-inference](./training-and-inference)
+
+## Making Search Index (optional)
+First, use [utils/corpus_converter.py](utils/corpus_converter.py) to convert raw dataset files to `jsonl` file, the latter can be fed to [approach0 indexerd](https://github.com/approach0/a0-engine) using [a0-crawlers feeder](https://github.com/approach0/a0-crawlers/feeder).
+
+Datasets can be found here: https://vault.cs.uwaterloo.ca/s/RTJ27g9Ek2kanRe
+
+We have made pre-processed jsonl files available, download them using:
+```sh
+wget https://vault.cs.uwaterloo.ca/s/s2bcWssfAHHyeTF/download -O ntcir12_wfb.jsonl
+wget https://vault.cs.uwaterloo.ca/s/ANg5XQyGLsZPXLL/download -O arqmath3_task1.jsonl
+wget https://vault.cs.uwaterloo.ca/s/tY5SfDgErgkBr28/download -O arqmath3_task2.jsonl
+```
+
+Second, create index images and mount them as loop devices
+```
+cd a0-engine
+sudo ./indexerd/scripts/vdisk-setup.sh
+vdisk-creat.sh reiserfs 1K
+vdisk-mount.sh reiserfs vdisk.img
+```
+
+To make enough space for common datasets, consider these examples
+```
+df -h
+/dev/loop6       12G  8.2G  3.9G  68% /home/w32zhong/indexes/mnt-arqmath-task1.img
+/dev/loop8       12G  9.0G  3.1G  75% /home/w32zhong/indexes/mnt-arqmath-task2.img
+/dev/loop9      5.0G  609M  4.5G  12% /home/w32zhong/indexes/mnt-ntcir12_wfb.img
+```
+
+Thrid, run indexerd daemon to create index for NTCIR-12 WFB:
+```sh
+cd a0-engine/indexerd
+./run/indexerd.out -o ~/indexes/mnt-ntcir12_wfb.img/ -p 8935 -e
+```
+
+then, run feeder to feed jsonl file to indexerd:
+```sh
+cd a0-crawlers/feeder
+python feeder.py --indexd-url http://localhost:8935/index --bye --corpus ntcir12_wfb ./feeder.ini ~/corpus/ntcir12_wfb.jsonl
+```
+
+For the ARQMath datasets, use `arqmath_task1_default__use_porter_stemmer` and `arqmath_task2_v3` as corpus names.
+
+# Building This Package
+<details>
+
 ## Build for Local Package
 Build and install package locally (for testing):
 ```sh
@@ -69,9 +117,6 @@ then, you can import as library from system path:
 import pya0
 print(dir(pya0))
 ```
-
-## Transformer Models
-Please check out [./training-and-inference](./training-and-inference)
 
 ## Build for Manylinux Distribution
 Install Docker:
@@ -202,44 +247,4 @@ Archive:  wheelhouse/pya0-0.1.7-py3-none-manylinux_2_24_x86_64.whl
 112906295                     20 files
 ```
 
-## Making Search Index (optional)
-First, use [utils/corpus_converter.py](utils/corpus_converter.py) to convert raw dataset files to `jsonl` file, the latter can be fed to [approach0 indexerd](https://github.com/approach0/a0-engine) using [a0-crawlers feeder](https://github.com/approach0/a0-crawlers/feeder).
-
-Datasets can be found here: https://vault.cs.uwaterloo.ca/s/RTJ27g9Ek2kanRe
-
-We have made pre-processed jsonl files available, download them using:
-```sh
-wget https://vault.cs.uwaterloo.ca/s/s2bcWssfAHHyeTF/download -O ntcir12_wfb.jsonl
-wget https://vault.cs.uwaterloo.ca/s/ANg5XQyGLsZPXLL/download -O arqmath3_task1.jsonl
-wget https://vault.cs.uwaterloo.ca/s/tY5SfDgErgkBr28/download -O arqmath3_task2.jsonl
-```
-
-Second, create index images and mount them as loop devices
-```
-cd a0-engine
-sudo ./indexerd/scripts/vdisk-setup.sh
-vdisk-creat.sh reiserfs 1K
-vdisk-mount.sh reiserfs vdisk.img
-```
-
-To make enough space for common datasets, consider these examples
-```
-df -h
-/dev/loop6       12G  8.2G  3.9G  68% /home/w32zhong/indexes/mnt-arqmath-task1.img
-/dev/loop8       12G  9.0G  3.1G  75% /home/w32zhong/indexes/mnt-arqmath-task2.img
-/dev/loop9      5.0G  609M  4.5G  12% /home/w32zhong/indexes/mnt-ntcir12_wfb.img
-```
-
-Thrid, run indexerd daemon to create index for NTCIR-12 WFB:
-```sh
-cd a0-engine/indexerd
-./run/indexerd.out -o ~/indexes/mnt-ntcir12_wfb.img/ -p 8935 -e
-```
-
-then, run feeder to feed jsonl file to indexerd:
-```sh
-cd a0-crawlers/feeder
-python feeder.py --indexd-url http://localhost:8935/index --bye --corpus ntcir12_wfb ./feeder.ini ~/corpus/ntcir12_wfb.jsonl
-```
-
-For the ARQMath datasets, use `arqmath_task1_default__use_porter_stemmer` and `arqmath_task2_v3` as corpus names.
+</details>
