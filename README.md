@@ -70,6 +70,9 @@ import pya0
 print(dir(pya0))
 ```
 
+## Transformer Models
+Please check out [./training-and-inference](./training-and-inference)
+
 ## Build for Manylinux Distribution
 Install Docker:
 ```sh
