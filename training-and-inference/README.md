@@ -224,3 +224,6 @@ Finally, push the model:
 git remote add hgf https://huggingface.co/approach0/coco-mae-220
 bash upload2hgf.sh
 ```
+
+Refer to [models/push2hf.sh](models/push2hf.sh) for automatic uploading all checkpoints.
+You may download models from our HuggingFace repository: https://huggingface.co/approach0
