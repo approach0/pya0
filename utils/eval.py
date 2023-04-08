@@ -106,7 +106,7 @@ def parse_qrel_file(file_path):
 
 
 def run_fold_topics(index, collection, k, fold, cascades, output, topk, purpose,
-                    math_expansion=False, verbose=False):
+                    math_expansion=False, query_type_filter=None, verbose=False):
     #tracemalloc.start()
     j = 0
     for topic_query_ in fold:
@@ -118,7 +118,10 @@ def run_fold_topics(index, collection, k, fold, cascades, output, topk, purpose,
             continue
 
         # process initial query
-        query = preprocess_query(query, expansion=math_expansion)
+        query = preprocess_query(query,
+            expansion=math_expansion,
+            query_type_filter=args.query_type_filter
+        )
 
         #snapshot1 = tracemalloc.take_snapshot()
 
@@ -143,8 +146,8 @@ def run_fold_topics(index, collection, k, fold, cascades, output, topk, purpose,
 
 
 def run_topics(index, collection, output, topk=1000, verbose=False,
-    cascades=[('first-stage', None)], training_output=None,
-    kfold=None, math_expansion=None, select_topic=None):
+    cascades=[('first-stage', None)], training_output=None, kfold=None,
+    math_expansion=None, query_type_filter=None, select_topic=None):
     # prepare K-fold evaluation
     topic_queries = list(gen_topics_queries(collection))
     #topic_queries = list(gen_topics_queries(collection, qfilter=lambda x: x['type'] == 'tex'))
@@ -174,11 +177,11 @@ def run_topics(index, collection, output, topk=1000, verbose=False,
 
         # for training
         run_fold_topics(index, collection, k, cur_fold, cascades, outfor('train'), topk, 'train',
-            math_expansion=math_expansion, verbose=verbose)
+            math_expansion=math_expansion, query_type_filter=query_type_filter, verbose=verbose)
 
         # for testing
         run_fold_topics(index, collection, k, hold_out, cascades, outfor('test'), topk, 'test',
-            math_expansion=math_expansion, verbose=verbose)
+            math_expansion=math_expansion, query_type_filter=query_type_filter, verbose=verbose)
 
     if output != '/dev/null':
         timer_report(report_filename=output + '.timer.json')

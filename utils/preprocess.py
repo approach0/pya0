@@ -138,7 +138,12 @@ def preprocess(content, expansion=False):
     return output.strip()
 
 
-def preprocess_query(query, expansion=False):
+def preprocess_query(query, expansion=False, query_type_filter=None):
+    # type filter
+    if query_type_filter is not None:
+        query = filter(lambda kw: kw['type'] == query_type_filter, query)
+        query = list(query)
+    # math expansion
     expand_set = set()
     for kw in query:
         if kw['type'] == 'tex':
@@ -149,6 +154,7 @@ def preprocess_query(query, expansion=False):
                 'type': 'term',
                 'str': expand_term,
             })
+    # query text keyword process
     for kw in query:
         if kw['type'] == 'term':
             kw['str'] = preprocess_text(kw['str'])

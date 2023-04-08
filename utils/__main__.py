@@ -75,6 +75,8 @@ if __name__ == '__main__':
         help="apply learning-to-rank model. E.g., '--learnig2rank-rerank lambdaMART,<path>'")
     parser.add_argument('--math-expansion', required=False, action='store_true',
         help="do text expansion for math query keyword(s)")
+    parser.add_argument('--query-type-filter', required=False, type=str,
+        help="filter query keyword type, options: tex / term.")
     parser.add_argument('--kfold', type=int, required=False,
         help="Sample input topics with k-fold validation.")
     parser.add_argument('--auto-eval', type=str, required=False,
@@ -240,7 +242,9 @@ if __name__ == '__main__':
 
         # process initial query
         origin_query = copy.deepcopy(query)
-        query = preprocess.preprocess_query(query, expansion=args.math_expansion)
+        query = preprocess.preprocess_query(query,
+            expansion=args.math_expansion,
+            query_type_filter=args.query_type_filter)
         collection = args.collection if args.collection else 'test'
 
         if verbose:
@@ -286,6 +290,7 @@ if __name__ == '__main__':
             verbose=verbose,
             cascades=cascades,
             math_expansion=args.math_expansion,
+            query_type_filter=args.query_type_filter,
             kfold=args.kfold,
             select_topic=args.select_topic
         )
