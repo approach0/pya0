@@ -206,3 +206,21 @@ $ python -m pya0.visualize visualize_file \
 	./utils/visualize.ini arqmath3_flat__colbert \
 	./visualization/runs/arqmath3-colbert-cocomae-6-0-0-top1000.run
 ```
+
+## Push to HuggingFace Model Hub
+First, use azbert as the boilerplate and prepare model data.
+For example, if you want to push a coco-mae-220 checkpoints to the model hub,
+```sh
+cd models
+git clone git@github.com:approach0/azbert.git coco-mae-220
+cd coco-mae-220
+# move your model, tokenizer, training logs (`events.out.*`) to ckpt/
+```
+
+Second, create a model on Huggingface. Assume it is `https://huggingface.co/approach0/coco-mae-220`.
+
+Finally, push the model:
+```sh
+git remote add hgf https://huggingface.co/approach0/coco-mae-220
+bash upload2hgf.sh
+```
