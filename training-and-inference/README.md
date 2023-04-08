@@ -207,7 +207,10 @@ $ python -m pya0.visualize visualize_file \
 	./visualization/runs/arqmath3-colbert-cocomae-6-0-0-top1000.run
 ```
 
-## Push to HuggingFace Model Hub
+## HuggingFace Model Hub
+You may download models from our HuggingFace repository: https://huggingface.co/approach0
+
+### Upload models
 First, use azbert as the boilerplate and prepare model data.
 For example, if you want to push a coco-mae-220 checkpoints to the model hub,
 ```sh
@@ -226,4 +229,3 @@ bash upload2hgf.sh
 ```
 
 Refer to [models/push2hf.sh](models/push2hf.sh) for automatic uploading all checkpoints.
-You may download models from our HuggingFace repository: https://huggingface.co/approach0
