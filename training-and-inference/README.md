@@ -16,16 +16,16 @@ splade_model = approach0/splade_{mode}-{backbone}-{ckpt}
 ```
 3. Run inference:
 ```sh
-# Use Flat index
+# Using Flat index
 python -m pya0.transformer_eval index inference.ini index_arqmath3_single_vec \
     --device a6000_0:20 --backbone cocomae --ckpt 220
-python -m pya0.transformer_eval index inference.ini search_arqmath3_single_vec \
+python -m pya0.transformer_eval search inference.ini search_arqmath3_single_vec \
     --backbone cocomae --ckpt 220
 
-# Use HNSW index
+# Using HNSW index
 python -m pya0.transformer_eval index inference.ini index_arqmath3_single_vec_hnsw \
     --device a6000_0:20 --backbone cocomae --ckpt 220
-python -m pya0.transformer_eval index inference.ini search_arqmath3_single_vec_hnsw \
+python -m pya0.transformer_eval search inference.ini search_arqmath3_single_vec_hnsw \
     --backbone cocomae --ckpt 220
 ```
 
