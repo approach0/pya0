@@ -4,6 +4,19 @@ Set Python path to pya0 root directory
 $ export PYTHONPATH="$(cd .. && pwd)"
 ```
 
+## Quick Start
+1. Download [datasets](https://vault.cs.uwaterloo.ca/s/RTJ27g9Ek2kanRe) to `./datasets`.
+2. Modify `inference.ini` to use HuggingFace models:
+```
+single_vec_model = approach0/dpr-{backbone}-{ckpt}
+colbert_model = approach0/colbert-{backbone}-{ckpt}
+splade_model = approach0/splade_{mode}-{backbone}-{ckpt}
+```
+3. Run inference:
+```sh
+python -m pya0.transformer_eval index inference.ini index_arqmath3_single_vec --device a6000_0:25 --backbone cocomae --ckpt 220
+```
+
 ## Prepare Data
 For all the intermediate files generated in this section, we have prebuilt them and made them available off-the-shelf:
 
