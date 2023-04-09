@@ -1,3 +1,5 @@
+# Usage
+
 ## Set Python Path
 Set Python path to pya0 root directory
 ```sh
@@ -26,6 +28,9 @@ python -m pya0.transformer_eval index inference.ini index_arqmath3_single_vec_hn
 python -m pya0.transformer_eval index inference.ini search_arqmath3_single_vec_hnsw \
     --backbone cocomae --ckpt 220
 ```
+
+# Replication
+<details>
 
 ## Prepare Data
 For all the intermediate files generated in this section, we have prebuilt them and made them available off-the-shelf:
@@ -180,6 +185,10 @@ $ python -m pya0.transformer_utils eval_trained_ckpts inference.ini pipeline__ev
 More examples can be found in the evaluation script [../experiments/mabowdor.sh](../experiments/mabowdor.sh)
 
 We have also made indexes available (only a subset of all indexes, due to space limit): https://vault.cs.uwaterloo.ca/s/5HK26TQEygMEHAe
+
+</details>
+
+# Utilities
 
 ## Evaluation
 To generate the main results we report, first merge some run files:
