@@ -78,9 +78,11 @@ Generate grid-search runs:
 python -m pya0 --use-fallback-parser --index ../../indexes/mnt-ntcir12_wfb.img/ --collection ntcir12-math-browsing-concrete --auto-eval ./experiments/auto_eval--symbol-scores.tsv
 ```
 
-Evaluate a run:
+Evaluate a run (evaluating ARQMath Task 2 will require downloading `slt_representation_v3`):
 ```sh
-./eval-arqmath3/task2/eval.sh --tsv=../../datasets/slt_representation_v3/ --nojudge
+wget https://vault.cs.uwaterloo.ca/s/TpSPrZY4xxRYGS2/download -O training-and-inference/datasets/latex_representation_v3.zip
+unzip training-and-inference/datasets/latex_representation_v3.zip
+./eval-arqmath3/task2/eval.sh --tsv=./slt_representation_v3/ --nojudge
 ```
 
 ## Transformer Models
