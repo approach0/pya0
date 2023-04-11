@@ -1,10 +1,9 @@
-**pya0** is a Python wrapper for Approach Zero search engine.
+[PyA0]((https://github.com/approach0/pya0)) is a Python wrapper for Approach Zero search engine.
 It provides Python interface to make the search engine core easy to play with.
 
-Source code of this Python binding can be found in this [repository](https://github.com/approach0/pya0).
 A [PyPI package](https://pypi.org/project/pya0/) is available, try it out!
 
-However, in order to build this Python module, you will need to have this repository fetched as a git submodule from its parent [repository](https://github.com/approach0/search-engine/tree/pya0).
+In order to build this Python module, you will need to have this repository placed as a git submodule from its parent [repository](https://github.com/approach0/search-engine/tree/mabowdor) and then issue `make` in this directory.
 
 ## Quick Start
 Install `pya0` using pip
