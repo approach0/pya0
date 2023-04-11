@@ -8,7 +8,8 @@ $ export PYTHONPATH="$(cd .. && pwd)"
 
 ## Quick Start
 1. Download your interested [datasets](https://vault.cs.uwaterloo.ca/s/RTJ27g9Ek2kanRe) to `./datasets`.
-2. Modify `inference.ini` `devices` option to match your GPU Configuration, then point model checkpoints to HuggingFace models:
+2. Modify `inference.ini` `devices` option to match your GPU Configuration,
+then point models to use off-the-shelf checkpoints on our [HuggingFace repository](https://huggingface.co/approach0):
 ```
 single_vec_model = approach0/dpr-{backbone}-{ckpt}
 colbert_model = approach0/colbert-{backbone}-{ckpt}
@@ -241,10 +242,7 @@ $ python -m pya0.visualize visualize_file \
 	./visualization/runs/arqmath3-colbert-cocomae-6-0-0-top1000.run
 ```
 
-## HuggingFace Model Hub
-You may download models from our HuggingFace repository: https://huggingface.co/approach0
-
-### Upload models
+## Push to HuggingFace Model Hub
 First, use azbert as the boilerplate and prepare model data.
 For example, if you want to push a coco-mae-220 checkpoints to the model hub,
 ```sh
