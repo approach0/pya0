@@ -93,17 +93,18 @@ def download_and_unpack_index(url, index_name, index_directory='indexes',
 
     download_url(url, local_tarball, verbose=verbose, md5=md5)
 
-    if verbose:
-        print(f'{local_tarball} -> {index_path}')
+    if verbose: print(f'Extracting {local_tarball}')
     tarball = tarfile.open(local_tarball)
     tarball_names = tarball.getnames()
-    assert len(tarball_names) == 1
+    if verbose: print(tarball_names)
+    assert len(tarball_names) > 0, "Error: empty tarball!"
     tarball.extractall(index_directory)
     tarball.close()
     os.remove(local_tarball)
 
-    extracted_img = os.path.join(index_directory, tarball_names[0])
-    os.rename(extracted_img, index_path)
+    if verbose: print(f'{local_tarball} -> {index_path}')
+    extracted_dir = os.path.join(index_directory, tarball_names[0])
+    os.rename(extracted_dir, index_path)
     return index_path
 
 
