@@ -24,6 +24,13 @@ MINDEX_INFO = {
         ],
         "md5": "f0256f6e7fa7b87bc855e4b10050ba91",
         "image_filesystem": "reiserfs"
+    },
+    "arqmath-task1-cocomae-220-hnsw": {
+        "description": "ARQMath-3 Task-1 efficient dense index",
+        "urls": [
+            "https://vault.cs.uwaterloo.ca/s/DGyWWFMFWQ4YSz2/download"
+        ],
+        "md5": "159440c22672ca2f462fdb7d8ac9cad6"
     }
 }
 

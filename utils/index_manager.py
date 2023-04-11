@@ -70,7 +70,7 @@ def download_url(url, dest, md5=None, force=False, verbose=True):
     return dest
 
 
-def download_and_unpack_index(url, index_name, index_directory='a0_indexes',
+def download_and_unpack_index(url, index_name, index_directory='indexes',
     verbose=True, md5=None):
 
     index_directory = os.path.join(get_cache_home(), index_directory)
@@ -132,3 +132,20 @@ def mount_image_index(image_path, image_fs):
         subprocess.run(["sudo", "umount", mount_dir])
         subprocess.run(["sudo", "mount", "-t", image_fs, image_path, mount_dir])
     return mount_dir
+
+
+def from_prebuilt_index(prebuilt_index_name, verbose=True):
+    try:
+        index_dir = download_prebuilt_index(prebuilt_index_name, verbose=verbose)
+
+        # mount index if it is a loop-device image
+        target_index = MINDEX_INFO[prebuilt_index_name]
+        if 'image_filesystem' in target_index:
+            filesystem = target_index['image_filesystem']
+            index_dir = mount_image_index(index_dir, filesystem)
+
+    except ValueError as e:
+        print(str(e), file=sys.stderr)
+        return None
+
+    return index_dir

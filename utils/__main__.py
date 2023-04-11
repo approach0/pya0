@@ -8,6 +8,7 @@ import time
 import pickle
 import pya0
 from .mindex_info import list_indexes
+from .index_manager import from_prebuilt_index
 from .eval import run_topics
 from .msearch import cascade_run, msearch
 from .mergerun import concatenate_run_files, merge_run_files
@@ -160,7 +161,7 @@ if __name__ == '__main__':
         index = collection_driver.open_special_index(args.index)
 
     elif not os.path.exists(args.index):
-        index_path = pya0.from_prebuilt_index(args.index, verbose=verbose)
+        index_path = from_prebuilt_index(args.index, verbose=verbose)
         if index_path is None: # if index name is not registered
             exit(1)
         index = pya0.index_open(index_path, option="r")
