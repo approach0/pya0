@@ -114,7 +114,7 @@ def download_prebuilt_index(index_name, verbose=False):
     else:
         target_index = MINDEX_INFO[index_name]
 
-    index_md5 = target_index['md5']
+    index_md5 = target_index['md5'] if 'md5' in target_index else None
     for url in target_index['urls']:
         try:
             return download_and_unpack_index(url, index_name,

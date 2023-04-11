@@ -31,7 +31,13 @@ MINDEX_INFO = {
             "https://vault.cs.uwaterloo.ca/s/DGyWWFMFWQ4YSz2/download"
         ],
         "md5": "159440c22672ca2f462fdb7d8ac9cad6"
-    }
+    },
+    "arqmath-task1-cocomae-220": {
+        "description": "ARQMath-3 Task-1 flat dense index",
+        "urls": [
+            "https://vault.cs.uwaterloo.ca/s/KTk7pERajYq2K8J/download"
+        ]
+    },
 }
 
 def list_indexes():
