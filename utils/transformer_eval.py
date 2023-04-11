@@ -569,6 +569,7 @@ def search(config_file, section, adhoc_query=None, max_print_res=3, device='cpu'
     verbose = (config.getboolean(section, 'verbose') or
         adhoc_query is not None or verbose)
     searcher = config[section]['searcher']
+
     if use_prebuilt_index is not None:
         from index_manager import from_prebuilt_index
         searcher = json.loads(searcher)
@@ -576,6 +577,7 @@ def search(config_file, section, adhoc_query=None, max_print_res=3, device='cpu'
             use_prebuilt_index, verbose=verbose)
         searcher = json.dumps(searcher)
         print('Use prebuilt index:', searcher)
+
     searcher, seacher_finalize = auto_invoke('searcher', searcher,
         [config[section], enc_utils, gpu_dev]
     )

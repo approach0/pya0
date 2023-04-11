@@ -62,12 +62,14 @@ def download_url(url, dest, md5=None, force=False, verbose=True):
 
     with TqdmUpTo(unit='B', unit_scale=True, unit_divisor=1024) as t:
         urlretrieve(url, dest, reporthook=t.update_to)
+
+    if verbose: print(f'Computing MD5 ...')
+    md5_computed = compute_md5(dest)
     if md5:
-        md5_computed = compute_md5(dest)
         assert md5_computed == md5, f'{dest} does not match checksum! Expecting {md5} got {md5_computed}.'
         if verbose: print('MD5 passed:', md5)
 
-    return dest
+    return md5_computed
 
 
 def download_and_unpack_index(url, index_name, index_directory='indexes',
@@ -85,13 +87,16 @@ def download_and_unpack_index(url, index_name, index_directory='indexes',
         os.remove(local_tarball)
 
     # index and download fresh copy.
-    index_path = os.path.join(index_directory, f'{index_name}.{md5}')
-    if os.path.exists(index_path):
-        if verbose:
-            print(f'{index_path} already exists, skipping download.')
-        return index_path
+    if md5 is not None:
+        index_path = os.path.join(index_directory, f'{index_name}.{md5}')
+        if os.path.exists(index_path):
+            if verbose:
+                print(f'{index_path} already exists, skipping download.')
+            return index_path
 
-    download_url(url, local_tarball, verbose=verbose, md5=md5)
+    # if md5 is not specified, always download.
+    md5 = download_url(url, local_tarball, verbose=verbose, md5=md5)
+    index_path = os.path.join(index_directory, f'{index_name}.{md5}')
 
     if verbose: print(f'Extracting {local_tarball}')
     tarball = tarfile.open(local_tarball)
