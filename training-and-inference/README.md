@@ -34,7 +34,7 @@ Alternatively, skip indexing and use a prebuilt index. For example:
 ```sh
 python -m pya0.transformer_eval search inference.ini search_arqmath3_single_vec \
     --backbone cocomae --ckpt 220 \
-    --verbose --use_prebuilt_index arqmath-task1-cocomae-220
+    --verbose --use_prebuilt_index arqmath-task1-dpr-cocomae-220
 ```
 
 # Replication
