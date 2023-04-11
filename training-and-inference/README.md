@@ -182,6 +182,16 @@ $ ./splade_inference.sh /path/to/anserini arqmath3-SPLADE-nomath-bertnsp-2-2-0
 $ ./splade_inference.sh /path/to/anserini arqmath3-SPLADE-somemath-bertnsp-2-2-0
 ```
 
+For ColBERT models, download a specialized pyserini branch first, and then do inference on GPU:
+```sh
+$ git clone -b patch-colbert git@github.com:w32zhong/pyserini.git pyserini
+$ wget https://vault.cs.uwaterloo.ca/s/Pbni95czxLWGzJm/download -O ./pyserini/pyserini/resources/jars/anserini-0.13.4-SNAPSHOT-fatjar.jar
+$ conda install --yes openjdk=11 -c conda-forge
+$ python -m pya0.transformer_eval search inference.ini search_arqmath3_colbert \
+    --device a6000_0:20 --backbone cocomae --ckpt 600 --verbose \
+    --use_prebuilt_index arqmath-task1-colbert-cocomae-600
+```
+
 Finally, there is an utility to quickly evaluate the effectiveness of a single checkpoint or a history of checkpoints by reranking the judged docuemnt set:
 ```sh
 $ python -m pya0.transformer_eval pipeline inference.ini pipeline__eval_arqmath3_single_vec \
@@ -192,7 +202,7 @@ $ python -m pya0.transformer_utils eval_trained_ckpts inference.ini pipeline__ev
 
 More examples can be found in the evaluation script [../experiments/mabowdor.sh](../experiments/mabowdor.sh)
 
-We have also made indexes available (only a subset of all indexes, due to space limit): https://vault.cs.uwaterloo.ca/s/5HK26TQEygMEHAe
+We have also made indexes available (only a subset of indexes, due to space limit): https://vault.cs.uwaterloo.ca/s/5HK26TQEygMEHAe
 
 </details>
 
