@@ -44,6 +44,7 @@ MINDEX_INFO = {
         "urls": [
             "https://vault.cs.uwaterloo.ca/s/sWTN9NS4mM7fA4P/download"
         ],
+        "md5": "89acb126a8d3706b4c4e8d3329a108eb"
     },
 }
 
