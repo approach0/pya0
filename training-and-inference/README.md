@@ -8,8 +8,8 @@ $ export PYTHONPATH="$(cd .. && pwd)"
 
 ## Quick Start
 1. Download your interested [datasets](https://vault.cs.uwaterloo.ca/s/RTJ27g9Ek2kanRe) to `./datasets`.
-2. Modify `inference.ini` `devices` option to match your GPU Configuration,
-then point models to use off-the-shelf checkpoints on our [HuggingFace repository](https://huggingface.co/approach0):
+2. Modify `inference.ini` `devices` option to match your local GPU configuration,
+then overwrite model pointers in `inference.ini` to use off-the-shelf checkpoints on our [HuggingFace repository](https://huggingface.co/approach0):
 ```
 single_vec_model = approach0/dpr-{backbone}-{ckpt}
 colbert_model = approach0/colbert-{backbone}-{ckpt}
