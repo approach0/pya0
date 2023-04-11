@@ -48,7 +48,8 @@ urls              [https://vault.cs.uwaterloo.ca/s/gySLti89gZF8xz6/download]
 One-line command to download the NTCIR-12 WFB index and evaluate its topics:
 ```sh
 rm -f ntcir12_wfb.run
-python -m pya0 --use-fallback-parser --index ntcir-wfb --collection ntcir12-math-browsing-concrete --trec-output ntcir12_wfb.run
+python -m pya0 --use-fallback-parser --verbose \
+  --index ntcir-wfb --collection ntcir12-math-browsing-concrete --trec-output ntcir12_wfb.run
 ```
 
 Now evaluate the generated run:
