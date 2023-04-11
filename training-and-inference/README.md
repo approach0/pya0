@@ -175,11 +175,17 @@ For SPLADE models, use pya0 to first generate sparse representations of topics a
 $ python -m pya0.transformer_eval index inference.ini index_arqmath3_splade_qry --mode=somemath
 $ python -m pya0.transformer_eval index inference.ini index_arqmath3_splade_doc --mode=somemath --device=a6000_5
 ```
+alternatively, download our prebuilt topic and index:
+```sh
+$ wget https://vault.cs.uwaterloo.ca/s/po2enXdPD88rsNA/download -O indexes/arqmath3-SPLADE-nomath-cocomae.tar
+$ (cd indexes && tar xf arqmath3-SPLADE-nomath-cocomae.tar)
+```
 and then evaluate them using [Anserini](https://github.com/castorini/anserini/tree/505594b6573294a9a4c72a8feee3416f8a9bd2d9):
 ```sh
-$ ./splade_inference.sh /path/to/anserini arqmath3-SPLADE-all-bertnsp-2-2-0
-$ ./splade_inference.sh /path/to/anserini arqmath3-SPLADE-nomath-bertnsp-2-2-0
-$ ./splade_inference.sh /path/to/anserini arqmath3-SPLADE-somemath-bertnsp-2-2-0
+# build anserini with `mvn clean package appassembler:assemble -DskipTests -Dmaven.javadoc.skip=true`
+$ ./splade_inference.sh /path/to/anserini arqmath3-SPLADE-all-cocomae-2-2-0
+$ ./splade_inference.sh /path/to/anserini arqmath3-SPLADE-nomath-cocomae-2-2-0
+$ ./splade_inference.sh /path/to/anserini arqmath3-SPLADE-somemath-cocomae-2-2-0
 ```
 
 For ColBERT models, download a specialized pyserini branch first, and then do inference on GPU:
