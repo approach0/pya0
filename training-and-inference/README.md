@@ -208,6 +208,8 @@ $ python -m pya0.transformer_utils eval_trained_ckpts inference.ini pipeline__ev
 
 More examples can be found in the evaluation scripts, e.g., [mabowdor.sh](../experiments/mabowdor.sh) and [crossvalidate-fusion.sh](../experiments/crossvalidate-fusion.sh).
 
+Run files for the main results can be downloaded [here](https://vault.cs.uwaterloo.ca/s/JSY22Nbdn9nf862) and all experiment run files can be downloaded [here](https://vault.cs.uwaterloo.ca/s/H26Mq9c6awT8QBC).
+
 We have also made indexes available (only a subset of indexes, due to space limit): https://vault.cs.uwaterloo.ca/s/5HK26TQEygMEHAe
 
 </details>
