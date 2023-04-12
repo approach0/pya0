@@ -206,7 +206,7 @@ $ python -m pya0.transformer_utils eval_trained_ckpts inference.ini pipeline__ev
     ./math-tokenizer/ a6000_0 models/path/to/ckpt
 ```
 
-More examples can be found in the evaluation scripts, e.g., [../experiments/mabowdor.sh](../experiments/mabowdor.sh) and [experiments/crossvalidate-fusion.sh](../experiments/crossvalidate-fusion.sh).
+More examples can be found in the evaluation scripts, e.g., [mabowdor.sh](../experiments/mabowdor.sh) and [crossvalidate-fusion.sh](../experiments/crossvalidate-fusion.sh).
 
 We have also made indexes available (only a subset of indexes, due to space limit): https://vault.cs.uwaterloo.ca/s/5HK26TQEygMEHAe
 
