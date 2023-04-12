@@ -374,6 +374,7 @@ def indexer__inverted_index_feed(outdir, rescaler, tok_ckpt, mode, dim, _):
 
 
 def index(config_file, section, device='cpu', **inject_args):
+    assert os.path.exists(config_file), f'{config_file} does not exists.'
     config = configparser.ConfigParser()
     config.read(config_file)
     inject_arguments(inject_args, config, section)
@@ -545,6 +546,7 @@ def corpus_reader__flat_topics(collection_name):
 
 def search(config_file, section, adhoc_query=None, max_print_res=3, device='cpu',
     use_prebuilt_index=None, verbose=False, query_filter=None, **inject_args):
+    assert os.path.exists(config_file), f'{config_file} does not exists.'
     config = configparser.ConfigParser()
     config.read(config_file)
     inject_arguments(inject_args, config, section)
@@ -806,6 +808,7 @@ def task3_output(item, output_file, append=True):
 
 def maprun(config_file, section, input_file, input_format='runfile',
     device='cpu', **inject_args):
+    assert os.path.exists(config_file), f'{config_file} does not exists.'
     assert input_format in ['runfile', 'qrels']
     config = configparser.ConfigParser()
     config.read(config_file)
@@ -923,6 +926,7 @@ def metrics__arqmath(output):
 
 
 def pipeline(config_file, section, **inject_args):
+    assert os.path.exists(config_file), f'{config_file} does not exists.'
     import subprocess
     config = configparser.ConfigParser()
     config.read(config_file)
