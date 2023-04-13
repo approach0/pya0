@@ -150,10 +150,8 @@ $ (cd datasets && unzip latex_representation_v3.zip)
 
 ## Training
 Examine all available training options in `train.sh`.
-Double check the `DATA_VER` variable and make sure it points to the desired Vault HASH,
-so that it downloads the correct data for training.
 
-Then issue training command, for example:
+To issue training command, for example:
 ```sh
 $ sh train.sh pretrain bertnsp-a6000 1,2,3
 ```
