@@ -196,7 +196,7 @@ $ python -m pya0.transformer_eval search inference.ini search_arqmath3_colbert \
     --use_prebuilt_index arqmath-task1-colbert-cocomae-600
 ```
 
-Finally, there is an utility to quickly evaluate the effectiveness of a single checkpoint or a history of checkpoints by reranking the judged docuemnt set:
+Finally, there is a utility to quickly evaluate the effectiveness of a single checkpoint or a history of checkpoints by reranking the judged docuemnt set:
 ```sh
 $ python -m pya0.transformer_eval pipeline inference.ini pipeline__eval_arqmath3_single_vec \
     --var_backbone models/path/to/ckpt --device a6000_0
