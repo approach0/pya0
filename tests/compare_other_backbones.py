@@ -28,7 +28,7 @@ def unmask(tokenizer, inputs, outputs, mask_token='[MASK]', topk=3):
 
 # Test MathBERTa, initialised from roberta-base and further pre-trained on their text + LaTeX dataset (MSE+ArXMLiv text and math extracted separatedly into two datasets) for one epoch.
 model_path = 'witiko/mathberta'
-text = r"[MATH] x <mask> x = 0[/MATH]"
+text = r" [MATH] x <mask> x = 0 [/MATH]"
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 model = RobertaForCausalLM.from_pretrained(model_path)
 encoded_input = tokenizer(text, return_tensors='pt')
