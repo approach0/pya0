@@ -194,6 +194,20 @@ case $TRAINER-${SETUP} in
     TRAINER_ARGS="--warmup-epochs 1 --lr 2e-5"
     ;;
 
+   single_vec_retriever-a6000-using-math-aware-albert)
+    DEV_BSIZE=18
+    SAVE_FOLD=1
+
+    DATA_VER=gkdLZeb2diEwMbt
+    START_POINT=AnReu/math_albert
+    TOK_CKPOINT=AnReu/math_albert
+    SHARDS_LIST=shards.txt
+    TEST_FILE=test.txt
+    TEST_CYCLE=0 # 300
+    CALL_ARGS= 
+    TRAINER_ARGS="--architecture albert --warmup-epochs 1 --lr 2e-5"
+    ;;
+
    colbert-a6000-using-bertnsp)
     EPOCHS=8
     DEV_BSIZE=18 # 20 is still ok, but just to match the DPRs...

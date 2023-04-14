@@ -19,11 +19,13 @@ except ImportError:
 
 import transformers
 from transformers import AdamW
+from transformers import AutoTokenizer
 from transformers import BertTokenizer
 from transformers import BertForPreTraining
 from transformers import BertConfig
 from transformers import BertForNextSentencePrediction
 from transformers import BertModel, BertPreTrainedModel
+from transformers import AlbertPreTrainedModel, AlbertModel
 from condenser import Condenser
 
 from nltk import LancasterStemmer
@@ -321,6 +323,21 @@ class DprEncoder(BertPreTrainedModel):
         return last_hidden_state, pooler_output
 
 
+class DprEncoder_ALBERT(AlbertPreTrainedModel):
+
+    def __init__(self, config):
+        super().__init__(config)
+
+        self.albert = AlbertModel(config, add_pooling_layer=True)
+        self.init_weights()
+
+    def forward(self, inputs):
+        outputs = self.albert(**inputs)
+        last_hidden_state = outputs.last_hidden_state
+        pooler_output = outputs.pooler_output
+        return last_hidden_state, pooler_output
+
+
 class SpladeMaxEncoder(nn.Module):
 
     def __init__(self):
@@ -386,7 +403,7 @@ class Trainer(BaseTrainer):
         # colbert args
         self.colbert_inbatch_neg = colbert_inbatch_neg
 
-        assert architecture in ['standard', 'splade', 'cotbert',
+        assert architecture in ['standard', 'splade', 'cotbert', 'albert',
             'condenser', 'cocondenser', 'cotmae', 'cocomae']
         self.architecture = architecture
         self.save_prefix = save_prefix
@@ -1288,12 +1305,17 @@ class Trainer(BaseTrainer):
             dirname = os.path.dirname(self.test_file)
             self.test_file = dirname + '/' + fh.read().rstrip()
 
-        self.tokenizer = BertTokenizer.from_pretrained(tok_ckpoint)
+        self.tokenizer = AutoTokenizer.from_pretrained(tok_ckpoint)
         self.criterion = nn.CrossEntropyLoss()
 
         if self.architecture == 'standard':
             print('Loading as DPR model ...')
             self.model = DprEncoder.from_pretrained(ckpoint,
+                tie_word_embeddings=True
+            )
+        elif self.architecture == 'albert':
+            print('Loading as DPR-ALBERT model ...')
+            self.model = DprEncoder_ALBERT.from_pretrained(ckpoint,
                 tie_word_embeddings=True
             )
         elif self.architecture == 'splade':

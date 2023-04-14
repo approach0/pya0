@@ -228,9 +228,14 @@ def unwrap_isolated_tex_groups(text,
 
 
 def preprocess_for_transformer(text, math_vocab=None, text_lowercase=True,
-    num_tokenizer_ver=3, replace_isolated_groups=True):
-    output = ''
+    num_tokenizer_ver=3, replace_isolated_groups=True, dest_token='pya0'):
 
+    if dest_token == 'math_albert':
+        text = text.replace('[imath]', '$')
+        text = text.replace('[/imath]', '$')
+        return text
+
+    output = ''
     if replace_isolated_groups:
         text = unwrap_isolated_tex_groups(text)
 
@@ -301,5 +306,5 @@ I expect that the polynomial equations can give the same surface in [imath]\math
 x^2+y^2+z^2-4a^2+4b^2-5=0
 [/imath]
     '''
-    output = preprocess_for_transformer(math)
+    output = preprocess_for_transformer(math, dest_token='math_albert')
     print(output)

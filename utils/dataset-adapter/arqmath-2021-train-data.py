@@ -54,7 +54,7 @@ def generate_contrastive_pairs(
     a_dict_file='arqmath-answer-dict.pkl',
     tag_bank_file='arqmath-tag-bank.pkl',
     answer_bank_file='arqmath-answer-bank.pkl',
-    postlink_file='PostLinks.V1.2.xml',
+    postlink_file='PostLinks.V1.2.xml', dest_token='pya0',
     replace_isolated_groups=True, out_dir='.', print_frq=10_000,
     num_tokenizer_ver=3, n_splits=10, limit=-1, min_votes=7,
     random_seed=123, allow_vote_postive=True):
@@ -84,7 +84,8 @@ def generate_contrastive_pairs(
 
             Q = preprocess.preprocess_for_transformer(Q,
                 num_tokenizer_ver=num_tokenizer_ver,
-                replace_isolated_groups=replace_isolated_groups
+                replace_isolated_groups=replace_isolated_groups,
+                dest_token=dest_token
             )
 
             positives = []
@@ -121,11 +122,13 @@ def generate_contrastive_pairs(
 
                 positive_A = preprocess.preprocess_for_transformer(positive_A,
                     num_tokenizer_ver=num_tokenizer_ver,
-                    replace_isolated_groups=replace_isolated_groups
+                    replace_isolated_groups=replace_isolated_groups,
+                    dest_token=dest_token
                 )
                 negative_A = preprocess.preprocess_for_transformer(negative_A,
                     num_tokenizer_ver=num_tokenizer_ver,
-                    replace_isolated_groups=replace_isolated_groups
+                    replace_isolated_groups=replace_isolated_groups,
+                    dest_token=dest_token
                 )
 
                 if i == 0 and aggregate_cnt % print_frq == 0:
