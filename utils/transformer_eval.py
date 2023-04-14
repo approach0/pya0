@@ -103,6 +103,35 @@ def psg_encoder__dpr_default(tok_ckpoint, model_ckpoint, config, mold, gpu_dev):
     return encoder, (tokenizer, model, dim)
 
 
+def psg_encoder__dpr_albert(tok_ckpoint, model_ckpoint, config, mold, gpu_dev):
+    from transformers import AutoTokenizer
+    from transformer import DprEncoder_ALBERT
+    from preprocess import preprocess_for_transformer
+
+    tokenizer = AutoTokenizer.from_pretrained(tok_ckpoint)
+    model = DprEncoder_ALBERT.from_pretrained(model_ckpoint,
+        tie_word_embeddings=True)
+    model.to(gpu_dev)
+    model.eval()
+
+    def encoder(batch_psg, debug=False):
+        batch_psg = [
+            preprocess_for_transformer(p, dest_token='math_albert')
+            for p in batch_psg
+        ]
+        inputs = tokenizer(batch_psg, truncation=True,
+                           return_tensors="pt", padding=True)
+        inputs = inputs.to(gpu_dev)
+        if debug:
+            print(tokenizer.decode(inputs['input_ids'][0]))
+        with torch.no_grad():
+            outputs = model.forward(inputs)[1]
+        return outputs.cpu().numpy()
+
+    dim = model.config.hidden_size
+    return encoder, (tokenizer, model, dim)
+
+
 def psg_encoder__colbert_default(tok_ckpoint, model_ckpoint, config, mold, gpu_dev):
     from pyserini.encode import ColBertEncoder
     from preprocess import preprocess_for_transformer
