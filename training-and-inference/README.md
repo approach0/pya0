@@ -258,7 +258,7 @@ $ python utils/fusion_analysis.py scatters \
 	--golden_line 0.4,0.6,0.45  --hist_top 120
 ```
 
-To visualize a run file:
+To visualize a run file and show highlighted matches:
 ```sh
 $ python -m pya0.visualize visualize_file \
 	./utils/visualize.ini arqmath3_flat__colbert \
