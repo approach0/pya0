@@ -139,7 +139,19 @@ $ python ../pya0/arqmath-2021-train-data.py \
     --postlink_file=./datasets/PostLinks.V1.3.xml --out_dir=./data.finetune-arqmath
 ```
 
-### Download additional data for inference
+## Training
+Examine all available training options in `train.sh`.
+
+To issue training command, for example:
+```sh
+$ sh train.sh pretrain bertnsp-a6000 1,2,3
+```
+(pretrain bertnsp on A6000 GPUs of cuda device number 1, 2, and 3)
+
+## Inference
+
+First, download additional data for inference.
+
 To download NTCIR-12 Wiki Formula dataset:
 ```sh
 $ wget https://vault.cs.uwaterloo.ca/s/JNbaS75N6gPzEF5/download -O datasets/NTCIR12_latex_expressions.zip
@@ -152,16 +164,7 @@ $ wget https://vault.cs.uwaterloo.ca/s/TpSPrZY4xxRYGS2/download -O datasets/late
 $ (cd datasets && unzip latex_representation_v3.zip)
 ```
 
-## Training
-Examine all available training options in `train.sh`.
-
-To issue training command, for example:
-```sh
-$ sh train.sh pretrain bertnsp-a6000 1,2,3
-```
-(pretrain bertnsp on A6000 GPUs of cuda device number 1, 2, and 3)
-
-## Inference
+Second, run inference (indexing and search).
 Here are some examples for indexing and generating run files:
 ```sh
 $ python -m pya0.transformer_eval index inference.ini index_arqmath3_single_vec --device a6000_7
