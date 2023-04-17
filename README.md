@@ -2,15 +2,6 @@
 > Please refer to the [mabowdor branch](https://github.com/approach0/pya0/tree/mabowdor)
 > for replicating our results in the recent SIGIR paper:
 > *One Blade for One Purpose: Advancing Math Information Retrieval using Hybrid Search.*
-  ```bib
-  @inproceedings{zhong2023mabowdor,
-    booktitle={Proceedings of the 46th International ACM SIGIR Conference on Research and Development in Information Retrieval},
-    title={One Blade for One Purpose: Advancing Math Information Retrieval using Hybrid Search},
-    author={Zhong, Wei and Sheng-Chieh Lin and Jheng-Hong Yang and Jimmy Lin},
-    year={2023}
-  }
-  ```
-Feel free to ask us any questions via email: w32zhong@uwaterloo.ca
 
 ## About
 [PyA0]((https://github.com/approach0/pya0)) is a Python wrapper for Approach Zero search engine.
