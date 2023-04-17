@@ -1,15 +1,20 @@
+<img align="right" src="https://user-images.githubusercontent.com/1407530/232622237-8072274a-aafd-48ac-90c4-8d8c1c7bb38a.jpeg" width="200"/>
+
 > **Note**
-> Please refer to the [mabowdor branch](https://github.com/approach0/pya0/tree/mabowdor)
-> for replicating our results in the recent SIGIR paper:
+> This is the branch for replicating our results in the recent SIGIR paper:
 > *One Blade for One Purpose: Advancing Math Information Retrieval using Hybrid Search.*
-  ```bib
-  @inproceedings{zhong2023mabowdor,
-    booktitle={Proceedings of the 46th International ACM SIGIR Conference on Research and Development in Information Retrieval},
-    title={One Blade for One Purpose: Advancing Math Information Retrieval using Hybrid Search},
-    author={Zhong, Wei and Sheng-Chieh Lin and Jheng-Hong Yang and Jimmy Lin},
-    year={2023}
-  }
-  ```
+
+If you find our work useful, please cite our paper:
+```bib
+@inproceedings{zhong2023mabowdor,
+  booktitle={Proceedings of the 46th International ACM SIGIR Conference on Research and Development in Information Retrieval},
+  title={One Blade for One Purpose: Advancing Math Information Retrieval using Hybrid Search},
+  author={Zhong, Wei and Sheng-Chieh Lin and Jheng-Hong Yang and Jimmy Lin},
+  year={2023}
+}
+```
+
+The MABOWDOR :guide_dog: training data and checkpoints can be found in our [training and inference subdirectory](./training-and-inference).
 Feel free to ask us any questions via email: w32zhong@uwaterloo.ca
 
 ## About
