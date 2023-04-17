@@ -1,21 +1,32 @@
 # Usage
 
-## Set Python Path
+## Prerequisites
 Set Python path to pya0 root directory
 ```sh
 $ export PYTHONPATH="$(cd .. && pwd)"
 ```
 
-## Quick Start
-1. Download your interested [datasets](https://vault.cs.uwaterloo.ca/s/RTJ27g9Ek2kanRe) to `./datasets`.
-2. Modify `inference.ini` `devices` option to match your local GPU configuration,
-then overwrite model pointers in `inference.ini` to use off-the-shelf checkpoints on our [HuggingFace repository](https://huggingface.co/approach0):
+Modify the `devices` option of `inference.ini` to match your local GPU configuration,
+then (optionally) overwrite model pointers in `inference.ini` to use off-the-shelf
+checkpoints on our [HuggingFace repository](https://huggingface.co/approach0):
 ```
 single_vec_model = approach0/dpr-{backbone}-{ckpt}
 colbert_model = approach0/colbert-{backbone}-{ckpt}
 splade_model = approach0/splade_{mode}-{backbone}-{ckpt}
 ```
-3. Run inference:
+
+## Quick Start
+One-liner to download a prebuilt index and search:
+```sh
+python -m pya0.transformer_eval search inference.ini search_arqmath3_single_vec_hnsw \
+    --backbone cocomae --ckpt 220 \
+    --verbose --use_prebuilt_index arqmath-task1-dpr-cocomae-220-hnsw
+```
+
+Alternatively, to build your own index and run search:
+
+1. Download your interested [datasets](https://vault.cs.uwaterloo.ca/s/RTJ27g9Ek2kanRe) to `./datasets`.
+2. Run indexer and then do inference:
 ```sh
 # Using Flat index
 python -m pya0.transformer_eval index inference.ini index_arqmath3_single_vec \
@@ -28,13 +39,6 @@ python -m pya0.transformer_eval index inference.ini index_arqmath3_single_vec_hn
     --device a6000_0:20 --backbone cocomae --ckpt 220
 python -m pya0.transformer_eval search inference.ini search_arqmath3_single_vec_hnsw \
     --backbone cocomae --ckpt 220
-```
-
-Alternatively, skip indexing and use a prebuilt index. For example:
-```sh
-python -m pya0.transformer_eval search inference.ini search_arqmath3_single_vec \
-    --backbone cocomae --ckpt 220 \
-    --verbose --use_prebuilt_index arqmath-task1-dpr-cocomae-220
 ```
 
 # Replication
