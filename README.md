@@ -27,7 +27,7 @@ In order to build this Python module, you will need to have this repository plac
 ## Quick Start
 Install the [PyPI package](https://pypi.org/project/pya0/) using pip
 ```sh
-$ sudo pip3 install --upgrade pya0
+$ pip install pya0==0.3.7
 ```
 
 If you find pip is unable to find package, update to the latest pip and try again:
