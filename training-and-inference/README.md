@@ -147,6 +147,11 @@ To issue training command, for example:
 $ sh train.sh pretrain bertnsp-a6000 1,2,3
 ```
 (pretrain bertnsp on A6000 GPUs of cuda device number 1, 2, and 3)
+	
+```sh
+$ sh train.sh single_vec_retriever a6000-using-math-aware-albert 3,4,5
+```
+(finetune the math-aware albert for a single-vector retriever (DPR) on a6000 GPUs of cuda device number 3, 4, and 5)
 
 ## Inference
 
