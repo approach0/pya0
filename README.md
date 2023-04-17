@@ -1,8 +1,12 @@
-<img align="right" src="https://user-images.githubusercontent.com/1407530/232622237-8072274a-aafd-48ac-90c4-8d8c1c7bb38a.jpeg" width="200"/>
+<img align="right" src="https://user-images.githubusercontent.com/1407530/232622237-8072274a-aafd-48ac-90c4-8d8c1c7bb38a.jpeg" width="150"/>
 
 > **Note**
-> This is the branch for replicating our results in the recent SIGIR paper:
+> This branch is for replicating our results in the recent SIGIR paper:
 > *One Blade for One Purpose: Advancing Math Information Retrieval using Hybrid Search.*
+
+
+The MABOWDOR :guide_dog: training data and checkpoints can be found in our [training and inference subdirectory](./training-and-inference).
+Feel free to ask us any questions via email: w32zhong@uwaterloo.ca
 
 If you find our work useful, please cite our paper:
 ```bib
@@ -13,9 +17,6 @@ If you find our work useful, please cite our paper:
   year={2023}
 }
 ```
-
-The MABOWDOR :guide_dog: training data and checkpoints can be found in our [training and inference subdirectory](./training-and-inference).
-Feel free to ask us any questions via email: w32zhong@uwaterloo.ca
 
 ## About
 [PyA0]((https://github.com/approach0/pya0)) is a Python wrapper for Approach Zero search engine.
