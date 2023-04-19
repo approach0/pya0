@@ -38,6 +38,17 @@ python -m pya0.transformer_eval search inference.ini search_arqmath3_single_vec_
     --verbose --use_prebuilt_index arqmath-task1-dpr-cocomae-220-hnsw
 ```
 
+Finally, run evaluation script:
+```sh
+../eval-arqmath3/task1/preprocess.sh cleanup
+../eval-arqmath3/task1/preprocess.sh ./runs/arqmath3-cocomae-220-hnsw-top1000.run
+../eval-arqmath3/task1/eval.sh
+```
+```
+System nDCG' mAP' p@10 BPref Judge
+arqmath3-cocomae-220-hnsw-top1000_run 0.4598 0.1935 0.3192 0.1946 -
+```
+
 Alternatively, to build your own index and run search, overwrite variables in `inference.ini`
 back to use local directories:
 ```
