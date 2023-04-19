@@ -1,7 +1,7 @@
 # Usage
 
 ## Prerequisites
-Set Python path to pya0 root directory if you use the PyA0 you have built yourself.
+Set Python path to PyA0 root directory if you use the PyA0 you have built locally.
 ```sh
 $ export PYTHONPATH="$(cd .. && pwd)"
 ```
@@ -227,7 +227,7 @@ $ python -m pya0.transformer_eval search inference.ini search_ntcir12_single_vec
     --topk=5000 --backbone condenser --ckpt 6-0-0
 ```
 
-For SPLADE models, use pya0 to first generate sparse representations of topics and corpus:
+For SPLADE models, use PyA0 to first generate sparse representations of topics and corpus:
 ```sh
 $ python -m pya0.transformer_eval index inference.ini index_arqmath3_splade_qry --mode=somemath
 $ python -m pya0.transformer_eval index inference.ini index_arqmath3_splade_doc --mode=somemath --device=a6000_5
