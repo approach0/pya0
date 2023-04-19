@@ -8,9 +8,11 @@ $ export PYTHONPATH="$(cd .. && pwd)"
 
 Create anaconda environment
 ```sh
-conda create --name mabowdor python=3.8
-conda activate mabowdor
-conda install pytorch pytorch-cuda=11.8 -c pytorch -c nvidia
+conda deactivate && conda env remove -n mabowdor
+conda create --yes --name mabowdor python=3.9 && conda activate mabowdor
+# you may change the following line to match your CUDA version
+conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
+# to double check torch-gpu, run: python -c 'import torch; print(torch.cuda.is_available())'
 pip install transformers==4.11.3
 pip install faiss-gpu==1.7.1
 conda install --yes pandas scikit-learn tqdm
