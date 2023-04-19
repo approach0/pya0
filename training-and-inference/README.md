@@ -1,21 +1,36 @@
 # Usage
 
 ## Prerequisites
-Set Python path to pya0 root directory
+Set Python path to pya0 root directory if you use the PyA0 you have built yourself.
 ```sh
 $ export PYTHONPATH="$(cd .. && pwd)"
 ```
 
-Modify the `devices` option of `inference.ini` to match your local GPU configuration,
-then (optionally) overwrite model pointers in `inference.ini` to use off-the-shelf
-checkpoints on our [HuggingFace repository](https://huggingface.co/approach0):
+Create anaconda environment
+```sh
+conda create --name mabowdor python=3.8
+conda activate mabowdor
+conda install pytorch pytorch-cuda=11.8 -c pytorch -c nvidia
+pip install transformers==4.11.3
+pip install faiss-gpu==1.7.1
+conda install --yes pandas scikit-learn tqdm
+pip install pyjnius onnxruntime fire chardet numba beautifulsoup4
+(git clone git@github.com:approach0/xmlr.git && cd xmlr && pip install .)
 ```
+
+Modify the `devices` option of `inference.ini` to match your local GPU configuration.
+
+## Quick Start
+For quick start, you need to overwrite a few variables in `inference.ini` to use the
+off-the-shelf checkpoints in our [HuggingFace repository](https://huggingface.co/approach0):
+```
+default_tokenizer = approach0/dpr-{backbone}-{ckpt}
+
 single_vec_model = approach0/dpr-{backbone}-{ckpt}
 colbert_model = approach0/colbert-{backbone}-{ckpt}
 splade_model = approach0/splade_{mode}-{backbone}-{ckpt}
 ```
 
-## Quick Start
 One-liner to download a prebuilt index and search:
 ```sh
 python -m pya0.transformer_eval search inference.ini search_arqmath3_single_vec_hnsw \
@@ -23,10 +38,23 @@ python -m pya0.transformer_eval search inference.ini search_arqmath3_single_vec_
     --verbose --use_prebuilt_index arqmath-task1-dpr-cocomae-220-hnsw
 ```
 
-Alternatively, to build your own index and run search:
+Alternatively, to build your own index and run search, overwrite variables in `inference.ini`
+back to use local directories:
+```
+default_tokenizer = %(root)s/math-tokenizer
 
-1. Download your interested [datasets](https://vault.cs.uwaterloo.ca/s/RTJ27g9Ek2kanRe) to `./datasets`.
-2. Run indexer and then do inference:
+single_vec_model = %(root)s/models/job-single_vec_retriever-a6000-using-{backbone}-single_vec_retriever/{ckpt}
+colbert_model = %(root)s/models/job-colbert-a6000-using-{backbone}-colbert/{ckpt}
+splade_model = %(root)s/models/job-single_vec_retriever-splade_{mode}-a6000-using-{backbone}-single_vec_retriever/{ckpt}
+```
+
+Download dataset:
+```sh
+# ARQMath Task 1
+wget https://vault.cs.uwaterloo.ca/s/rdRkP4ZYRqLjgiS/download -O ./datasets/Posts.V1.3.xml
+```
+
+Run indexer and then do inference:
 ```sh
 # Using Flat index
 python -m pya0.transformer_eval index inference.ini index_arqmath3_single_vec \
