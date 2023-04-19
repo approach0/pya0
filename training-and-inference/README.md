@@ -49,8 +49,9 @@ System nDCG' mAP' p@10 BPref Judge
 arqmath3-cocomae-220-hnsw-top1000_run 0.4598 0.1935 0.3192 0.1946 -
 ```
 
-Alternatively, to build your own index and run search, overwrite variables in `inference.ini`
-back to use local directories:
+Alternatively, if you want to run everything locally and build your own index, follow the steps below.
+
+Make sure you overwrite variables in `inference.ini` back to use local directories:
 ```
 default_tokenizer = %(root)s/math-tokenizer
 
@@ -59,10 +60,15 @@ colbert_model = %(root)s/models/job-colbert-a6000-using-{backbone}-colbert/{ckpt
 splade_model = %(root)s/models/job-single_vec_retriever-splade_{mode}-a6000-using-{backbone}-single_vec_retriever/{ckpt}
 ```
 
-Download dataset:
+Download dataset and relevant tokenizer or models:
 ```sh
-# ARQMath Task 1
+# ARQMath Task 1 dataset
 wget https://vault.cs.uwaterloo.ca/s/rdRkP4ZYRqLjgiS/download -O ./datasets/Posts.V1.3.xml
+# Math tokenizer
+wget https://vault.cs.uwaterloo.ca/s/KENQpHw5qbioNga/download -O ./math-tokenizer.tar.gz
+tar xzf ./math-tokenizer.tar.gz
+# download models from: https://vault.cs.uwaterloo.ca/s/72Aeaq9wZZNzc2M
+# and extract checkpoints (including different epochs) to ./models
 ```
 
 Run indexer and then do inference:
