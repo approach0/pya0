@@ -65,7 +65,7 @@ Download dataset and relevant tokenizer or models:
 # ARQMath Task 1 dataset
 wget https://vault.cs.uwaterloo.ca/s/rdRkP4ZYRqLjgiS/download -O ./datasets/Posts.V1.3.xml
 # Math tokenizer
-wget https://vault.cs.uwaterloo.ca/s/KENQpHw5qbioNga/download -O ./math-tokenizer.tar.gz
+wget https://vault.cs.uwaterloo.ca/s/PDNaBrazZ7gP2cj/download -O ./math-tokenizer.tar.gz
 tar xzf ./math-tokenizer.tar.gz
 # download models from: https://vault.cs.uwaterloo.ca/s/72Aeaq9wZZNzc2M
 # and extract checkpoints (including different epochs) to ./models
@@ -75,15 +75,15 @@ Run indexer and then do inference:
 ```sh
 # Using Flat index
 python -m pya0.transformer_eval index inference.ini index_arqmath3_single_vec \
-    --device a6000_0:20 --backbone cocomae --ckpt 220
+    --device a6000_0:20 --backbone cocomae --ckpt 2-2-0
 python -m pya0.transformer_eval search inference.ini search_arqmath3_single_vec \
-    --backbone cocomae --ckpt 220
+    --backbone cocomae --ckpt 2-2-0
 
 # Using HNSW index
 python -m pya0.transformer_eval index inference.ini index_arqmath3_single_vec_hnsw \
-    --device a6000_0:20 --backbone cocomae --ckpt 220
+    --device a6000_0:20 --backbone cocomae --ckpt 2-2-0
 python -m pya0.transformer_eval search inference.ini search_arqmath3_single_vec_hnsw \
-    --backbone cocomae --ckpt 220
+    --backbone cocomae --ckpt 2-2-0
 ```
 
 # Replication
