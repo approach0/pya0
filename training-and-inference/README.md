@@ -202,28 +202,13 @@ $ sh train.sh single_vec_retriever a6000-using-math-aware-albert 3,4,5
 
 ## Inference
 
-First, download additional data for inference.
-
-To download NTCIR-12 Wiki Formula dataset:
-```sh
-$ wget https://vault.cs.uwaterloo.ca/s/JNbaS75N6gPzEF5/download -O datasets/NTCIR12_latex_expressions.zip
-$ (cd datasets && unzip NTCIR12_latex_expressions.zip)
-```
-
-To download ARQMath-3 Task 2 (in-context formula retrieval) dataset:
-```sh
-$ wget https://vault.cs.uwaterloo.ca/s/TpSPrZY4xxRYGS2/download -O datasets/latex_representation_v3.zip
-$ (cd datasets && unzip latex_representation_v3.zip)
-```
-
-Second, run inference (indexing and search).
-Here are some examples for indexing and generating run files:
+For DPR models, here are some examples for indexing and generating run files:
 ```sh
 $ python -m pya0.transformer_eval index inference.ini index_arqmath3_single_vec --device a6000_7
-$ python -m pya0.transformer_eval index inference.ini index_ntcir12_single_vec \
+$ python -m pya0.transformer_eval index inference.ini index_arqmath3_single_vec \
     --device a6000_7:40 --backbone cotmae --ckpt 1-0-0
-$ python -m pya0.transformer_eval search inference.ini search_ntcir12_single_vec
-$ python -m pya0.transformer_eval search inference.ini search_ntcir12_single_vec \
+$ python -m pya0.transformer_eval search inference.ini search_arqmath3_single_vec
+$ python -m pya0.transformer_eval search inference.ini search_arqmath3_single_vec \
     --topk=5000 --backbone condenser --ckpt 6-0-0
 ```
 
