@@ -122,6 +122,8 @@ def run_fold_topics(index, collection, k, fold, cascades, output, topk, purpose,
             expansion=math_expansion,
             query_type_filter=query_type_filter
         )
+        topic_query = qid, query, args
+        if len(query) == 0: continue
 
         #snapshot1 = tracemalloc.take_snapshot()
 
