@@ -3,7 +3,9 @@ import pandas as pd
 pd.set_option('max_colwidth', None)
 
 df = pd.read_csv('text_term_dense.report', delimiter='\s+')
-df = df.drop(['BPref', 'Judge'], axis='columns')
+df = df.drop(['Judge'], axis='columns')
+for col in ["nDCG'", "mAP'", "p@10", "BPref"]:
+    df[col] = df[col].round(3)
 
 for i, row in df.iterrows():
     system = row['System']
