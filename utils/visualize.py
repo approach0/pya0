@@ -86,37 +86,41 @@ def output_html(output_dir, output_name, qid, query, hits, qrels,
             # query
             fh.write(f'<h3>Query Keywords (Topic ID: {qid})</h3>\n')
             fh.write('<ul id="topbar">\n')
-            for q in query:
-                if q['type'] == 'term':
-                    disp_qstr = escape(q["str"])
-                    kw_str = f'{disp_qstr} &nbsp;&nbsp;'
-                else:
-                    kw_str = f'[imath]{q["str"]}[/imath]'
-                fh.write(f'<li>{kw_str}</li>\n')
+            if isinstance(query, str):
+                fh.write(f'<li>{query}</li>\n')
+            else:
+                for q in query:
+                    if q['type'] == 'term':
+                        disp_qstr = escape(q["str"])
+                        kw_str = f'{disp_qstr} &nbsp;&nbsp;'
+                    else:
+                        kw_str = f'[imath]{q["str"]}[/imath]'
+                    fh.write(f'<li>{kw_str}</li>\n')
             fh.write('</ul>\n')
             # hits
             fh.write(f'<h3>Hits (page #{page + 1} / {tot_pages})</h3>\n')
             output_html_pagination(fh, qid, page, tot_pages)
             fh.write('<ol>\n')
             for hit in tqdm(page_hits):
-                docID = hit["trec_docid"]
-                rank = hit['rank']
-                score = hit['score']
-                relev = hit['relev']
-                content = hit['content'].replace(r'\require', '')
                 fh.write('<li>\n')
-                fh.write(f'<b id="{rank}"><a href="#{rank}">#{rank}</a>, ' +
-                         f'doc#{docID}, score: {score}, relev: {relev}, </b>\n')
-                colors = [
-                    f'<b style="background: {degree_color(i)}">{i}</b>'
-                    for i in range(4)
-                ]
-                color = degree_color(relev)
-                fh.write('<b>relevance levels: ' + ' '.join(colors) + ':</b>')
-                disp_content = escape(content)
-                fh.write(f'<p style="background:{color};">{disp_content}</p>')
                 if generator_mapper is not None:
                     generator_mapper(fh, query, hit)
+                else:
+                    docID = hit["trec_docid"]
+                    rank = hit['rank']
+                    score = hit['score']
+                    relev = hit['relev']
+                    content = hit['content'].replace(r'\require', '')
+                    fh.write(f'<b id="{rank}"><a href="#{rank}">#{rank}</a>, ' +
+                             f'doc#{docID}, score: {score}, relev: {relev}, </b>\n')
+                    colors = [
+                        f'<b style="background: {degree_color(i)}">{i}</b>'
+                        for i in range(4)
+                    ]
+                    color = degree_color(relev)
+                    fh.write('<b>relevance levels: ' + ' '.join(colors) + ':</b>')
+                    disp_content = escape(content)
+                    fh.write(f'<p style="background:{color};">{disp_content}</p>')
                 fh.write('</li>\n')
             fh.write(f'</ol>\n')
             output_html_pagination(fh, qid, page, tot_pages)
