@@ -57,18 +57,22 @@ def degree_color(relev):
 
 
 def output_html(output_dir, output_name, qid, query, hits, qrels,
-    judged_only, hits_per_page, generator_mapper):
+    judged_only, hits_per_page, generator_mapper, create_parent_dir=True):
     # prepare output
     hits_per_page = 100
     tot_pages = len(hits) // hits_per_page + (len(hits) % hits_per_page > 0)
     parent_dir = f'{output_dir}/{output_name}' + ('__J' if judged_only else '')
-    parent_dir = os.path.expanduser(parent_dir)
-    if not os.path.exists(parent_dir):
-        os.makedirs(parent_dir)
+    if create_parent_dir:
+        parent_dir = os.path.expanduser(parent_dir)
+        if not os.path.exists(parent_dir):
+            os.makedirs(parent_dir)
     for page in range(tot_pages):
         start = page * hits_per_page
         page_hits = hits[start : start + hits_per_page]
-        page_output = f'{parent_dir}/{qid}__p{page + 1:03}.html'
+        if create_parent_dir:
+            page_output = f'{parent_dir}/{qid}__p{page + 1:03}.html'
+        else:
+            page_output = f'{parent_dir}__{qid}__p{page + 1:03}.html'
         print(f'Page {page + 1} => {page_output}')
         # start output page
         with open(page_output, 'w') as fh:
@@ -101,10 +105,10 @@ def output_html(output_dir, output_name, qid, query, hits, qrels,
             fh.write(f'<h3>Hits (page #{page + 1} / {tot_pages})</h3>\n')
             output_html_pagination(fh, qid, page, tot_pages)
             fh.write('<ol>\n')
-            for hit in tqdm(page_hits):
+            for idx, hit in enumerate(tqdm(page_hits)):
                 fh.write('<li>\n')
                 if generator_mapper is not None:
-                    generator_mapper(fh, query, hit)
+                    generator_mapper(fh, query, hit, page, idx)
                 else:
                     docID = hit["trec_docid"]
                     rank = hit['rank']
