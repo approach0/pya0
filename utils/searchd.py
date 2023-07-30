@@ -1,6 +1,7 @@
 import os
 import json
 import pickle
+from collections import defaultdict
 
 import sys
 sys.path.insert(0, '.')
@@ -54,6 +55,51 @@ def get_supervised():
     return searcher, encoder
 
 
+def format_supervised_results(results):
+    formated = []
+    for res in results:
+        # docid, score, ((postID, *doc_props), psg)
+        score = res[1]
+        post_id = res[2][0][0]
+        formated.append((score, post_id))
+    return formated
+
+
+def format_unsuperv_results(results):
+    if results['ret_code'] != 0: return []
+    formated = []
+    for hit in results['hits']:
+        # {docid, rank, score, field_{title, content, ...}}
+        score = hit['score']
+        post_id = hit['field_title']
+        formated.append((score, post_id))
+    return formated
+
+
+def merge_results(merging_results, weights):
+    id2score = defaultdict(float)
+    for i, results in enumerate(merging_results):
+        for res in results:
+            score, post_id = res
+            id2score[post_id] += weights[i] * score
+    # sort by scores in descending order
+    merged_results = sorted(id2score.items(),
+        reverse=True, key=lambda x: x[1])
+    return merged_results
+
+
+def postprocess_results(results, docs):
+    def mapper(item):
+        post_id, score = item
+        doc = docs[post_id] if post_id in docs else None
+        doc_content = doc[1] if doc is not None else None
+        if doc_content is not None:
+            doc_content = doc_content.replace('[imath]', '$')
+            doc_content = doc_content.replace('[/imath]', '$')
+        return doc_content, post_id, score
+    return list(map(mapper, results))
+
+
 @app.route('/search', methods=['GET', 'POST'])
 def server_handler():
     j = request.json
@@ -63,7 +109,7 @@ def server_handler():
         topk = j['topk']
         print(f'Searching (topk={topk}) ...')
 
-    unsup_ix, searcher, encoder = app.config['args']
+    unsup_ix, searcher, encoder, docs = app.config['args']
 
     if 'keywords' in j:
         def mapper(kw):
@@ -82,41 +128,34 @@ def server_handler():
         unsup_results = json.loads(JSON)
     else:
         unsup_results = []
+    unsup_results = format_unsuperv_results(unsup_results)
 
     if 'question' in j:
-        pass
+        query = j['question']
+        sup_results = searcher(query, encoder, topk=topk)
+    else:
+        sup_results = []
+    sup_results = format_supervised_results(sup_results)
 
-    print(unsup_results)
+    results = merge_results(
+        [unsup_results, sup_results],
+        [0.5, 0.5]
+    )
+    print(len(unsup_results), len(sup_results), len(results))
+    results = results[:topk]
 
-    #res = searcher(query, encoder, topk=topk)
-    #JSON = pya0.search(ix, j['query'], verbose=False, topk=topk)
-    #results = json.loads(JSON)
-    #print(json.dumps(results, indent=4))
-    #return jsonify(JSON)
-
-        #for hit in j['hits']:
-        #    docid = hit['docid']
-        #    url = hit['field_url']
-        #    answer_id = hit['field_title']
-        #    snippet = hit['field_content']
-        #    document = corpus[answer_id]
-        #    d = document[1]
-        #    d = d.replace(r'[imath]', '$')
-        #    d = d.replace(r'[/imath]', '$')
-
-        #    print('-' * 20, url, '-' * 20)
-        #    print(d)
-    return {'test': 'hello!'}
+    results = postprocess_results(results, docs)
+    return results
 
 
 def serve(port=8080, debug=False):
-    doc = get_doclookup()
-    print(list(doc.items())[:1])
+    docs = get_doclookup()
+    print(list(docs.items())[:1])
 
     unsup_ix = get_unsupervised_index()
     searcher, encoder = get_supervised()
 
-    app.config['args'] = (unsup_ix, searcher, encoder)
+    app.config['args'] = (unsup_ix, searcher, encoder, docs)
     app.run(debug=debug, port=port, host="0.0.0.0")
 
 
@@ -128,7 +167,7 @@ def test(url='http://127.0.0.1:8080/search'):
             r'$\tan x + \sec x = 2 \cos x$',
             r'interval'
         ],
-        'topk': 50
+        'topk': 30
     })
 
     print(res)
