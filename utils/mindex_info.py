@@ -46,6 +46,13 @@ MINDEX_INFO = {
         ],
         "md5": "89acb126a8d3706b4c4e8d3329a108eb"
     },
+    "arqmath-task1-doclookup": {
+        "description": "ARQMath-3 Task-1 corpus document lookup",
+        "urls": [
+            "https://vault.cs.uwaterloo.ca/s/62JME7BSqXex7me/download"
+        ],
+        "md5": "84213bcff54e61c86e4d556bc4ebfde4"
+    }
 }
 
 def list_indexes():
