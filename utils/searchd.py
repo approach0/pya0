@@ -129,9 +129,10 @@ def server_handler():
 
         for kw in j['keywords']:
             print('keyword:', kw)
+
+        unsup_results = format_unsuperv_results(unsup_results)
     else:
         unsup_results = []
-    unsup_results = format_unsuperv_results(unsup_results)
 
     if 'question' in j:
         query = j['question']
