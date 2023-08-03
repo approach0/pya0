@@ -79,11 +79,14 @@ def format_unsuperv_results(results):
 def merge_results(merging_results, weights):
     id2score = defaultdict(float)
     for i, results in enumerate(merging_results):
-        high = max(results)[0]
-        low = min(results)[0]
+        if len(results) > 0:
+            high = max(results)[0]
+            low = min(results)[0]
+        else:
+            high = low = 0
         for res in results:
             score, post_id = res
-            norm_score = (score - low) / (high - low)
+            norm_score = (score - low) / (high - low + 0.001)
             id2score[post_id] += weights[i] * norm_score
     # sort by scores in descending order
     merged_results = sorted(id2score.items(),
