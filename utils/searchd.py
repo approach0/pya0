@@ -117,7 +117,7 @@ def server_handler():
 
     unsup_ix, searcher, encoder, docs = app.config['args']
 
-    if 'keywords' in j:
+    if 'keywords' in j and len(j['keywords']) > 0:
         def mapper(kw):
             if kw.startswith('$'):
                 return {
