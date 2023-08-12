@@ -52,6 +52,20 @@ MINDEX_INFO = {
             "https://vault.cs.uwaterloo.ca/s/62JME7BSqXex7me/download"
         ],
         "md5": "84213bcff54e61c86e4d556bc4ebfde4"
+    },
+    "MATH-dpr-cocomae-220-hnsw": {
+        "description": "MATH index encoded by Coco-MAE 220",
+        "urls": [
+            "https://vault.cs.uwaterloo.ca/s/N8atJR3Kqf7Aoni/download"
+        ],
+        "md5": "980a8ba9b7269e37fbad11876abee1fb"
+    },
+    "MATH-dpr-cocomae-520-hnsw": {
+        "description": "MATH index encoded by Coco-MAE 520",
+        "urls": [
+            "https://vault.cs.uwaterloo.ca/s/n8cjmFKo7HGwQig/download"
+        ],
+        "md5": "8bb6602db36a30e4bd325de3e95e49f7"
     }
 }
 

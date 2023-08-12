@@ -191,9 +191,9 @@ def test_request(url='http://127.0.0.1:8080/search'):
 
 def test_sup_search(query, topk=3):
     searcher, encoder = get_supervised(
-        'approach0/dpr-cocomae-520',
-        'approach0/dpr-cocomae-520',
-        'indexes/MATH-cocomae-520-hnsw'
+        'approach0/dpr-cocomae-220',
+        'approach0/dpr-cocomae-220',
+        'MATH-dpr-cocomae-220-hnsw'
     )
     results = searcher(query, encoder, topk=topk)
     return results
