@@ -35,20 +35,21 @@ def get_unsupervised_index():
     return ix
 
 
-def get_supervised():
-    default_tokenizer = 'approach0/dpr-cocomae-220'
-    single_vec_model = 'approach0/dpr-cocomae-220'
-    prebuilt_index = 'arqmath-task1-dpr-cocomae-220-hnsw'
+def get_supervised(
+    tokenizer_path='approach0/dpr-cocomae-220',
+    encoder_path='approach0/dpr-cocomae-220',
+    index_path='arqmath-task1-dpr-cocomae-220-hnsw'):
+
     from pya0.transformer_eval import (
         psg_encoder__dpr_default,
         searcher__docid_vec_flat_faiss
     )
 
-    index_path = from_prebuilt_index(prebuilt_index)
+    index_path = from_prebuilt_index(index_path) or index_path
 
     print('Loading DPR encoder ...')
     encoder, enc_utils = psg_encoder__dpr_default(
-        default_tokenizer, single_vec_model, 0, 0, 'cpu')
+        tokenizer_path, encoder_path, 0, 0, 'cpu')
     searcher, _ = searcher__docid_vec_flat_faiss(
         index_path, None, enc_utils, 'cpu')
 
@@ -171,7 +172,7 @@ def serve(port=8080, debug=False):
     app.run(debug=debug, port=port, host="0.0.0.0")
 
 
-def test(url='http://127.0.0.1:8080/search'):
+def test_request(url='http://127.0.0.1:8080/search'):
     import requests
     res = requests.post(url, json={
         'question': r'Find the number of solutions in the interval $[0,2\pi]$ to equation $\tan x + \sec x = 2 \cos x.$',
@@ -188,10 +189,21 @@ def test(url='http://127.0.0.1:8080/search'):
         print(json.dumps(j, indent=2))
 
 
+def test_sup_search(query, topk=3):
+    searcher, encoder = get_supervised(
+        'approach0/dpr-cocomae-520',
+        'approach0/dpr-cocomae-520',
+        'indexes/MATH-cocomae-520-hnsw'
+    )
+    results = searcher(query, encoder, topk=topk)
+    return results
+
+
 if __name__ == '__main__':
     import fire
     os.environ["PAGER"] = 'cat'
     fire.Fire({
         'serve': serve,
-        'test': test
+        'test_request': test_request,
+        'test_sup_search': test_sup_search,
     })
