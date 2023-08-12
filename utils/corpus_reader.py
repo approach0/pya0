@@ -190,3 +190,38 @@ def corpus_reader__jsonl(jsonl_path, fields):
             values = [j[f] for f in fields]
             # YIELD (docid, doc_props), contents
             yield tuple(values[:-1]), values[-1]
+
+
+def corpus_length__MATH_dataset_dir(data_dir, max_items):
+    cnt = 0
+    for _, dirname, fname in file_iterator(data_dir, max_items, 'json'):
+        cnt += 1
+    return cnt
+
+
+def corpus_reader__MATH_dataset_dir(data_dir):
+    import json
+    from replace_post_tex import replace_dollar_tex
+    from replace_post_tex import replace_display_tex
+    from replace_post_tex import replace_inline_tex
+    from replace_post_tex import unwrap_tex_groups
+
+    for _, dirname, fname in file_iterator(data_dir, 0, 'json'):
+        path = os.path.join(dirname, fname)
+        with open(path, 'r') as fh:
+            j = json.load(fh)
+            docid = '/'.join(path.split('/')[-2:])
+            contents = j['problem'] + '\n\n' + j['solution']
+
+            contents = replace_dollar_tex(contents)
+            contents = replace_display_tex(contents)
+            contents = replace_inline_tex(contents)
+            contents = unwrap_tex_groups(contents)
+
+            # YIELD (docid, doc_props), contents
+            yield (docid, j['level'], j['type']), contents
+
+
+if __name__ == '__main__':
+    for (docid, *_), content in corpus_reader__MATH_dataset_dir('/mnt/users/w32zhong/MATH/train'):
+        print(docid, content)
