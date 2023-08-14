@@ -57,7 +57,8 @@ def format_supervised_results(results):
         # docid, score, ((postID, *doc_props), psg)
         score = res[1]
         post_id = res[2][0][0]
-        formated.append((score, post_id))
+        psg = res[2][1]
+        formated.append((score, post_id, psg))
     return formated
 
 
@@ -68,12 +69,14 @@ def format_unsuperv_results(results):
         # {docid, rank, score, field_{title, content, ...}}
         score = hit['score']
         post_id = hit['field_title']
-        formated.append((score, post_id))
+        doc = hit['field_content']
+        formated.append((score, post_id, doc))
     return formated
 
 
 def merge_results(merging_results, weights):
     id2score = defaultdict(float)
+    id2doc = defaultdict(str)
     for i, results in enumerate(merging_results):
         if len(results) > 0:
             high = max(results)[0]
@@ -81,20 +84,28 @@ def merge_results(merging_results, weights):
         else:
             high = low = 0
         for res in results:
-            score, post_id = res
+            score, post_id, doc = res
             norm_score = (score - low) / (high - low + 0.001)
             id2score[post_id] += weights[i] * norm_score
+            id2doc[post_id] = doc
     # sort by scores in descending order
-    merged_results = sorted(id2score.items(),
+    sorted_results = sorted(id2score.items(),
         reverse=True, key=lambda x: x[1])
-    return merged_results
+
+    return [
+        (i, id2score[i], id2doc[i])
+        for i, score in sorted_results
+    ]
 
 
-def postprocess_results(results, docs):
+def postprocess_results(results, docs=None):
     def mapper(item):
-        post_id, score = item
-        doc = docs[post_id] if post_id in docs else None
-        doc_content = doc[1] if doc is not None else None
+        post_id, score, doc = item
+        if docs:
+            doc = docs[post_id] if post_id in docs else None
+            doc_content = doc[1] if doc is not None else None
+        else:
+            doc_content = doc
         if doc_content is not None:
             doc_content = doc_content.replace('[imath]', '$')
             doc_content = doc_content.replace('[/imath]', '$')
@@ -102,8 +113,19 @@ def postprocess_results(results, docs):
     return list(map(mapper, results))
 
 
-@app.route('/search', methods=['GET', 'POST'])
-def server_handler():
+@app.route('/mabowdor', methods=['GET', 'POST'])
+def server_handler__mabowdor():
+    args = app.config['args']['mabowdor']
+    return server_handler(*args)
+
+
+@app.route('/MATH', methods=['GET', 'POST'])
+def server_handler__MATH():
+    args = app.config['args']['MATH']
+    return server_handler(*args)
+
+
+def server_handler(unsup_ix, searcher, encoder, docs):
     j = request.json
     if 'topk' not in j:
         return jsonify({'error': 'malformed query!'})
@@ -111,9 +133,7 @@ def server_handler():
         topk = j['topk']
         print(f'Searching (topk={topk}) ...')
 
-    unsup_ix, searcher, encoder, docs = app.config['args']
-
-    if 'keywords' in j and len(j['keywords']) > 0:
+    if 'keywords' in j and len(j['keywords']) > 0 and unsup_ix:
         def mapper(kw):
             if kw.startswith('$'):
                 return {
@@ -136,7 +156,7 @@ def server_handler():
     else:
         unsup_results = []
 
-    if 'question' in j:
+    if 'question' in j and encoder:
         query = j['question']
         sup_results = searcher(query, encoder, topk=topk)
 
@@ -157,17 +177,32 @@ def server_handler():
 
 
 def serve(port=8080, debug=False):
+    unsup_ix = get_unsupervised_index()
+
+    mab_searcher, mab_encoder = get_supervised(
+        tokenizer_path='approach0/dpr-cocomae-220',
+        encoder_path='approach0/dpr-cocomae-220',
+        index_path='arqmath-task1-dpr-cocomae-220-hnsw'
+    )
+
     docs = get_doclookup()
     print(list(docs.items())[:1])
 
-    unsup_ix = get_unsupervised_index()
-    searcher, encoder = get_supervised()
+    mat_searcher, mat_encoder = get_supervised(
+        tokenizer_path='approach0/dpr-cocomae-220',
+        encoder_path='approach0/dpr-cocomae-220',
+        index_path='MATH-dpr-cocomae-220-hnsw'
+    )
 
-    app.config['args'] = (unsup_ix, searcher, encoder, docs)
+    app.config['args'] = {
+        'mabowdor': (unsup_ix, mab_searcher, mab_encoder, docs),
+        'MATH': (None, mat_searcher, mat_encoder, None)
+    }
+
     app.run(debug=debug, port=port, host="0.0.0.0")
 
 
-def test_request(url='http://127.0.0.1:8080/search'):
+def test_request(url='http://127.0.0.1:8080/MATH'):
     import requests
     res = requests.post(url, json={
         'question': r'Find the number of solutions in the interval $[0,2\pi]$ to equation $\tan x + \sec x = 2 \cos x.$',
@@ -178,20 +213,12 @@ def test_request(url='http://127.0.0.1:8080/search'):
         'topk': 30
     })
 
-    print(res)
     if res.ok:
-        j = res.json()
-        print(json.dumps(j, indent=2))
-
-
-def test_sup_search(query, topk=3):
-    searcher, encoder = get_supervised(
-        'approach0/dpr-cocomae-220',
-        'approach0/dpr-cocomae-220',
-        'MATH-dpr-cocomae-220-hnsw'
-    )
-    results = searcher(query, encoder, topk=topk)
-    return results
+        try:
+            j = res.json()
+            print(json.dumps(j, indent=2))
+        except:
+            print(res.text)
 
 
 if __name__ == '__main__':
@@ -199,6 +226,5 @@ if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
     fire.Fire({
         'serve': serve,
-        'test_request': test_request,
-        'test_sup_search': test_sup_search,
+        'test': test_request,
     })
