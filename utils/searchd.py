@@ -8,11 +8,6 @@ sys.path.insert(0, '.')
 
 import pya0
 from pya0.index_manager import from_prebuilt_index
-from pya0.replace_post_tex import (
-    replace_dollar_tex,
-    replace_display_tex,
-    replace_inline_tex
-)
 
 from flask import Flask, request, jsonify
 app = Flask('pya0 searchd')
