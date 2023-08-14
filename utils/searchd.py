@@ -133,25 +133,30 @@ def server_handler(unsup_ix, searcher, encoder, docs):
         topk = j['topk']
         print(f'Searching (topk={topk}) ...')
 
-    if 'keywords' in j and len(j['keywords']) > 0 and unsup_ix:
-        for kw in j['keywords']:
-            print('keyword:', kw)
+    if 'keywords' in j and unsup_ix:
+        keywords = j['keywords']
+        keywords = list(filter(lambda x: len(x.strip()) > 0, keywords))
+        if len(j['keywords']) > 0:
+            for kw in j['keywords']:
+                print('keyword:', kw)
 
-        def mapper(kw):
-            if kw.startswith('$'):
-                return {
-                    'str': kw.strip('$'),
-                    'type': 'tex'
-                }
-            else:
-                return {
-                    'str': kw,
-                    'type': 'term'
-                }
-        query = list(map(mapper, j['keywords']))
-        JSON = pya0.search(unsup_ix, query, topk=topk)
-        unsup_results = json.loads(JSON)
-        unsup_results = format_unsuperv_results(unsup_results)
+            def mapper(kw):
+                if kw.startswith('$'):
+                    return {
+                        'str': kw.strip('$'),
+                        'type': 'tex'
+                    }
+                else:
+                    return {
+                        'str': kw,
+                        'type': 'term'
+                    }
+            query = list(map(mapper, keywords))
+            JSON = pya0.search(unsup_ix, query, topk=topk)
+            unsup_results = json.loads(JSON)
+            unsup_results = format_unsuperv_results(unsup_results)
+        else:
+            unsup_results = []
     else:
         unsup_results = []
 
@@ -168,7 +173,7 @@ def server_handler(unsup_ix, searcher, encoder, docs):
         [unsup_results, sup_results],
         [0.5, 0.5]
     )
-    print(len(unsup_results), len(sup_results), len(results))
+    print('merged:', len(unsup_results), len(sup_results), len(results))
     results = results[:topk]
 
     results = postprocess_results(results, docs)
