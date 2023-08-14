@@ -134,6 +134,9 @@ def server_handler(unsup_ix, searcher, encoder, docs):
         print(f'Searching (topk={topk}) ...')
 
     if 'keywords' in j and len(j['keywords']) > 0 and unsup_ix:
+        for kw in j['keywords']:
+            print('keyword:', kw)
+
         def mapper(kw):
             if kw.startswith('$'):
                 return {
@@ -148,19 +151,15 @@ def server_handler(unsup_ix, searcher, encoder, docs):
         query = list(map(mapper, j['keywords']))
         JSON = pya0.search(unsup_ix, query, topk=topk)
         unsup_results = json.loads(JSON)
-
-        for kw in j['keywords']:
-            print('keyword:', kw)
-
         unsup_results = format_unsuperv_results(unsup_results)
     else:
         unsup_results = []
 
     if 'question' in j and encoder:
         query = j['question']
-        sup_results = searcher(query, encoder, topk=topk)
-
         print('question:', query)
+
+        sup_results = searcher(query, encoder, topk=topk)
     else:
         sup_results = []
     sup_results = format_supervised_results(sup_results)
