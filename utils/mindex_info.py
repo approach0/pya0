@@ -53,6 +53,13 @@ MINDEX_INFO = {
         ],
         "md5": "84213bcff54e61c86e4d556bc4ebfde4"
     },
+    "arqmath-task1-doclookup-full": {
+        "description": "ARQMath-3 Task-1 corpus document lookup (w/ questions)",
+        "urls": [
+            "https://vault.cs.uwaterloo.ca/s/FYNyHkGC4xkZnj4/download"
+        ],
+        "md5": "b2916e2bfea9bcec195348ea6a8f9fcc"
+    },
     "MATH-dpr-cocomae-220-hnsw": {
         "description": "MATH index encoded by Coco-MAE 220",
         "urls": [

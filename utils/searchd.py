@@ -15,7 +15,7 @@ app = Flask('pya0 searchd')
 
 
 def get_doclookup():
-    index_doc = from_prebuilt_index('arqmath-task1-doclookup')
+    index_doc = from_prebuilt_index('arqmath-task1-doclookup-full')
     doc_path = os.path.join(index_doc, 'docdict.pkl')
     with open(doc_path, 'rb') as fh:
         doc = pickle.load(fh)
@@ -102,9 +102,16 @@ def merge_results(merging_results, weights):
 def postprocess_results(results, docs=None):
     def mapper(item):
         post_id, score, doc = item
-        if docs:
-            doc = docs[post_id] if post_id in docs else None
-            doc_content = doc[1] if doc is not None else None
+        if docs and post_id in docs:
+            A, upvotes, parent = docs[post_id]
+            upvote_str = f'Upvotes: {upvotes}'
+            if parent in docs:
+                Q, _upvotes, accept = docs[parent]
+                Q = Q.strip()
+                Q = Q[:1024] + ' ...' if len(Q) > 1024 else Q
+                doc_content = Q + '\n\n' + upvote_str + '\n\n' + A
+            else:
+                doc_content = upvote_str + '\n\n' + A
         else:
             doc_content = doc
         if doc_content is not None:
