@@ -8,6 +8,7 @@ sys.path.insert(0, '.')
 
 import pya0
 from pya0.index_manager import from_prebuilt_index
+import preprocess
 
 from flask import Flask, request, jsonify
 app = Flask('pya0 searchd')
@@ -152,6 +153,7 @@ def server_handler(unsup_ix, searcher, encoder, docs):
                         'type': 'term'
                     }
             query = list(map(mapper, keywords))
+            query = preprocess.preprocess_query(query, query_type_filter=None)
             JSON = pya0.search(unsup_ix, query, topk=topk)
             unsup_results = json.loads(JSON)
             unsup_results = format_unsuperv_results(unsup_results)
@@ -181,6 +183,7 @@ def server_handler(unsup_ix, searcher, encoder, docs):
 
 
 def serve(port=8080, debug=False):
+    preprocess.use_stemmer(name='porter')
     unsup_ix = get_unsupervised_index()
 
     mab_searcher, mab_encoder = get_supervised(
@@ -206,15 +209,15 @@ def serve(port=8080, debug=False):
     app.run(debug=debug, port=port, host="0.0.0.0")
 
 
-def test_request(url='http://127.0.0.1:8080/MATH'):
+def test_request(url='http://127.0.0.1:8080/mabowdor'):
     import requests
     res = requests.post(url, json={
         'question': r'Find the number of solutions in the interval $[0,2\pi]$ to equation $\tan x + \sec x = 2 \cos x.$',
         'keywords': [
             r'$\tan x + \sec x = 2 \cos x$',
-            r'interval'
+            r'intervals'
         ],
-        'topk': 30
+        'topk': 3
     })
 
     if res.ok:
