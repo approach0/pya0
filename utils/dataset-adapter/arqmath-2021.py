@@ -28,6 +28,29 @@ def generate_qdict(xml_file, maxitems=0):
         pickle.dump(Q_dict, fh)
 
 
+def generate_docs_dict(xml_file='/tuna1/scratch/w32zhong/arqmath3/collection/task1/Posts.V1.3.xml', maxitems=0):
+    total_lines = corpus_length__arqmath3_rawxml(xml_file, maxitems)
+    print('total lines:', total_lines)
+    reader = corpus_reader__arqmath3_rawxml(xml_file)
+
+    docs_dict = dict()
+    for cnt, (meta_data, data) in tqdm(enumerate(reader), total=total_lines):
+        if cnt >= total_lines: break
+        type_ = meta_data[1]
+        if type_ == 'Q':
+            ID, _, title, body, vote, tags, accept = meta_data
+            Q_content = title + '\n\n' + body
+            docs_dict[ID] = (Q_content, vote, accept)
+        elif type_ == 'A':
+            postID, _, parentID, vote = meta_data
+            docs_dict[postID] = (data, vote, parentID)
+        else:
+            continue
+
+    with open('arqmath-full-docs-dict.pkl', 'wb') as fh:
+        pickle.dump(docs_dict, fh)
+
+
 def generate_answer_banks(xml_file, maxitems=0):
     with open('arqmath-question-dict.pkl', 'rb') as fh:
         Q_dict = pickle.load(fh)
@@ -75,5 +98,6 @@ if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
     fire.Fire({
         'gen_question_dict': generate_qdict,
+        'gen_docs_dict': generate_docs_dict,
         'gen_answer_banks': generate_answer_banks
     })
