@@ -104,14 +104,19 @@ def postprocess_results(results, docs=None):
         post_id, score, doc = item
         if docs and post_id in docs:
             A, upvotes, parent = docs[post_id]
-            upvote_str = f'Upvotes: {upvotes}'
+            upvote_str = f'(Upvotes: {upvotes})'
             if parent in docs:
                 Q, _upvotes, accept = docs[parent]
                 Q = Q.strip()
                 Q = Q[:1024] + ' ...' if len(Q) > 1024 else Q
-                doc_content = Q + '\n\n' + upvote_str + '\n\n' + A
+                doc_content = (
+                    '### Question\n' + Q + '\n\n' +
+                    '### Answer' + upvote_str + '\n' + A + '\n'
+                )
             else:
-                doc_content = upvote_str + '\n\n' + A
+                doc_content = (
+                    '### Answer' + upvote_str + '\n' + A + '\n'
+                )
         else:
             doc_content = doc
         if doc_content is not None:
