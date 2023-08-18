@@ -77,9 +77,11 @@ def output_html(output_dir, output_name, qid, query, hits, qrels,
         # start output page
         with open(page_output, 'w') as fh:
             mathjax_cdn = "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml-full.js"
-            fh.write('<html>\n')
+            fh.write('<!DOCTYPE html>\n')
+            fh.write('<html lang="en">\n')
             # head
             fh.write('<head>\n')
+            fh.write('<meta charset="utf-8">\n')
             fh.write(f'<title>{qid} (page #{page + 1})</title><body>\n')
             fh.write('<style>\n')
             fh.write('a, a:visited { color: blue; } \n')
