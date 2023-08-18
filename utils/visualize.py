@@ -76,7 +76,7 @@ def output_html(output_dir, output_name, qid, query, hits, qrels,
         print(f'Page {page + 1} => {page_output}')
         # start output page
         with open(page_output, 'w') as fh:
-            mathjax_cdn = "https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-chtml-full.js"
+            mathjax_cdn = "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml-full.js"
             fh.write('<html>\n')
             # head
             fh.write('<head>\n')
@@ -88,7 +88,7 @@ def output_html(output_dir, output_name, qid, query, hits, qrels,
             fh.write('</style>\n')
             fh.write('</head>\n')
             # query
-            fh.write(f'<h3>Query Keywords (Topic ID: {qid})</h3>\n')
+            fh.write(f'<h3>Query (Topic ID: {qid})</h3>\n')
             fh.write('<ul id="topbar">\n')
             if isinstance(query, str):
                 fh.write(f'<li>{query}</li>\n')
