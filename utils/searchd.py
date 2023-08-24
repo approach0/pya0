@@ -22,8 +22,10 @@ def get_doclookup():
     return doc
 
 
-def get_unsupervised_index():
-    index_path = from_prebuilt_index('arqmath-task1')
+def get_unsupervised_index(index_path='arqmath-task1'):
+    prebuilt_index_path = from_prebuilt_index(index_path)
+    if prebuilt_index_path:
+        index_path = prebuilt_index_path
     ix = pya0.index_open(index_path, option="r")
     if ix is None:
         print('error in opening structure search index!')
@@ -75,7 +77,7 @@ def format_unsuperv_results(results):
     return formated
 
 
-def merge_results(merging_results, weights):
+def merge_results(merging_results, weights, normalize=True):
     id2score = defaultdict(float)
     id2doc = defaultdict(str)
     for i, results in enumerate(merging_results):
@@ -86,8 +88,11 @@ def merge_results(merging_results, weights):
             high = low = 0
         for res in results:
             score, post_id, doc = res
-            norm_score = (score - low) / (high - low + 0.001)
-            id2score[post_id] += weights[i] * norm_score
+            if normalize:
+                norm_score = (score - low) / (high - low + 0.001)
+                id2score[post_id] += weights[i] * norm_score
+            else:
+                id2score[post_id] += weights[i] * score
             id2doc[post_id] = doc
     # sort by scores in descending order
     sorted_results = sorted(id2score.items(),
@@ -119,11 +124,10 @@ def postprocess_results(results, docs=None):
                 )
         else:
             doc_content = doc
-            parent = None
         if doc_content is not None:
             doc_content = doc_content.replace('[imath]', '$')
             doc_content = doc_content.replace('[/imath]', '$')
-        return doc_content, post_id, parent, score
+        return doc_content, post_id, score
     return list(map(mapper, results))
 
 
@@ -139,6 +143,12 @@ def server_handler__MATH():
     return server_handler(*args)
 
 
+@app.route('/dups', methods=['GET', 'POST'])
+def server_handler__dups():
+    args = app.config['args']['dups']
+    return server_handler(*args)
+
+
 def server_handler(unsup_ix, searcher, encoder, docs):
     j = request.json
     if 'topk' not in j:
@@ -146,6 +156,8 @@ def server_handler(unsup_ix, searcher, encoder, docs):
     else:
         topk = j['topk']
         print(f'Searching (topk={topk}) ...')
+
+    docid = j['docid'] if 'docid' in j else None
 
     if 'keywords' in j and unsup_ix:
         keywords = j['keywords']
@@ -167,7 +179,14 @@ def server_handler(unsup_ix, searcher, encoder, docs):
                     }
             query = list(map(mapper, keywords))
             query = preprocess.preprocess_query(query, query_type_filter=None)
-            JSON = pya0.search(unsup_ix, query, topk=topk)
+            if docid:
+                lookup_doc = pya0.index_lookup_doc(unsup_ix, docid)
+                try:
+                    docid = int(lookup_doc['extern_id'])
+                except ValueError as e:
+                    print(e)
+                    docid = 1
+            JSON = pya0.search(unsup_ix, query, topk=topk, docid=docid)
             unsup_results = json.loads(JSON)
             unsup_results = format_unsuperv_results(unsup_results)
         else:
@@ -186,7 +205,8 @@ def server_handler(unsup_ix, searcher, encoder, docs):
 
     results = merge_results(
         [unsup_results, sup_results],
-        [0.5, 0.5]
+        [0.5, 0.5],
+        normalize=(False if docid else True)
     )
     print('merged:', len(unsup_results), len(sup_results), len(results))
     results = results[:topk]
@@ -197,6 +217,13 @@ def server_handler(unsup_ix, searcher, encoder, docs):
 
 def serve(port=8080, debug=False):
     preprocess.use_stemmer(name='porter')
+
+    docs = get_doclookup()
+    print(list(docs.items())[:1])
+
+    index_path = '/tuna1/scratch/w32zhong/a0-engine/indexerd/mnt-arqmath-dup-questions.img'
+    unsup_dups_ix = get_unsupervised_index(index_path)
+
     unsup_ix = get_unsupervised_index()
 
     mab_searcher, mab_encoder = get_supervised(
@@ -204,9 +231,6 @@ def serve(port=8080, debug=False):
         encoder_path='approach0/dpr-cocomae-220',
         index_path='arqmath-task1-dpr-cocomae-220-hnsw'
     )
-
-    docs = get_doclookup()
-    print(list(docs.items())[:1])
 
     mat_searcher, mat_encoder = get_supervised(
         tokenizer_path='approach0/dpr-cocomae-220',
@@ -216,20 +240,24 @@ def serve(port=8080, debug=False):
 
     app.config['args'] = {
         'mabowdor': (unsup_ix, mab_searcher, mab_encoder, docs),
-        'MATH': (None, mat_searcher, mat_encoder, None)
+        'MATH': (None, mat_searcher, mat_encoder, None),
+        'dups': (unsup_dups_ix, None, None, None)
     }
 
     app.run(debug=debug, port=port, host="0.0.0.0")
 
+    pya0.index_close(unsup_ix)
+    pya0.index_close(unsup_dups_ix)
 
-def test_request(url='http://127.0.0.1:8080/mabowdor'):
+
+def test_request(url='http://127.0.0.1:8080/dups'):
     import requests
     res = requests.post(url, json={
-        'question': r'Find the number of solutions in the interval $[0,2\pi]$ to equation $\tan x + \sec x = 2 \cos x.$',
+        'question': r'$\lim_{x \to \infty} \sqrt{x^4-3x^2-1}-x^2$',
         'keywords': [
-            r'$\tan x + \sec x = 2 \cos x$',
-            r'intervals'
+            r'$\lim_{x \to \infty} \sqrt{x^4-3x^2-1}-x^2$',
         ],
+        'docid': 30040,
         'topk': 3
     })
 
