@@ -1,5 +1,6 @@
 import os
 import fire
+import json
 import pickle
 import random
 from tqdm import tqdm
@@ -161,7 +162,7 @@ def generate_duplicate_posts(
     a_dict = load_pickle_file(a_dict_file)
     dup_dicts = read_dup_posts(postlink_file)
     coverage = set()
-    all_dups = []
+    fh = open('arqmath-question-dups.jsonl', 'w')
 
     for qid, dups in dup_dicts.items():
         if len(dups) > 0:
@@ -176,13 +177,15 @@ def generate_duplicate_posts(
                 if 'Possible Duplicate' in Q_dup: continue
                 if qid in coverage: continue
                 if dup_qid in coverage: continue
-                all_dups.append((qid, Q, dup_qid, Q_dup))
+                fh.write(json.dumps({
+                    'qid': qid,
+                    'Q': Q,
+                    'dup_qid': dup_qid,
+                    'Q_dup': Q_dup
+                }) + '\n')
                 coverage.add(qid)
                 coverage.add(dup_qid)
-
-    with open('arqmath-question-dups.pkl', 'wb') as fh:
-        print(f'writing duplicate posts of length {len(all_dups)} ...')
-        pickle.dump(all_dups, fh)
+    fh.close()
 
 
 if __name__ == '__main__':
