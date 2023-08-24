@@ -26,13 +26,13 @@ def dump_split(out_dir, aggregate, aggregate_cnt, ver):
     return []
 
 
-def read_linked_posts(postlink_file):
+def read_dup_posts(postlink_file):
     dups_dict = defaultdict(list)
     for attrs in xmliter(postlink_file, 'row'):
         if attrs['@LinkTypeId'] != '3':
             continue # skip weakly relevant ones (linked posts)
-        a = int(attrs['@PostId'])
-        b = int(attrs['@RelatedPostId'])
+        a = str(attrs['@PostId'])
+        b = str(attrs['@RelatedPostId'])
         dups_dict[a].append(b)
         dups_dict[b].append(a)
     return dups_dict
@@ -60,7 +60,7 @@ def generate_contrastive_pairs(
     random_seed=123, allow_vote_postive=True):
 
     print(f'Reading {postlink_file} ...')
-    dups_dict = read_linked_posts(postlink_file)
+    dups_dict = read_dup_posts(postlink_file)
 
     print('Reading pickle files ...')
     random.seed(random_seed)
@@ -151,6 +151,43 @@ def generate_contrastive_pairs(
         )
 
 
+def generate_duplicate_posts(
+    q_dict_file='arqmath-question-dict.pkl',
+    a_dict_file='arqmath-answer-dict.pkl',
+    answer_bank_file='arqmath-answer-bank.pkl',
+    postlink_file='PostLinks.V1.3.xml'):
+
+    q_dict = load_pickle_file(q_dict_file)
+    a_dict = load_pickle_file(a_dict_file)
+    dup_dicts = read_dup_posts(postlink_file)
+    coverage = set()
+    all_dups = []
+
+    for qid, dups in dup_dicts.items():
+        if len(dups) > 0:
+            for dup_qid in dups:
+                if qid not in q_dict or dup_qid not in q_dict:
+                    continue
+                _, _, Q = q_dict[qid]
+                _, _, Q_dup = q_dict[dup_qid]
+                if '[imath]' not in Q: continue
+                if '[imath]' not in Q_dup: continue
+                if 'Possible Duplicate' in Q: continue
+                if 'Possible Duplicate' in Q_dup: continue
+                if qid in coverage: continue
+                if dup_qid in coverage: continue
+                all_dups.append((qid, Q, dup_qid, Q_dup))
+                coverage.add(qid)
+                coverage.add(dup_qid)
+
+    with open('arqmath-question-dups.pkl', 'wb') as fh:
+        print(f'writing duplicate posts of length {len(all_dups)} ...')
+        pickle.dump(all_dups, fh)
+
+
 if __name__ == '__main__':
     os.environ["PAGER"] = 'cat'
-    fire.Fire(generate_contrastive_pairs)
+    fire.Fire({
+        'gen_pairs': generate_contrastive_pairs,
+        'gen_dups': generate_duplicate_posts
+    })
