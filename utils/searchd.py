@@ -119,10 +119,11 @@ def postprocess_results(results, docs=None):
                 )
         else:
             doc_content = doc
+            parent = None
         if doc_content is not None:
             doc_content = doc_content.replace('[imath]', '$')
             doc_content = doc_content.replace('[/imath]', '$')
-        return doc_content, post_id, score
+        return doc_content, post_id, parent, score
     return list(map(mapper, results))
 
 
