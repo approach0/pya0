@@ -253,11 +253,11 @@ def serve(port=8080, debug=False):
 def test_request(url='http://127.0.0.1:8080/dups'):
     import requests
     res = requests.post(url, json={
-        'question': r'$\lim_{x \to \infty} \sqrt{x^4-3x^2-1}-x^2$',
+        #'question': r'$\lim_{x \to \infty} \sqrt{x^4-3x^2-1}-x^2$',
         'keywords': [
-            r'$\lim_{x \to \infty} \sqrt{x^4-3x^2-1}-x^2$',
+            r'$1^\infty$',
         ],
-        'docid': 30040,
+        'docid': 10490,
         'topk': 3
     })
 
