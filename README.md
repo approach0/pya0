@@ -92,7 +92,7 @@ unzip training-and-inference/datasets/latex_representation_v3.zip
 Please check out [./training-and-inference](./training-and-inference)
 
 ## Making Search Index (optional)
-First, use [utils/corpus_converter.py](utils/corpus_converter.py) to convert raw dataset files to `jsonl` file, the latter can be fed to [approach0 indexerd](https://github.com/approach0/a0-engine) using [a0-crawlers feeder](https://github.com/approach0/a0-crawlers/feeder).
+First, use [utils/corpus_converter.py](utils/corpus_converter.py) to convert raw dataset files to `jsonl` file, the latter can be fed to [approach0 indexerd](https://github.com/approach0/a0-engine) using [a0-crawlers feeder](https://github.com/approach0/a0-crawlers/tree/master/feeder).
 
 Datasets can be found here: https://vault.cs.uwaterloo.ca/s/RTJ27g9Ek2kanRe
 
