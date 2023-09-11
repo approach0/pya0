@@ -183,6 +183,7 @@ def server_handler(unsup_ix, searcher, encoder, docs):
                 lookup_doc = pya0.index_lookup_doc(unsup_ix, docid)
                 try:
                     docid = int(lookup_doc['extern_id'])
+                    print(f'Searching docid={docid}...')
                 except ValueError as e:
                     print(e)
                     docid = 1

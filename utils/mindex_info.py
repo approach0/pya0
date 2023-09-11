@@ -73,7 +73,15 @@ MINDEX_INFO = {
             "https://vault.cs.uwaterloo.ca/s/n8cjmFKo7HGwQig/download"
         ],
         "md5": "8bb6602db36a30e4bd325de3e95e49f7"
-    }
+    },
+    "arqmath-duplicate-questions": {
+        "description": "ARQMath duplicate questions index (See https://huggingface.co/datasets/approach0/MSE-duplicate-questions)",
+        "urls": [
+            "https://vault.cs.uwaterloo.ca/s/Y4JXcdnoRZQNZYi/download"
+        ],
+        "md5": "59bce646b0959aa60864c046247bd4e9",
+        "image_filesystem": "reiserfs"
+    },
 }
 
 def list_indexes():
