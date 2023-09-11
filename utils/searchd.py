@@ -22,7 +22,7 @@ def get_doclookup():
     return doc
 
 
-def get_unsupervised_index(index_path='arqmath-task1'):
+def get_unsupervised_index(index_path):
     prebuilt_index_path = from_prebuilt_index(index_path)
     if prebuilt_index_path:
         index_path = prebuilt_index_path
@@ -222,10 +222,9 @@ def serve(port=8080, debug=False):
     docs = get_doclookup()
     print(list(docs.items())[:1])
 
-    index_path = '/tuna1/scratch/w32zhong/a0-engine/indexerd/mnt-arqmath-dup-questions.img'
-    unsup_dups_ix = get_unsupervised_index(index_path)
+    unsup_dups_ix = get_unsupervised_index('arqmath-duplicate-questions')
 
-    unsup_ix = get_unsupervised_index()
+    unsup_ix = get_unsupervised_index('arqmath-task1')
 
     mab_searcher, mab_encoder = get_supervised(
         tokenizer_path='approach0/dpr-cocomae-220',
@@ -256,9 +255,9 @@ def test_request(url='http://127.0.0.1:8080/dups'):
     res = requests.post(url, json={
         #'question': r'$\lim_{x \to \infty} \sqrt{x^4-3x^2-1}-x^2$',
         'keywords': [
-            r'$1^\infty$',
+            r'$\int x^x dx$',
         ],
-        'docid': 10490,
+        'docid': 141347,
         'topk': 3
     })
 
