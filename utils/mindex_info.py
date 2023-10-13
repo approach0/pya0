@@ -86,6 +86,6 @@ MINDEX_INFO = {
 
 def list_indexes():
     df = pd.DataFrame.from_dict(MINDEX_INFO)
-    with pd.option_context('display.max_rows', None, 'display.max_columns',
-                           None, 'display.max_colwidth', -1, 'display.colheader_justify', 'left'):
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None,
+        'display.max_colwidth', None, 'display.colheader_justify', 'left'):
         print(df)
