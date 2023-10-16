@@ -74,12 +74,12 @@ MINDEX_INFO = {
         ],
         "md5": "8bb6602db36a30e4bd325de3e95e49f7"
     },
-    "MATH-a0-solutions": {
+    "MATH-unsup": {
         "description": "MATH dataset solutions indexed by approach0",
         "urls": [
-            "https://vault.cs.uwaterloo.ca/s/22j4Wb3tWaoyyre/download"
+            "https://vault.cs.uwaterloo.ca/s/fWZ86BFdjQFT4ik/download"
         ],
-        "md5": "5d125d2ea6a3adcd496eca4a946f10dc",
+        "md5": "c98f78d3d7ef92f8ffe3915ff0b14f13",
         "image_filesystem": "reiserfs"
     },
     "arqmath-duplicate-questions": {
