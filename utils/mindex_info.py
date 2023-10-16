@@ -74,6 +74,14 @@ MINDEX_INFO = {
         ],
         "md5": "8bb6602db36a30e4bd325de3e95e49f7"
     },
+    "MATH-a0-solutions": {
+        "description": "MATH dataset solutions indexed by approach0",
+        "urls": [
+            "https://vault.cs.uwaterloo.ca/s/22j4Wb3tWaoyyre/download"
+        ],
+        "md5": "5d125d2ea6a3adcd496eca4a946f10dc",
+        "image_filesystem": "reiserfs"
+    },
     "arqmath-duplicate-questions": {
         "description": "ARQMath duplicate questions index (See https://huggingface.co/datasets/approach0/MSE-duplicate-questions)",
         "urls": [
