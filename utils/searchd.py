@@ -61,7 +61,7 @@ def format_supervised_results(results):
         score = res[1]
         post_id = res[2][0][0]
         psg = res[2][1]
-        formated.append((score, post_id, psg))
+        formated.append((score, post_id, post_id, psg))
     return formated
 
 
@@ -71,15 +71,18 @@ def format_unsuperv_results(results):
     for hit in results['hits']:
         # {docid, rank, score, field_{title, content, ...}}
         score = hit['score']
-        post_id = hit['field_title']
-        doc = hit['field_content']
-        formated.append((score, post_id, doc))
+        url = hit['field_url']
+        title = hit['field_title']
+        content = hit['field_content']
+        formated.append((score, url, title, content))
     return formated
 
 
-def merge_results(merging_results, weights, normalize=True):
+def merge_results(merging_results, weights,
+    normalize=True, merge_key=None):
+
     id2score = defaultdict(float)
-    id2doc = defaultdict(str)
+    id2res = defaultdict(str)
     for i, results in enumerate(merging_results):
         if len(results) > 0:
             high = max(results)[0]
@@ -87,26 +90,30 @@ def merge_results(merging_results, weights, normalize=True):
         else:
             high = low = 0
         for res in results:
-            score, post_id, doc = res
+            res_id = hash(res) if merge_key is None else res[merge_key]
+            score = res[0]
             if normalize:
                 norm_score = (score - low) / (high - low + 0.001)
-                id2score[post_id] += weights[i] * norm_score
+                id2score[res_id] += weights[i] * norm_score
             else:
-                id2score[post_id] += weights[i] * score
-            id2doc[post_id] = doc
+                id2score[res_id] += weights[i] * score
+            id2res[res_id] = res
     # sort by scores in descending order
     sorted_results = sorted(id2score.items(),
         reverse=True, key=lambda x: x[1])
 
     return [
-        (i, id2score[i], id2doc[i])
-        for i, score in sorted_results
+        (id2score[res_id], id2res[res_id])
+        for res_id, score in sorted_results
     ]
 
 
 def postprocess_results(results, docs=None):
     def mapper(item):
-        post_id, score, doc = item
+        # item: (score, url, title, content)
+        score, res = item
+        # for mabowdor index:
+        post_id = res[2]
         if docs and post_id in docs:
             A, upvotes, parent = docs[post_id]
             upvote_str = f' (Upvotes: {upvotes})'
@@ -122,8 +129,19 @@ def postprocess_results(results, docs=None):
                 doc_content = (
                     '#### User Answer' + upvote_str + '\n' + A + '\n'
                 )
+        # for MATH unsupervised index:
+        elif '__ANSWER__' in res[2]:
+            post_id = res[1]
+            Q, A = res[2].split('__ANSWER__')
+            Q, A = Q.strip(), A.strip()
+            doc_content = (
+                '#### Similar Question\n' + Q + '\n\n' +
+                '#### User Answer' + '\n' + A + '\n'
+            )
+        # for other index:
         else:
-            doc_content = doc
+            doc_content = res[-1]
+
         if doc_content is not None:
             doc_content = doc_content.replace('[imath]', '$')
             doc_content = doc_content.replace('[/imath]', '$')
@@ -149,7 +167,7 @@ def server_handler__dups():
     return server_handler(*args)
 
 
-def server_handler(unsup_ix, searcher, encoder, docs):
+def server_handler(unsup_ix, searcher, encoder, docs, merge_key):
     j = request.json
     if 'topk' not in j:
         return jsonify({'error': 'malformed query!'})
@@ -207,9 +225,15 @@ def server_handler(unsup_ix, searcher, encoder, docs):
     results = merge_results(
         [unsup_results, sup_results],
         [0.5, 0.5],
-        normalize=(False if docid else True)
+        normalize=(False if docid else True),
+        merge_key=merge_key
     )
-    print('merged:', len(unsup_results), len(sup_results), len(results))
+    if merge_key is not None:
+        print('Merged:',
+            [x[merge_key] for x in unsup_results],
+            [x[merge_key] for x in sup_results],
+            '=>', len(results)
+        )
     results = results[:topk]
 
     results = postprocess_results(results, docs)
@@ -232,7 +256,7 @@ def serve(port=8080, debug=False):
         index_path='arqmath-task1-dpr-cocomae-220-hnsw'
     )
 
-    unsup_mat_ix = get_unsupervised_index('MATH-a0-solutions')
+    unsup_mat_ix = get_unsupervised_index('MATH-unsup')
 
     #mat_searcher, mat_encoder = get_supervised(
     #    tokenizer_path='approach0/dpr-cocomae-220',
@@ -241,10 +265,10 @@ def serve(port=8080, debug=False):
     #)
 
     app.config['args'] = {
-        'mabowdor': (unsup_ix, mab_searcher, mab_encoder, docs),
+        'mabowdor': (unsup_ix, mab_searcher, mab_encoder, docs, 2),
         #'MATH': (None, mat_searcher, mat_encoder, None),
-        'MATH': (unsup_mat_ix, None, None, None),
-        'dups': (unsup_dups_ix, None, None, None)
+        'MATH': (unsup_mat_ix, None, None, None, None),
+        'dups': (unsup_dups_ix, None, None, None, None)
     }
 
     app.run(debug=debug, port=port, host="0.0.0.0")
