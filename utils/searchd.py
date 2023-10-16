@@ -157,7 +157,7 @@ def server_handler(unsup_ix, searcher, encoder, docs):
         topk = j['topk']
         print(f'Searching (topk={topk}) ...')
 
-    docid = j['docid'] if 'docid' in j else None
+    docid = j['docid'] if 'docid' in j else 0
 
     if 'keywords' in j and unsup_ix:
         keywords = j['keywords']
@@ -232,15 +232,18 @@ def serve(port=8080, debug=False):
         index_path='arqmath-task1-dpr-cocomae-220-hnsw'
     )
 
-    mat_searcher, mat_encoder = get_supervised(
-        tokenizer_path='approach0/dpr-cocomae-220',
-        encoder_path='approach0/dpr-cocomae-220',
-        index_path='MATH-dpr-cocomae-220-hnsw'
-    )
+    unsup_mat_ix = get_unsupervised_index('MATH-a0-solutions')
+
+    #mat_searcher, mat_encoder = get_supervised(
+    #    tokenizer_path='approach0/dpr-cocomae-220',
+    #    encoder_path='approach0/dpr-cocomae-220',
+    #    index_path='MATH-dpr-cocomae-220-hnsw'
+    #)
 
     app.config['args'] = {
         'mabowdor': (unsup_ix, mab_searcher, mab_encoder, docs),
-        'MATH': (None, mat_searcher, mat_encoder, None),
+        #'MATH': (None, mat_searcher, mat_encoder, None),
+        'MATH': (unsup_mat_ix, None, None, None),
         'dups': (unsup_dups_ix, None, None, None)
     }
 
@@ -250,17 +253,19 @@ def serve(port=8080, debug=False):
     pya0.index_close(unsup_dups_ix)
 
 
-def test_request(url='http://127.0.0.1:8080/dups'):
-    import requests
-    res = requests.post(url, json={
-        #'question': r'$\lim_{x \to \infty} \sqrt{x^4-3x^2-1}-x^2$',
-        'keywords': [
-            r'$\int x^x dx$',
-        ],
-        'docid': 141347,
-        'topk': 3
-    })
+def test_request(url='http://127.0.0.1:8080/MATH',
+    keywords=[r'$x^x$'], question=None, docid=0, topk=3):
+    req_j = {'topk': topk}
+    if keywords:
+        req_j['keywords'] = keywords
+    if question:
+        req_j['question'] = question
+    if docid:
+        req_j['docid'] = docid
 
+    import requests
+    print(req_j)
+    res = requests.post(url, json=req_j)
     if res.ok:
         try:
             j = res.json()
