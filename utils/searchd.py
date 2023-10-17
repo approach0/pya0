@@ -13,6 +13,8 @@ import preprocess
 from flask import Flask, request, jsonify
 app = Flask('pya0 searchd')
 
+MAX_NUM_KEYWORDS = 12
+
 
 def get_doclookup():
     index_doc = from_prebuilt_index('arqmath-task1-doclookup-full')
@@ -180,6 +182,7 @@ def server_handler(unsup_ix, searcher, encoder, docs, merge_key):
     if 'keywords' in j and unsup_ix:
         keywords = j['keywords']
         keywords = list(filter(lambda x: len(x.strip()) > 0, keywords))
+        keywords = keywords[:MAX_NUM_KEYWORDS]
         if len(j['keywords']) > 0:
             for kw in j['keywords']:
                 print('keyword:', kw)
