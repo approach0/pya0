@@ -44,17 +44,13 @@ def replace_dollar_tex(s):
 
 def replace_display_tex(s):
     # replace '\[ * \]'
-    regex = re.compile('\\\\\[(.+?)\\\\\]', re.DOTALL)
+    regex = re.compile(r'\\\[(.+?)\\\]', re.DOTALL)
     return re.sub(regex, r"[imath]\1[/imath]", s)
 
 def replace_inline_tex(s):
     # replace '\\( * \\)'
-    regex = re.compile(r'\\\((.+)\\\)')
+    regex = re.compile(r'\\\\\((.+?)\\\\\)', re.DOTALL)
     return re.sub(regex, r"[imath]\1[/imath]", s)
-
-# curl http://math.stackexchange.com/questions/1886701/justify-a-function-series-is-approximating-another-function
-# to test everything.
-
 
 def unwrap_tex_group(text, group_name):
     regex = re.compile(
@@ -69,3 +65,16 @@ def unwrap_tex_groups(text,
     for grp in groups:
         text = unwrap_tex_group(text, grp)
     return text
+
+if __name__ == '__main__':
+    # curl http://math.stackexchange.com/questions/1886701
+    # to test real-world MSE parsing.
+    test = r'''
+    In this paper, the authors investigate the double-pole Nahm-type sums
+    \[
+    \mathcal D_{t,s}(w,q) = \sum_{n_1,\ldots,n_t\geq 0} (-w;q){n_1} q^{n_s} \prod{r=1}^t \frac{q^{n_rn_{r+1}+n_r}}{(q;q){n_r}^2},
+    \]
+    where \\(t\geq 1\\), \\(1\leq s \leq t+1\\) and \\(n{t+1}=0\\).
+    '''
+    print(test)
+    print(replace_display_tex(replace_inline_tex(test)))
